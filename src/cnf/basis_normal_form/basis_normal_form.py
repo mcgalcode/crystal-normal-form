@@ -1,5 +1,5 @@
 from .element_position_map import ElementPositionMap
-from .utils import sort_elements, sort_number_lists
+from .utils import sort_number_lists
 
 class BasisNormalForm():
     """Implements methods for taking a list of atomic positions
