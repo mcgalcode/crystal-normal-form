@@ -3,6 +3,9 @@ import numpy as np
 PRIMARY_VONORM_IDXS = [0, 1, 2, 3]
 SECONDARY_VONORM_IDXS = [4,5,6]
 
+INCREMENT = 1
+DECREMENT = -1
+
 class DiscretizedVonormComputer():
 
     def __init__(self, true_vonorms, lattice_step_size):
@@ -39,26 +42,30 @@ class DiscretizedVonormComputer():
                 # In this case, we have to either reduce a primary vonorm
                 # or increase a secondary vonorm
                 for idx in PRIMARY_VONORM_IDXS:
-                    error_change = self.compute_error_change(rounded_vonorms, idx, -1)
-                    possible_changes.append((idx, -1, error_change))
+                    adjustment = DECREMENT
+                    error_change = self.compute_error_change(rounded_vonorms, idx, adjustment)
+                    possible_changes.append((idx, adjustment, error_change))
 
                 for idx in SECONDARY_VONORM_IDXS:
-                    error_change = self.compute_error_change(rounded_vonorms, idx, +1)
-                    possible_changes.append((idx, +1, error_change))
+                    adjustment = INCREMENT
+                    error_change = self.compute_error_change(rounded_vonorms, idx, adjustment)
+                    possible_changes.append((idx, adjustment, error_change))
                     
             else:
                 # In this case, we have to either INCREASE a PRIMARY vonorm
                 # or DECREASE a SECONDARY vonorm
                 for idx in PRIMARY_VONORM_IDXS:
-                    error_change = self.compute_error_change(rounded_vonorms, idx, +1)
-                    possible_changes.append((idx, +1, error_change))
+                    adjustment = INCREMENT
+                    error_change = self.compute_error_change(rounded_vonorms, idx, adjustment)
+                    possible_changes.append((idx, adjustment, error_change))
 
                 for idx in SECONDARY_VONORM_IDXS:
-                    error_change = self.compute_error_change(rounded_vonorms, idx, -1)
-                    possible_changes.append((idx, -1, error_change))
+                    adjustment = DECREMENT
+                    error_change = self.compute_error_change(rounded_vonorms, idx, adjustment)
+                    possible_changes.append((idx, adjustment, error_change))
             
             least_damaging_change = sorted(possible_changes, key=lambda c: c[2])[0]
-            idx_to_adjust, adjustment, error = least_damaging_change
+            idx_to_adjust, adjustment, _ = least_damaging_change
             rounded_vonorms[idx_to_adjust] = rounded_vonorms[idx_to_adjust] + adjustment
             primary_sum = np.sum(rounded_vonorms[:4])
             secondary_sum = np.sum(rounded_vonorms[4:])
