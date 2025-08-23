@@ -37,10 +37,10 @@ def test_can_sort_positions():
     ]
     el_pos_map = ElementPositionMap.from_elements_and_positions(elements, positions)
     sorted_positions = el_pos_map.get_sorted_discretized_positions(10)
-    assert np.all(sorted_positions[0] == [5, 6, 4])
+    assert np.all(sorted_positions[3] == [5, 6, 4])
     assert np.all(sorted_positions[1] == [1, 1, 1])
     assert np.all(sorted_positions[2] == [2, 1, 8])
-    assert np.all(sorted_positions[3] == [0, 2, 3])
+    assert np.all(sorted_positions[0] == [0, 2, 3])
 
 @pytest.mark.parametrize("shift_vector", [
     (np.array([-0.5, 0, -0.5]))
