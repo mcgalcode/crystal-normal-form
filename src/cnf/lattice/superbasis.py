@@ -60,7 +60,7 @@ class Superbasis():
     def selling_transform(self) -> tuple["Superbasis", tuple[int, int]]:
         acute_pair = find_first_acute_pair(self.lattice_vecs)
         if acute_pair is None:
-            return self
+            return self, None
         first_acute_idx, second_acute_idx = acute_pair
         new_basis_vecs = apply_selling_transformation(
             self.lattice_vecs,
