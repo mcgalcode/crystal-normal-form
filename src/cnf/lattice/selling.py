@@ -1,5 +1,44 @@
 import numpy as np
 
+CANONICAL_PAIRS = [
+    (0,1),
+    (0,2),
+    (0,3),
+    (1,2),
+    (1,3),
+    (2,3),
+]
+
+LABELS_TO_COLS = {
+    1: np.array([1, 0, 0]),
+    2: np.array([0, 1, 0]),
+    3: np.array([0, 0, 1]),
+    0: np.array([-1, -1, -1]),
+}
+
+def build_unimodular_selling_transform_matrix(selling_pair: tuple):
+    columns = []
+    i, j = selling_pair
+    # We only care about vectors 1,2, and 3
+    for lattice_vec_label in range(1,4):
+        if lattice_vec_label == i:
+            col = - LABELS_TO_COLS[lattice_vec_label]
+        elif lattice_vec_label == j:
+            col = LABELS_TO_COLS[lattice_vec_label]
+        else:
+            col = LABELS_TO_COLS[lattice_vec_label] + LABELS_TO_COLS[i]
+        columns.append(col)
+    return np.array(columns).T
+
+SELLING_TRANSFORM_MATRICES = {}
+SELLING_TRANSFORM_INVERSE_MATRICES = {}
+
+for p in CANONICAL_PAIRS:
+    SELLING_TRANSFORM_MATRICES[p] = build_unimodular_selling_transform_matrix(p)
+
+for p in CANONICAL_PAIRS:
+    SELLING_TRANSFORM_INVERSE_MATRICES[p] = np.linalg.inv(SELLING_TRANSFORM_MATRICES[p]).astype(int)
+
 def find_first_acute_pair(vecs: np.array):
     """Given a list of vectors (perhaps an obtuse superbasis), iterates through
     the pairwise dot products and if a positive dot product is encountered (a
@@ -67,8 +106,8 @@ def get_obtuse_superbasis(lattice_generating_vecs: np.array):
     return current_basis_vecs
 
 def apply_selling_transformation(superbasis_vectors: np.array,
-                                first_acute_idx: int,
-                                second_acute_idx: int) -> np.array:
+                                 first_acute_idx: int,
+                                 second_acute_idx: int) -> np.array:
     """Performs the Selling reduction step described in Lemma A.1 (reduction)
     in Kurlin, 2022 "A complete isometry classification of 3-dimensional
     lattices". You can only apply this function after you have identified a pair
