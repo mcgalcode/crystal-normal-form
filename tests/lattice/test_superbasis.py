@@ -1,0 +1,24 @@
+import pytest
+import numpy as np
+
+from cnf.lattice import Superbasis
+from pymatgen.core.lattice import Lattice
+
+def test_can_instantiate():
+    test_lattice = Lattice.rhombohedral(1.5, 80)
+    sb = Superbasis.from_pymatgen_lattice(test_lattice)
+
+    assert (sb.lattice_vecs[0] == -np.sum(test_lattice.matrix, axis=0)).all()
+    assert (sb.lattice_vecs[1] == test_lattice.matrix[0]).all()
+    assert (sb.lattice_vecs[2] == test_lattice.matrix[1]).all()
+    assert (sb.lattice_vecs[3] == test_lattice.matrix[2]).all()
+
+    vonorms = sb.compute_vonorms()
+    assert vonorms[0] == np.dot(-np.sum(test_lattice.matrix, axis=0), -np.sum(test_lattice.matrix, axis=0))
+    assert vonorms[1] == np.dot(test_lattice.matrix[0], test_lattice.matrix[0])
+    assert vonorms[2] == np.dot(test_lattice.matrix[1], test_lattice.matrix[1])
+    assert vonorms[3] == np.dot(test_lattice.matrix[2], test_lattice.matrix[2])
+
+    assert vonorms[4] == np.dot(-test_lattice.matrix[1] - test_lattice.matrix[2], -test_lattice.matrix[1] - test_lattice.matrix[2])
+    assert vonorms[5] == np.dot(-test_lattice.matrix[0] - test_lattice.matrix[2], -test_lattice.matrix[0] - test_lattice.matrix[2])
+    assert vonorms[6] == np.dot(-test_lattice.matrix[0] - test_lattice.matrix[1], -test_lattice.matrix[0] - test_lattice.matrix[1])
