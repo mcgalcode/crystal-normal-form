@@ -1,6 +1,8 @@
 import numpy as np
 
 from pymatgen.core.lattice import Lattice
+from pymatgen.core.structure import Structure
+
 from .vonorm_list import VonormList
 from .selling import find_first_acute_pair, apply_selling_transformation
 
@@ -13,12 +15,15 @@ class Superbasis():
         superbasis_vecs = np.array([v0, *lattice_vecs])
         return cls(superbasis_vecs)
 
+    @classmethod
+    def from_pymatgen_structure(cls, struct: Structure):
+        return cls.from_pymatgen_lattice(struct.lattice)
+
     def __init__(self, lattice_vecs: np.array):
         self.lattice_vecs = lattice_vecs
 
     def generating_vecs(self):
         return self.lattice_vecs[1:]
-
     
     def is_obtuse(self, tol=0):
         return self.compute_vonorms().is_obtuse(tol=tol)
