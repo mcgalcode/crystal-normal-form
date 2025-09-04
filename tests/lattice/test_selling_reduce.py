@@ -18,10 +18,10 @@ def test_can_selling_transform(monoclinic_lattice):
     basis = Superbasis.from_pymatgen_lattice(monoclinic_lattice)
     vonorm_list = basis.compute_vonorms()
 
-    transformed_basis = basis.selling_transform()
+    transformed_basis, swap = basis.selling_transform()
     print(transformed_basis.compute_vonorms())
 
-    transformed_vonorms = vonorm_list.selling_transform()
+    transformed_vonorms, _ = vonorm_list.selling_transform()
     print("VIA VONORM")
     print(vonorm_list)
     print(transformed_vonorms)
@@ -50,7 +50,7 @@ def test_selling_transform_maintains_superbasis(monoclinic_lattice):
     sb = Superbasis.from_pymatgen_lattice(monoclinic_lattice)
     
     for i in range(4):
-        sb = sb.selling_transform()
+        sb, _ = sb.selling_transform()
         assert np.isclose(sb.lattice_vecs[0], -np.sum(sb.lattice_vecs[1:], axis=0)).all()
 
 def test_can_selling_reduce_vonorm_list(monoclinic_lattice):
@@ -66,13 +66,13 @@ def test_parallel_reduction_rhombohedral(rhombohedral_lattice):
 
     for i in range(100):
         assert np.all(np.isclose(vl.vonorms, sb.compute_vonorms().vonorms))
-        sb_temp = sb.selling_transform()
+        sb_temp, _ = sb.selling_transform()
         sb_converged = sb_temp == sb
 
         if sb_converged:
             print("Superbasis converged!")
 
-        vl_temp = vl.selling_transform()
+        vl_temp, _ = vl.selling_transform()
         vl_converged = vl_temp == vl
 
         if vl_converged:
@@ -91,13 +91,13 @@ def test_parallel_reduction_monoclinic(monoclinic_lattice):
 
     for i in range(40):
         assert np.all(np.isclose(vl.vonorms, sb.compute_vonorms().vonorms))
-        sb_temp = sb.selling_transform()
+        sb_temp, _ = sb.selling_transform()
         sb_converged = sb_temp == sb
 
         # if sb_converged:
         #     print("Superbasis converged!")
 
-        vl_temp = vl.selling_transform()
+        vl_temp, _ = vl.selling_transform()
         vl_converged = vl_temp == vl
 
         # if vl_converged:

@@ -51,6 +51,8 @@ def get_possible_swaps(secondary_idx_pair, vonorm_list):
     return swappable_primary_pairs
 
 def is_valid_swap(idx1, idx2, vonorms):
+    # In the future, this will depend on the symmetry
+    # of the lattice.
     return is_primary_vonorm_idx(idx1) and is_primary_vonorm_idx(idx2)
 
 def swap_vonorm_idxs_in_place(idx1, idx2, vonorms):

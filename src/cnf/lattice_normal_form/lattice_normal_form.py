@@ -1,7 +1,7 @@
 import numpy as np
-from pymatgen.core.structure import Structure
 from itertools import permutations
 
+from ..lattice import Superbasis
 from .rounding import DiscretizedVonormComputer
 
 VONORM_TO_DOT_PRODUCTS = np.array([
@@ -16,35 +16,7 @@ VONORM_TO_DOT_PRODUCTS = np.array([
 class LatticeNormalForm():
 
 
-    @staticmethod
-    def compute_vonorms(superbasis_vectors: np.array) -> tuple[float]:
-        """Given a (hopefully) obtuse superbasis, computes the 7
-        vonorms associated with them. Labeling/order of the basis vectors
-        is important, since it determines the order of the vonorms as well. 
-        This function expects the basis vectors to be the ROWS (first index)
-        of the supplied array.
 
-        Parameters
-        ----------
-        superbasis_vectors : np.array
-            A list of superbasis vectors (i.e. rows in a matrix)
-
-        Returns
-        -------
-        tuple[float]
-            The list of vonorm values (see pp 25 of DM thesis)
-        """
-        # rename this for brevity
-        sb = superbasis_vectors
-        return (
-            np.dot(sb[0], sb[0]),
-            np.dot(sb[1], sb[1]),
-            np.dot(sb[2], sb[2]),
-            np.dot(sb[3], sb[3]),
-            np.dot(sb[0] + sb[1], sb[0] + sb[1]),
-            np.dot(sb[0] + sb[2], sb[0] + sb[2]),
-            np.dot(sb[0] + sb[3], sb[0] + sb[3]),
-        )
     
     @staticmethod
     def get_canonicalized_superbasis_and_vonorms(superbasis_vectors: np.array, epsilon: float) -> tuple[np.array, list]:
@@ -89,11 +61,11 @@ class LatticeNormalForm():
         # with permutations
         permutation_vonorm_pairs = []
         for p in idx_permutations:
-            permuted_basis = [superbasis_vectors[idx] for idx in p]
+            permuted_basis = Superbasis(np.array([superbasis_vectors[idx] for idx in p]))
 
             # 3. And compute the vonorms for each basis
-            vonorm_list = LatticeNormalForm.compute_vonorms(permuted_basis)
-            vonorm_computer = DiscretizedVonormComputer(vonorm_list, epsilon)
+            vonorm_list = permuted_basis.compute_vonorms()
+            vonorm_computer = DiscretizedVonormComputer(vonorm_list.vonorms, epsilon)
             # 3a. Be sure to round these here
             rounded_vonorm_list = vonorm_computer.find_closest_valid_vonorms()
             # rounded_vonorm_list = (np.array(vonorm_list) / epsilon).tolist()
@@ -161,9 +133,3 @@ class LatticeNormalForm():
         A list of dot products, as described in the docstring.
         """
         return 0.5 * VONORM_TO_DOT_PRODUCTS @ vonorm_list[:6]
-    
-
-    def to_crystal_normal_form(structure: Structure, xi=1.5):
-        lattice_matrix = structure.lattice.matrix
-        superbasis = LatticeNormalForm.get_obtuse_superbasis(lattice_matrix.T)
-        matching_permutations, canonical_vonorm_list = LatticeNormalForm.get_canonicalized_superbasis_and_vonorms(superbasis, xi)

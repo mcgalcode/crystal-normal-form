@@ -1,5 +1,5 @@
 import pytest
-import cnf.lattice_normal_form.selling as selling
+import cnf.lattice.selling as selling
 from pymatgen.core.structure import Structure
 
 import numpy as np
