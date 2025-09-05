@@ -51,7 +51,7 @@ def test_selling_transform_maintains_superbasis(monoclinic_lattice):
     
     for i in range(4):
         sb, _ = sb.selling_transform()
-        assert np.isclose(sb.lattice_vecs[0], -np.sum(sb.lattice_vecs[1:], axis=0)).all()
+        assert np.isclose(sb.superbasis_vecs[0], -np.sum(sb.superbasis_vecs[1:], axis=0)).all()
 
 def test_can_selling_reduce_vonorm_list(monoclinic_lattice):
     vl = Superbasis.from_pymatgen_lattice(monoclinic_lattice).compute_vonorms()

@@ -4,7 +4,7 @@ from pymatgen.core.lattice import Lattice
 from pymatgen.core.structure import Structure
 
 from .vonorm_list import VonormList
-from .selling import find_first_acute_pair, apply_selling_transformation
+from .selling import find_first_acute_pair, apply_selling_transformation, get_v0_from_generating_vecs
 
 class Superbasis():
 
@@ -18,12 +18,18 @@ class Superbasis():
     @classmethod
     def from_pymatgen_structure(cls, struct: Structure):
         return cls.from_pymatgen_lattice(struct.lattice)
+    
+    @classmethod
+    def from_generating_vecs(cls, generating_vecs: np.array):
+        v0 = get_v0_from_generating_vecs(generating_vecs)
+        superbasis_vecs = np.array([v0, *generating_vecs])
+        return cls(superbasis_vecs)
 
-    def __init__(self, lattice_vecs: np.array):
-        self.lattice_vecs = lattice_vecs
+    def __init__(self, superbasis_vecs: np.array):
+        self.superbasis_vecs = superbasis_vecs
 
     def generating_vecs(self):
-        return self.lattice_vecs[1:]
+        return self.superbasis_vecs[1:]
     
     def is_obtuse(self, tol=0):
         return self.compute_vonorms().is_obtuse(tol=tol)
@@ -46,7 +52,7 @@ class Superbasis():
             The list of vonorm values (see pp 25 of DM thesis)
         """
         # rename this for brevity
-        lv = self.lattice_vecs
+        lv = self.superbasis_vecs
         return VonormList((
             np.dot(lv[0], lv[0]),
             np.dot(lv[1], lv[1]),
@@ -58,16 +64,20 @@ class Superbasis():
         ))
 
     def selling_transform(self) -> tuple["Superbasis", tuple[int, int]]:
-        acute_pair = find_first_acute_pair(self.lattice_vecs)
+        acute_pair = find_first_acute_pair(self.superbasis_vecs)
         if acute_pair is None:
             return self, None
         first_acute_idx, second_acute_idx = acute_pair
         new_basis_vecs = apply_selling_transformation(
-            self.lattice_vecs,
+            self.superbasis_vecs,
             first_acute_idx,
             second_acute_idx
         )
         return Superbasis(new_basis_vecs), acute_pair
     
+    def apply_matrix_transform(self, mat_transform: np.array):
+        new_vecs = self.generating_vecs() @ mat_transform
+        return Superbasis.from_generating_vecs(new_vecs)
+    
     def __eq__(self, other: "Superbasis"):
-        return np.all(np.isclose(self.lattice_vecs, other.lattice_vecs))
+        return np.all(np.isclose(self.superbasis_vecs, other.superbasis_vecs))

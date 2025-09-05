@@ -8,10 +8,10 @@ def test_can_instantiate():
     test_lattice = Lattice.rhombohedral(1.5, 80)
     sb = Superbasis.from_pymatgen_lattice(test_lattice)
 
-    assert (sb.lattice_vecs[0] == -np.sum(test_lattice.matrix, axis=0)).all()
-    assert (sb.lattice_vecs[1] == test_lattice.matrix[0]).all()
-    assert (sb.lattice_vecs[2] == test_lattice.matrix[1]).all()
-    assert (sb.lattice_vecs[3] == test_lattice.matrix[2]).all()
+    assert (sb.superbasis_vecs[0] == -np.sum(test_lattice.matrix, axis=0)).all()
+    assert (sb.superbasis_vecs[1] == test_lattice.matrix[0]).all()
+    assert (sb.superbasis_vecs[2] == test_lattice.matrix[1]).all()
+    assert (sb.superbasis_vecs[3] == test_lattice.matrix[2]).all()
 
     vonorms = sb.compute_vonorms()
     assert vonorms[0] == np.dot(-np.sum(test_lattice.matrix, axis=0), -np.sum(test_lattice.matrix, axis=0))
