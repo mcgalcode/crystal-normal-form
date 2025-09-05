@@ -72,18 +72,28 @@ def swap_list_items_in_place(idx1, idx2, items):
     items[idx2] = items[idx1]
     items[idx1] = tmp
 
-def sort_vonorms(vonorms):
+def sort_vonorms(vonorms) -> list[tuple[int, int]]:
+    swaps = []
     primary_vonorms_sorted, out_of_order_pair = check_primary_vonorms_sorted(vonorms)
     
     while not primary_vonorms_sorted:
+        print(out_of_order_pair)
         swap_vonorm_idxs_in_place(out_of_order_pair[0], out_of_order_pair[1], vonorms)
+        print("After: ", out_of_order_pair)
+        swaps.append(out_of_order_pair)
+        print("Swaps so far: ", swaps)
         primary_vonorms_sorted, out_of_order_pair = check_primary_vonorms_sorted(vonorms)
     
     for idx1 in range(4,6):
         for idx2 in range(idx1, 7):
             if vonorms[idx1] > vonorms[idx2]:
                 # print(f"Found out of order secondary vonorms! {idx1}, {idx2}")
-                swaps = get_possible_swaps((idx1, idx2), vonorms)
+                possible_swaps = get_possible_swaps((idx1, idx2), vonorms)
+                # There may be multiple possible swaps that can achieve this
+                # reordering, but we just need to execute one of them.
                 if len(swaps) > 0:
-                    swap_vonorm_idxs_in_place(swaps[0][0], swaps[0][1], vonorms)
+                    selected_swap = possible_swaps[0]
+                    swap_vonorm_idxs_in_place(selected_swap[0], selected_swap[1], vonorms)
+                    swaps.append(selected_swap)
+    return swaps
 

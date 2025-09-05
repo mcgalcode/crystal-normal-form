@@ -67,7 +67,7 @@ def test_swap_vonorm_idxs_in_place(antimony_vonorms_unsorted):
     assert antimony_vonorms_unsorted[6] == 19.2
 
 def test_sort_vonorm_list(antimony_vonorms_unsorted):
-    srt.sort_vonorms(antimony_vonorms_unsorted)
+    swaps = srt.sort_vonorms(antimony_vonorms_unsorted)
 
     assert antimony_vonorms_unsorted[0] == 19.2
     assert antimony_vonorms_unsorted[1] == 19.2
