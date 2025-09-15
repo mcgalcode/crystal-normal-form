@@ -28,7 +28,14 @@ class Superbasis():
     def __init__(self, superbasis_vecs: np.array):
         self.superbasis_vecs = superbasis_vecs
 
-    def generating_vecs(self):
+    def generating_vecs(self) -> np.array:
+        """Returns the generating vectors of this superbasis as rows in a matrix
+
+        Returns
+        -------
+        np.array
+            A matrix in which each row represents a generating vector
+        """
         return self.superbasis_vecs[1:]
     
     def is_obtuse(self, tol=0):
@@ -76,8 +83,24 @@ class Superbasis():
         return Superbasis(new_basis_vecs), acute_pair
     
     def apply_matrix_transform(self, mat_transform: np.array):
-        new_vecs = self.generating_vecs() @ mat_transform
-        return Superbasis.from_generating_vecs(new_vecs)
+        new_vecs = self.generating_vecs().T @ mat_transform
+        return Superbasis.from_generating_vecs(new_vecs.T)
+    
+    def v0(self):
+        return self.superbasis_vecs[0]
+    
+    def v1(self):
+        return self.superbasis_vecs[1]
+    
+    def v2(self):
+        return self.superbasis_vecs[2]
+    
+    def v3(self):
+        return self.superbasis_vecs[3]
     
     def __eq__(self, other: "Superbasis"):
         return np.all(np.isclose(self.superbasis_vecs, other.superbasis_vecs))
+    
+    def __repr__(self):
+        float_vecs = [[float(i) for i in vec] for vec in self.superbasis_vecs]
+        return f"Superbasis({' '.join(['v' + str(idx) + ': ' + str(list(v)) for idx, v in enumerate(float_vecs)])})"
