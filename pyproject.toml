@@ -8,6 +8,7 @@ authors = [
 ]
 requires-python = ">=3.11"
 dependencies = [
+    "jupyterlab>=4.4.7",
     "mp-api>=0.45.8",
     "numpy>=2.3.2",
     "pymatgen>=2025.6.14",
