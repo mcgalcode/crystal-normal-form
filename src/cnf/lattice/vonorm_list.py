@@ -1,5 +1,7 @@
 import enum
 import numpy as np
+import copy
+from .sorting import swap_vonorm_idxs
 
 # This matrix is found on page 48 of David's thesis
 VONORM_TO_DOT_PRODUCTS = np.array([
@@ -33,7 +35,7 @@ VECTOR_PAIRS_TO_CONORM_IDXS = { v: k for k, v in CONORM_IDX_TO_VECTOR_PAIRS.item
 
 ALL_INDICES = {0, 1, 2, 3}
 
-VONORM_PAIRS_TO_IDXS = {
+SECONDARY_VONORM_LABELS_TO_IDXS = {
     (0, 1): 4,
     (2, 3): 4,
     (0, 2): 5,
@@ -46,6 +48,7 @@ VONORM_PAIRS_TO_IDXS = {
 def to_canonical_pair(pair):
     pair = list(pair)
     return tuple(sorted(pair))
+
 
 class VonormList():
 
@@ -61,6 +64,20 @@ class VonormList():
     
     def __getitem__(self, key):
         return self.vonorms[key]
+    
+    def swap_labels(self, swap_pair, return_swaps=False):
+        i, j = swap_pair
+        if return_swaps:
+            new_vonorms, swaps = swap_vonorm_idxs(i, j, self.vonorms, in_place=False, return_swaps=True)
+            return VonormList(new_vonorms), swaps
+        else:
+            new_vonorms = swap_vonorm_idxs(i, j, self.vonorms, in_place=False)
+            return VonormList(new_vonorms)
+    
+    def stabilizer(self):
+        # What permutations of this list produce the same
+        # values?
+        pass
     
     def selling_transform(self) -> tuple["VonormList", tuple[int, int]]:
         positive_conorm_indices = [i for i, conorm in enumerate(self.conorms) if conorm > 0]
@@ -82,22 +99,22 @@ class VonormList():
         # that each secondary vonorm is expressed: v0 + v1 = -v2 - v3
         #                                       (v0 +v1)^2 = (v2 + v3)^2
         # So if i and k are 2 and 3, then v_ik isn't v_23, which isn't a label
-        # we use - it's v_01. The map VONORM_PAIRS_TO_IDXS enumerates these
+        # we use - it's v_01. The map SECONDARY_VONORM_LABELS_TO_IDXS enumerates these
         # relationships and makes it easy to grab the index corresponding to a given ik pair
         #
         # pair 1: u_k = v_ik, u_ik = u_jl = v_k
-        ik_idx = VONORM_PAIRS_TO_IDXS[to_canonical_pair({i, k})]
+        ik_idx = SECONDARY_VONORM_LABELS_TO_IDXS[to_canonical_pair({i, k})]
         new_vonorm_list[k] = self.vonorms[ik_idx]
         new_vonorm_list[ik_idx] = self.vonorms[k]
 
         # pair 2: u_l = v_il, u_il = u_jk = v_l
-        il_idx = VONORM_PAIRS_TO_IDXS[to_canonical_pair({i, l})]
+        il_idx = SECONDARY_VONORM_LABELS_TO_IDXS[to_canonical_pair({i, l})]
         new_vonorm_list[l] = self.vonorms[il_idx]
         new_vonorm_list[il_idx] = self.vonorms[l]
 
         # The i,j vonorm is reduced by 4 x v_i dot v_j
         vector_pair = to_canonical_pair({i, j})
-        ij_idx = VONORM_PAIRS_TO_IDXS[vector_pair]
+        ij_idx = SECONDARY_VONORM_LABELS_TO_IDXS[vector_pair]
         conorm_v_i_dot_v_j = self.conorms[VECTOR_PAIRS_TO_CONORM_IDXS[vector_pair]]
         new_vonorm_list[ij_idx] = self.vonorms[ij_idx] - 4 * conorm_v_i_dot_v_j
         return VonormList(new_vonorm_list), acute_vector_pair
@@ -108,3 +125,6 @@ class VonormList():
         
     def __eq__(self, other: "VonormList"):
         return np.all(np.isclose(self.vonorms, other.vonorms))
+    
+    def __hash__(self):
+        return tuple(self.vonorms).__hash__()

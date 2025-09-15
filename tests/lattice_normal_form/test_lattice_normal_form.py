@@ -17,7 +17,7 @@ def Zr_BCC_lattice():
 def test_lnf_for_zr_hcp(Zr_HCP_lattice):
     superbasis, m_steps = selling_reduce(Superbasis.from_pymatgen_lattice(Zr_HCP_lattice), tol=1e-7)
 
-    permutations, vonorms = LatticeNormalForm.get_canonicalized_superbasis_and_vonorms(superbasis.lattice_vecs, epsilon=1.5)
+    permutations, vonorms = LatticeNormalForm.get_canonicalized_superbasis_and_vonorms(superbasis.superbasis_vecs, epsilon=1.5)
     print("Zr HCP lattice vonorm list: ", tuple(vonorms))
     assert tuple(vonorms) == (7,7,17,24,7,24,24) # numbered page 64 of David's thesis
     # print("Vonorms")

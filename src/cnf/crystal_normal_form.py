@@ -1,7 +1,35 @@
 import numpy as np
-# from pymatgen.core import Lattice, Structure # Or other library
+from pymatgen.core import Lattice, Structure # Or other library
+from .lattice import VonormList, Superbasis
+from .lattice.atomic_motif import AtomicMotif
+from .lattice.utils import selling_reduce
+from .lattice.sorting import sort_vonorms
+from .lattice.stabilizer import search_for_stabilizers
+from .lattice_normal_form.rounding import DiscretizedVonormComputer
+from .basis_normal_form import BasisNormalForm
 
 class CrystalNormalForm:
+
+    @classmethod
+    def from_structure(cls, struct: Structure, lattice_step_size=1.5):
+        motif = AtomicMotif.from_structure(struct)
+        superbasis = Superbasis.from_pymatgen_structure(struct)
+        vonorms = superbasis.compute_vonorms()
+        vonorms = VonormList(DiscretizedVonormComputer(vonorms.vonorms, lattice_step_size).find_closest_valid_vonorms())
+        vonorms, transform_mat = selling_reduce(vonorms, return_transform_mat=True)
+        motif = motif.transform(transform_mat)
+        _, sort_transform_mat = sort_vonorms(vonorms, return_transform_mat=True)
+        motif = motif.transform(sort_transform_mat)
+
+        stabilizers, _ = search_for_stabilizers(vonorms)
+        bnfs = []
+        for stabilizer, transform in stabilizers.items():
+            transformed_motif = motif.transform(transform)
+            bnf = BasisNormalForm.from_motif(transformed_motif)
+            bnfs.append(bnf)
+        # bnfs.sort() ???
+
+        
     
     def __init__(self, canonical_vonorms, canonical_basis, canonical_permutation, xi=1.5, delta=30):
         """

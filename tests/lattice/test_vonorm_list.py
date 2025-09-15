@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from cnf.lattice import Superbasis
+from cnf.lattice import Superbasis, VonormList
 from pymatgen.core.lattice import Lattice
 
 
@@ -28,3 +28,13 @@ def test_can_check_obtuseness():
     basis = Superbasis.from_pymatgen_lattice(obtuse_lattice)
     assert basis.compute_vonorms().is_obtuse()
 
+def test_can_hash_for_use_in_set():
+    vlist1 = VonormList([1,2,3,4,5,6,7])
+    vlist2 = VonormList([1,2,3,4,5,6,7])
+    vlist3 = VonormList([1,2,3,4,5,6,8])
+
+    vlist_set = {vlist1, vlist2}
+    assert len(vlist_set) == 1
+
+    vlist_set.add(vlist3)
+    assert len(vlist_set) == 2

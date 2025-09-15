@@ -1,6 +1,6 @@
 import pytest
 
-import cnf.lattice_normal_form.sorting as srt
+import cnf.lattice.sorting as srt
 
 @pytest.fixture
 def antimony_vonorms_unsorted():
@@ -52,14 +52,14 @@ def test_swap_list_items_in_place():
 
 def test_swap_vonorm_idxs_in_place(antimony_vonorms_unsorted):
     with pytest.raises(RuntimeError) as order_err:
-        srt.swap_vonorm_idxs_in_place(3, 2, antimony_vonorms_unsorted)
+        srt.swap_vonorm_idxs(3, 2, antimony_vonorms_unsorted, in_place=True)
     assert "Out-of-order" in str(order_err.value)
     
     with pytest.raises(RuntimeError) as primary_secondary_err:
-        srt.swap_vonorm_idxs_in_place(3,5, antimony_vonorms_unsorted)
+        srt.swap_vonorm_idxs(3,5, antimony_vonorms_unsorted, in_place=True)
     assert "primary vonorms" in str(primary_secondary_err.value)
 
-    srt.swap_vonorm_idxs_in_place(2,3, antimony_vonorms_unsorted)
+    srt.swap_vonorm_idxs(2,3, antimony_vonorms_unsorted, in_place=True)
     assert antimony_vonorms_unsorted[2] == 21.3
     assert antimony_vonorms_unsorted[3] == 19.2
 
