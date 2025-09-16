@@ -74,4 +74,4 @@ class UnimodularMatrix():
         for row in matrix:
             for val in row:
                 entries.append(val)
-        self.tuple = tuple(entries)
+        self.tuple = tuple([int(e) for e in entries])

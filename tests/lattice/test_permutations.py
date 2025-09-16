@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from cnf.lattice.permutations import VonormPermutation, ConormPermutation, VONORM_PERMUTATION_TO_CONORM_PERMUTATION, compose_permutations, apply_permutation
+from cnf.lattice.permutations import VonormPermutation, ConormPermutation, VONORM_PERMUTATION_TO_CONORM_PERMUTATION, compose_permutations, apply_permutation, is_permutation_set_closed
 
 
 def test_vonorm_permutation():
@@ -43,22 +43,13 @@ def test_are_vonorm_permutations_an_s7_subgroup():
     # Note, this test is not for functionality, but for probing the
     # character of these groups
     vperms = set(VONORM_PERMUTATION_TO_CONORM_PERMUTATION.keys())
-    
-    for p1 in vperms:
-        for p2 in vperms:
-            composed = compose_permutations(p1, p2)
-            assert composed in vperms
-
+    assert is_permutation_set_closed(vperms)
 
 def test_are_conorm_permutations_an_s7_subgroup():
     # Note, this test is not for functionality, but for probing the
     # character of these groups
     cperms = set(VONORM_PERMUTATION_TO_CONORM_PERMUTATION.values())
-    
-    for p1 in cperms:
-        for p2 in cperms:
-            composed = compose_permutations(p1, p2)
-            assert composed in cperms
+    assert is_permutation_set_closed(cperms)
 
 def test_are_permutation_groups_isomorphic():
     # Note, this test is not for functionality, but for probing the

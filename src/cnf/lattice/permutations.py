@@ -76,13 +76,19 @@ def find_matching_permutations():
         json.dump(matching_pairs, f)
 
 def compose_permutations(p1, p2):
-    result = []
-    for idx in range(len(p1)):
-        result.append(p2[p1[idx]])
-    return tuple(result)
+    return tuple(apply_permutation(p2, p1))
 
 def apply_permutation(to_permute, permutation):
     permuted_vals = []
     for p in permutation:
         permuted_vals.append(to_permute[p])
     return permuted_vals
+
+def is_permutation_set_closed(permutations):
+    for p1 in permutations:
+        for p2 in permutations:
+            composed = compose_permutations(p1, p2)
+            
+            if composed not in permutations:
+                return False
+    return True
