@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-import cnf.basis_normal_form.utils as bnf_utils
+import cnf.motif.utils as bnf_utils
 
 @pytest.mark.parametrize(
     "unnormalized_coords,expected_coords",

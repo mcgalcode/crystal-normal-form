@@ -2,12 +2,14 @@ import pytest
 import numpy as np
 
 from pymatgen.core.composition import Element
-from cnf.basis_normal_form import ElementPositionMap
-import cnf.basis_normal_form.utils as bnf_utils
+from cnf.motif import AtomicMotif, FractionalMotif
+from cnf.lattice.superbasis import Superbasis
+
+import cnf.motif.utils as bnf_utils
 
 def test_can_initialize(sn2_o4_els_and_positions):
     els, positions = sn2_o4_els_and_positions
-    el_pos_map = ElementPositionMap.from_elements_and_positions(els, positions)
+    el_pos_map = FractionalMotif.from_elements_and_positions(els, positions)
 
     for el, pos in zip(els, positions):
         stored_positions = el_pos_map.get_element_positions(el)
@@ -19,13 +21,13 @@ def test_can_initialize(sn2_o4_els_and_positions):
 
         assert found_match, f"No match found for {el} at {pos}"
 
-def test_can_report_length(sn2_o4_el_pos_map):
-    assert len(sn2_o4_el_pos_map) == 6
+def test_can_report_length(sn2_o4_motif: FractionalMotif):
+    assert len(sn2_o4_motif) == 6
 
-def test_can_report_elements(sn2_o4_el_pos_map):
-    assert "Sn" in sn2_o4_el_pos_map.unique_elements()
-    assert "O" in sn2_o4_el_pos_map.unique_elements()
-    assert len(sn2_o4_el_pos_map.unique_elements()) == 2
+def test_can_report_elements(sn2_o4_motif: FractionalMotif):
+    assert "Sn" in sn2_o4_motif.unique_elements()
+    assert "O" in sn2_o4_motif.unique_elements()
+    assert len(sn2_o4_motif.unique_elements()) == 2
 
 def test_can_sort_positions():
     elements = ["H", "Br", "O", "O"]
@@ -35,7 +37,7 @@ def test_can_sort_positions():
         (0.1, 0.1, 0.1),
         (0.2, 0.1, 0.8)
     ]
-    el_pos_map = ElementPositionMap.from_elements_and_positions(elements, positions)
+    el_pos_map = FractionalMotif.from_elements_and_positions(elements, positions)
     sorted_positions = el_pos_map.get_sorted_discretized_positions(10)
     assert np.all(sorted_positions[3] == [5, 6, 4])
     assert np.all(sorted_positions[1] == [1, 1, 1])
@@ -52,7 +54,7 @@ def test_can_shift_positions(
     els, original_positions = sn2_o4_els_and_positions
     shifted_positions = [bnf_utils.shift_coords(np.array(c), shift_vector) for c in original_positions]
 
-    original_map = ElementPositionMap.from_elements_and_positions(els, original_positions)
+    original_map = FractionalMotif.from_elements_and_positions(els, original_positions)
     shifted_map = original_map.shift_origin(shift_vector)
 
     for el, shifted_pos in zip(els, shifted_positions):
@@ -76,3 +78,25 @@ def test_from_element_position():
         (0, 0, 0),
         (0.5, 0.2, 0.8)
     ]
+
+def test_can_get_cartesian_coords_after_transform():
+    lattice_vecs = [[0,2,1], [1, 0, 0], [1, 0, 2]]
+    sb = Superbasis.from_generating_vecs(lattice_vecs)
+    motif = FractionalMotif.from_elements_and_positions(["Li", "Li"], [(0.25, 0.25, 0.25), (0.5, 0.5, 0)])
+
+    cartesian_coords = motif.compute_cartesian_coords_in_basis(sb)
+    assert (cartesian_coords.positions[0] == np.array([0.5, 0.5, 0.75])).all()
+    assert (cartesian_coords.positions[1] == np.array([0.5, 1, 0.5])).all()
+
+    transform = np.array([
+        [0, 1, 0],
+        [0, 0, 1],
+        [1, 0, 0],
+    ])
+
+    transformed_sb = sb.apply_matrix_transform(transform)
+    transformed_motif = motif.transform(transform)
+
+    transformed_cart_coords = transformed_motif.compute_cartesian_coords_in_basis(transformed_sb)
+    assert (transformed_cart_coords.positions[0] == np.array([0.5, 0.5, 0.75])).all()
+    assert (transformed_cart_coords.positions[1] == np.array([0.5, 1, 0.5])).all()

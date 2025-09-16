@@ -1,6 +1,6 @@
 import pytest
 
-from cnf.basis_normal_form import ElementPositionMap
+from cnf.motif.atomic_motif import FractionalMotif
 
 SN_2_O_4_POSITIONS = [
     (0, 0.3, 0.3),
@@ -17,6 +17,6 @@ def sn2_o4_els_and_positions():
     return elements, SN_2_O_4_POSITIONS
 
 @pytest.fixture
-def sn2_o4_el_pos_map(sn2_o4_els_and_positions):
+def sn2_o4_motif(sn2_o4_els_and_positions):
     els, positions = sn2_o4_els_and_positions
-    return ElementPositionMap.from_elements_and_positions(els, positions)
+    return FractionalMotif.from_elements_and_positions(els, positions)

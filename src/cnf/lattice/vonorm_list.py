@@ -2,6 +2,7 @@ import enum
 import numpy as np
 import copy
 from .sorting import swap_vonorm_idxs
+from .conorm_list import ConormList
 
 # This matrix is found on page 48 of David's thesis
 VONORM_TO_DOT_PRODUCTS = np.array([
@@ -44,11 +45,9 @@ SECONDARY_VONORM_LABELS_TO_IDXS = {
     (1, 2): 6,
 }
 
-
 def to_canonical_pair(pair):
     pair = list(pair)
     return tuple(sorted(pair))
-
 
 class VonormList():
 
@@ -57,7 +56,7 @@ class VonormList():
 
     @property
     def conorms(self):
-        return (1 / 2) * VONORM_TO_DOT_PRODUCTS @ self.vonorms[:6]
+        return ConormList((1 / 2) * VONORM_TO_DOT_PRODUCTS @ self.vonorms[:6])
     
     def is_obtuse(self, tol=0):
         return all([c <= tol for c in self.conorms])
