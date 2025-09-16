@@ -3,6 +3,7 @@ import numpy as np
 import copy
 from .sorting import swap_vonorm_idxs
 from .conorm_list import ConormList
+from .permutations import apply_permutation
 
 # This matrix is found on page 48 of David's thesis
 VONORM_TO_DOT_PRODUCTS = np.array([
@@ -74,10 +75,7 @@ class VonormList():
             return VonormList(new_vonorms)
     
     def apply_permutation(self, permutation: tuple):
-        new_vonorms = []
-        for p in permutation:
-            new_vonorms.append(self.vonorms[p])
-        return VonormList(tuple(new_vonorms))
+        return VonormList(tuple(apply_permutation(self.vonorms, permutation)))
     
     def selling_transform(self) -> tuple["VonormList", tuple[int, int]]:
         positive_conorm_indices = [i for i, conorm in enumerate(self.conorms) if conorm > 0]
