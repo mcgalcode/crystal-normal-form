@@ -40,6 +40,8 @@ def test_compose_permutations():
     assert composition_2 == (2, 0, 1)
 
 def test_are_vonorm_permutations_an_s7_subgroup():
+    # Note, this test is not for functionality, but for probing the
+    # character of these groups
     vperms = set(VONORM_PERMUTATION_TO_CONORM_PERMUTATION.keys())
     
     for p1 in vperms:
@@ -49,9 +51,28 @@ def test_are_vonorm_permutations_an_s7_subgroup():
 
 
 def test_are_conorm_permutations_an_s7_subgroup():
-    vperms = set(VONORM_PERMUTATION_TO_CONORM_PERMUTATION.values())
+    # Note, this test is not for functionality, but for probing the
+    # character of these groups
+    cperms = set(VONORM_PERMUTATION_TO_CONORM_PERMUTATION.values())
     
-    for p1 in vperms:
-        for p2 in vperms:
+    for p1 in cperms:
+        for p2 in cperms:
             composed = compose_permutations(p1, p2)
-            assert composed in vperms
+            assert composed in cperms
+
+def test_are_permutation_groups_isomorphic():
+    # Note, this test is not for functionality, but for probing the
+    # character of these groups
+
+    # Identity required for isomorphism:
+    # f(ab) = f(a)f(b)
+    for v_p1 in VONORM_PERMUTATION_TO_CONORM_PERMUTATION:
+        for v_p2 in VONORM_PERMUTATION_TO_CONORM_PERMUTATION:
+            c_p1 = VONORM_PERMUTATION_TO_CONORM_PERMUTATION[v_p1]
+            c_p2 = VONORM_PERMUTATION_TO_CONORM_PERMUTATION[v_p2]
+
+            v_composed = compose_permutations(v_p1, v_p2)
+            c_composed = compose_permutations(c_p1, c_p2)
+
+            #      f(a)f(b)   =  f(ab)
+            assert c_composed == VONORM_PERMUTATION_TO_CONORM_PERMUTATION[v_composed]
