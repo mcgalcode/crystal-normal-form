@@ -74,3 +74,15 @@ def find_matching_permutations():
     
     with open("matching_perms.json", 'w+') as f:
         json.dump(matching_pairs, f)
+
+def compose_permutations(p1, p2):
+    result = []
+    for idx in range(len(p1)):
+        result.append(p2[p1[idx]])
+    return tuple(result)
+
+def apply_permutation(to_permute, permutation):
+    permuted_vals = []
+    for p in permutation:
+        permuted_vals.append(to_permute[p])
+    return permuted_vals
