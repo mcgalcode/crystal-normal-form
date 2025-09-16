@@ -78,7 +78,22 @@ class AtomicMotif():
     def __repr__(self):
         return self.map.__repr__()
     
-
+    def __eq__(self, other: 'AtomicMotif'):
+        els_eq = tuple(self.atoms) == tuple(other.atoms)
+        if not els_eq:
+            return False
+        
+        def lists_of_np_arrays_approx_eq(l1, l2):
+            l1_tuples = set([tuple(np.round(l, 5)) for l in l1])
+            l2_tuples = set([tuple(np.round(l, 5)) for l in l2])
+            return l1_tuples == l2_tuples and len(l1) == len(l2)
+            
+        for el in self.unique_elements():
+            self_positions = self.get_element_positions(el)
+            other_positions = other.get_element_positions(el)
+            if not lists_of_np_arrays_approx_eq(self_positions, other_positions):
+                return False
+        return True 
 class FractionalMotif(AtomicMotif):
 
     @classmethod

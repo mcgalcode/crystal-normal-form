@@ -1,9 +1,11 @@
 import pytest
 import numpy as np
 
-from pymatgen.core.composition import Element
+from pymatgen.core.lattice import Lattice
 from cnf.motif import AtomicMotif, FractionalMotif
+from cnf.lattice.permutations import VONORM_PERMUTATION_TO_CONORM_PERMUTATION, VonormPermutation
 from cnf.lattice.superbasis import Superbasis
+from cnf.lattice.unimodular import get_unimodular_matrix_from_voronoi_vector_idxs
 
 import cnf.motif.utils as bnf_utils
 
@@ -100,3 +102,48 @@ def test_can_get_cartesian_coords_after_transform():
     transformed_cart_coords = transformed_motif.compute_cartesian_coords_in_basis(transformed_sb)
     assert (transformed_cart_coords.positions[0] == np.array([0.5, 0.5, 0.75])).all()
     assert (transformed_cart_coords.positions[1] == np.array([0.5, 1, 0.5])).all()
+
+def test_compare_equality():
+    motif1 = FractionalMotif.from_elements_and_positions(["Li", "Li"], [(0.25, 0.25, 0.25), (0.5, 0.5, 0)])
+    motif2 = FractionalMotif.from_elements_and_positions(["Li", "Li"], [(0.25, 0.25, 0.25), (0.5, 0.5, 0)])
+    assert motif1 == motif2
+
+    motif1 = FractionalMotif.from_elements_and_positions(["Li", "Li"], [(0.25, 0.25, 0.25), (0.5, 0.5, 0)])
+    motif2 = FractionalMotif.from_elements_and_positions(["Li", "Li"], [(0.5, 0.5, 0), (0.25, 0.25, 0.25)])
+    assert motif1 == motif2
+
+    motif1 = FractionalMotif.from_elements_and_positions(["Li", "Si"], [(0.25, 0.25, 0.25), (0.5, 0.5, 0)])
+    motif2 = FractionalMotif.from_elements_and_positions(["Li", "Li"], [(0.25, 0.25, 0.25), (0.5, 0.5, 0)])
+    assert not motif1 == motif2
+
+    motif1 = FractionalMotif.from_elements_and_positions(["Li", "Si"], [(0.25, 0.25, 0.25), (0.5, 0.5, 0)])
+    motif2 = FractionalMotif.from_elements_and_positions(["Li", "Si"], [(0.25, 0.35, 0.25), (0.5, 0.5, 0)])
+    assert not motif1 == motif2
+
+    motif1 = FractionalMotif.from_elements_and_positions(["Li", "Si"], [(0.25, 0.35, 0.25), (0.5, 0.5, 0)])
+    motif2 = FractionalMotif.from_elements_and_positions(["Li", "Si"], [(0.25, 0.35, 0.25), (0.5, 0.5, 0)])
+    assert motif1 == motif2
+
+def test_cartesian_coords_not_changed_by_unimodular():
+    lattice = Lattice.orthorhombic(1.0, 2.0, 1.5)
+    sb = Superbasis.from_pymatgen_lattice(lattice)
+    motif = FractionalMotif.from_elements_and_positions(["Li", "Li"], [(0.25, 0.25, 0.25), (0.5, 0.5, 0)])
+    original_cart_coords = motif.compute_cartesian_coords_in_basis(sb)
+
+    correct = []
+    incorrect = []
+
+    for perm in VONORM_PERMUTATION_TO_CONORM_PERMUTATION:
+        mat = VonormPermutation(perm).to_unimodular_matrix()
+        permuted_sb = sb.apply_matrix_transform(mat)
+        transformed_cart_corods = motif.apply_unimodular(mat).compute_cartesian_coords_in_basis(permuted_sb)
+
+        if original_cart_coords == transformed_cart_corods:
+            correct.append(perm)
+        else:
+            incorrect.append(perm)
+    
+    assert len(correct) == len(VONORM_PERMUTATION_TO_CONORM_PERMUTATION)
+
+    
+
