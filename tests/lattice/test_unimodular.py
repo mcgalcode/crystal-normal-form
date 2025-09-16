@@ -79,3 +79,10 @@ def test_get_unimodular_matrix_for_swap_series():
     assert (mat.T[0] == [-1, -1, -1]).all()
     assert (mat.T[1] == [0, -1, -1]).all()
     assert (mat.T[2] == [-1, 0, -1]).all()
+
+def test_roundtrip_unimodular_class():
+    example_unimodular = uni.get_unimodular_matrix_for_swap((0,1))
+    before = uni.UnimodularMatrix(example_unimodular)
+    after = uni.UnimodularMatrix.from_tuple(before.tuple)
+
+    assert np.all(before.matrix == after.matrix)
