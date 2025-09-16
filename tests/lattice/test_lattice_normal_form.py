@@ -30,10 +30,6 @@ def test_can_round_trip_trivial_discretization():
     print(lnf2.to_superbasis())
     print(lnf3.to_superbasis())
 
-
-
-
-
 def test_lnf_for_zr_hcp(Zr_HCP_lattice):
 
     lnf = LatticeNormalForm.from_pymatgen_lattice(Zr_HCP_lattice, lattice_step_size=1.5, return_transforms=False)

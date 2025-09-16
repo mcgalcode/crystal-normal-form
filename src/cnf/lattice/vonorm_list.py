@@ -118,7 +118,37 @@ class VonormList():
         conorm_v_i_dot_v_j = self.conorms[VECTOR_PAIRS_TO_CONORM_IDXS[vector_pair]]
         new_vonorm_list[ij_idx] = self.vonorms[ij_idx] - 4 * conorm_v_i_dot_v_j
         return VonormList(new_vonorm_list), acute_vector_pair
+
+    def to_generators(self, epsilon: float):
+        v0_dot_v1, v0_dot_v2, _, v1_dot_v2, _, _ = self.conorms # * epsilon
+
+        v0_norm = np.sqrt(self[0] * epsilon)
+        v1_norm = np.sqrt(self[1] * epsilon)
+        v2_norm = np.sqrt(self[2] * epsilon)
+
+        x = v0_dot_v1 / (epsilon ** 2 * v0_norm * v1_norm) # Max
+        # x = v0_dot_v1 * epsilon / (v0_norm * v1_norm) # David
+
+        y = np.sqrt(1 - x ** 2) # Max + David
+
+        a = v0_dot_v2 / (epsilon ** 2 * v0_norm * v2_norm) # Max
+        # a = v0_dot_v2 * epsilon / (v0_norm * v2_norm) # David
+        
+        b = (1 / y) * (v1_dot_v2 / (epsilon ** 2 * v1_norm * v2_norm) - x * a) # Max
+        # b = (1 / y) * (v1_dot_v2 * epsilon / (v1_norm * v2_norm) - x * a) # David
+
+        c = np.sqrt(1 - a ** 2 - b ** 2)
+
+        v0 = epsilon * v0_norm * np.array([1, 0, 0])
+        v1 = epsilon * v1_norm * np.array([x, y, 0])
+        v2 = epsilon * v2_norm * np.array([a, b, c])
+        return np.array([v0, v1, v2])
     
+    def to_superbasis(self, epsilon: float = 1.0):
+        from .superbasis import Superbasis
+        return Superbasis.from_generating_vecs(self.to_generators(epsilon=epsilon))
+
+
     def __repr__(self):
         numbers = " ".join([str(v) for v in self.vonorms])
         return f"Vonorms({numbers})"
@@ -128,3 +158,6 @@ class VonormList():
     
     def __hash__(self):
         return tuple(self.vonorms).__hash__()
+    
+    def __getitem__(self, key):
+        return self.vonorms[key]
