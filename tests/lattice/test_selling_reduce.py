@@ -3,7 +3,7 @@ import numpy as np
 
 from cnf.lattice import VonormList, Superbasis
 from cnf.lattice.utils import selling_reduce
-from cnf.lattice_normal_form.rounding import DiscretizedVonormComputer
+from cnf.lattice.rounding import DiscretizedVonormComputer
 from pymatgen.core.lattice import Lattice
 
 @pytest.fixture

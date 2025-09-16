@@ -1,4 +1,4 @@
-import cnf.lattice_normal_form.unimodular as uni
+import cnf.lattice.unimodular as uni
 import numpy as np
 
 def test_get_unimodular_matrix_from_voronoi_vector_idxs():

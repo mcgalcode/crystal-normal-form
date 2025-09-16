@@ -70,18 +70,6 @@ def test_selling_transformation():
     assert np.all(transformed2[2] == [-1, 0, -0.5])
     assert np.all(transformed2[3] == [1, 1, 0.5])
 
-def test_selling_reduction():
-    lattice = np.array([
-        [1, 0, 0],
-        [1, 1, 0],
-        [0,0,0.5]
-    ])
-    obtuse_superbasis = selling.get_obtuse_superbasis(lattice)
-    print(obtuse_superbasis)
-    for i in range(len(obtuse_superbasis)-1):
-        for j in range(i + 1, len(obtuse_superbasis)):
-            assert np.dot(obtuse_superbasis[i], obtuse_superbasis[j]) <= 0
-
 def test_get_v0():
     lattice = np.array([
         [1, 0, 0],

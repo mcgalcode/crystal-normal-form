@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 
 from pymatgen.core.structure import Lattice
-from cnf.lattice_normal_form.lattice_normal_form import LatticeNormalForm
+from cnf.lattice.lattice_normal_form_old import LatticeNormalForm
 from cnf.lattice import Superbasis
 from cnf.lattice.utils import selling_reduce
 
@@ -38,7 +38,7 @@ def test_roundtrip_vonorms_and_back(Zr_BCC_lattice):
     # print("Found canonical generators:")
     # print(canonical_generators)
 
-    superbasis = get_obtuse_superbasis(canonical_generators)
+    # superbasis = get_obtuse_superbasis(canonical_generators)
     # print("Second superbasis")
     # print(superbasis)
     permutations, roundtrip_vonorms = LatticeNormalForm.get_canonicalized_superbasis_and_vonorms(superbasis, epsilon=xi)

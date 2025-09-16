@@ -2,10 +2,9 @@ import pytest
 import numpy as np
 
 from pymatgen.core.lattice import Lattice
-from cnf.lattice_normal_form import DiscretizedVonormComputer
+from cnf.lattice.rounding import DiscretizedVonormComputer
 from cnf.lattice.utils import selling_reduce
-from cnf.lattice import Superbasis, VonormList
-from cnf.lattice_normal_form.lattice_normal_form import LatticeNormalForm
+from cnf.lattice import Superbasis
 
 @pytest.fixture
 def Zr_BCC_lattice():
