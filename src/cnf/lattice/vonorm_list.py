@@ -73,10 +73,11 @@ class VonormList():
             new_vonorms = swap_vonorm_idxs(i, j, self.vonorms, in_place=False)
             return VonormList(new_vonorms)
     
-    def stabilizer(self):
-        # What permutations of this list produce the same
-        # values?
-        pass
+    def apply_permutation(self, permutation: tuple):
+        new_vonorms = []
+        for p in permutation:
+            new_vonorms.append(self.vonorms[p])
+        return VonormList(tuple(new_vonorms))
     
     def selling_transform(self) -> tuple["VonormList", tuple[int, int]]:
         positive_conorm_indices = [i for i, conorm in enumerate(self.conorms) if conorm > 0]
