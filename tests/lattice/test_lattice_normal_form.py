@@ -30,8 +30,8 @@ def test_can_round_trip_trivial_discretization():
     lnf2: LatticeNormalForm = LatticeNormalForm.from_superbasis(lnf1.to_superbasis(), lattice_step_size=1.0, return_transforms=False)
     lnf3: LatticeNormalForm = LatticeNormalForm.from_superbasis(lnf2.to_superbasis(), lattice_step_size=1.0, return_transforms=False)
 
-    print(lnf2.to_superbasis())
-    print(lnf3.to_superbasis())
+    assert lnf2.to_superbasis() == lnf3.to_superbasis()
+    assert lnf1.to_superbasis() == lnf3.to_superbasis()
 
 def test_lnf_for_zr_hcp(Zr_HCP_lattice):
 
