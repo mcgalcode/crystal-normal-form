@@ -66,45 +66,6 @@ def find_first_acute_pair(vecs: np.array):
 def get_v0_from_generating_vecs(generating_vecs):
     return sum([-np.array(v) for v in generating_vecs])
 
-def get_obtuse_superbasis(lattice_generating_vecs: np.array):
-    """Given any basis for a lattice, returns the unique set of obtuse superbasis
-    vectors. Note that these vectors are not assigned any particular labels,
-    so producing the vonorms will first require you to be intentional about assigning
-    indices to these vectors.
-
-    Parameters
-    ----------
-    lattice_generating_vecs : np.array
-        A numpy array where each ROW is a lattice basis vector
-    """
-    # Use the transpose because we expect the basis vecs to come in 
-    # the standard form (row vectors)
-    current_basis_vecs = np.copy(lattice_generating_vecs)
-
-    # First, compute the fourth vector of the superbasis
-    # This is just the sum of the others.
-    v0 = get_v0_from_generating_vecs(current_basis_vecs)
-    current_basis_vecs = np.array([v0, *current_basis_vecs])
-    acute_pair = find_first_acute_pair(current_basis_vecs)
-
-    MAX_NUM_ATTEMPTS = 100
-    num_attempts = 0
-    # NEXT: We actually have to look through all pairs (including v0) to find the acute vector pairs...
-    while acute_pair is not None and num_attempts < MAX_NUM_ATTEMPTS:
-        # We find the first pair that is currently acute
-        first_acute_idx, second_acute_idx = acute_pair
-        current_basis_vecs = apply_selling_transformation(
-            current_basis_vecs,
-            first_acute_idx,
-            second_acute_idx
-        )
-
-        acute_pair = find_first_acute_pair(current_basis_vecs)
-        num_attempts += 1
-        # print(current_basis_vecs)
-
-    return current_basis_vecs
-
 def apply_selling_transformation(superbasis_vectors: np.array,
                                  first_acute_idx: int,
                                  second_acute_idx: int) -> np.array:
