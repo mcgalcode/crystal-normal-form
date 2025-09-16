@@ -5,6 +5,7 @@ from .lattice.permutations import VonormPermutation
 from .motif.atomic_motif import FractionalMotif
 from .lattice.utils import selling_reduce
 from .lattice.rounding import DiscretizedVonormComputer
+from .lattice.lattice_normal_form import LatticeNormalForm
 from .motif.basis_normal_form import BasisNormalForm
 
 class CrystalNormalForm:
@@ -16,37 +17,17 @@ class CrystalNormalForm:
                                   superbasis: Superbasis,
                                   lattice_step_size: float,
                                   motif_step_size: int):
-        vonorms = superbasis.compute_vonorms()
-        vonorms = VonormList(DiscretizedVonormComputer(vonorms.vonorms, lattice_step_size).find_closest_valid_vonorms())
-        reduced_vonorms, _, transform_mat = selling_reduce(vonorms, return_transform_mat=True)
-        motif = motif.apply_unimodular(transform_mat)
-        conorms = reduced_vonorms.conorms
-
-        permissible_permutations = conorms.permissible_permutations
-        permuted_vonorm_lists: list[tuple[VonormList, VonormPermutation]] = []
-        for conorm_permutation in permissible_permutations:
-            vonorm_permutation = conorm_permutation.to_vonorm_permutation()
-            permuted_vlist = reduced_vonorms.apply_permutation(vonorm_permutation)
-            permuted_vonorm_lists.append((permuted_vlist, vonorm_permutation))
-
-        sorted_vlists = sorted(permuted_vonorm_lists, key=lambda pair: pair[0].vonorms, reverse=False)
-
-        # print(f"Identified permissible vonorm permutations:")
-        # for pair in sorted_vlists:
-        #     print(f"{pair[1]} -> {pair[0]}")
         
-        stabilizer_perms = [pair[1] for pair in permuted_vonorm_lists if pair[0] == sorted_vlists[0][0]]    
-        # print("")
-
-        # print(f"Identified stabilizers permutations for maximally ascending {sorted_vlists[0][0]}:")
-        # for s in stabilizer_perms:
-        #     print(f"{s}")
+        lnf, selling_transform, stabilizer_neighbor_permutations = LatticeNormalForm.from_superbasis(superbasis,
+                                                                                                     lattice_step_size,
+                                                                                                     return_transforms=True)
         
-        # print("")
+        motif = motif.apply_unimodular(selling_transform)
+    
 
         bnfs: list[BasisNormalForm] = []
-        for stabilizer_permutation in stabilizer_perms:
-            unimodular_transform = -1*stabilizer_permutation.to_unimodular_matrix()
+        for stabilizer_permutation in stabilizer_neighbor_permutations:
+            unimodular_transform = stabilizer_permutation.to_unimodular_matrix()
             transformed_motif = motif.apply_unimodular(unimodular_transform)
             bnf = BasisNormalForm.from_motif(transformed_motif, motif_step_size)
             bnfs.append(bnf)
@@ -54,7 +35,7 @@ class CrystalNormalForm:
         sorted_bnfs = sorted(bnfs, key=lambda bnf: bnf.coord_list, reverse=True)
         canonical_bnf = sorted_bnfs[0]
         # print(canonical_bnf)
-        return cls(sorted_vlists[0][0], canonical_bnf)
+        return cls(lnf, canonical_bnf, lattice_step_size, motif_step_size)
     
     @classmethod
     def from_motif_and_basis_vecs(cls,
@@ -71,7 +52,11 @@ class CrystalNormalForm:
         superbasis = Superbasis.from_pymatgen_structure(struct)
         return cls.from_motif_and_superbasis(motif, superbasis, lattice_step_size, motif_step)
     
-    def __init__(self, canonical_vonorms, canonical_basis, xi=1.5, delta=30):
+    def __init__(self,
+                 lattice_normal_form: LatticeNormalForm,
+                 basis_normal_form: BasisNormalForm,
+                 xi: float,
+                 delta: int):
         """
         Represents a crystal structure in its unique, discretized normal form.
 
@@ -82,8 +67,8 @@ class CrystalNormalForm:
             xi (float): The lattice discretization parameter (e.g., in Å²).
             delta (int): The basis discretization parameter (number of divisions).
         """
-        self.vonorms = canonical_vonorms
-        self.basis = canonical_basis
+        self.lattice_normal_form = lattice_normal_form
+        self.basis_normal_form = basis_normal_form
         self.xi = xi
         self.delta = delta
 
@@ -98,5 +83,5 @@ class CrystalNormalForm:
         pass
 
     def __repr__(self):
-        return (f"CrystalNormalForm(vonorms={self.vonorms}, basis={self.basis}, "
+        return (f"CrystalNormalForm(lattice={self.lattice_normal_form}, motif={self.basis_normal_form}, "
                 f"xi={self.xi}, delta={self.delta})")
