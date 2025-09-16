@@ -1,4 +1,5 @@
 import numpy as np
+from pymatgen.core.structure import Structure
 from .utils import shift_coords, discretize_coords, sort_elements, sort_number_lists
 
 from ..lattice import Superbasis
@@ -6,8 +7,11 @@ from ..lattice import Superbasis
 class AtomicMotif():
 
     
+        
     @classmethod
     def from_elements_and_positions(cls, elements, positions):
+        if len(elements) != len(positions):
+            raise ValueError("Must instantiate motifs with same num elements and positions")
         element_to_positions_map = {}
 
         for el, pos in zip(elements, positions):
@@ -22,6 +26,10 @@ class AtomicMotif():
         self.map = element_to_positions_map
         self.sorted_elements = sort_elements(self.unique_elements())
         self.sorted_elements.reverse()
+        elements, positions = self.to_elements_and_positions()
+        self.atoms = elements
+        self.positions = positions
+        self.coord_matrix = np.array(self.positions).T
     
     def get_element_positions(self, el: str):
         if el not in self.map:
@@ -29,9 +37,11 @@ class AtomicMotif():
         
         return self.map[el]
 
-
     def unique_elements(self):
         return list(self.map.keys())
+
+    def element_count(self, el):
+        return len(self.get_element_positions(el))
 
     def to_elements_and_positions(self):
         elements  = []
@@ -57,7 +67,7 @@ class AtomicMotif():
             for pos in pos_list:
                 new_map[el].append(shift_coords(pos, shift_vector))
         
-        return AtomicMotif(new_map)
+        return self.__class__(new_map)
 
     def is_valid_shift_vector(self, shift_vector: np.array):
         return True
@@ -69,18 +79,29 @@ class AtomicMotif():
         return self.map.__repr__()
     
 
-class FractionalMotif():
+class FractionalMotif(AtomicMotif):
+
+    @classmethod
+    def from_pymatgen_structure(cls, pmg_struct: Structure):
+        elements = [site.species for site in pmg_struct.sites]
+        coords = [site.frac_coords for site in pmg_struct.sites]
+        return cls.from_elements_and_positions(elements, coords)
 
     def get_discretized_positions(self, el: str, delta: int):
         unrounded = self.get_element_positions(el)
         return [discretize_coords(c, delta) for c in unrounded]
     
     def transform(self, transform: np.array):
-        transformed_coords = self.relative_coords @ transform
-        return FractionalMotif(transformed_coords, self.atom_species)
+        transformed_coords = self.coord_matrix.T @ transform
+        return FractionalMotif.from_elements_and_positions(self.atoms, transformed_coords)
+    
+    def apply_unimodular(self, unimodular: np.array):
+        transformed = np.linalg.inv(unimodular) @ self.coord_matrix
+        return FractionalMotif.from_elements_and_positions(self.atoms, transformed.T)
     
     def compute_cartesian_coords_in_basis(self, basis: Superbasis):
-        return CartesianMotif(self.relative_coords @ basis.generating_vecs())
+        cart_coords = basis.generating_vecs().T @ self.coord_matrix
+        return CartesianMotif.from_elements_and_positions(self.atoms, cart_coords.T)
 
     def get_sorted_discretized_positions(self, delta, element_order = None):
         if element_order is None:
@@ -98,13 +119,16 @@ class FractionalMotif():
             element_order = self.sorted_elements
 
         discretized_positions_list = self.get_sorted_discretized_positions(delta, element_order)
-        return [el for coord_list in discretized_positions_list for el in coord_list]
+        return tuple(el for coord_list in discretized_positions_list for el in coord_list)
 
-    def is_valid_shift_vector(self, shift_vector: np.array):
-        return np.all(shift_vector >= 0 and shift_vector < 1.0)
 
 class CartesianMotif(AtomicMotif):
     
-    pass
+    @classmethod
+    def from_pymatgen_structure(cls, pmg_struct: Structure):
+        elements = [site.species for site in pmg_struct.sites]
+        coords = [site.coords for site in pmg_struct.sites]
+        return CartesianMotif.from_elements_and_positions(elements, coords)
+        
     
     
