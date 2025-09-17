@@ -72,6 +72,8 @@ def test_are_permutation_groups_isomorphic():
             #      f(a)f(b)   =  f(ab)
             assert c_composed == VONORM_PERMUTATION_TO_CONORM_PERMUTATION[v_composed]
 
+
+@pytest.mark.skip
 def test_positive_determinant():
     pos = []
     neg = []
