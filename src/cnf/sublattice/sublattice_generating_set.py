@@ -1,4 +1,4 @@
-from .utils import valid_denominator_sets
+from .utils import valid_denominator_sets, is_valid_denominator_set
 from itertools import permutations
 from .vector import Vector, ModFractionVector
 from .fraction import Fraction
@@ -51,7 +51,7 @@ class SublatticeGeneratingSet():
                                 Fraction(m_3, denoms[2])
                             ])
                             reduced_denoms = [f.denom for f in vec.coords]
-                            if math.lcm(*reduced_denoms) == N:
+                            if is_valid_denominator_set(reduced_denoms, N):
                                 cyclic_groups.add(CyclicGroup.from_generator(vec, N))
 
         return cls(cyclic_groups)
