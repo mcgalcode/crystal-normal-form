@@ -34,7 +34,7 @@ def test_share_cyclic_group():
     v1 = Vector([Fraction(1,4), Fraction.zero(), Fraction(3, 4)])
     v2 = Vector([Fraction(3,4), Fraction.zero(), Fraction(1, 4)])
     assert v1.in_same_cyclic_group(v2, 4)
-    assert v2.in_san
+    assert v2.in_same_cyclic_group(v1, 4)
 
 def test_set_of_vectors():
     f1 = Fraction(1, 2)
