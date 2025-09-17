@@ -1,10 +1,10 @@
-import math
 import numpy as np
 
-from .fraction import Fraction
-from .fraction_vector import FractionVector
+from ...linalg.matrix_tuple import MatrixTuple
+from ..fraction_vector import FractionVector
+from ..fraction import Fraction
 
-class UpperTriangular():
+class GammaMatrixTuple(MatrixTuple):
 
     @classmethod
     def from_k_vector(cls, k_vec: FractionVector, N):
@@ -74,5 +74,5 @@ class UpperTriangular():
         
         return cls(mat)
 
-    def __init__(self, matrix):
-        self.matrix = matrix
+    def generates_same_sublattice(self, other: 'GammaMatrixTuple'):
+        return MatrixTuple(self.inverse() @ other.matrix).is_unimodular()

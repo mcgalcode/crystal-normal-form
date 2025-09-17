@@ -1,15 +1,11 @@
 import pytest
 import numpy as np
 
-from cnf.sublattice.upper_triangular import UpperTriangular
 from cnf.sublattice import Fraction, FractionVector
 
-def np_mats_eq(mat1, mat2):
-    return np.all(mat1 == mat2)
-
-@pytest.mark.parametrize(
-    "k_vec,expected_mat",
-    [
+@pytest.fixture(scope='module')
+def n_equals_4_generators_with_kvecs():
+    return [
         # Row 1
         (FractionVector([Fraction(1,4), Fraction.zero(), Fraction.zero()]),
          np.array([
@@ -184,18 +180,51 @@ def np_mats_eq(mat1, mat2):
             [0, 0, 1],
         ])),
     ]
-)
-def test_can_instantiate_from_k_vec(k_vec, expected_mat):
-    ut = UpperTriangular.from_k_vector(k_vec, 4)
-    exact_eq = np_mats_eq(ut.matrix, expected_mat)
-    if not exact_eq:
-        inverse = np.linalg.inv(expected_mat).astype(np.int64)
-        computed = ut.matrix.astype(np.int64)
 
-        test = np.linalg.inv(expected_mat) @ ut.matrix
-        # print(test)
-        # for row in test:
-        #     for entry in row:
-        #         assert isinstance(entry, np.int64)
-        
-        assert np.abs(np.linalg.det(test)) == 1
+@pytest.fixture(scope='module')
+def n_equals_4_generators_from_kvecs(n_equals_4_generators_with_kvecs):
+    return [pair[1] for pair in n_equals_4_generators_with_kvecs]
+
+@pytest.fixture(scope='module')
+def n_equals_4_generators_not_from_kvecs():
+    return [
+        np.array([
+            [2, 0, 0],
+            [0, 2, 0],
+            [0, 0, 1],
+        ]),
+        np.array([
+            [2, 0, 1],
+            [0, 2, 0],
+            [0, 0, 1],
+        ]),
+        np.array([
+            [2, 0, 0],
+            [0, 2, 1],
+            [0, 0, 1],
+        ]),
+        np.array([
+            [2, 0, 1],
+            [0, 2, 1],
+            [0, 0, 1],
+        ]),
+        np.array([
+            [2, 0, 0],
+            [0, 1, 0],
+            [0, 0, 2],
+        ]),
+        np.array([
+            [2, 1, 0],
+            [0, 1, 0],
+            [0, 0, 2],
+        ]),
+        np.array([
+            [1, 0, 0],
+            [0, 2, 0],
+            [0, 0, 2],
+        ]),
+    ]
+
+@pytest.fixture(scope=['module'])
+def n_equals_4_generators(n_equals_4_generators_from_kvecs, n_equals_4_generators_not_from_kvecs):
+    return n_equals_4_generators_not_from_kvecs + n_equals_4_generators_from_kvecs
