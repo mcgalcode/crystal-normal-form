@@ -28,10 +28,52 @@ class Fraction():
         new_num = int(self.num % self.denom)
         return Fraction(new_num, self.denom)
     
+    def copy(self):
+        return Fraction(self.num, self.denom)
+
+    def to_float(self):
+        return self.num / self.denom
+    
+    def is_int(self):
+        return self.num % self.denom == 0
+    
+    def is_zero(self):
+        return self == Fraction.zero()
+    
+    def to_int(self):
+        if not self.is_int():
+            raise RuntimeError(f"Tried to convert non-int fraction {self} to int")
+        return int(self.num / self.denom)
+    
+    def add(self, other: 'Fraction'):
+        common_denom = self.common_denominator(other)
+        compatible_self = self.convert_denominator(common_denom)
+        compatible_other = other.convert_denominator(common_denom)
+        assert compatible_other.denom == compatible_self.denom
+        new_num = compatible_self.num + compatible_other.num
+        return Fraction(new_num, common_denom).simplify()
+
+    def convert_denominator(self, new_denominator):
+        if new_denominator >= self.denom:
+            if not new_denominator % self.denom == 0:
+                raise ValueError(f"New denominator ({new_denominator}) is not an integer multiple of old {self.denom}")
+
+            multiple = int(new_denominator / self.denom)
+            return Fraction(self.num * multiple, new_denominator)
+        else:
+            raise ValueError(f"Converting to lower denom (old: {self.denom}, new: {new_denominator}) not supported :()")
+
+
+    def common_denominator(self, other: 'Fraction'):
+        return math.lcm(self.denom, other.denom)
+    
     def as_tuple(self):
         return (self.num, self.denom)
 
-    def scale(self, scale: 'Fraction'):
+    def multiply(self, scale):
+        if isinstance(scale, int):
+            scale = Fraction.whole_number(scale)
+
         return Fraction(self.num * scale.num, self.denom * scale.denom)
         
     def is_multiple_of(self, other: 'Fraction'):
@@ -42,7 +84,7 @@ class Fraction():
         elif self.num != 0 and other.num == 0:
             return False
         
-        common_multiple = math.lcm(self.denom, other.denom)
+        common_multiple = self.common_denominator(other)
         # print(common_multiple)
         self_converted_num = int(self.num * common_multiple / self.denom)
         other_converted_num = int(other.num * common_multiple / other.denom)

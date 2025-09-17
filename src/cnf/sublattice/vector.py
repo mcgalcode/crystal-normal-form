@@ -28,7 +28,7 @@ class Vector():
         return False
     
     def scale(self, scale: Fraction):
-        return Vector([c.scale(scale) for c in self.coords])
+        return Vector([c.multiply(scale) for c in self.coords])
     
     def mod_one(self):
         return Vector([f.mod_one() for f in self.coords])
