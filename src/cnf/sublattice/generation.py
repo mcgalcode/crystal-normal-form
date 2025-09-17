@@ -1,6 +1,7 @@
 import numpy as np
 
 from .gamma_matrices import GammaMatrixTuple
+from ..motif import FractionalMotif
 
 def transform_lattice_vecs(lvecs: np.array, gmat: GammaMatrixTuple):
     """Converts lattice vecs (as rows) to supercell lattice vecs
@@ -49,3 +50,18 @@ class MotifTranslationSet():
         for v in self.vecs:
             images.append(transformed + v)
         return images
+    
+    def apply_to_motif(self, motif: FractionalMotif):
+        
+        if not isinstance(motif, FractionalMotif):
+            raise ValueError(f"Tried to apply motif translation to something other than FractionalMotif instance: {motif}")
+        
+        new_el_pos_map = {}
+
+        for el in motif.unique_elements():
+            new_el_pos_map[el] = []
+            for pos in motif.get_element_positions(el):
+                position_images = self.apply_to_coord(np.asarray(pos))
+                new_el_pos_map[el].extend(position_images)
+        
+        return FractionalMotif(new_el_pos_map)

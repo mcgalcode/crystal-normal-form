@@ -3,6 +3,8 @@ import numpy as np
 
 from cnf.sublattice.generation import transform_lattice_vecs, MotifTranslationSet, transform_basis_position
 from cnf.sublattice.gamma_matrices import GammaMatrixGroup, GammaMatrixTuple
+from cnf.motif import FractionalMotif
+
 from pymatgen.core.lattice import Lattice
 
 @pytest.fixture
@@ -77,3 +79,65 @@ def test_motif_translations_for_simple_gamma():
     assert (0.75, 0.25, 0.75) in images
     assert (0.75, 0.75, 0.25) in images
     assert (0.75, 0.75, 0.75) in images
+
+def test_motif_translations_for_simple_motif_1():
+    motif = FractionalMotif({
+        "Li": [[0.5, 0.5, 0.5]],
+        "C": [[0.25, 0.5, 0.75]],
+    })
+    
+    mat = np.array([
+        [2, 0, 0],
+        [0, 2, 0],
+        [0, 0, 2],
+    ])
+    translations = MotifTranslationSet.from_gamma_matrix(GammaMatrixTuple(mat))
+    extended_motif = translations.apply_to_motif(motif)
+    assert len(extended_motif) == 8 * len(motif)
+
+    new_li_positions = [tuple(pos) for pos in extended_motif.get_element_positions("Li")]
+    assert (0.25, 0.25, 0.25) in new_li_positions
+    assert (0.25, 0.25, 0.75) in new_li_positions
+    assert (0.25, 0.75, 0.25) in new_li_positions
+    assert (0.75, 0.25, 0.25) in new_li_positions
+    assert (0.25, 0.75, 0.75) in new_li_positions
+    assert (0.75, 0.25, 0.75) in new_li_positions
+    assert (0.75, 0.75, 0.25) in new_li_positions
+    assert (0.75, 0.75, 0.75) in new_li_positions
+
+    new_c_positions = [tuple(pos) for pos in extended_motif.get_element_positions("C")]
+    assert (0.125, 0.25, 0.375) in new_c_positions
+    assert (0.125, 0.25, 0.875) in new_c_positions
+    assert (0.125, 0.75, 0.375) in new_c_positions
+    assert (0.625, 0.25, 0.375) in new_c_positions
+    assert (0.125, 0.75, 0.875) in new_c_positions
+    assert (0.625, 0.25, 0.875) in new_c_positions
+    assert (0.625, 0.75, 0.375) in new_c_positions
+    assert (0.625, 0.75, 0.875) in new_c_positions
+
+def test_motif_translations_for_simple_motif_2():
+    motif = FractionalMotif({
+        "Li": [[0.5, 0.5, 0.5]],
+        "C": [[0.25, 0.5, 0.75]],
+    })
+    
+    mat = np.array([
+        [2, 0, 0],
+        [0, 2, 0],
+        [0, 0, 1],
+    ])
+    translations = MotifTranslationSet.from_gamma_matrix(GammaMatrixTuple(mat))
+    extended_motif = translations.apply_to_motif(motif)
+    assert len(extended_motif) == 4 * len(motif)
+
+    new_li_positions = [tuple(pos) for pos in extended_motif.get_element_positions("Li")]
+    assert (0.25, 0.25, 0.5) in new_li_positions
+    assert (0.25, 0.75, 0.5) in new_li_positions
+    assert (0.75, 0.25, 0.5) in new_li_positions
+    assert (0.75, 0.75, 0.5) in new_li_positions
+
+    new_c_positions = [tuple(pos) for pos in extended_motif.get_element_positions("C")]
+    assert (0.125, 0.25, 0.75) in new_c_positions
+    assert (0.125, 0.75, 0.75) in new_c_positions
+    assert (0.625, 0.25, 0.75) in new_c_positions
+    assert (0.625, 0.75, 0.75) in new_c_positions

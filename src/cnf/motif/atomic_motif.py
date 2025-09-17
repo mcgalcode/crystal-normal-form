@@ -5,8 +5,6 @@ from .utils import shift_coords, discretize_coords, sort_elements, sort_number_l
 from ..lattice import Superbasis
 
 class AtomicMotif():
-
-    
         
     @classmethod
     def from_elements_and_positions(cls, elements, positions):
