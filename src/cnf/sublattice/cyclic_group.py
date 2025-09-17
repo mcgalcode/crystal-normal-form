@@ -1,21 +1,20 @@
-from .fraction import Fraction
-from .vector import Vector
+from .fraction_vector import FractionVector, ModFractionVector
 from .utils import is_valid_denominator_set
 
 class CyclicGroup():
 
     @classmethod
-    def from_generator(cls, generator: Vector, N: int):
-        generator = generator.simplify().mod_one()
+    def from_generator(cls, generator: FractionVector, N: int):
+        generator = ModFractionVector.from_vec(generator)
         group = []
         for scalar in range(1,N):
-            scaled = generator.scale(Fraction.whole_number(scalar)).mod_one().simplify()
+            scaled = generator.scale(scalar)
             denoms = [f.denom for f in scaled.coords]
             if is_valid_denominator_set(denoms, N):
                 group.append(scaled)
         return cls(generator, group, N)
 
-    def __init__(self, generator, members: list[Vector], N: int):
+    def __init__(self, generator, members: list[FractionVector], N: int):
         self.N = N
         self.generator = generator
         self.members = frozenset(members)
@@ -29,7 +28,7 @@ class CyclicGroup():
         return self.members.__hash__()
     
     def __contains__(self, item):
-        if not isinstance(item, Vector):
+        if not isinstance(item, FractionVector):
             raise ValueError(f"Tested for containment in CyclicGroup item of wrong type {type(item)}")
         
         return item in self.members

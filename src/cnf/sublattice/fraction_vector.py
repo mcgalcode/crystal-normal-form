@@ -1,6 +1,6 @@
 from .fraction import Fraction
 
-class Vector():
+class FractionVector():
 
     def __init__(self, coords: list[Fraction]):
         self.coords = coords
@@ -11,13 +11,13 @@ class Vector():
     def __repr__(self):
         return f"{self.coords}"
     
-    def __eq__(self, other: 'Vector'):
+    def __eq__(self, other: 'FractionVector'):
         return all([self_coord == other_coord for self_coord, other_coord in zip(self.coords, other.coords)])
 
     def __hash__(self):
         return tuple([c.simplify().as_tuple() for c in self.coords]).__hash__()
     
-    def in_same_cyclic_group(self, other: 'Vector', N: int):
+    def in_same_cyclic_group(self, other: 'FractionVector', N: int):
         other_mod_one = other.mod_one()
         for scalar in range(2,N):
             scaled_self = self.scale(Fraction.whole_number(scalar))
@@ -27,16 +27,19 @@ class Vector():
                 return True
         return False
     
-    def scale(self, scale: Fraction):
-        return Vector([c.multiply(scale) for c in self.coords])
+    def scale(self, scale):
+        if isinstance(scale, int):
+            scale = Fraction.whole_number(scale)
+
+        return self.__class__([c.multiply(scale) for c in self.coords])
     
     def mod_one(self):
-        return Vector([f.mod_one() for f in self.coords])
+        return self.__class__([f.mod_one() for f in self.coords])
     
     def simplify(self):
-        return Vector([f.simplify() for f in self.coords])
+        return self.__class__([f.simplify() for f in self.coords])
     
-    def is_multiple_of(self, other: 'Vector'):
+    def is_multiple_of(self, other: 'FractionVector'):
         multiple_test_results = [this.is_multiple_of(that) for this, that in zip(self.coords, other.coords)]
         # print(multiple_test_results)
         if False in multiple_test_results:
@@ -51,7 +54,11 @@ class Vector():
             vals.append(c.num / c.denom)
         return tuple(vals)
 
-class ModFractionVector(Vector):
+class ModFractionVector(FractionVector):
+
+    @classmethod
+    def from_vec(cls, vec: FractionVector):
+        return cls(vec.coords)
 
     def __init__(self, coords: list[Fraction]):
         self.coords = [c.simplify().mod_one() for c in coords]

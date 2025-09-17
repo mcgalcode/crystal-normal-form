@@ -1,6 +1,6 @@
 import pytest
 
-from cnf.sublattice import Fraction, Vector, CyclicGroup, SublatticeGeneratingSet
+from cnf.sublattice import Fraction, FractionVector, CyclicGroup, SublatticeGeneratingSet
 
 @pytest.fixture
 def expected_n4_vecs():
@@ -10,37 +10,37 @@ def expected_n4_vecs():
     f0 = Fraction.zero()
 
     expected_n4_vecs = [
-        Vector([f14, f0, f0]),
-        Vector([f0, f14, f0]),
-        Vector([f14, f14, f0]),
-        Vector([f12, f14, f0]),
-        Vector([f34, f14, f0]),
-        Vector([f14, f12, f0]),
-        Vector([f0, f0, f14]),
+        FractionVector([f14, f0, f0]),
+        FractionVector([f0, f14, f0]),
+        FractionVector([f14, f14, f0]),
+        FractionVector([f12, f14, f0]),
+        FractionVector([f34, f14, f0]),
+        FractionVector([f14, f12, f0]),
+        FractionVector([f0, f0, f14]),
         ##
-        Vector([f14, f0, f14]),
-        Vector([f12, f0, f14]),
-        Vector([f34, f0, f14]),
-        Vector([f0, f14, f14]),
-        Vector([f14, f14, f14]),
-        Vector([f12, f14, f14]),
-        Vector([f34, f14, f14]),
+        FractionVector([f14, f0, f14]),
+        FractionVector([f12, f0, f14]),
+        FractionVector([f34, f0, f14]),
+        FractionVector([f0, f14, f14]),
+        FractionVector([f14, f14, f14]),
+        FractionVector([f12, f14, f14]),
+        FractionVector([f34, f14, f14]),
         ##
-        Vector([f0, f12, f14]),
-        Vector([f14, f12, f14]),
-        Vector([f12, f12, f14]),
-        Vector([f34, f12, f14]),
-        Vector([f0, f34, f14]),
-        Vector([f14, f34, f14]),
-        Vector([f12, f34, f14]),
+        FractionVector([f0, f12, f14]),
+        FractionVector([f14, f12, f14]),
+        FractionVector([f12, f12, f14]),
+        FractionVector([f34, f12, f14]),
+        FractionVector([f0, f34, f14]),
+        FractionVector([f14, f34, f14]),
+        FractionVector([f12, f34, f14]),
         ##
-        Vector([f34, f34, f14]),
-        Vector([f14, f0, f12]),
-        Vector([f0, f14, f12]),
-        Vector([f14, f14, f12]),
-        Vector([f12, f14, f12]),
-        Vector([f34, f14, f12]),
-        Vector([f14, f12, f12]),
+        FractionVector([f34, f34, f14]),
+        FractionVector([f14, f0, f12]),
+        FractionVector([f0, f14, f12]),
+        FractionVector([f14, f14, f12]),
+        FractionVector([f12, f14, f12]),
+        FractionVector([f34, f14, f12]),
+        FractionVector([f14, f12, f12]),
     ]
 
     chosen_evecs = set()

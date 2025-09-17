@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 
 from cnf.sublattice.upper_triangular import UpperTriangular
-from cnf.sublattice import Fraction, Vector
+from cnf.sublattice import Fraction, FractionVector
 
 def np_mats_eq(mat1, mat2):
     return np.all(mat1 == mat2)
@@ -11,43 +11,43 @@ def np_mats_eq(mat1, mat2):
     "k_vec,expected_mat",
     [
         # Row 1
-        (Vector([Fraction(1,4), Fraction.zero(), Fraction.zero()]),
+        (FractionVector([Fraction(1,4), Fraction.zero(), Fraction.zero()]),
          np.array([
             [4, 0, 0],
             [0, 1, 0],
             [0, 0, 1],
         ])),
-        (Vector([Fraction.zero(), Fraction(1,4), Fraction.zero()]),
+        (FractionVector([Fraction.zero(), Fraction(1,4), Fraction.zero()]),
          np.array([
             [1, 0, 0],
             [0, 4, 0],
             [0, 0, 1],
         ])),
-        (Vector([Fraction(1,4), Fraction(1,4), Fraction.zero()]),
+        (FractionVector([Fraction(1,4), Fraction(1,4), Fraction.zero()]),
          np.array([
             [4, 3, 0],
             [0, 1, 0],
             [0, 0, 1],
         ])),
-        (Vector([Fraction(1,2), Fraction(1,4), Fraction.zero()]),
+        (FractionVector([Fraction(1,2), Fraction(1,4), Fraction.zero()]),
          np.array([
             [2, 1, 0],
             [0, 2, 0],
             [0, 0, 1],
         ])),
-        (Vector([Fraction(3,4), Fraction(1,4), Fraction.zero()]),
+        (FractionVector([Fraction(3,4), Fraction(1,4), Fraction.zero()]),
          np.array([
             [4, 1, 0],
             [0, 1, 0],
             [0, 0, 1],
         ])),
-        (Vector([Fraction(1,4), Fraction(1,2), Fraction.zero()]),
+        (FractionVector([Fraction(1,4), Fraction(1,2), Fraction.zero()]),
          np.array([
             [4, 2, 0],
             [0, 1, 0],
             [0, 0, 1],
         ])),
-        (Vector([Fraction(0,4), Fraction(0,4), Fraction(1,4)]),
+        (FractionVector([Fraction(0,4), Fraction(0,4), Fraction(1,4)]),
          np.array([
             [1, 0, 0],
             [0, 1, 0],
@@ -55,129 +55,129 @@ def np_mats_eq(mat1, mat2):
         ])),
 
         # # Row 2
-        (Vector([Fraction(1,4), Fraction(0,4), Fraction(1,4)]),
+        (FractionVector([Fraction(1,4), Fraction(0,4), Fraction(1,4)]),
          np.array([
             [4, 0, 3],
             [0, 1, 0],
             [0, 0, 1],
         ])),
-        (Vector([Fraction(1,2), Fraction(0,4), Fraction(1,4)]),
+        (FractionVector([Fraction(1,2), Fraction(0,4), Fraction(1,4)]),
          np.array([
             [2, 0, 1],
             [0, 1, 0],
             [0, 0, 2],
         ])),
-        (Vector([Fraction(1,4), Fraction(1,4), Fraction.zero()]),
+        (FractionVector([Fraction(1,4), Fraction(1,4), Fraction.zero()]),
          np.array([
             [4, 3, 0],
             [0, 1, 0],
             [0, 0, 1],
         ])),
-        (Vector([Fraction(1,4), Fraction(1,4), Fraction.zero()]),
+        (FractionVector([Fraction(1,4), Fraction(1,4), Fraction.zero()]),
          np.array([
             [4, 3, 0],
             [0, 1, 0],
             [0, 0, 1],
         ])),
-        (Vector([Fraction(1,4), Fraction(1,4), Fraction(1,4)]),
+        (FractionVector([Fraction(1,4), Fraction(1,4), Fraction(1,4)]),
          np.array([
             [4, 3, 3],
             [0, 1, 0],
             [0, 0, 1],
         ])),
-        (Vector([Fraction(1,2), Fraction(1,4), Fraction(1,4)]),
+        (FractionVector([Fraction(1,2), Fraction(1,4), Fraction(1,4)]),
          np.array([
             [2, 1, 0],
             [0, 2, 3],
             [0, 0, 1],
         ])),
-        (Vector([Fraction(3,4), Fraction(1,4), Fraction(1,4)]),
+        (FractionVector([Fraction(3,4), Fraction(1,4), Fraction(1,4)]),
          np.array([
             [4, 1, 1],
             [0, 1, 0],
             [0, 0, 1],
         ])),
         # Row 3
-        (Vector([Fraction(0,4), Fraction(1,2), Fraction(1,4)]),
+        (FractionVector([Fraction(0,4), Fraction(1,2), Fraction(1,4)]),
          np.array([
             [1, 0, 0],
             [0, 2, 1],
             [0, 0, 2],
         ])),
-        (Vector([Fraction(1,4), Fraction(1,2), Fraction(1,4)]),
+        (FractionVector([Fraction(1,4), Fraction(1,2), Fraction(1,4)]),
          np.array([
             [4, 2, 3],
             [0, 1, 0],
             [0, 0, 1],
         ])),
-        (Vector([Fraction(1,2), Fraction(1,2), Fraction(1,4)]),
+        (FractionVector([Fraction(1,2), Fraction(1,2), Fraction(1,4)]),
          np.array([
             [2, 1, 1],
             [0, 1, 0],
             [0, 0, 2],
         ])),
-        (Vector([Fraction(3,4), Fraction(1,2), Fraction(1,4)]),
+        (FractionVector([Fraction(3,4), Fraction(1,2), Fraction(1,4)]),
          np.array([
             [4, 2, 1],
             [0, 1, 0],
             [0, 0, 1],
         ])),
-        (Vector([Fraction(0,4), Fraction(3,4), Fraction(1,4)]),
+        (FractionVector([Fraction(0,4), Fraction(3,4), Fraction(1,4)]),
          np.array([
             [1, 0, 0],
             [0, 4, 1],
             [0, 0, 1],
         ])),
-        (Vector([Fraction(1,4), Fraction(3,4), Fraction(1,4)]),
+        (FractionVector([Fraction(1,4), Fraction(3,4), Fraction(1,4)]),
          np.array([
             [4, 1, 3],
             [0, 1, 0],
             [0, 0, 1],
         ])),
-        (Vector([Fraction(1,2), Fraction(3,4), Fraction(1,4)]),
+        (FractionVector([Fraction(1,2), Fraction(3,4), Fraction(1,4)]),
          np.array([
             [2, 1, 0],
             [0, 2, 1],
             [0, 0, 1],
         ])),
         # Row 4
-        (Vector([Fraction(3,4), Fraction(3,4), Fraction(1,4)]),
+        (FractionVector([Fraction(3,4), Fraction(3,4), Fraction(1,4)]),
          np.array([
             [4, 3, 1],
             [0, 1, 0],
             [0, 0, 1],
         ])),
-        (Vector([Fraction(1,4), Fraction(0,4), Fraction(1,2)]),
+        (FractionVector([Fraction(1,4), Fraction(0,4), Fraction(1,2)]),
          np.array([
             [4, 0, 2],
             [0, 1, 0],
             [0, 0, 1],
         ])),
-        (Vector([Fraction(0,4), Fraction(1,4), Fraction(1,2)]),
+        (FractionVector([Fraction(0,4), Fraction(1,4), Fraction(1,2)]),
          np.array([
             [1, 0, 0],
             [0, 4, 2],
             [0, 0, 1],
         ])),
-        (Vector([Fraction(1,4), Fraction(1,4), Fraction(1,2)]),
+        (FractionVector([Fraction(1,4), Fraction(1,4), Fraction(1,2)]),
          np.array([
             [4, 3, 2],
             [0, 1, 0],
             [0, 0, 1],
         ])),
-        (Vector([Fraction(1,2), Fraction(1,4), Fraction(1,2)]),
+        (FractionVector([Fraction(1,2), Fraction(1,4), Fraction(1,2)]),
          np.array([
             [2, 1, 0],
             [0, 2, 2],
             [0, 0, 1],
         ])),
-        (Vector([Fraction(3,4), Fraction(1,4), Fraction(1,2)]),
+        (FractionVector([Fraction(3,4), Fraction(1,4), Fraction(1,2)]),
          np.array([
             [4, 1, 2],
             [0, 1, 0],
             [0, 0, 1],
         ])),
-        (Vector([Fraction(1,4), Fraction(1,2), Fraction(1,2)]),
+        (FractionVector([Fraction(1,4), Fraction(1,2), Fraction(1,2)]),
          np.array([
             [4, 2, 2],
             [0, 1, 0],

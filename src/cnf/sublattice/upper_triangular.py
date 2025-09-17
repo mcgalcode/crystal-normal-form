@@ -2,12 +2,12 @@ import math
 import numpy as np
 
 from .fraction import Fraction
-from .vector import Vector
+from .fraction_vector import FractionVector
 
 class UpperTriangular():
 
     @classmethod
-    def from_k_vector(cls, k_vec: Vector, N):
+    def from_k_vector(cls, k_vec: FractionVector, N):
 
         mat = np.zeros((3,3))
 

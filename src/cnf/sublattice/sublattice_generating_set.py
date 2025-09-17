@@ -1,6 +1,6 @@
 from .utils import valid_denominator_sets, is_valid_denominator_set
 from itertools import permutations
-from .vector import Vector, ModFractionVector
+from .fraction_vector import FractionVector, ModFractionVector
 from .fraction import Fraction
 from .cyclic_group import CyclicGroup
 import math
@@ -64,7 +64,7 @@ class SublatticeGeneratingSet():
         self._cyclic_groups = frozenset(cgs)
     
     @property
-    def representatives(self) -> list[Vector]:
+    def representatives(self) -> list[FractionVector]:
         reps = [cg.representative for cg in self._cyclic_groups]
         return sorted(reps, key=lambda r: r.sortable_string())
     
