@@ -3,7 +3,8 @@ import numpy as np
 
 from itertools import permutations
 
-from cnf.lattice.unimodular import get_unimodular_matrix_from_voronoi_vector_idxs, UnimodularMatrix
+from cnf.linalg.matrix_tuple import MatrixTuple
+from cnf.lattice.unimodular import get_unimodular_matrix_from_voronoi_vector_idxs
 from cnf.lattice.permutations import VonormPermutation, ConormPermutation, VONORM_PERMUTATION_TO_CONORM_PERMUTATION, compose_permutations, apply_permutation, is_permutation_set_closed
 
 
@@ -78,17 +79,18 @@ def test_positive_determinant():
         mat = VonormPermutation(perm).to_unimodular_matrix()
         determinant = np.linalg.det(mat)
         if determinant == 1:
-            pos.append(UnimodularMatrix(mat).tuple)
+            pos.append(MatrixTuple(mat).tuple)
         elif determinant == -1:
-            neg.append(UnimodularMatrix(mat).tuple)
+            neg.append(MatrixTuple(mat).tuple)
         
     print(f"Positives: {len(pos)}")
     print(f"Negatives: {len(neg)}")
     assert len(pos) + len(neg) == len(VONORM_PERMUTATION_TO_CONORM_PERMUTATION)
 
     # Are these the same sets?
+    # They are not!
 
-    transformed_pos = [UnimodularMatrix(-UnimodularMatrix.from_tuple(mt).matrix).tuple for mt in pos]
+    transformed_pos = [MatrixTuple(-MatrixTuple.from_tuple(mt).matrix).tuple for mt in pos]
 
     assert len(transformed_pos) == len(neg)
     assert set(transformed_pos) == set(neg)
@@ -98,9 +100,9 @@ def test_s4_subgroup_isomorphism():
     s4_perms = set(permutations(range(4)))
     assert is_permutation_set_closed(s4_perms)
     matrices = [get_unimodular_matrix_from_voronoi_vector_idxs(p[1:]) for p in s4_perms]
-    mat_tuples = set([UnimodularMatrix(m).tuple for m in matrices])
+    mat_tuples = set([MatrixTuple(m).tuple for m in matrices])
     assert len(mat_tuples) == len(s4_perms)
 
     for m1 in matrices:
         for m2 in matrices:
-            assert UnimodularMatrix(m1 @ m2).tuple in mat_tuples
+            assert MatrixTuple(m1 @ m2).tuple in mat_tuples

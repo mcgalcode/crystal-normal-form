@@ -1,5 +1,6 @@
 import numpy as np
 from enum import Enum
+from ..linalg.matrix_tuple import MatrixTuple
 
 class VoronoiVectors(Enum):
 
@@ -67,22 +68,9 @@ def get_unimodular_matrix_for_swap_series(swap_series: list[tuple[int, int]]):
     return get_unimodular_matrix_from_voronoi_vector_idxs(labels[1:4])
 
 def is_unimodular_set_closed(unimodular_mats):
-    mat_tuples = set([UnimodularMatrix(m).tuple for m in unimodular_mats])
+    mat_tuples = set([MatrixTuple(m).tuple for m in unimodular_mats])
     assert len(mat_tuples) == len(unimodular_mats)
 
     for m1 in unimodular_mats:
         for m2 in unimodular_mats:
-            assert UnimodularMatrix(m1 @ m2).tuple in mat_tuples
-class UnimodularMatrix():
-
-    @classmethod
-    def from_tuple(cls, mat_tuple):
-        return cls(np.array(mat_tuple).reshape((3,3)))
-
-    def __init__(self, matrix: np.array):
-        self.matrix = matrix
-        entries = []
-        for row in matrix:
-            for val in row:
-                entries.append(val)
-        self.tuple = tuple([int(e) for e in entries])
+            assert MatrixTuple(m1 @ m2).tuple in mat_tuples

@@ -1,5 +1,5 @@
 from cnf.lattice.superbasis import Superbasis
-from cnf.lattice.unimodular import UnimodularMatrix
+from cnf.linalg.matrix_tuple import MatrixTuple
 from pymatgen.core.lattice import Lattice
 
 def test_v5_case():
@@ -57,7 +57,7 @@ def test_v1_case():
 
     unimodular_matrices = []
     for p in conorms.permissible_permutations:
-        unimodular_matrices.append(UnimodularMatrix(p.to_unimodular_matrix()))
+        unimodular_matrices.append(MatrixTuple(p.to_unimodular_matrix()))
     
     mat_tuples = [m.tuple for m in unimodular_matrices]
     print(f"{len(conorms.permissible_permutations)} distinct permutations")

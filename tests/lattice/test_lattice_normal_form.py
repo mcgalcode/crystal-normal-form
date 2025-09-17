@@ -4,7 +4,8 @@ import numpy as np
 from pymatgen.core.structure import Lattice
 from cnf.lattice.lattice_normal_form import LatticeNormalForm
 from cnf.lattice import Superbasis
-from cnf.lattice.unimodular import UnimodularMatrix, get_unimodular_matrix_from_voronoi_vector_idxs
+from cnf.linalg.matrix_tuple import MatrixTuple
+from cnf.lattice.unimodular import get_unimodular_matrix_from_voronoi_vector_idxs
 from cnf.lattice.permutations import is_permutation_set_closed, VonormPermutation
 from cnf.lattice.utils import selling_reduce
 from itertools import permutations
@@ -47,14 +48,14 @@ def test_is_stabilizer_closed():
     )
     stabilizer_perms = stabilizer_perms + [(0,1,2,3,4,5,6)]
     all_mats = [VonormPermutation(p).to_unimodular_matrix() for p in stabilizer_perms]
-    mat_strings = set([UnimodularMatrix(mat).tuple for mat in all_mats])
+    mat_strings = set([MatrixTuple(mat).tuple for mat in all_mats])
     print(mat_strings)
     for mat1 in all_mats:
         for mat2 in all_mats:
             result = mat1 @ mat2
-            if not UnimodularMatrix(result).tuple in mat_strings:
+            if not MatrixTuple(result).tuple in mat_strings:
                 print(result)
-                print(UnimodularMatrix(result).tuple)
+                print(MatrixTuple(result).tuple)
                 print(mat1)
                 print(mat2)
 
