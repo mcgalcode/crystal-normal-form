@@ -80,6 +80,12 @@ def test_group_adds_equivalent_matrix_only_once():
     assert group.contains_equivalent(mat)
     assert group.contains_exact(mat)
 
+def test_gamma_matrices_are_invertible():
+    for N in range(1,10):
+        group = GammaMatrixGroup.for_index(N)
+        for mat in group.matrices:
+            assert mat.inverse() is not None
+
 def test_gamma_matrix_group(all_n_equals_4_generators, n_equals_4_generators_from_kvecs, n_equals_4_generators_not_from_kvecs):
     N = 4
     # Build generators from kvecs
