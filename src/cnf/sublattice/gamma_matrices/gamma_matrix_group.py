@@ -24,7 +24,6 @@ class GammaMatrixGroup():
                 for row2 in possible_second_rows:
                     
                     gamma_matrix = np.diag(parcel)
-                    print(row1, row2, gamma_matrix)
                     gamma_matrix[0][1] = row1[0]
                     gamma_matrix[0][2] = row1[1]
                     gamma_matrix[1][2] = row2

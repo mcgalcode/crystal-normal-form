@@ -225,6 +225,6 @@ def n_equals_4_generators_not_from_kvecs():
         ]),
     ]
 
-@pytest.fixture(scope=['module'])
-def n_equals_4_generators(n_equals_4_generators_from_kvecs, n_equals_4_generators_not_from_kvecs):
+@pytest.fixture(scope='module')
+def all_n_equals_4_generators(n_equals_4_generators_from_kvecs, n_equals_4_generators_not_from_kvecs):
     return n_equals_4_generators_not_from_kvecs + n_equals_4_generators_from_kvecs

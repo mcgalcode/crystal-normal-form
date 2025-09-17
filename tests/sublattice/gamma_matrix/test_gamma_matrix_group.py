@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 
 from cnf.sublattice.gamma_matrices import GammaMatrixGroup, GammaMatrixTuple
+from cnf.sublattice.sublattice_generating_set import SublatticeGeneratingSet
 
 def test_group_can_add_matrix():
     group = GammaMatrixGroup()
@@ -79,8 +80,28 @@ def test_group_adds_equivalent_matrix_only_once():
     assert group.contains_equivalent(mat)
     assert group.contains_exact(mat)
 
-# def test_gamma_matrix_group(n_equals_4_generators):
-#     matrices = GammaMatrixGroup.for_index(4)
-#     for m in matrices:
-#         print(m)
-#     print(f"Found {len(matrices)} gamma matrices")
+def test_gamma_matrix_group(all_n_equals_4_generators, n_equals_4_generators_from_kvecs, n_equals_4_generators_not_from_kvecs):
+    N = 4
+    # Build generators from kvecs
+    kvec_group = GammaMatrixGroup()
+    kvec_generating_set = SublatticeGeneratingSet.from_sublattice_index(N)
+    for kvec in kvec_generating_set.representatives:
+        gmat = GammaMatrixTuple.from_k_vector(kvec, N)
+        kvec_group.add_matrix(gmat)
+    
+    assert len(kvec_group) == len(n_equals_4_generators_from_kvecs)
+    # Build generators using upper triangular algorithm
+    ut_group = GammaMatrixGroup.for_index(N)
+    assert len(ut_group) == len(all_n_equals_4_generators)
+
+    assert len(all_n_equals_4_generators) == 35
+
+    for generator in n_equals_4_generators_from_kvecs:
+        generator = GammaMatrixTuple(generator)
+        assert kvec_group.contains_equivalent(generator)
+        assert ut_group.contains_equivalent(generator)
+    
+    for generator in n_equals_4_generators_not_from_kvecs:
+        generator = GammaMatrixTuple(generator)
+        assert not kvec_group.contains_equivalent(generator)
+        assert ut_group.contains_equivalent(generator)
