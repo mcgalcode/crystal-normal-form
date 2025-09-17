@@ -42,3 +42,8 @@ def test_is_multiple():
     f2 = Fraction(3, 6)
     assert not f2.is_multiple_of(f1)
     assert not f1.is_multiple_of(f2)
+
+def test_set_of_fractions():
+    f1 = Fraction(1, 2)
+    f2 = Fraction(1, 2)
+    assert len(set([f1, f2])) == 1

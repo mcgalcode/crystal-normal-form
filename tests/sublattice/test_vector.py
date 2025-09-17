@@ -34,12 +34,14 @@ def test_share_cyclic_group():
     v1 = Vector([Fraction(1,4), Fraction.zero(), Fraction(3, 4)])
     v2 = Vector([Fraction(3,4), Fraction.zero(), Fraction(1, 4)])
     assert v1.in_same_cyclic_group(v2, 4)
+    assert v2.in_san
 
-# Excluding: [0, 1/4, 1/2] because [0, 1/4, 1/4] is already there
-# Excluding: [0, 1/4, 3/4] because [0, 1/4, 1/4] is already there
-# Excluding: [0, 1/2, 1/4] because [0, 1/4, 1/4] is already there
-# Excluding: [0, 3/4, 0] because [0, 1/4, 0] is already there
-# Excluding: [0, 3/4, 1/4] because [0, 1/4, 1/4] is already there
-# Excluding: [0, 3/4, 3/4] because [0, 1/4, 1/4] is already there
-# Excluding: [1/4, 0, 1/2] because [1/4, 0, 1/4] is already there
-# Excluding: [1/4, 0, 3/4] because [1/4, 0, 1/4] is already there
+def test_set_of_vectors():
+    f1 = Fraction(1, 2)
+    f2 = Fraction(1, 3)
+    f3 = Fraction(1, 4)
+    vec = Vector([f1, f2, f3])
+    vec2 = Vector([f1, f2, f3])
+    assert vec == vec2
+
+    assert len(set([vec, vec2])) == 1
