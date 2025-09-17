@@ -90,6 +90,7 @@ def test_positive_determinant():
 
     transformed_pos = [UnimodularMatrix(-UnimodularMatrix.from_tuple(mt).matrix).tuple for mt in pos]
 
+    assert len(transformed_pos) == len(neg)
     assert set(transformed_pos) == set(neg)
         
 
