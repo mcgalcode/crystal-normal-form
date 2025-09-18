@@ -9,12 +9,16 @@ DECREMENT = -1
 class DiscretizedVonormComputer():
 
     def __init__(self, true_vonorms, lattice_step_size):
-        self.true_vonorms = true_vonorms
+        self.true_vonorms = np.array(true_vonorms)
         self.lattice_step_size = lattice_step_size
 
     def compute_error_change(self, rounded_vnorms, idx, adjustment):
-        old_error = np.abs(rounded_vnorms[idx] * self.lattice_step_size - self.true_vonorms[idx])
-        new_error = np.abs((rounded_vnorms[idx] + adjustment) * self.lattice_step_size - self.true_vonorms[idx])
+        # old_error = np.abs(rounded_vnorms[idx] * self.lattice_step_size - self.true_vonorms[idx])
+        old_error = np.linalg.norm(rounded_vnorms * self.lattice_step_size - self.true_vonorms)
+        # new_error = np.abs((rounded_vnorms[idx] + adjustment) * self.lattice_step_size - self.true_vonorms[idx])
+        adjusted_rounded_vnorms = np.copy(rounded_vnorms)
+        adjusted_rounded_vnorms[idx] = rounded_vnorms[idx] + adjustment
+        new_error = np.linalg.norm(adjusted_rounded_vnorms * self.lattice_step_size - self.true_vonorms)
         return new_error - old_error
 
     def find_closest_valid_vonorms(self):
