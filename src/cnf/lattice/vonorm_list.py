@@ -120,6 +120,9 @@ class VonormList():
         ij_idx = SECONDARY_VONORM_LABELS_TO_IDXS[vector_pair]
         conorm_v_i_dot_v_j = self.conorms[VECTOR_PAIRS_TO_CONORM_IDXS[vector_pair]]
         new_vonorm_list[ij_idx] = self.vonorms[ij_idx] - 4 * conorm_v_i_dot_v_j
+        if isinstance(self.vonorms[ij_idx], int):
+            new_vonorm_list[ij_idx] = int(new_vonorm_list[ij_idx])
+            
         return VonormList(new_vonorm_list), acute_vector_pair
 
     def to_generators(self, epsilon: float):
