@@ -1,6 +1,6 @@
 import pytest
 
-from cnf.sublattice import Fraction, FractionVector, CyclicGroup, SublatticeGeneratingSet
+from cnf.sublattice import Fraction, FractionVector, CyclicGroup, KVecGeneratingSet
 
 @pytest.fixture
 def expected_n4_vecs():
@@ -57,7 +57,7 @@ def test_correctly_generates_sublattice_generating_set(expected_n4_vecs):
     assert len(expected_cyclic_groups) == len(expected_n4_vecs)
     assert len(expected_n4_vecs) == 28
 
-    generating_set = SublatticeGeneratingSet.from_sublattice_index(4)
+    generating_set = KVecGeneratingSet.from_sublattice_index(4)
     generated_cyclic_groups = generating_set._cyclic_groups
     excess_expected: set[CyclicGroup] = expected_cyclic_groups - generated_cyclic_groups
     for v in excess_expected:
@@ -77,4 +77,4 @@ def test_correctly_generates_sublattice_generating_set(expected_n4_vecs):
 
 def test_can_compare_sublattice_generators(expected_n4_vecs):
     cgs = [CyclicGroup.from_generator(g, 4) for g in expected_n4_vecs]
-    assert SublatticeGeneratingSet.from_sublattice_index(4) == SublatticeGeneratingSet(cgs)
+    assert KVecGeneratingSet.from_sublattice_index(4) == KVecGeneratingSet(cgs)

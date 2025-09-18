@@ -8,7 +8,7 @@ import math
 from typing import Iterable
 
 
-class SublatticeGeneratingSet():
+class KVecGeneratingSet():
     """Implements a method for identifying the unique k-vectors that
     generate unique sublattices. This essentially follows the process
     outlined on the top of page 34 of David's thesis. The summary paragraph
@@ -68,5 +68,5 @@ class SublatticeGeneratingSet():
         reps = [cg.representative for cg in self._cyclic_groups]
         return sorted(reps, key=lambda r: r.sortable_string())
     
-    def __eq__(self, other: 'SublatticeGeneratingSet'):
+    def __eq__(self, other: 'KVecGeneratingSet'):
         return self._cyclic_groups == other._cyclic_groups

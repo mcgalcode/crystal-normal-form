@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 
 from cnf.sublattice.gamma_matrices import GammaMatrixGroup, GammaMatrixTuple
-from cnf.sublattice.sublattice_generating_set import SublatticeGeneratingSet
+from cnf.sublattice.kvec_generating_set import KVecGeneratingSet
 
 def test_group_can_add_matrix():
     group = GammaMatrixGroup()
@@ -90,7 +90,7 @@ def test_gamma_matrix_group(all_n_equals_4_generators, n_equals_4_generators_fro
     N = 4
     # Build generators from kvecs
     kvec_group = GammaMatrixGroup()
-    kvec_generating_set = SublatticeGeneratingSet.from_sublattice_index(N)
+    kvec_generating_set = KVecGeneratingSet.from_sublattice_index(N)
     for kvec in kvec_generating_set.representatives:
         gmat = GammaMatrixTuple.from_k_vector(kvec, N)
         kvec_group.add_matrix(gmat)
