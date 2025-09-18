@@ -71,6 +71,12 @@ class CrystalNormalForm:
         self.basis_normal_form = basis_normal_form
         self.xi = xi
         self.delta = delta
+    
+    @property
+    def coords(self):
+        lnf_coords = self.lattice_normal_form.coords
+        bnf_coords = self.basis_normal_form.coord_list
+        return tuple(lnf_coords) + tuple(bnf_coords)
 
     def reconstruct(self) -> 'Structure':
         """
@@ -85,3 +91,9 @@ class CrystalNormalForm:
     def __repr__(self):
         return (f"CrystalNormalForm(lattice={self.lattice_normal_form}, motif={self.basis_normal_form}, "
                 f"xi={self.xi}, delta={self.delta})")
+    
+    def __eq__(self, other: 'CrystalNormalForm'):
+        return self.coords == other.coords
+    
+    def __hash__(self):
+        return self.coords.__hash__()
