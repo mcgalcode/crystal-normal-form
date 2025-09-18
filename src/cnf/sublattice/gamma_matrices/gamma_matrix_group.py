@@ -36,6 +36,10 @@ class GammaMatrixGroup():
         if matrices is None:
             matrices = set()
         self.matrices = set(matrices)
+
+    @property
+    def ordered_matrices(self):
+        return sorted(self.matrices, key=lambda m: m.tuple)
     
     def add_matrix(self, mat):
         if isinstance(mat, np.ndarray):
