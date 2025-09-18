@@ -13,7 +13,7 @@ def transform_lattice_vecs(lvecs: np.array, gmat: GammaMatrixTuple):
         The lattice vecs for which a supercell should be generated
         using gmat
     """
-    return lvecs.T @ gmat.matrix
+    return (lvecs.T @ gmat.matrix).T
 
 def transform_basis_position(basis_position: np.ndarray, gmat: GammaMatrixTuple):
     return gmat.inverse() @ basis_position

@@ -20,6 +20,23 @@ def various_lattices():
         Lattice.from_parameters(2.0, 1.0, 1.4, 45, 55, 65),
     ]
 
+def test_can_transform_lattice_generators():
+    generators = np.array([
+        [1, 2, 0],
+        [0, 2, 0],
+        [0, 1, 3],
+    ])
+
+    transform = GammaMatrixTuple(np.array([
+        [2, 0, 0],
+        [0, 2, 0],
+        [0, 0, 1],
+    ]))
+    transformed_generators = transform_lattice_vecs(generators, transform)
+    assert np.all(np.isclose(transformed_generators[0], [2, 4, 0]))
+    assert np.all(np.isclose(transformed_generators[1], [0, 4, 0]))
+    assert np.all(np.isclose(transformed_generators[2], [0, 1, 3]))
+
 def test_generating_matrices_yield_correct_volume_change(various_lattices):
     for N in range(1, 10):
         mat_group = GammaMatrixGroup.for_index(N)

@@ -5,6 +5,8 @@ from pymatgen.core.lattice import Lattice
 from cnf.lattice.rounding import DiscretizedVonormComputer
 from cnf.lattice.utils import selling_reduce
 from cnf.lattice import Superbasis
+from cnf.sublattice.generation import transform_lattice_vecs
+from cnf.sublattice.gamma_matrices import GammaMatrixTuple
 
 @pytest.fixture
 def Zr_BCC_lattice():
