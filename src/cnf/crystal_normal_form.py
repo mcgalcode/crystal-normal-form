@@ -7,9 +7,16 @@ from .lattice.utils import selling_reduce
 from .lattice.rounding import DiscretizedVonormComputer
 from .lattice.lattice_normal_form import LatticeNormalForm
 from .motif.basis_normal_form import BasisNormalForm
+from .unit_cell import UnitCell
 
 class CrystalNormalForm:
 
+    @classmethod
+    def from_unit_cell(cls,
+                       unit_cell: UnitCell,
+                       lattice_step_size: float,
+                       motif_step_size: int):
+        return cls.from_motif_and_superbasis(unit_cell.motif, unit_cell.superbasis, lattice_step_size, motif_step_size)
 
     @classmethod
     def from_motif_and_superbasis(cls,
