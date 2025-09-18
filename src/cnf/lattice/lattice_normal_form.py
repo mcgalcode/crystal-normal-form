@@ -43,9 +43,8 @@ class LatticeNormalForm():
         reduced_vonorms, _, selling_transform_mat = selling_reduce(vonorms, return_transform_mat=True)
         conorms = reduced_vonorms.conorms
 
-        permissible_permutations = conorms.permissible_permutations
         permuted_vonorm_lists: list[tuple[VonormList, VonormPermutation]] = []
-        for conorm_permutation in permissible_permutations:
+        for conorm_permutation in conorms.permissible_permutations:
             vonorm_permutation = conorm_permutation.to_vonorm_permutation()
             permuted_vlist = reduced_vonorms.apply_permutation(vonorm_permutation)
             permuted_vonorm_lists.append((permuted_vlist, vonorm_permutation))
@@ -73,4 +72,7 @@ class LatticeNormalForm():
         return f"LatticeNormalForm(vonorms={self.vonorms.vonorms},step_size={self.lattice_step_size})"
 
     def __eq__(self, other: 'LatticeNormalForm'):
-        return self.vonorms == other.vonorms
+        return self.coords == other.coords and self.lattice_step_size == other.lattice_step_size
+    
+    def __hash__(self):
+        return self.coords.__hash__()
