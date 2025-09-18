@@ -1,4 +1,6 @@
 import numpy as np
+from .vonorm_list import VonormList
+from .utils import selling_reduce
 
 PRIMARY_VONORM_IDXS = [0, 1, 2, 3]
 SECONDARY_VONORM_IDXS = [4,5,6]
@@ -8,19 +10,35 @@ DECREMENT = -1
 
 class DiscretizedVonormComputer():
 
-    def __init__(self, true_vonorms, lattice_step_size):
-        self.true_vonorms = np.array(true_vonorms)
-        self.lattice_step_size = lattice_step_size
+    @staticmethod
+    def discretize_vonorm_list(true_vonorm_list: VonormList, lattice_step_size: float):
+        return DiscretizedVonormComputer(true_vonorm_list, lattice_step_size).find_closest_valid_vonorms()
 
-    def compute_error_change(self, rounded_vnorms, idx, adjustment):
-        # old_error = np.abs(rounded_vnorms[idx] * self.lattice_step_size - self.true_vonorms[idx])
-        old_error = np.linalg.norm(rounded_vnorms * self.lattice_step_size - self.true_vonorms)
-        # new_error = np.abs((rounded_vnorms[idx] + adjustment) * self.lattice_step_size - self.true_vonorms[idx])
-        adjusted_rounded_vnorms = np.copy(rounded_vnorms)
-        adjusted_rounded_vnorms[idx] = rounded_vnorms[idx] + adjustment
-        new_error = np.linalg.norm(adjusted_rounded_vnorms * self.lattice_step_size - self.true_vonorms)
+    def __init__(self, vonorms: VonormList, lattice_step_size, verbose_log=False):
+        true_reduced_vonorms, _ = selling_reduce(vonorms)
+        self.true_reduced_vonorms = np.array(true_reduced_vonorms.vonorms)
+        self.original_vonorms = vonorms
+        self.lattice_step_size = lattice_step_size
+        self._verbose_log = verbose_log
+
+    def compute_error_change_at_idx(self, rounded_vnorms, idx, adjustment):
+        old_error = np.abs(rounded_vnorms[idx] * self.lattice_step_size - self.true_reduced_vonorms[idx])
+        new_error = np.abs((rounded_vnorms[idx] + adjustment) * self.lattice_step_size - self.true_reduced_vonorms[idx])
         return new_error - old_error
 
+    def compute_norm_error_change(self, rounded_vnorms, idx, adjustment):
+        old_error = np.linalg.norm(rounded_vnorms * self.lattice_step_size - self.true_reduced_vonorms)
+        adjusted_rounded_vnorms = np.copy(rounded_vnorms)
+        adjusted_rounded_vnorms[idx] = rounded_vnorms[idx] + adjustment
+        new_error = np.linalg.norm(adjusted_rounded_vnorms * self.lattice_step_size - self.true_reduced_vonorms)
+        return new_error - old_error
+    
+    def unrounded_discretized_vonorms(self):
+        return VonormList(np.array(self.true_reduced_vonorms) / self.lattice_step_size)
+    
+    def uncorrected_discretized_vonorms(self):
+        return VonormList([int(v) for v in np.round(np.array(self.true_reduced_vonorms) / self.lattice_step_size).astype(np.int64)])
+    
     def find_closest_valid_vonorms(self):
 
         # The discretized version of the vonorm list has to satisfy
@@ -31,7 +49,11 @@ class DiscretizedVonormComputer():
         # The vonorm list comes in the following order:
         #
         # (v0^2, v1^2, v2^2, v3^2, (v0 + v1)^2, (v0 + v2)^2, (v0 + v3)^2)
-        rounded_vonorms = np.round(np.array(self.true_vonorms) / self.lattice_step_size).astype(np.int64)
+        if self._verbose_log:
+            print(f"Unrounded, discretized: {self.unrounded_discretized_vonorms()}")
+            print(f"Rounded, discretized: {self.uncorrected_discretized_vonorms()}")
+
+        rounded_vonorms = np.round(np.array(self.true_reduced_vonorms) / self.lattice_step_size).astype(np.int64)
         primary_sum = np.sum(rounded_vonorms[:4])
         secondary_sum = np.sum(rounded_vonorms[4:])
         while primary_sum != secondary_sum:
@@ -54,12 +76,13 @@ class DiscretizedVonormComputer():
                 possible_changes.append((error_change, idx, adjustment))
 
             least_damaging_change = sorted(possible_changes)[0]
-            print(least_damaging_change)
             _, idx_to_adjust, adjustment = least_damaging_change
             rounded_vonorms[idx_to_adjust] = rounded_vonorms[idx_to_adjust] + adjustment
+            if self._verbose_log:
+                print(f"Correction (idx: {idx_to_adjust}, change: {adjustment}): {rounded_vonorms}...")
             primary_sum = np.sum(rounded_vonorms[:4])
             secondary_sum = np.sum(rounded_vonorms[4:])
         
-        return [int(vo) for vo in rounded_vonorms]
+        return VonormList([int(vo) for vo in rounded_vonorms])
 
         
