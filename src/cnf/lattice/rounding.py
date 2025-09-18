@@ -15,7 +15,7 @@ class DiscretizedVonormComputer():
         return DiscretizedVonormComputer(true_vonorm_list, lattice_step_size).find_closest_valid_vonorms()
 
     def __init__(self, vonorms: VonormList, lattice_step_size, verbose_log=False):
-        true_reduced_vonorms, _ = selling_reduce(vonorms)
+        true_reduced_vonorms, _ = selling_reduce(vonorms, tol=1e-5)
         self.true_reduced_vonorms = np.array(true_reduced_vonorms.vonorms)
         self.original_vonorms = vonorms
         self.lattice_step_size = lattice_step_size
@@ -72,7 +72,7 @@ class DiscretizedVonormComputer():
                     # In this case, we have to either INCREASE a PRIMARY vonorm
                     # or DECREASE a SECONDARY vonorm
                     adjustment = INCREMENT if idx in PRIMARY_VONORM_IDXS else DECREMENT
-                error_change = self.compute_error_change(rounded_vonorms, idx, adjustment)
+                error_change = self.compute_error_change_at_idx(rounded_vonorms, idx, adjustment)
                 possible_changes.append((error_change, idx, adjustment))
 
             least_damaging_change = sorted(possible_changes)[0]
