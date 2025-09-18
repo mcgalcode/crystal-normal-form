@@ -5,13 +5,18 @@ from .selling import SELLING_TRANSFORM_INVERSE_MATRICES
 
 ERROR_THRESHHOLD = 500
 
-def selling_reduce(object: VonormList | Superbasis, tol=0, return_transform_mat = False):
+def selling_reduce(object: VonormList | Superbasis,
+                   tol=0,
+                   return_transform_mat = False,
+                   verbose_log = False):
     num_steps = 0
     transform_matrix = np.eye(3)
     while not object.is_obtuse(tol=tol):
-        object, swap = object.selling_transform()
+        object, acute_pair = object.selling_transform()
+        if verbose_log:
+            print(f"Selling transform {acute_pair}: {object}")
         if return_transform_mat:
-            transform_matrix = SELLING_TRANSFORM_INVERSE_MATRICES[swap] @ transform_matrix
+            transform_matrix = SELLING_TRANSFORM_INVERSE_MATRICES[acute_pair] @ transform_matrix
         num_steps += 1
         if num_steps > ERROR_THRESHHOLD:
             raise RuntimeError(f"Selling reduction failed to converge after {ERROR_THRESHHOLD} steps")
