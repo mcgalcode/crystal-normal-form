@@ -1,7 +1,8 @@
 import pytest
 import numpy as np
 
-from cnf.sublattice.generation import transform_lattice_vecs, MotifTranslationSet, transform_basis_position
+from cnf.sublattice.sublattice_generator import transform_lattice_vecs
+from cnf.sublattice.motif_translation_set import MotifTranslationSet, transform_basis_position
 from cnf.sublattice.gamma_matrices import GammaMatrixGroup, GammaMatrixTuple
 from cnf.motif import FractionalMotif
 

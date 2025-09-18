@@ -1,9 +1,12 @@
 import numpy as np
 
 from .gamma_matrices import GammaMatrixTuple
-from .generation import transform_basis_position
 
 from ..motif import FractionalMotif
+
+def transform_basis_position(basis_position: np.ndarray, gmat: GammaMatrixTuple):
+    return gmat.inverse() @ basis_position
+
 
 class MotifTranslationSet():
 
