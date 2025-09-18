@@ -154,7 +154,15 @@ class VonormList():
         from .superbasis import Superbasis
         return Superbasis.from_generating_vecs(self.to_generators(epsilon=epsilon))
 
+    def primary_sum(self):
+        return sum(self.vonorms[:4])
 
+    def secondary_sum(self):
+        return sum(self.vonorms[4:])
+    
+    def is_superbasis(self):
+        return np.isclose(self.primary_sum(), self.secondary_sum())
+    
     def __repr__(self):
         numbers = " ".join([str(v) for v in self.vonorms])
         return f"Vonorms({numbers})"
