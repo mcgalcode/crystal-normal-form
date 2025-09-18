@@ -4,7 +4,8 @@ from .constants import VONORM_TO_CONORM_TRANSFORM_NSO_SUPERBASIS
 import json
 import tqdm
 
-from pkg_resources import resource_filename
+from importlib.resources import files
+
 from .unimodular import get_unimodular_matrix_from_voronoi_vector_idxs
 
 
@@ -44,14 +45,14 @@ def permutation_to_matrix(permutation):
     return np.array(rows)
 
 def load_matching_perms():
-    file_path = resource_filename(__name__, 'data/matching_perms.json')
     perm_map = {}
-    with open(file_path, 'r+') as f:
-        perm_pairs = json.load(f)
-        for pair in perm_pairs:
-            vonorm_permutation = tuple(pair[0])
-            conorm_permutation = tuple(pair[1])
-            perm_map[vonorm_permutation] = conorm_permutation
+
+    data = files("cnf.lattice").joinpath("data", "matching_perms.json").read_text()
+    perm_pairs = json.loads(data)
+    for pair in perm_pairs:
+        vonorm_permutation = tuple(pair[0])
+        conorm_permutation = tuple(pair[1])
+        perm_map[vonorm_permutation] = conorm_permutation
     
     return perm_map
 
