@@ -65,6 +65,10 @@ class LatticeNormalForm():
     def to_superbasis(self):
         return self.vonorms.to_superbasis(self.lattice_step_size)
     
+    @property
+    def coords(self):
+        return tuple([int(vo) for vo in self.vonorms.vonorms])
+    
     def __repr__(self):
         return f"LatticeNormalForm(vonorms={self.vonorms.vonorms},step_size={self.lattice_step_size})"
 
