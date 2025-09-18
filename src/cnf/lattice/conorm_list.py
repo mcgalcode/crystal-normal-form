@@ -71,3 +71,7 @@ class ConormList():
  
     def __getitem__(self, key):
         return self.conorms[key]
+    
+    def __repr__(self):
+        numbers = " ".join([str(v) for v in self.conorms])
+        return f"Conorms({numbers})"
