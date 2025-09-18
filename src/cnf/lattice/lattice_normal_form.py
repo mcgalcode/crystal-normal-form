@@ -35,12 +35,18 @@ class LatticeNormalForm():
                                 return_transforms=return_transforms)
 
     @classmethod
-    def from_vonorms(cls, vonorms: VonormList, lattice_step_size: float, return_transforms=True):
+    def from_vonorms(cls,
+                     vonorms: VonormList,
+                     lattice_step_size: float,
+                     return_transforms=True,
+                     verbose_log=False):
         vonorms = VonormList(
-            DiscretizedVonormComputer(vonorms.vonorms, lattice_step_size).find_closest_valid_vonorms()
+            DiscretizedVonormComputer(vonorms,
+                                      lattice_step_size,
+                                      verbose_log=verbose_log).find_closest_valid_vonorms()
         )
 
-        reduced_vonorms, _, selling_transform_mat = selling_reduce(vonorms, return_transform_mat=True)
+        reduced_vonorms, _, selling_transform_mat = selling_reduce(vonorms, return_transform_mat=True, verbose_log=verbose_log)
         conorms = reduced_vonorms.conorms
 
         permuted_vonorm_lists: list[tuple[VonormList, VonormPermutation]] = []
