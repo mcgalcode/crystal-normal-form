@@ -74,6 +74,11 @@ class VonormList():
             new_vonorms = swap_vonorm_idxs(i, j, self.vonorms, in_place=False)
             return VonormList(new_vonorms)
     
+    def has_same_members(self, other: 'VonormList', decimal_comparison=3):
+        this = tuple(sorted(list(np.round(self.vonorms, decimal_comparison))))
+        that = tuple(sorted(list(np.round(other.vonorms, decimal_comparison))))
+        return this == that
+
     def apply_permutation(self, permutation: tuple):
         return VonormList(tuple(apply_permutation(self.vonorms, permutation)))
     
