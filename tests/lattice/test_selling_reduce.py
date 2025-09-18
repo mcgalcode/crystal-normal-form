@@ -108,3 +108,27 @@ def test_parallel_reduction_monoclinic(monoclinic_lattice):
         # print(f"Got through transform {i}")
         if sb_converged and vl_converged:
             break
+
+@pytest.mark.parametrize(
+    "lattice",
+    [
+        (Lattice.cubic(1.2)),
+        (Lattice.rhombohedral(2.8, 59)),
+        (Lattice.hexagonal(5.6, 4.9)),
+        (Lattice.monoclinic(5.6, 4.9, 8.1, 110)),
+    ]
+)
+def test_selling_reductions_equivalent(lattice):
+    superbasis = Superbasis.from_pymatgen_lattice(lattice)
+
+    # print(f"Vonorms before Selling: {superbasis.compute_vonorms()}")
+    # print(f"Conorms before Selling: {superbasis.compute_vonorms().conorms}")
+    # print("=============")
+    reduced_sb, nsteps = selling_reduce(superbasis, tol=1e-7)
+    # print(f"Vonorms after {nsteps} SB Selling steps: {reduced_sb.compute_vonorms()}")
+    # print(f"Conorms after {nsteps} SB Selling steps: {reduced_sb.compute_vonorms().conorms}")
+    # print("=============")
+    reduced_vonorms, nsteps = selling_reduce(superbasis.compute_vonorms())
+    # print(f"Vonorms after {nsteps} VO Selling steps: {reduced_vonorms}")
+    # print(f"Conorms after {nsteps} VO Selling steps: {reduced_vonorms.conorms}")
+    assert reduced_sb.compute_vonorms().has_same_members(reduced_vonorms)
