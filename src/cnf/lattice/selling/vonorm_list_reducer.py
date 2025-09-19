@@ -31,7 +31,7 @@ class VonormListSellingReducer(SellingReducer):
 
     
     def apply_selling_transform(self, obj: VonormList):
-        positive_conorm_indices = [i for i, conorm in enumerate(obj.conorms) if conorm > 0]
+        positive_conorm_indices = [i for i, conorm in enumerate(obj.conorms) if conorm > self.tol]
         selected_conorm_idx = positive_conorm_indices[0]
         acute_vector_pair = VonormListSellingReducer.CONORM_IDX_TO_VECTOR_PAIRS[selected_conorm_idx]
         i, j = tuple(acute_vector_pair)

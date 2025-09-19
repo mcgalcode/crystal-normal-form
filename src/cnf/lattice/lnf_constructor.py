@@ -66,7 +66,7 @@ class LatticeNormalFormConstructor():
         return self.build_lnf_from_vonorms(superbasis.compute_vonorms())
 
     def build_lnf_from_vonorms(self, vonorms: VonormList):
-        canonicalizer = VonormCanonicalizer(reduction_tolerance=0, verbose_logging=self._verbose_logging)
+        canonicalizer = VonormCanonicalizer(reduction_tolerance=1e-8, verbose_logging=self._verbose_logging)
         undiscretized_canonical_result = canonicalizer.get_canonicalized_vonorms(vonorms)
 
         discretized_vonorms = VonormList(
