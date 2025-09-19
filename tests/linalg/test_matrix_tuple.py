@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from cnf.lattice.unimodular import get_unimodular_matrix_for_swap
+from cnf.lattice.swaps.utils import get_unimodular_matrix_for_swap
 from cnf.linalg.matrix_tuple import MatrixTuple
 
 def test_roundtrip_unimodular_class():
@@ -39,3 +39,20 @@ def test_unimodularity_check():
     mt = MatrixTuple(not_unimodular)
     assert not mt.is_unimodular()
 
+def test_matrix_multiplication():
+    npmat1 = np.array([
+        [4, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1],
+    ])
+
+    npmat2 = np.array([
+        [2, 5, 0],
+        [1, 3, 9],
+        [6, 1, 1],
+    ])
+
+    mattuple1 = MatrixTuple(npmat1)
+    mattuple2 = MatrixTuple(npmat2)
+
+    assert np.all((mattuple1 @ mattuple2).matrix == npmat1 @ npmat2)
