@@ -10,6 +10,7 @@ class Conorms(enum.Enum):
     P_13 = 4
     P_23 = 5
 
+
 conorm_swaps = {
     (0, 1): [(Conorms.P_02, Conorms.P_12), (Conorms.P_03, Conorms.P_13)],
     (0, 2): [(Conorms.P_01, Conorms.P_12), (Conorms.P_03, Conorms.P_23)],
