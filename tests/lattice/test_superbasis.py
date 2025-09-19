@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 
 from cnf.lattice import Superbasis
+from cnf.lattice.superbasis import get_v0_from_generating_vecs
 from pymatgen.core.lattice import Lattice
 
 def test_can_instantiate():
@@ -44,3 +45,13 @@ def test_can_transform():
     assert (new_vecs[0] == [2, 1, 0]).all()
     assert (new_vecs[1] == [0, 6, 0]).all()
     assert (new_vecs[2] == [6, 3, 0]).all()
+
+
+def test_get_v0():
+    lattice = np.array([
+        [1, 0, 0],
+        [1, 1, 0],
+        [0,0,0.5]
+    ])
+    v0 = get_v0_from_generating_vecs(lattice)
+    assert np.all(v0 == np.array([-2, -1, -0.5]))

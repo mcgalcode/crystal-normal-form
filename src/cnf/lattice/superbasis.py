@@ -4,8 +4,9 @@ from pymatgen.core.lattice import Lattice
 from pymatgen.core.structure import Structure
 
 from .vonorm_list import VonormList
-from .selling import find_first_acute_pair, apply_selling_transformation, get_v0_from_generating_vecs
 
+def get_v0_from_generating_vecs(generating_vecs):
+    return sum([-np.array(v) for v in generating_vecs])
 class Superbasis():
 
     @classmethod
@@ -20,12 +21,12 @@ class Superbasis():
         return cls.from_pymatgen_lattice(struct.lattice)
     
     @classmethod
-    def from_generating_vecs(cls, generating_vecs: np.array):
+    def from_generating_vecs(cls, generating_vecs: np.ndarray):
         v0 = get_v0_from_generating_vecs(generating_vecs)
         superbasis_vecs = np.array([v0, *generating_vecs])
         return cls(superbasis_vecs)
 
-    def __init__(self, superbasis_vecs: np.array):
+    def __init__(self, superbasis_vecs: np.ndarray):
         self.superbasis_vecs = superbasis_vecs
 
     def generating_vecs(self) -> np.array:
@@ -50,7 +51,7 @@ class Superbasis():
 
         Parameters
         ----------
-        superbasis_vectors : np.array
+        superbasis_vectors : np.ndarray
             A list of superbasis vectors (i.e. rows in a matrix)
 
         Returns
