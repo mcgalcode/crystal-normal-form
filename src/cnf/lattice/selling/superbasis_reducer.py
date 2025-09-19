@@ -57,7 +57,7 @@ class SuperbasisSellingReducer(SellingReducer):
         """        
         acute_pair = find_first_acute_pair(obj.superbasis_vecs)
         if acute_pair is None:
-            return self, None
+            return obj, None
         first_acute_idx, second_acute_idx = acute_pair
         transformed_vecs = self.get_transformed_vecs(obj.superbasis_vecs, first_acute_idx, second_acute_idx)
         
