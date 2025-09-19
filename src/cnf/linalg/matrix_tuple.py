@@ -27,7 +27,7 @@ class MatrixTuple():
         return self.tuple == other.tuple
     
     def __matmul__(self, other: 'MatrixTuple'):
-        return MatrixTuple(self.matrix @ other.matrix)
+        return self.__class__(self.matrix @ other.matrix)
     
     def __repr__(self):
         return self.tuple.__repr__()
