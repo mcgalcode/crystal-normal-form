@@ -1,7 +1,6 @@
 import numpy as np
 
 from .gamma_matrices import GammaMatrixTuple
-
 from ..motif import FractionalMotif
 
 def transform_basis_position(basis_position: np.ndarray, gmat: GammaMatrixTuple):

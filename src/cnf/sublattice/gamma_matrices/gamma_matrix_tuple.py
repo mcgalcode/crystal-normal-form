@@ -1,8 +1,8 @@
 import numpy as np
 
 from ...linalg.matrix_tuple import MatrixTuple
-from ..fraction_vector import FractionVector
-from ..fraction import Fraction
+from ..kvec.fraction_vector import FractionVector
+from ..kvec.fraction import Fraction
 
 class GammaMatrixTuple(MatrixTuple):
 

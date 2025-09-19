@@ -3,7 +3,6 @@ from itertools import permutations
 from .fraction_vector import FractionVector, ModFractionVector
 from .fraction import Fraction
 from .cyclic_group import CyclicGroup
-import math
 
 from typing import Iterable
 

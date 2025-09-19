@@ -1,6 +1,6 @@
 import pytest
 
-from cnf.sublattice.utils import get_divisors, valid_denominator_sets
+from cnf.sublattice.kvec.utils import get_divisors, valid_denominator_sets
 
 def test_divisors():
     assert set(get_divisors(4)) == {1, 2, 4}
