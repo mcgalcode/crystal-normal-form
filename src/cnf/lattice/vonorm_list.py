@@ -122,7 +122,7 @@ class VonormList():
         new_vonorm_list[ij_idx] = self.vonorms[ij_idx] - 4 * conorm_v_i_dot_v_j
         if isinstance(self.vonorms[ij_idx], int):
             new_vonorm_list[ij_idx] = int(new_vonorm_list[ij_idx])
-            
+
         return VonormList(new_vonorm_list), acute_vector_pair
 
     def to_generators(self, epsilon: float):
@@ -163,6 +163,10 @@ class VonormList():
     def is_superbasis(self):
         return np.isclose(self.primary_sum(), self.secondary_sum())
     
+    @property
+    def tuple(self):
+        return tuple(self.vonorms)
+    
     def __repr__(self):
         numbers = " ".join([str(v) for v in self.vonorms])
         return f"Vonorms({numbers})"
@@ -171,7 +175,7 @@ class VonormList():
         return np.all(np.isclose(self.vonorms, other.vonorms))
     
     def __hash__(self):
-        return tuple(self.vonorms).__hash__()
+        return self.tuple.__hash__()
     
     def __getitem__(self, key):
         return self.vonorms[key]
