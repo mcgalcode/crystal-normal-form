@@ -2,6 +2,7 @@ import pytest
 from pymatgen.core.structure import Structure
 
 from cnf.lattice.selling.superbasis_reducer import SuperbasisSellingReducer, find_first_acute_pair
+from cnf.lattice import Superbasis
 
 import numpy as np
 
@@ -71,3 +72,23 @@ def test_selling_transformation():
     assert np.all(transformed2[1] == [2, 1, 0.5])
     assert np.all(transformed2[2] == [-1, 0, -0.5])
     assert np.all(transformed2[3] == [1, 1, 0.5])
+
+
+
+def test_can_selling_reduce_superbasis(monoclinic_lattice):
+    tol = 1e-7
+    reducer = SuperbasisSellingReducer(tol = tol)
+    sb = Superbasis.from_pymatgen_lattice(monoclinic_lattice)
+    assert not sb.is_obtuse()
+    
+    reduced = reducer.reduce(sb)
+    assert reduced.reduced_object.is_obtuse(tol=tol)
+
+def test_selling_transform_maintains_superbasis(monoclinic_lattice):
+    sb = Superbasis.from_pymatgen_lattice(monoclinic_lattice)
+
+    reducer = SuperbasisSellingReducer()
+
+    for i in range(4):
+        sb, _ = reducer.apply_selling_transform(sb)
+        assert np.isclose(sb.superbasis_vecs[0], -np.sum(sb.superbasis_vecs[1:], axis=0)).all()
