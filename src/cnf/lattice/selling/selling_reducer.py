@@ -22,7 +22,7 @@ class SellingReducer(ABC):
 
     def reduce(self, object: VonormList | Superbasis):
         num_steps = 0
-        transform_matrices = [np.eye(3)]
+        transform_matrices = [SellingTransformMatrix(np.eye(3))]
         while not object.is_obtuse(tol=self.tol):
             object, acute_pair = self.apply_selling_transform(object)
             if self._verbose_logging:

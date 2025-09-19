@@ -3,7 +3,7 @@ import numpy as np
 
 from pymatgen.core.lattice import Lattice
 from cnf.lattice.rounding import DiscretizedVonormComputer
-from cnf.lattice.utils import selling_reduce
+from cnf.lattice.selling import VonormListSellingReducer
 from cnf.lattice import Superbasis
 from cnf.sublattice.sublattice_generator import transform_lattice_vecs
 from cnf.sublattice.gamma_matrices import GammaMatrixTuple
@@ -13,8 +13,9 @@ def Zr_BCC_lattice():
     return Lattice.cubic(3.42)
 
 def test_can_discretize_vonorms(Zr_BCC_lattice):
+    reducer = VonormListSellingReducer()
     superbasis = Superbasis.from_pymatgen_lattice(Zr_BCC_lattice)
-    vonorms, nsteps = selling_reduce(superbasis.compute_vonorms())
+    vonorms = reducer.reduce(superbasis.compute_vonorms()).reduced_object
     computer = DiscretizedVonormComputer(vonorms, 1.5)
     rounded_vonorms = computer.find_closest_valid_vonorms()
 

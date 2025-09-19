@@ -3,7 +3,7 @@ import numpy as np
 
 from cnf.lattice import Superbasis, VonormList
 from cnf.lattice.lnf_constructor import LatticeNormalFormConstructor
-from cnf.lattice.utils import selling_reduce
+from cnf.lattice.selling import VonormListSellingReducer
 from cnf.lattice.rounding import DiscretizedVonormComputer
 from cnf.sublattice.gamma_matrices import GammaMatrixTuple
 from cnf.sublattice.sublattice_generator import SublatticeGenerator, transform_lattice_vecs
@@ -129,7 +129,8 @@ def test_trace_example_fcc_lnf_construction(zr_fcc_lnfs_and_diff):
     def _get_selling_reduced_vonorms(vecs):
         sb = Superbasis.from_generating_vecs(vecs)
         vnorms = sb.compute_vonorms()
-        vnorms, nsteps = selling_reduce(vnorms)
+        reducer = VonormListSellingReducer()
+        vnorms = reducer.reduce(vnorms).reduced_object
         return vnorms
     
     d1_undiscretized = _get_selling_reduced_vonorms(d1['generating_vecs'])
@@ -151,7 +152,8 @@ def test_debug_fcc_class_one_distinct_members(zr_fcc_lnfs_and_diff):
     def _get_selling_reduced_vonorms(vecs):
         sb = Superbasis.from_generating_vecs(vecs)
         vnorms = sb.compute_vonorms()
-        vnorms, nsteps = selling_reduce(vnorms)
+        reducer = VonormListSellingReducer()
+        vnorms = reducer.reduce(vnorms).reduced_object
         return vnorms
     
     d1_undiscretized = _get_selling_reduced_vonorms(d1['generating_vecs'])

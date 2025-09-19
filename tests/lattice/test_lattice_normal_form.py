@@ -1,15 +1,9 @@
 import pytest
-import numpy as np
-
 from pymatgen.core.structure import Lattice
 from cnf.lattice.lattice_normal_form import LatticeNormalForm
 from cnf.lattice.lnf_constructor import LatticeNormalFormConstructor
-from cnf.lattice import Superbasis
 from cnf.linalg.matrix_tuple import MatrixTuple
-from cnf.lattice.unimodular import get_unimodular_matrix_from_voronoi_vector_idxs
-from cnf.lattice.permutations import is_permutation_set_closed, VonormPermutation
-from cnf.lattice.utils import selling_reduce
-from itertools import permutations
+from cnf.lattice.permutations import VonormPermutation
 
 @pytest.fixture
 def Zr_HCP_lattice():

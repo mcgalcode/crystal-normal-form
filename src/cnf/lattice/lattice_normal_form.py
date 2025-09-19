@@ -1,4 +1,5 @@
 from .vonorm_list import VonormList
+
 class LatticeNormalForm():
 
     def __init__(self, canonical_vonorm_list: VonormList, lattice_step_size: float):

@@ -2,10 +2,9 @@ import pytest
 import numpy as np
 
 from pymatgen.core.lattice import Lattice
-from cnf.motif import AtomicMotif, FractionalMotif
+from cnf.motif import FractionalMotif
 from cnf.lattice.permutations import VONORM_PERMUTATION_TO_CONORM_PERMUTATION, VonormPermutation
 from cnf.lattice.superbasis import Superbasis
-from cnf.lattice.unimodular import get_unimodular_matrix_from_voronoi_vector_idxs
 
 import cnf.motif.utils as bnf_utils
 

@@ -3,7 +3,7 @@ from pymatgen.core.lattice import Lattice
 from pymatgen.core.structure import Structure
 
 from .vonorm_list import VonormList
-from .utils import selling_reduce
+from .selling import VonormListSellingReducer
 from .permutations import VonormPermutation
 from .rounding import DiscretizedVonormComputer
 from .superbasis import Superbasis
@@ -12,13 +12,14 @@ from .lattice_normal_form import LatticeNormalForm
 
 class VonormCanonicalizer():
 
-    def __init__(self, verbose_logging=False):
+    def __init__(self, verbose_logging=False, reduction_tolerance = 0):
         self._verbose_logging = verbose_logging
+        self.reduction_tolerance = reduction_tolerance
     
     def get_canonicalized_vonorms(self, vonorms: VonormList):
-        reduced_vonorms, _, selling_transform_mat = selling_reduce(vonorms,
-                                                                   return_transform_mat=True,
-                                                                   verbose_log=self._verbose_logging)
+        reducer = VonormListSellingReducer(tol=self.reduction_tolerance, verbose_logging=self._verbose_logging)
+        reduction_result = reducer.reduce(vonorms)
+        reduced_vonorms = reduction_result.reduced_object
         conorms = reduced_vonorms.conorms
 
         permuted_vonorm_lists: list[tuple[VonormList, VonormPermutation]] = []
@@ -32,7 +33,7 @@ class VonormCanonicalizer():
         stabilizer_permutations = [pair[1] for pair in permuted_vonorm_lists if pair[0] == canonical_vonorm_list]
         return CanonicalizedVonormResult(
             canonical_vonorm_list,
-            selling_transform_mat,
+            reduction_result.transform_matrix,
             stabilizer_permutations
         )
 
@@ -65,7 +66,7 @@ class LatticeNormalFormConstructor():
         return self.build_lnf_from_vonorms(superbasis.compute_vonorms())
 
     def build_lnf_from_vonorms(self, vonorms: VonormList):
-        canonicalizer = VonormCanonicalizer(verbose_logging=self._verbose_logging)
+        canonicalizer = VonormCanonicalizer(reduction_tolerance=0, verbose_logging=self._verbose_logging)
         undiscretized_canonical_result = canonicalizer.get_canonicalized_vonorms(vonorms)
 
         discretized_vonorms = VonormList(

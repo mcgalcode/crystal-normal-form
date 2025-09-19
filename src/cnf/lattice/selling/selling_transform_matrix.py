@@ -41,4 +41,4 @@ for p in SellingPair.CANONICAL_PAIRS:
     SELLING_TRANSFORM_MATRICES[p] = build_st_mat_from_pair(p)
 
 for p in SellingPair.CANONICAL_PAIRS:
-    SELLING_TRANSFORM_INVERSE_MATRICES[p] = SELLING_TRANSFORM_MATRICES[p].inverse()
+    SELLING_TRANSFORM_INVERSE_MATRICES[p] = SellingTransformMatrix(SELLING_TRANSFORM_MATRICES[p].inverse())

@@ -1,10 +1,7 @@
 import numpy as np
-from pymatgen.core import Lattice, Structure # Or other library
-from .lattice import VonormList, Superbasis
-from .lattice.permutations import VonormPermutation
+from pymatgen.core import Structure # Or other library
+from .lattice import Superbasis
 from .motif.atomic_motif import FractionalMotif
-from .lattice.utils import selling_reduce
-from .lattice.rounding import DiscretizedVonormComputer
 from .lattice.lnf_constructor import LatticeNormalFormConstructor
 from .lattice.lattice_normal_form import LatticeNormalForm
 from .motif.basis_normal_form import BasisNormalForm
@@ -29,11 +26,11 @@ class CrystalNormalForm:
         lnf_constructor = LatticeNormalFormConstructor(lattice_step_size, verbose_logging)
         lnf_construction_result = lnf_constructor.build_lnf_from_superbasis(superbasis)
         
-        motif = motif.apply_unimodular(lnf_construction_result.undiscretized_canonicalization_result.selling_transform_mat)
+        motif = motif.apply_unimodular(lnf_construction_result.undiscretized_canonicalization_result.selling_transform_mat.matrix)
         initial_stabilizer_perm = lnf_construction_result.undiscretized_canonicalization_result.stabilizer_permutations[0]
         initial_stabilizer_mat = initial_stabilizer_perm.to_unimodular_matrix()
         motif = motif.apply_unimodular(initial_stabilizer_mat)
-        motif = motif.apply_unimodular(lnf_construction_result.discretized_canonicalization_result.selling_transform_mat)
+        motif = motif.apply_unimodular(lnf_construction_result.discretized_canonicalization_result.selling_transform_mat.matrix)
 
         bnfs: list[BasisNormalForm] = []
         for stabilizer_permutation in lnf_construction_result.discretized_canonicalization_result.stabilizer_permutations:
