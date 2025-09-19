@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from cnf.sublattice import Fraction, FractionVector
+from cnf.sublattice.kvec import Fraction, FractionVector
 
 @pytest.fixture(scope='module')
 def n_equals_4_generators_with_kvecs():

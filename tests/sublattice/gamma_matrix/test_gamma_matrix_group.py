@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 
 from cnf.sublattice.gamma_matrices import GammaMatrixGroup, GammaMatrixTuple
-from cnf.sublattice.kvec_generating_set import KVecGeneratingSet
+from cnf.sublattice.kvec.kvec_generating_set import KVecGeneratingSet
 
 def test_group_can_add_matrix():
     group = GammaMatrixGroup()

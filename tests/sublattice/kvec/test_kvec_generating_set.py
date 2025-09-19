@@ -1,6 +1,6 @@
 import pytest
 
-from cnf.sublattice import Fraction, FractionVector, CyclicGroup, KVecGeneratingSet
+from cnf.sublattice.kvec import Fraction, FractionVector, CyclicGroup, KVecGeneratingSet
 
 @pytest.fixture
 def expected_n4_vecs():

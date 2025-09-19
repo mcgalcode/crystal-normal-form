@@ -1,6 +1,6 @@
 import pytest
 
-from cnf.sublattice import FractionVector, Fraction
+from cnf.sublattice.kvec import FractionVector, Fraction
 
 
 def test_is_multiple():
