@@ -70,20 +70,8 @@ class Superbasis():
             np.dot(lv[0] + lv[2], lv[0] + lv[2]),
             np.dot(lv[0] + lv[3], lv[0] + lv[3]),
         ))
-
-    def selling_transform(self) -> tuple["Superbasis", tuple[int, int]]:
-        acute_pair = find_first_acute_pair(self.superbasis_vecs)
-        if acute_pair is None:
-            return self, None
-        first_acute_idx, second_acute_idx = acute_pair
-        new_basis_vecs = apply_selling_transformation(
-            self.superbasis_vecs,
-            first_acute_idx,
-            second_acute_idx
-        )
-        return Superbasis(new_basis_vecs), acute_pair
     
-    def apply_matrix_transform(self, mat_transform: np.array):
+    def apply_matrix_transform(self, mat_transform: np.ndarray):
         new_vecs = self.generating_vecs().T @ mat_transform
         return Superbasis.from_generating_vecs(new_vecs.T)
     
