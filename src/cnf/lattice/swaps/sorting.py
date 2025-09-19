@@ -1,5 +1,5 @@
 import copy
-from .unimodular import get_unimodular_matrix_for_swap_series
+from ..unimodular import get_unimodular_matrix_for_swap_series
 
 def check_primary_vonorms_sorted(vonorms):
     for idx in range(0,3):

@@ -1,6 +1,6 @@
 import pytest
 
-import cnf.lattice.sorting as srt
+import cnf.lattice.swaps.sorting as srt
 
 @pytest.fixture
 def antimony_vonorms_unsorted():
