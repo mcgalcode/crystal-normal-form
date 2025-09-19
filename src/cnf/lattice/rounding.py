@@ -75,11 +75,18 @@ class DiscretizedVonormComputer():
                 error_change = self.compute_error_change_at_idx(rounded_vonorms, idx, adjustment)
                 possible_changes.append((error_change, idx, adjustment))
 
+            if self._verbose_log:
+                print(f"Primary: {primary_sum}, Secondary: {secondary_sum}")
+                print("Possible corrections")
+                print("====================")
+                for pc in possible_changes:
+                    err, idx_to_adjust, adjustment = pc
+                    print(f"idx: {idx_to_adjust}, change: {adjustment}, diff: {round(err, 3)}")
             least_damaging_change = sorted(possible_changes)[0]
-            _, idx_to_adjust, adjustment = least_damaging_change
+            err, idx_to_adjust, adjustment = least_damaging_change
             rounded_vonorms[idx_to_adjust] = rounded_vonorms[idx_to_adjust] + adjustment
             if self._verbose_log:
-                print(f"Correction (idx: {idx_to_adjust}, change: {adjustment}): {rounded_vonorms}...")
+                print(f"Selected Correction (idx: {idx_to_adjust}, change: {adjustment}, diff: {round(err, 3)}): {rounded_vonorms}...")
             primary_sum = np.sum(rounded_vonorms[:4])
             secondary_sum = np.sum(rounded_vonorms[4:])
         
