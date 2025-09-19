@@ -1,7 +1,7 @@
 import numpy as np
 from .superbasis import Superbasis
 from .vonorm_list import VonormList
-from .selling import SELLING_TRANSFORM_INVERSE_MATRICES
+from .selling import SELLING_TRANSFORM_MATRICES
 
 ERROR_THRESHHOLD = 500
 
@@ -16,7 +16,7 @@ def selling_reduce(object: VonormList | Superbasis,
         if verbose_log:
             print(f"Selling transform {acute_pair}: {object}")
         if return_transform_mat:
-            transform_matrix = SELLING_TRANSFORM_INVERSE_MATRICES[acute_pair] @ transform_matrix
+            transform_matrix = transform_matrix @ SELLING_TRANSFORM_MATRICES[acute_pair]
         num_steps += 1
         if num_steps > ERROR_THRESHHOLD:
             raise RuntimeError(f"Selling reduction failed to converge after {ERROR_THRESHHOLD} steps")

@@ -54,7 +54,7 @@ def test_selling_reduce_atomic_positions():
 
     sb = Superbasis.from_pymatgen_lattice(lat)
     reduced_sb, num_steps, transform_mat = selling_reduce(sb, tol=1e-7, return_transform_mat=True)
-    reduced_frac_coords = transform_mat @ fractional_coords
+    reduced_frac_coords = np.linalg.inv(transform_mat) @ fractional_coords
     reduced_cart_coords = reduced_sb.generating_vecs().T @ reduced_frac_coords
 
     assert np.all(np.isclose(reduced_cart_coords, original_cart_coords))
