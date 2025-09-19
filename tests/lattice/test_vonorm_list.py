@@ -2,7 +2,6 @@ import pytest
 import numpy as np
 
 from cnf.lattice import Superbasis, VonormList
-from cnf.lattice.utils import selling_reduce
 from cnf.lattice.lattice_normal_form import LatticeNormalForm
 from pymatgen.core.lattice import Lattice
 
