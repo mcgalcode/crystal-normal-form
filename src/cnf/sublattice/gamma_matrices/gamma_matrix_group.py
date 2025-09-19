@@ -3,7 +3,7 @@ from itertools import combinations_with_replacement, permutations
 
 from .gamma_matrix_tuple import GammaMatrixTuple
 from ...linalg.matrix_tuple import MatrixTuple
-from ..primes import get_prime_parcels, get_prime_factors
+from .primes import get_prime_parcels, get_prime_factors
 
 from typing import Iterable
 
