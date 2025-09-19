@@ -17,6 +17,10 @@ class Permutation(tuple):
     def __init__(self, perm):
         self.perm = perm
         super().__init__()
+    
+    def compose(self, other: 'Permutation'):
+        composed = compose_permutations(self.perm, other.perm)
+        return self.__class__(composed)
 
 class ConormPermutation(Permutation):
 
