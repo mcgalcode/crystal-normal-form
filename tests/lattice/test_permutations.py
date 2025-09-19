@@ -43,11 +43,31 @@ def test_compose_permutations():
     composition_2 = compose_permutations(perm2, perm1)
     assert composition_2 == (2, 0, 1)
 
+@pytest.mark.xfail
+def test_composed_permutations_match_matrices():
+    vperm1 = VonormPermutation([2, 4, 5, 1, 3, 0, 6])
+    vperm2 = VonormPermutation([5, 6, 2, 3, 4, 0, 1])
+
+    composed_vperm = VonormPermutation(compose_permutations(vperm1.perm, vperm2.perm))
+
+    composed_unimodular = vperm1.to_unimodular_matrix() @ vperm2.to_unimodular_matrix()
+    assert np.all(composed_vperm.to_unimodular_matrix() == composed_unimodular)
+
 def test_are_vonorm_permutations_an_s7_subgroup():
     # Note, this test is not for functionality, but for probing the
     # character of these groups
     vperms = set(VONORM_PERMUTATION_TO_CONORM_PERMUTATION.keys())
     assert is_permutation_set_closed(vperms)
+
+@pytest.mark.xfail
+def test_are_vonorm_unimodular_matrices_a_group():
+    vperms = set(VONORM_PERMUTATION_TO_CONORM_PERMUTATION.keys())
+    vperm_matrices: list[MatrixTuple] = [MatrixTuple(VonormPermutation(vperm).to_unimodular_matrix()) for vperm in vperms]
+    for p1 in vperm_matrices:
+        for p2 in vperm_matrices:
+            composed = MatrixTuple(p1.matrix @ p2.matrix)
+            
+            assert composed in vperm_matrices
 
 def test_are_conorm_permutations_an_s7_subgroup():
     # Note, this test is not for functionality, but for probing the
@@ -73,7 +93,7 @@ def test_are_permutation_groups_isomorphic():
             assert c_composed == VONORM_PERMUTATION_TO_CONORM_PERMUTATION[v_composed]
 
 
-@pytest.mark.skip
+@pytest.mark.xfail
 def test_positive_determinant():
     pos = []
     neg = []
