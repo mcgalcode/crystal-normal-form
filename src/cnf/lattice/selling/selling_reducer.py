@@ -17,13 +17,16 @@ class SellingReducer(ABC):
     def apply_selling_transform(self, obj: Superbasis):
         pass
 
+    def _logging_repr(self, obj):
+        return f"{obj}"
+
     def reduce(self, object: VonormList | Superbasis):
         num_steps = 0
         transform_matrices = [np.eye(3)]
         while not object.is_obtuse(tol=self.tol):
             object, acute_pair = self.apply_selling_transform(object)
             if self._verbose_logging:
-                print(f"Selling transform {acute_pair}: {object}")
+                print(f"Selling transform {acute_pair}: {self._logging_repr(object)}")
 
             transform_matrices.append(SellingTransformMatrix.from_pair(acute_pair))
             num_steps += 1
