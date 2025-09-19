@@ -1,6 +1,6 @@
 import pytest
 
-from cnf.sublattice import CyclicGroup, FractionVector, Fraction
+from cnf.sublattice.kvec import CyclicGroup, FractionVector, Fraction
 
 def test_cyclic_group_equality():
     cg1 = CyclicGroup.from_generator(FractionVector([Fraction(1,4), Fraction(1, 2), Fraction(3, 4)]), 4)

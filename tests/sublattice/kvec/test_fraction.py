@@ -1,6 +1,6 @@
 import pytest
 
-from cnf.sublattice import Fraction
+from cnf.sublattice.kvec import Fraction
 
 def test_equality():
     f1 = Fraction(1, 2)
