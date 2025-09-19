@@ -5,6 +5,7 @@ from .lattice.permutations import VonormPermutation
 from .motif.atomic_motif import FractionalMotif
 from .lattice.utils import selling_reduce
 from .lattice.rounding import DiscretizedVonormComputer
+from .lattice.lnf_constructor import LatticeNormalFormConstructor
 from .lattice.lattice_normal_form import LatticeNormalForm
 from .motif.basis_normal_form import BasisNormalForm
 from .unit_cell import UnitCell
@@ -23,26 +24,30 @@ class CrystalNormalForm:
                                   motif: FractionalMotif,
                                   superbasis: Superbasis,
                                   lattice_step_size: float,
-                                  motif_step_size: int):
+                                  motif_step_size: int,
+                                  verbose_logging: bool = False):
+        lnf_constructor = LatticeNormalFormConstructor(lattice_step_size, verbose_logging)
+        lnf_construction_result = lnf_constructor.build_lnf_from_superbasis(superbasis)
         
-        lnf, selling_transform, stabilizer_neighbor_permutations = LatticeNormalForm.from_superbasis(superbasis,
-                                                                                                     lattice_step_size,
-                                                                                                     return_transforms=True)
-        
-        motif = motif.apply_unimodular(selling_transform)
-    
+        motif = motif.apply_unimodular(lnf_construction_result.undiscretized_canonicalization_result.selling_transform_mat)
+        initial_stabilizer_perm = lnf_construction_result.undiscretized_canonicalization_result.stabilizer_permutations[0]
+        initial_stabilizer_mat = initial_stabilizer_perm.to_unimodular_matrix()
+        motif = motif.apply_unimodular(initial_stabilizer_mat)
+        motif = motif.apply_unimodular(lnf_construction_result.discretized_canonicalization_result.selling_transform_mat)
 
         bnfs: list[BasisNormalForm] = []
-        for stabilizer_permutation in stabilizer_neighbor_permutations:
+        for stabilizer_permutation in lnf_construction_result.discretized_canonicalization_result.stabilizer_permutations:
             unimodular_transform = stabilizer_permutation.to_unimodular_matrix()
             transformed_motif = motif.apply_unimodular(unimodular_transform)
             bnf = BasisNormalForm.from_motif(transformed_motif, motif_step_size)
             bnfs.append(bnf)
+    
         
-        sorted_bnfs = sorted(bnfs, key=lambda bnf: bnf.coord_list, reverse=True)
+        sorted_bnfs = sorted(bnfs, key=lambda bnf: bnf.coord_list, reverse=False)
+        print(sorted_bnfs)
         canonical_bnf = sorted_bnfs[0]
         # print(canonical_bnf)
-        return cls(lnf, canonical_bnf, lattice_step_size, motif_step_size)
+        return cls(lnf_construction_result.lnf, canonical_bnf, lattice_step_size, motif_step_size)
     
     @classmethod
     def from_motif_and_basis_vecs(cls,
