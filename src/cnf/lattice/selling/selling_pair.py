@@ -1,5 +1,3 @@
-
-
 class SellingPair(tuple):
 
     def __new__(cls, *vals):
