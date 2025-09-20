@@ -3,6 +3,7 @@ from pymatgen.core.structure import Structure
 from .utils import shift_coords, discretize_coords, sort_elements, sort_number_lists
 
 from ..lattice import Superbasis
+from ..linalg import MatrixTuple
 
 class AtomicMotif():
         
@@ -108,8 +109,12 @@ class FractionalMotif(AtomicMotif):
         transformed_coords = self.coord_matrix.T @ transform
         return FractionalMotif.from_elements_and_positions(self.atoms, transformed_coords)
     
-    def apply_unimodular(self, unimodular: np.array):
-        transformed = np.linalg.inv(unimodular) @ self.coord_matrix
+    def apply_unimodular(self, unimodular: MatrixTuple):
+        # if np.linalg.det(unimodular) == -1:
+        #     # raise RuntimeError("Negative determinant!")
+        #     unimodular = -unimodular
+        #     assert np.linalg.det(unimodular) == 1
+        transformed = unimodular.inverse() @ self.coord_matrix
         return FractionalMotif.from_elements_and_positions(self.atoms, transformed.T)
     
     def compute_cartesian_coords_in_basis(self, basis: Superbasis):

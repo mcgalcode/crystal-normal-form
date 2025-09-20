@@ -69,7 +69,8 @@ class VonormListSellingReducer(SellingReducer):
         # assert VonormListSellingReducer.VECTOR_PAIRS_TO_CONORM_IDXS[vector_pair] == selected_conorm_idx
         conorm_v_i_dot_v_j = obj.conorms[selected_conorm_idx]
         new_vonorm_list[ij_idx] = obj.vonorms[ij_idx] - 4 * conorm_v_i_dot_v_j
-        print(f"Reducing vonorm {ij_idx} ({obj.vonorms[ij_idx]} -> {new_vonorm_list[ij_idx]}) using conorm idx {selected_conorm_idx}, w value {conorm_v_i_dot_v_j}")
+        if self._verbose_logging:
+            print(f"Reducing vonorm {ij_idx} ({obj.vonorms[ij_idx]} -> {new_vonorm_list[ij_idx]}) using conorm idx {selected_conorm_idx}, w value {conorm_v_i_dot_v_j}")
         if isinstance(obj.vonorms[ij_idx], int):
             new_vonorm_list[ij_idx] = int(new_vonorm_list[ij_idx])
 

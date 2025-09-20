@@ -20,6 +20,9 @@ class MatrixTuple():
     def inverse(self):
         return np.linalg.inv(self.matrix)
     
+    def determinant(self):
+        return np.linalg.det(self.matrix)
+    
     def __hash__(self):
         return self.tuple.__hash__()
     

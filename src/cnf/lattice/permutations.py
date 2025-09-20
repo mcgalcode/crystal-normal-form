@@ -6,7 +6,7 @@ import tqdm
 
 from importlib.resources import files
 
-from .unimodular import get_unimodular_matrix_from_voronoi_vector_idxs
+from .vonorm_unimodular import VonormPermutationMatrix
 
 
 VONORM_PERMUTATION_TO_CONORM_PERMUTATION = None
@@ -36,8 +36,7 @@ class VonormPermutation(Permutation):
         return ConormPermutation(VONORM_PERMUTATION_TO_CONORM_PERMUTATION[self.perm])
     
     def to_unimodular_matrix(self):
-        generating_vec_indices = self.perm[1:4]
-        return get_unimodular_matrix_from_voronoi_vector_idxs(generating_vec_indices)
+        return VonormPermutationMatrix.from_permutation(self)
 
 
 def permutation_to_matrix(permutation):

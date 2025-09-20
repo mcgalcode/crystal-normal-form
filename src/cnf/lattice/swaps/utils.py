@@ -1,4 +1,4 @@
-from ..unimodular import get_unimodular_matrix_from_voronoi_vector_idxs
+from ..vonorm_unimodular import get_unimodular_matrix_from_voronoi_vector_idxs
 
 def get_unimodular_matrix_for_swap_series(swap_series: list[tuple[int, int]]):
     labels = [0,1,2,3,4,5,6]

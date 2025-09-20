@@ -134,7 +134,7 @@ def test_cartesian_coords_not_changed_by_unimodular():
 
     for perm in VONORM_PERMUTATION_TO_CONORM_PERMUTATION:
         mat = VonormPermutation(perm).to_unimodular_matrix()
-        permuted_sb = sb.apply_matrix_transform(mat)
+        permuted_sb = sb.apply_matrix_transform(mat.matrix)
         transformed_cart_corods = motif.apply_unimodular(mat).compute_cartesian_coords_in_basis(permuted_sb)
 
         if original_cart_coords == transformed_cart_corods:

@@ -56,6 +56,7 @@ class ConormList():
                 return 4
     
     def is_permutation_permissible(self, permutation):
+        # return permutation[-1] == 6
         return permutation[-1] in self.zero_indices or permutation[-1] == 6
         # vperm = ConormPermutation(permutation).to_vonorm_permutation()
         # return 4 not in vperm[:4] and 5 not in vperm[:4] and 6 not in vperm[:4]

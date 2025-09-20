@@ -4,7 +4,7 @@ import numpy as np
 from itertools import permutations
 
 from cnf.linalg.matrix_tuple import MatrixTuple
-from cnf.lattice.unimodular import get_unimodular_matrix_from_voronoi_vector_idxs
+from cnf.lattice.vonorm_unimodular import get_unimodular_matrix_from_voronoi_vector_idxs
 from cnf.lattice.permutations import VonormPermutation, ConormPermutation, VONORM_PERMUTATION_TO_CONORM_PERMUTATION, compose_permutations, apply_permutation, is_permutation_set_closed
 
 
@@ -25,7 +25,7 @@ def test_item_access():
 def test_unimodularity():
     for vperm in VONORM_PERMUTATION_TO_CONORM_PERMUTATION:
         u = VonormPermutation(vperm).to_unimodular_matrix()
-        assert np.abs(np.linalg.det(u)) == 1
+        assert np.abs(u.determinant()) == 1
 
 def test_apply_permutation():
     perm = (3,1,2,0)
@@ -68,6 +68,26 @@ def test_are_vonorm_unimodular_matrices_a_group():
             composed = MatrixTuple(p1.matrix @ p2.matrix)
             
             assert composed in vperm_matrices
+
+@pytest.mark.xfail
+def test_are_vonorm_unimodular_with_postive_det_a_group():
+    vperms = set(VONORM_PERMUTATION_TO_CONORM_PERMUTATION.keys())
+    vperm_matrices: list[MatrixTuple] = [MatrixTuple(VonormPermutation(vperm).to_unimodular_matrix()) for vperm in vperms]
+    vperm_matrices: list[MatrixTuple] = [m for m in vperm_matrices if np.linalg.det(m.matrix) == 1]
+    for p1 in vperm_matrices:
+        for p2 in vperm_matrices:
+            composed = p1 @ p2
+            
+            assert composed in vperm_matrices
+
+def test_are_vonorm_unimodular_matrix_products_also_unimodular():
+    vperms = set(VONORM_PERMUTATION_TO_CONORM_PERMUTATION.keys())
+    vperm_matrices: list[MatrixTuple] = [VonormPermutation(vperm).to_unimodular_matrix() for vperm in vperms]
+    vperm_matrices: list[MatrixTuple] = [m for m in vperm_matrices if m.determinant() == 1]
+    for p1 in vperm_matrices:
+        for p2 in vperm_matrices:
+            composed = p1 @ p2
+            assert composed.is_unimodular()    
 
 def test_are_conorm_permutations_an_s7_subgroup():
     # Note, this test is not for functionality, but for probing the

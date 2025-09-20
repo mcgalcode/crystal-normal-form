@@ -18,7 +18,12 @@ def zr_fcc_lnfs_and_diff(zr_fcc_primitive_lattice_vecs):
 
     sublattice_vec_sets = sl_generator.generate_sublattice_vector_sets(zr_fcc_primitive_lattice_vecs)
     constructor = LatticeNormalFormConstructor(xi)
-    all_lnfs = [constructor.build_lnf_from_generating_vecs(v).lnf for v in sublattice_vec_sets]
+
+    all_lnfs = []
+    for v in sublattice_vec_sets:
+        print("New lattice!")
+        all_lnfs.append(constructor.build_lnf_from_generating_vecs(v).lnf)
+        print(all_lnfs[-1])
 
     sublattice_organizer = {
         1: [],
@@ -66,7 +71,7 @@ def test_produces_zr_bcc_vonorm_set_sublattice_1(zr_bcc_primitive_lattice_vecs):
     assert vnorms.has_same_members(expected_thesis_vonorms)
     assert vnorms.tuple >= expected_thesis_vonorms.tuple
 
-@pytest.mark.xfail
+# @pytest.mark.xfail
 def test_produces_zr_bcc_vonorm_set_sublattice_2(zr_bcc_primitive_lattice_vecs):
     transform = GammaMatrixTuple(np.array([
         [2, 1, 0],
@@ -160,8 +165,6 @@ def test_debug_fcc_class_one_distinct_members(zr_fcc_lnfs_and_diff):
     d2_undiscretized = _get_selling_reduced_vonorms(d2['generating_vecs'])
     assert d1_undiscretized.has_same_members(d2_undiscretized)
 
-
-
-    _trace_lnf(d1, xi)
-    _trace_lnf(d2, xi)
+    # _trace_lnf(d1, xi)
+    # _trace_lnf(d2, xi)
 

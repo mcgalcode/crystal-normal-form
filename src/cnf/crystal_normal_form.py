@@ -26,14 +26,16 @@ class CrystalNormalForm:
         lnf_constructor = LatticeNormalFormConstructor(lattice_step_size, verbose_logging)
         lnf_construction_result = lnf_constructor.build_lnf_from_superbasis(superbasis)
         
-        motif = motif.apply_unimodular(lnf_construction_result.undiscretized_canonicalization_result.selling_transform_mat.matrix)
+        motif = motif.apply_unimodular(lnf_construction_result.undiscretized_canonicalization_result.selling_transform_mat)
         initial_stabilizer_perm = lnf_construction_result.undiscretized_canonicalization_result.stabilizer_permutations[0]
         initial_stabilizer_mat = initial_stabilizer_perm.to_unimodular_matrix()
         motif = motif.apply_unimodular(initial_stabilizer_mat)
-        motif = motif.apply_unimodular(lnf_construction_result.discretized_canonicalization_result.selling_transform_mat.matrix)
+        motif = motif.apply_unimodular(lnf_construction_result.discretized_canonicalization_result.selling_transform_mat)
 
         bnfs: list[BasisNormalForm] = []
         for stabilizer_permutation in lnf_construction_result.discretized_canonicalization_result.stabilizer_permutations:
+            print(f"Vonorm Permutation: {stabilizer_permutation}")
+            # print(f"Conorm Permutation: {stabilizer_permutation.to_conorm_permutation()}")
             unimodular_transform = stabilizer_permutation.to_unimodular_matrix()
             transformed_motif = motif.apply_unimodular(unimodular_transform)
             bnf = BasisNormalForm.from_motif(transformed_motif, motif_step_size)
