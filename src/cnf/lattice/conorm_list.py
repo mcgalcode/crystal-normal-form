@@ -31,9 +31,9 @@ CONORM_INDICES_TO_PAIRS = {
 
 class ConormList():
 
-    def __init__(self, conorms):
+    def __init__(self, conorms, tol=1e-8):
         self.conorms = conorms
-        self.zero_indices = [idx for idx, conorm in enumerate(self.conorms) if conorm == 0]
+        self.zero_indices = [idx for idx, conorm in enumerate(self.conorms) if np.abs(conorm) < tol]
         self.voronoi_class = self._compute_voronoi_class()
         self.permissible_permutations = self._compute_permissible_permutations()
 
