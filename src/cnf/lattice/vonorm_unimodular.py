@@ -19,6 +19,16 @@ VORONOI_IDX_TO_COLUMN = {
     6: VectorTuple([-1, -1, 0])
 }
 
+VORONOI_IDX_TO_COLUMNS_TO_SUM = {
+    0: [0],
+    1: [1],
+    2: [2],
+    3: [3],
+    4: [0,1],
+    5: [0,2],
+    6: [0,3],
+}
+
 COLUMN_TO_VORONOI_IDX = { v: k for k, v in VORONOI_IDX_TO_COLUMN.items()}
 ALL_VORONOI_VECTOR_COLS = set(COLUMN_TO_VORONOI_IDX.keys())
 

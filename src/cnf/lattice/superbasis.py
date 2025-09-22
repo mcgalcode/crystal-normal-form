@@ -3,7 +3,9 @@ import numpy as np
 from pymatgen.core.lattice import Lattice
 from pymatgen.core.structure import Structure
 
+from .permutations import VonormPermutation
 from .vonorm_list import VonormList
+from .vonorm_unimodular import VORONOI_IDX_TO_COLUMNS_TO_SUM
 
 def get_v0_from_generating_vecs(generating_vecs):
     return sum([-np.array(v) for v in generating_vecs])
@@ -28,7 +30,21 @@ class Superbasis():
 
     def __init__(self, superbasis_vecs: np.ndarray):
         self.superbasis_vecs = superbasis_vecs
+    
+    def is_superbasis(self, tol=1e-5):
+        expected_v0 = get_v0_from_generating_vecs(self.generating_vecs())
+        return np.all(np.abs(expected_v0 - self.superbasis_vecs[0]) < tol)
+    
+    def apply_permutation(self, perm: VonormPermutation):
+        new_superbasis_vecs = []
+        for idx in perm[:4]:
+            col = np.zeros(3)
+            for col_idx in VORONOI_IDX_TO_COLUMNS_TO_SUM[idx]:
+                col = col + np.array(self.superbasis_vecs[col_idx])
+            new_superbasis_vecs.append(col)
+        return Superbasis(new_superbasis_vecs)
 
+    
     def generating_vecs(self) -> np.array:
         """Returns the generating vectors of this superbasis as rows in a matrix
 
