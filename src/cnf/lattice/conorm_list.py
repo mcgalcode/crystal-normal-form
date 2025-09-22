@@ -1,5 +1,6 @@
 import enum
-from .permutations import CONORM_PERMUTATION_TO_VONORM_PERMUTATION, ConormPermutation, VonormPermutation
+import numpy as np
+from .permutations import CONORM_PERMUTATION_TO_VONORM_PERMUTATION, ConormPermutation
 
 class Conorms(enum.Enum):
 
@@ -55,6 +56,15 @@ class ConormList():
             else:
                 return 4
     
+    def apply_permutation(self, permutation: tuple):
+        permuted_vals = []
+        for p in permutation:
+            if p < 6:
+                permuted_vals.append(self.conorms[p])
+            else:
+                permuted_vals.append(0)
+        return ConormList(tuple(permuted_vals[:6]))
+
     def is_permutation_permissible(self, permutation):
         # return permutation[-1] == 6
         return permutation[-1] in self.zero_indices or permutation[-1] == 6
