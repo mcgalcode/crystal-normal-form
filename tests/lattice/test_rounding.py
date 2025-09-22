@@ -16,7 +16,7 @@ def test_can_discretize_vonorms(Zr_BCC_lattice):
     reducer = VonormListSellingReducer()
     superbasis = Superbasis.from_pymatgen_lattice(Zr_BCC_lattice)
     vonorms = reducer.reduce(superbasis.compute_vonorms()).reduced_object
-    computer = DiscretizedVonormComputer(vonorms, 1.5)
-    rounded_vonorms = computer.find_closest_valid_vonorms()
+    computer = DiscretizedVonormComputer(1.5)
+    rounded_vonorms = computer.find_closest_valid_vonorms(vonorms)
 
     assert (np.abs(vonorms.vonorms - (np.array(rounded_vonorms.vonorms) * 1.5)) < 1.5).all()

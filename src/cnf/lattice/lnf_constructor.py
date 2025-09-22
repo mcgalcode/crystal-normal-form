@@ -69,11 +69,8 @@ class LatticeNormalFormConstructor():
         canonicalizer = VonormCanonicalizer(reduction_tolerance=1e-8, verbose_logging=self._verbose_logging)
         undiscretized_canonical_result = canonicalizer.get_canonicalized_vonorms(vonorms)
 
-        discretized_vonorms = VonormList(
-            DiscretizedVonormComputer(undiscretized_canonical_result.canonical_vonorms,
-                                      self.lattice_step_size,
-                                      verbose_log=self._verbose_logging).find_closest_valid_vonorms()
-        )
+        dvc = DiscretizedVonormComputer(self.lattice_step_size, self._verbose_logging)
+        discretized_vonorms = dvc.find_closest_valid_vonorms(undiscretized_canonical_result.canonical_vonorms)
 
         discretized_canonical_result = canonicalizer.get_canonicalized_vonorms(discretized_vonorms)
         lnf = LatticeNormalForm(discretized_canonical_result.canonical_vonorms, self.lattice_step_size)
