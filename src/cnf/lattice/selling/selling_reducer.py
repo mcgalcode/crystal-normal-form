@@ -54,6 +54,9 @@ class SellingReducer(ABC):
         num_steps = 0
         transform_matrices = [SellingTransformMatrix(np.eye(3))]
         while not object.is_obtuse(tol=self.tol):
+            if not object.is_superbasis():
+                raise RuntimeError(f"Selling transformation converted object: {object} to non-superbasis form!")
+
             object, acute_pair = self.apply_selling_transform(object)
             if self._verbose_logging:
                 print(f"Selling transform {acute_pair}: {self._logging_repr(object)}")
