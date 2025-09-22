@@ -1,3 +1,5 @@
+import numpy as np
+
 from .selling_reducer import SellingReducer
 from ..vonorm_list import VonormList
 from .selling_pair import SellingPair
@@ -28,15 +30,20 @@ class VonormListSellingReducer(SellingReducer):
 
     def _logging_repr(self, obj: VonormList):
         return f"{obj} {obj.conorms}"
-
     
-    def apply_selling_transform(self, obj: VonormList):
-        positive_conorm_indices = [i for i, conorm in enumerate(obj.conorms) if conorm > self.tol]
-        selected_conorm_idx = positive_conorm_indices[0]
-        acute_vector_pair = VonormListSellingReducer.CONORM_IDX_TO_VECTOR_PAIRS[selected_conorm_idx]
-        i, j = tuple(acute_vector_pair)
-        k, l = tuple(VonormListSellingReducer.ALL_INDICES - set(acute_vector_pair))
-
+    def get_dot_product_for_pair(self, obj: VonormList, pair: SellingPair):
+        pair_idx = VonormListSellingReducer.VECTOR_PAIRS_TO_CONORM_IDXS[pair]
+        return obj.conorms[pair_idx]
+    
+    def get_transformed_object(self, obj: VonormList, pair: SellingPair):
+        # positive_conorm_indices = [(conorm, i) for i, conorm in enumerate(obj.conorms) if conorm > self.tol]
+        # positive_conorm_indices = sorted(positive_conorm_indices)
+        # selected_conorm_idx = positive_conorm_indices[-1][1]
+        # acute_vector_pair = VonormListSellingReducer.CONORM_IDX_TO_VECTOR_PAIRS[selected_conorm_idx]
+        
+        i, j = pair
+        k, l = tuple(VonormListSellingReducer.ALL_INDICES - set(pair))
+        conorm_idx = VonormListSellingReducer.VECTOR_PAIRS_TO_CONORM_IDXS[pair]
         new_vonorm_list = [0, 0, 0, 0, 0, 0, 0]
 
         # Following Kurlin Lemma A.1
@@ -67,11 +74,11 @@ class VonormListSellingReducer(SellingReducer):
         vector_pair = SellingPair(i, j)
         ij_idx = VonormListSellingReducer.SECONDARY_VONORM_LABELS_TO_IDXS[vector_pair]
         # assert VonormListSellingReducer.VECTOR_PAIRS_TO_CONORM_IDXS[vector_pair] == selected_conorm_idx
-        conorm_v_i_dot_v_j = obj.conorms[selected_conorm_idx]
+        conorm_v_i_dot_v_j = obj.conorms[conorm_idx]
         new_vonorm_list[ij_idx] = obj.vonorms[ij_idx] - 4 * conorm_v_i_dot_v_j
         if self._verbose_logging:
-            print(f"Reducing vonorm {ij_idx} ({obj.vonorms[ij_idx]} -> {new_vonorm_list[ij_idx]}) using conorm idx {selected_conorm_idx}, w value {conorm_v_i_dot_v_j}")
+            print(f"Reducing vonorm {ij_idx} ({obj.vonorms[ij_idx]} -> {new_vonorm_list[ij_idx]}) using conorm idx {conorm_idx}, w value {conorm_v_i_dot_v_j}")
         if isinstance(obj.vonorms[ij_idx], int):
             new_vonorm_list[ij_idx] = int(new_vonorm_list[ij_idx])
 
-        return VonormList(new_vonorm_list), acute_vector_pair
+        return VonormList(new_vonorm_list)

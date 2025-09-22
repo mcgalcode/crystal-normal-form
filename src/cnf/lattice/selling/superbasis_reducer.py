@@ -26,9 +26,15 @@ def find_first_acute_pair(vecs: np.array):
                 return (i, j)
     return None
 
+
+
 class SuperbasisSellingReducer(SellingReducer):
+
+    def get_dot_product_for_pair(self, obj: Superbasis, pair: tuple[int, int]):
+        i, j = pair
+        return np.dot(obj.superbasis_vecs[i], obj.superbasis_vecs[j])
     
-    def apply_selling_transform(self, obj: Superbasis):
+    def get_transformed_object(self, superbasis: Superbasis, pair):
         """Performs the Selling reduction step described in Lemma A.1 (reduction)
         in Kurlin, 2022 "A complete isometry classification of 3-dimensional
         lattices". You can only apply this function after you have identified a pair
@@ -54,16 +60,9 @@ class SuperbasisSellingReducer(SellingReducer):
         np.array
             A new matrix where the rows are the new superbasis vectors
             after the reduction step has been applied one time.
-        """        
-        acute_pair = find_first_acute_pair(obj.superbasis_vecs)
-        if acute_pair is None:
-            return obj, None
-        first_acute_idx, second_acute_idx = acute_pair
-        transformed_vecs = self.get_transformed_vecs(obj.superbasis_vecs, first_acute_idx, second_acute_idx)
-        
-        return Superbasis(transformed_vecs), acute_pair
-    
-    def get_transformed_vecs(self, vecs, i, j):
+        """                
+        i, j = pair
+        vecs = superbasis.superbasis_vecs
         transformed_vecs = np.zeros(vecs.shape)
 
         # First assign the easy ones:
@@ -76,5 +75,5 @@ class SuperbasisSellingReducer(SellingReducer):
         other_idxs = {0, 1, 2, 3} - {i, j}
         for other_idx in other_idxs:
             transformed_vecs[other_idx] = vecs[other_idx] + vecs[i]        
-        return transformed_vecs
+        return Superbasis(transformed_vecs)
 
