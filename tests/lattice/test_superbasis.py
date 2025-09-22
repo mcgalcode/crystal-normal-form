@@ -101,19 +101,19 @@ def test_voronoi_class_two_superbases_have_same_vonorms():
     sb2 = Superbasis(new_sb_vecs)
     # print(sb.compute_vonorms().conorms)
     # print(sb2.compute_vonorms().conorms)
-    for cperm in sb.compute_vonorms().conorms.permissible_permutations:
-        permuted_conorms = sb.compute_vonorms().conorms.apply_permutation(cperm)
-        permuted_vonorms = sb.compute_vonorms().apply_permutation(cperm.to_vonorm_permutation())
+    # for cperm in sb.compute_vonorms().conorms.permissible_permutations:
+    #     permuted_conorms = sb.compute_vonorms().conorms.apply_permutation(cperm)
+    #     permuted_vonorms = sb.compute_vonorms().apply_permutation(cperm.to_vonorm_permutation())
 
-        conorms_match = np.isclose(np.array(permuted_conorms.conorms), np.array(sb2.compute_vonorms().conorms.conorms)).all()
-        vonorms_match = np.isclose(np.array(permuted_vonorms.vonorms), np.array(sb2.compute_vonorms().vonorms)).all()
+    #     conorms_match = np.isclose(np.array(permuted_conorms.conorms), np.array(sb2.compute_vonorms().conorms.conorms)).all()
+    #     vonorms_match = np.isclose(np.array(permuted_vonorms.vonorms), np.array(sb2.compute_vonorms().vonorms)).all()
     
-        if conorms_match and vonorms_match:
-            print(f"Matching Vonorm permutation: {cperm.to_vonorm_permutation()}")
+    #     if conorms_match and vonorms_match:
+    #         print(f"Matching Vonorm permutation: {cperm.to_vonorm_permutation()}")
 
     assert sb2.is_superbasis()
     assert sb.compute_vonorms().has_same_members(sb2.compute_vonorms())
     conorms = sb.compute_vonorms().conorms
-    assert len(conorms.zero_indices) == 1
-    assert conorms.voronoi_class == 2
+    assert len(conorms.form.zero_indices) == 1
+    assert conorms.form.voronoi_class == 2
     # print(f"{conorms.voronoi_class}: {len(conorms.permissible_permutations)}")    

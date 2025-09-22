@@ -10,9 +10,9 @@ def test_v5_case():
     sb: Superbasis = r.reduce(sb).reduced_object
 
     conorms = sb.compute_vonorms().conorms
-    assert len(conorms.zero_indices) == 3
-    assert conorms.voronoi_class == 5
-    print(f"{conorms.voronoi_class}: {len(conorms.permissible_permutations)}")
+    assert len(conorms.form) == 3
+    assert conorms.form.voronoi_class == 5
+    print(f"{conorms.form.voronoi_class}: {len(conorms.permissible_permutations)}")
 
 
 
@@ -36,9 +36,9 @@ def test_v4_case():
     hexagonal_prism = Lattice.hexagonal(1.0, 2.0)
     sb = Superbasis.from_pymatgen_lattice(hexagonal_prism)
     conorms = sb.compute_vonorms().conorms
-    assert len(conorms.zero_indices) == 2
-    assert conorms.voronoi_class == 4
-    print(f"{conorms.voronoi_class}: {len(conorms.permissible_permutations)}")
+    assert len(conorms.form) == 2
+    assert conorms.form.voronoi_class == 4
+    print(f"{conorms.form.voronoi_class}: {len(conorms.permissible_permutations)}")
 
 def test_v3_case():
     rhombic_dodecahedron = Lattice([
@@ -48,9 +48,9 @@ def test_v3_case():
     ])
     sb = Superbasis.from_pymatgen_lattice(rhombic_dodecahedron)
     conorms = sb.compute_vonorms().conorms
-    assert len(conorms.zero_indices) == 2
-    assert conorms.voronoi_class == 3
-    print(f"{conorms.voronoi_class}: {len(conorms.permissible_permutations)}")
+    assert len(conorms.form) == 2
+    assert conorms.form.voronoi_class == 3
+    print(f"{conorms.form.voronoi_class}: {len(conorms.permissible_permutations)}")
 
 def test_v2_case():
     hexarhombic_dodecahedron = Lattice([
@@ -60,9 +60,9 @@ def test_v2_case():
     ])
     sb = Superbasis.from_pymatgen_lattice(hexarhombic_dodecahedron)
     conorms = sb.compute_vonorms().conorms
-    assert len(conorms.zero_indices) == 1
-    assert conorms.voronoi_class == 2
-    print(f"{conorms.voronoi_class}: {len(conorms.permissible_permutations)}")
+    assert len(conorms.form) == 1
+    assert conorms.form.voronoi_class == 2
+    print(f"{conorms.form.voronoi_class}: {len(conorms.permissible_permutations)}")
     
 
 def test_v1_case():
@@ -73,9 +73,9 @@ def test_v1_case():
     ])
     sb = Superbasis.from_pymatgen_lattice(truncated_octahedron)
     conorms = sb.compute_vonorms().conorms
-    assert len(conorms.zero_indices) == 0
-    assert conorms.voronoi_class == 1
-    print(f"{conorms.voronoi_class}: {len(conorms.permissible_permutations)}")
+    assert len(conorms.form) == 0
+    assert conorms.form.voronoi_class == 1
+    print(f"{conorms.form.voronoi_class}: {len(conorms.permissible_permutations)}")
 
     unimodular_matrices = []
     for p in conorms.permissible_permutations:

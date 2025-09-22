@@ -1,6 +1,4 @@
-import enum
 import numpy as np
-import copy
 from .swaps.sorting import swap_vonorm_idxs
 from .conorms.conorm_list import ConormList
 from .permutations import apply_permutation
