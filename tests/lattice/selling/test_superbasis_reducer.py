@@ -58,20 +58,20 @@ def test_selling_transformation():
         [0,1,0.5]
     ])
     reducer = SuperbasisSellingReducer()
-    transformed = reducer.get_transformed_vecs(lattice, 0, 1)
+    transformed = reducer.get_transformed_object(Superbasis(lattice), (0, 1))
 
-    assert np.all(transformed[0] == [-1, 0, 0])
-    assert np.all(transformed[1] == [1, 1, 0])
-    assert np.all(transformed[2] == [1, 0, 0.5])
-    assert np.all(transformed[3] == [1, 1, 0.5])
+    assert np.all(transformed.superbasis_vecs[0] == [-1, 0, 0])
+    assert np.all(transformed.superbasis_vecs[1] == [1, 1, 0])
+    assert np.all(transformed.superbasis_vecs[2] == [1, 0, 0.5])
+    assert np.all(transformed.superbasis_vecs[3] == [1, 1, 0.5])
 
     # Apply on indices 2 and 3
-    transformed2 = reducer.get_transformed_vecs(transformed, 2, 3)
+    transformed2 = reducer.get_transformed_object(transformed, (2, 3))
 
-    assert np.all(transformed2[0] == [0, 0, 0.5])
-    assert np.all(transformed2[1] == [2, 1, 0.5])
-    assert np.all(transformed2[2] == [-1, 0, -0.5])
-    assert np.all(transformed2[3] == [1, 1, 0.5])
+    assert np.all(transformed2.superbasis_vecs[0] == [0, 0, 0.5])
+    assert np.all(transformed2.superbasis_vecs[1] == [2, 1, 0.5])
+    assert np.all(transformed2.superbasis_vecs[2] == [-1, 0, -0.5])
+    assert np.all(transformed2.superbasis_vecs[3] == [1, 1, 0.5])
 
 
 

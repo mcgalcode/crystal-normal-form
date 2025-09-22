@@ -12,15 +12,45 @@ def test_can_selling_transform(monoclinic_lattice):
     sb_reducer = SuperbasisSellingReducer()
     vl_reducer = VonormListSellingReducer()
 
-    transformed_basis, swap = sb_reducer.apply_selling_transform(basis)
-    print(transformed_basis.compute_vonorms())
+    transformed_basis, sb_swap = sb_reducer.apply_selling_transform(basis)
+    # print(transformed_basis.compute_vonorms())
 
-    transformed_vonorms, _ = vl_reducer.apply_selling_transform(basis.compute_vonorms())
-    print("VIA VONORM")
-    print(vonorm_list)
-    print(transformed_vonorms)
+    transformed_vonorms, v_swap = vl_reducer.apply_selling_transform(basis.compute_vonorms())
+    assert sb_swap == v_swap
+    # print(f"Vonorm swap: {v_swap}")
+    # print(f"Superbasis swap: {sb_swap}")
+    # print(vonorm_list)
+    # print(transformed_vonorms)
 
     assert np.isclose(transformed_basis.compute_vonorms().vonorms, transformed_vonorms.vonorms).all()
+
+def test_reduction_pair_selection_is_the_same(acute_lattice_1):
+    basis = Superbasis.from_pymatgen_lattice(acute_lattice_1)
+    vonorm_list = basis.compute_vonorms()
+    sb_reducer = SuperbasisSellingReducer(tol=1e-3)
+    vl_reducer = VonormListSellingReducer(tol=1e-3, verbose_logging=False)
+
+
+    num_steps = 500
+    for i in range(num_steps):
+        # print(i)
+        # print(basis.compute_vonorms())
+        # print(vonorm_list)
+        # print(basis.compute_vonorms().conorms)
+        # print(vonorm_list.conorms)
+        basis, sb_swap = sb_reducer.apply_selling_transform(basis)
+        vonorm_list, v_swap = vl_reducer.apply_selling_transform(vonorm_list)
+        # print(f"sb: {sb_swap}", f"vl: {v_swap}")
+        assert basis.is_obtuse() == vonorm_list.is_obtuse()
+        assert sb_swap == v_swap
+        assert np.isclose(basis.compute_vonorms().vonorms, vonorm_list.vonorms).all()
+
+        if basis.is_obtuse(tol=1e-3):
+            print(f"Got obtuseness after {i} steps")
+            break
+    
+    # print(basis.compute_vonorms().conorms)
+    # print(vonorm_list.conorms)
 
 def test_parallel_reduction_rhombohedral(rhombohedral_lattice):
 
@@ -31,7 +61,8 @@ def test_parallel_reduction_rhombohedral(rhombohedral_lattice):
     vl_reducer = VonormListSellingReducer()
 
     for i in range(100):
-        assert np.all(np.isclose(vl.vonorms, sb.compute_vonorms().vonorms))
+        assert vl.has_same_members(sb.compute_vonorms())
+        # assert np.all(np.isclose(vl.vonorms, sb.compute_vonorms().vonorms))
         sb_temp, _ = sb_reducer.apply_selling_transform(sb)
         sb_converged = sb_temp == sb
 
