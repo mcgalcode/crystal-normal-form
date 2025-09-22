@@ -34,7 +34,7 @@ class CrystalNormalForm:
 
         bnfs: list[BasisNormalForm] = []
         for stabilizer_permutation in lnf_construction_result.discretized_canonicalization_result.stabilizer_permutations:
-            print(f"Vonorm Permutation: {stabilizer_permutation}")
+            # print(f"Vonorm Permutation: {stabilizer_permutation}")
             # print(f"Conorm Permutation: {stabilizer_permutation.to_conorm_permutation()}")
             unimodular_transform = stabilizer_permutation.to_unimodular_matrix()
             transformed_motif = motif.apply_unimodular(unimodular_transform)
@@ -43,7 +43,7 @@ class CrystalNormalForm:
     
         
         sorted_bnfs = sorted(bnfs, key=lambda bnf: bnf.coord_list, reverse=False)
-        print(sorted_bnfs)
+        # print(sorted_bnfs)
         canonical_bnf = sorted_bnfs[0]
         # print(canonical_bnf)
         return cls(lnf_construction_result.lnf, canonical_bnf, lattice_step_size, motif_step_size)
