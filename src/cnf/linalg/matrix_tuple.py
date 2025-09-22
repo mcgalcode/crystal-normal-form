@@ -23,6 +23,9 @@ class MatrixTuple():
     def determinant(self):
         return np.linalg.det(self.matrix)
     
+    def to_list(self):
+        return list(self.tuple)
+    
     def __hash__(self):
         return self.tuple.__hash__()
     
