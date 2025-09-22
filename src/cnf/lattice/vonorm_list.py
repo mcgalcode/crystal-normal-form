@@ -18,6 +18,8 @@ VONORM_TO_DOT_PRODUCTS = np.array([
 class VonormList():
 
     def __init__(self, vonorms):
+        if not (isinstance(vonorms, tuple) or isinstance(vonorms, list) or isinstance(vonorms, np.ndarray)):
+            raise ValueError(f"Tried to intialize VonormList with bad type {type(vonorms)}")
         self.vonorms = vonorms
 
     @property
