@@ -1,14 +1,36 @@
 from cnf.lattice.superbasis import Superbasis
-from cnf.linalg.matrix_tuple import MatrixTuple
+from cnf.lattice.selling import SuperbasisSellingReducer
+from cnf.lattice.permutations import is_permutation_set_closed
 from pymatgen.core.lattice import Lattice
 
 def test_v5_case():
     cuboid = Lattice.cubic(1.0)
     sb = Superbasis.from_pymatgen_lattice(cuboid)
+    r = SuperbasisSellingReducer()
+    sb: Superbasis = r.reduce(sb).reduced_object
+
     conorms = sb.compute_vonorms().conorms
     assert len(conorms.zero_indices) == 3
     assert conorms.voronoi_class == 5
     print(f"{conorms.voronoi_class}: {len(conorms.permissible_permutations)}")
+
+
+
+    good = []
+    bad = []
+    for cperm in conorms.permissible_permutations:
+        perm = cperm.to_vonorm_permutation()
+        # print(mat, cperm.to_vonorm_permutation())
+        permuted = sb.apply_permutation(perm)
+        if permuted.is_superbasis():
+            good.append(perm)
+        else:
+            bad.append(perm)
+        # assert permuted.is_superbasis()
+        # assert permuted.compute_vonorms().has_same_members(sb.compute_vonorms())
+    
+    print(len(good))
+
 
 def test_v4_case():
     hexagonal_prism = Lattice.hexagonal(1.0, 2.0)

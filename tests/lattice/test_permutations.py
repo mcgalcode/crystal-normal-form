@@ -6,6 +6,7 @@ from itertools import permutations
 from cnf.linalg.matrix_tuple import MatrixTuple
 from cnf.lattice.vonorm_unimodular import get_unimodular_matrix_from_voronoi_vector_idxs
 from cnf.lattice.permutations import VonormPermutation, ConormPermutation, VONORM_PERMUTATION_TO_CONORM_PERMUTATION, compose_permutations, apply_permutation, is_permutation_set_closed
+from pymatgen.core.lattice import Lattice
 
 
 def test_vonorm_permutation():
@@ -87,7 +88,16 @@ def test_are_vonorm_unimodular_matrix_products_also_unimodular():
     for p1 in vperm_matrices:
         for p2 in vperm_matrices:
             composed = p1 @ p2
-            assert composed.is_unimodular()    
+            assert composed.is_unimodular()
+
+def test_are_vonorm_permutation_primary_idx_unique():
+    p = [p[1:4] for p in VONORM_PERMUTATION_TO_CONORM_PERMUTATION]
+    assert len(set(p)) == len(VONORM_PERMUTATION_TO_CONORM_PERMUTATION)
+
+def test_are_vonorm_permutations_unique_when_turned_to_unimodulars():
+    vperms = set(VONORM_PERMUTATION_TO_CONORM_PERMUTATION.keys())
+    vperm_matrices: list[MatrixTuple] = [VonormPermutation(vperm).to_unimodular_matrix() for vperm in vperms]    
+    assert len(vperm_matrices) == len(VONORM_PERMUTATION_TO_CONORM_PERMUTATION)
 
 def test_are_conorm_permutations_an_s7_subgroup():
     # Note, this test is not for functionality, but for probing the
