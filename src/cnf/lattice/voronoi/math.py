@@ -1,7 +1,11 @@
 import enum
+import copy
 import numpy as np
+
+from itertools import permutations
 from .voronoi_values import VoronoiValue, VoronoiVector, PrimaryVonorm, Conorm
-from ...linalg import MatrixTuple, VectorTuple
+from ...linalg import MatrixTuple
+from ..permutations import ConormPermutation
 from ..superbasis import get_v0_from_generating_vecs
 
 class Sign(enum.Enum):
@@ -267,8 +271,20 @@ class ConormCalculator():
                 new_set.add_val(signed_value)
         return new_set
 
-    # @staticmethod
-    # def validate_conorm_set(conorm_set: SignedValueSet):
+    @staticmethod
+    def validate_conorm_set(conorm_set: SignedValueSet):
+        if len(conorm_set) > 1:
+            return False
+        
+        cnorm_signed = conorm_set.to_list()[0]
+        if cnorm_signed.sign == Sign.NEGATIVE:
+            return False
+        if cnorm_signed.count != 1:
+            return False
+        if not isinstance(cnorm_signed.value, Conorm):
+            return False
+        
+        return cnorm_signed.value
     
     def __init__(self, t: Transformation, zero_conorms = None):
         if zero_conorms is None:
@@ -290,4 +306,34 @@ class ConormCalculator():
         reduced = ConormCalculator.vonorms_to_conorms(values)
         filtered = ConormCalculator.remove_zeros(reduced, self.zero_conorms)
         return filtered
+    
+    
+    def get_permutations(self):
+        template = []
+        permutable_indices = [6]
+        
+        for c in Conorm.all_conorms():
+            filtered_set = self.get_conorm(c)
+            if len(filtered_set) == 0:
+                permutable_indices.append(c.idx)
+                template.append(None)
+            else:
+                computed_conorm = ConormCalculator.validate_conorm_set(filtered_set)
+                if not computed_conorm:
+                    raise ValueError("Conorm mask and transform did not yield valid permutation")
+                template.append(computed_conorm.idx)
+        template.append(None)
+        fillable_indices = [idx for idx, val in enumerate(template) if val is None]
+
+        filled_permutations = []
+        for perm in permutations(permutable_indices):
+            # print(perm)
+            filled_perm = copy.copy(template)
+            for item in zip(fillable_indices, perm):
+                fillable_idx, permutation_idx = item
+                filled_perm[fillable_idx] = permutation_idx
+            filled_permutations.append(filled_perm)
+
+        return [ConormPermutation(p) for p in filled_permutations]
+
 

@@ -14,6 +14,10 @@ CONORM_PAIRS_TO_IDXS = {
 }
 class Conorm(VoronoiValue):
 
+    @staticmethod
+    def all_conorms():
+        return [Conorm(p) for p in CONORM_PAIRS_TO_IDXS.keys()]
+
     def __init__(self, pair: VoronoiVectorPair):
         if not isinstance(pair, VoronoiVectorPair): 
             pair = VoronoiVectorPair(*pair)        
@@ -27,6 +31,7 @@ class Conorm(VoronoiValue):
     def j(self):
         return self.pair[1]
     
+    @property
     def idx(self):
         return CONORM_PAIRS_TO_IDXS[self.pair]
     

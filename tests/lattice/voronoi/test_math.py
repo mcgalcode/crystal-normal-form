@@ -5,6 +5,7 @@ from cnf.lattice.voronoi.math import SignedVoronoiValue, Sign, SignedValueSet, S
 from cnf.lattice.voronoi.voronoi_values import PrimaryVonorm, SecondaryVonorm, Conorm, VoronoiVector
 from cnf.lattice.superbasis import get_v0_from_generating_vecs
 from cnf.linalg import MatrixTuple
+from cnf.lattice.permutations import ConormPermutation
 
 def test_can_init_voronoi_value():
     v = SignedVoronoiValue.negative_one(PrimaryVonorm(0))
@@ -258,3 +259,8 @@ def test_get_conorm():
 
     result = cc.get_conorm(Conorm((2, 3)), log=False)
     assert len(result) == 0
+
+    # print(cc.get_permutations())
+    assert ConormPermutation([0,1,4,3,2,5,6]) in cc.get_permutations()
+    assert ConormPermutation([0,1,4,3,2,6,5]) in cc.get_permutations()
+    assert len(cc.get_permutations()) == 2
