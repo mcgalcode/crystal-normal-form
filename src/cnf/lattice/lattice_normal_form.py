@@ -1,4 +1,4 @@
-from .vonorm_list import VonormList
+from .voronoi.vonorm_list import VonormList
 
 class LatticeNormalForm():
 

@@ -1,7 +1,7 @@
 import numpy as np
-from .swaps.sorting import swap_vonorm_idxs
-from .conorms.conorm_list import ConormList
-from .permutations import apply_permutation
+from ..swaps.sorting import swap_vonorm_idxs
+from .conorm_list import ConormList
+from ..permutations import apply_permutation
 
 # This matrix is found on page 48 of David's thesis
 VONORM_TO_DOT_PRODUCTS = np.array([
@@ -180,7 +180,7 @@ class VonormList():
         return np.array([v0, v1, v2])
     
     def to_superbasis(self, lattice_step_size: float = 1.0):
-        from .superbasis import Superbasis
+        from ..superbasis import Superbasis
         return Superbasis.from_generating_vecs(self.recover_generators(lattice_step_size=lattice_step_size))
 
     def primary_sum(self):

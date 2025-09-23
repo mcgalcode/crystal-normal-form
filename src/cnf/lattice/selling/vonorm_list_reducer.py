@@ -1,7 +1,7 @@
 import numpy as np
 
 from .selling_reducer import SellingReducer
-from ..vonorm_list import VonormList
+from ..voronoi.vonorm_list import VonormList
 from .selling_pair import SellingPair
 
 class VonormListSellingReducer(SellingReducer):

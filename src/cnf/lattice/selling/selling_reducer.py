@@ -2,7 +2,7 @@ import numpy as np
 from .selling_reduction_result import SellingReductionResult
 from .selling_transform_matrix import SellingTransformMatrix
 from ..superbasis import Superbasis
-from ..vonorm_list import VonormList
+from ..voronoi.vonorm_list import VonormList
 
 from abc import ABC, abstractmethod
 

@@ -1,11 +1,6 @@
 class SellingPair(tuple):
 
     def __new__(cls, *vals):
-        """
-        Creates a new instance of the SellingPair. This method is called before
-        __init__. It's the correct place to control the creation of immutable
-        objects.
-        """
         if len(vals) != 2:
             raise ValueError(f"SellingPair must be initialized with exactly two values, but got {len(vals)}.")
 

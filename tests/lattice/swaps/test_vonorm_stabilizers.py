@@ -1,7 +1,8 @@
 import pytest
 import numpy as np
 
-from cnf.lattice import Superbasis, VonormList
+from cnf.lattice import Superbasis
+from cnf.lattice.voronoi import VonormList
 from cnf.lattice.swaps.stabilizer import search_for_stabilizers
 
 from pymatgen.core.lattice import Lattice

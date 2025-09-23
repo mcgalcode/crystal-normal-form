@@ -1,7 +1,8 @@
 import pytest
 import numpy as np
 
-from cnf.lattice import Superbasis, VonormList
+from cnf.lattice import Superbasis
+from cnf.lattice.voronoi import VonormList
 from cnf.lattice.lnf_constructor import LatticeNormalFormConstructor
 from cnf.lattice.selling import VonormListSellingReducer
 from cnf.lattice.rounding import DiscretizedVonormComputer

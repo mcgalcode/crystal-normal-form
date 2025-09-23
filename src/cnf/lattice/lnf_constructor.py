@@ -2,7 +2,7 @@ import numpy as np
 from pymatgen.core.lattice import Lattice
 from pymatgen.core.structure import Structure
 
-from .vonorm_list import VonormList
+from .voronoi.vonorm_list import VonormList
 from .selling import VonormListSellingReducer
 from .permutations import VonormPermutation
 from .rounding import DiscretizedVonormComputer

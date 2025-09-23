@@ -4,7 +4,7 @@ from pymatgen.core.lattice import Lattice
 from pymatgen.core.structure import Structure
 
 from .permutations import VonormPermutation
-from .vonorm_list import VonormList
+from .voronoi.vonorm_list import VonormList
 from .vonorm_unimodular import VORONOI_IDX_TO_COLUMNS_TO_SUM
 
 def get_v0_from_generating_vecs(generating_vecs):

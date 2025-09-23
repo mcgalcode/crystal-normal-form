@@ -1,5 +1,5 @@
 import numpy as np
-from .vonorm_list import VonormList
+from .voronoi.vonorm_list import VonormList
 
 PRIMARY_VONORM_IDXS = [0, 1, 2, 3]
 SECONDARY_VONORM_IDXS = [4,5,6]

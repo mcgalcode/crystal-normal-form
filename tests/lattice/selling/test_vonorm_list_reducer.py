@@ -1,7 +1,7 @@
 import pytest
 
 from cnf.lattice.selling import VonormListSellingReducer, SuperbasisSellingReducer
-from cnf.lattice import Superbasis, VonormList
+from cnf.lattice import Superbasis
 from cnf.lattice.rounding import DiscretizedVonormComputer
 
 

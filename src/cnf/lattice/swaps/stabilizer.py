@@ -1,7 +1,7 @@
 import copy
 import numpy as np
 
-from ..vonorm_list import VonormList
+from ..voronoi.vonorm_list import VonormList
 from .sorting import apply_swap_series 
 from ..vonorm_unimodular import get_unimodular_matrix_from_voronoi_vector_idxs
 
