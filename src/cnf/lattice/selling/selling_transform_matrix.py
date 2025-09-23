@@ -1,7 +1,7 @@
 import numpy as np
 
 from ...linalg.matrix_tuple import MatrixTuple
-from .selling_pair import SellingPair
+from ..voronoi.vector_pair import VoronoiVectorPair
 
 LABELS_TO_COLS = {
     1: np.array([1, 0, 0]),
@@ -13,14 +13,14 @@ LABELS_TO_COLS = {
 class SellingTransformMatrix(MatrixTuple):
 
     @staticmethod
-    def from_pair(pair: SellingPair):
+    def from_pair(pair: VoronoiVectorPair):
         return SELLING_TRANSFORM_MATRICES[pair]
     
     @staticmethod
-    def inverse_from_pair(pair: SellingPair):
+    def inverse_from_pair(pair: VoronoiVectorPair):
         return SELLING_TRANSFORM_INVERSE_MATRICES[pair]
 
-def build_st_mat_from_pair(pair: SellingPair):
+def build_st_mat_from_pair(pair: VoronoiVectorPair):
     columns = []
     i, j = pair
     # We only care about vectors 1,2, and 3
@@ -34,11 +34,11 @@ def build_st_mat_from_pair(pair: SellingPair):
         columns.append(col)
     return SellingTransformMatrix(np.array(columns).T)
 
-SELLING_TRANSFORM_MATRICES: dict[SellingPair, SellingTransformMatrix] = {}
-SELLING_TRANSFORM_INVERSE_MATRICES: dict[SellingPair, SellingTransformMatrix] = {}
+SELLING_TRANSFORM_MATRICES: dict[VoronoiVectorPair, SellingTransformMatrix] = {}
+SELLING_TRANSFORM_INVERSE_MATRICES: dict[VoronoiVectorPair, SellingTransformMatrix] = {}
 
-for p in SellingPair.CANONICAL_PAIRS:
+for p in VoronoiVectorPair.CANONICAL_PAIRS:
     SELLING_TRANSFORM_MATRICES[p] = build_st_mat_from_pair(p)
 
-for p in SellingPair.CANONICAL_PAIRS:
+for p in VoronoiVectorPair.CANONICAL_PAIRS:
     SELLING_TRANSFORM_INVERSE_MATRICES[p] = SellingTransformMatrix(SELLING_TRANSFORM_MATRICES[p].inverse())

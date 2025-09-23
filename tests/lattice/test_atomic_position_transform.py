@@ -5,11 +5,11 @@ from pymatgen.core.structure import Structure
 
 from cnf.lattice.superbasis import Superbasis
 from cnf.lattice.selling import SuperbasisSellingReducer
-from cnf.lattice.selling.selling_pair import SellingPair
+from cnf.lattice.voronoi.vector_pair import VoronoiVectorPair
 from cnf.lattice.selling.selling_transform_matrix import SellingTransformMatrix
 
 def test_unimodular_inverse():
-    for p in SellingPair.CANONICAL_PAIRS:
+    for p in VoronoiVectorPair.CANONICAL_PAIRS:
         mat = SellingTransformMatrix.from_pair(p).matrix
         inv = SellingTransformMatrix.inverse_from_pair(p).matrix
         assert np.all(mat @ inv == np.eye(3))

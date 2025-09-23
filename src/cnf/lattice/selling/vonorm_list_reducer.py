@@ -2,7 +2,7 @@ import numpy as np
 
 from .selling_reducer import SellingReducer
 from ..voronoi.vonorm_list import VonormList
-from .selling_pair import SellingPair
+from ..voronoi.vector_pair import VoronoiVectorPair
 
 class VonormListSellingReducer(SellingReducer):
  
@@ -31,11 +31,11 @@ class VonormListSellingReducer(SellingReducer):
     def _logging_repr(self, obj: VonormList):
         return f"{obj} {obj.conorms}"
     
-    def get_dot_product_for_pair(self, obj: VonormList, pair: SellingPair):
+    def get_dot_product_for_pair(self, obj: VonormList, pair: VoronoiVectorPair):
         pair_idx = VonormListSellingReducer.VECTOR_PAIRS_TO_CONORM_IDXS[pair]
         return obj.conorms[pair_idx]
     
-    def get_transformed_object(self, obj: VonormList, pair: SellingPair):
+    def get_transformed_object(self, obj: VonormList, pair: VoronoiVectorPair):
         # positive_conorm_indices = [(conorm, i) for i, conorm in enumerate(obj.conorms) if conorm > self.tol]
         # positive_conorm_indices = sorted(positive_conorm_indices)
         # selected_conorm_idx = positive_conorm_indices[-1][1]
@@ -61,17 +61,17 @@ class VonormListSellingReducer(SellingReducer):
         # relationships and makes it easy to grab the index corresponding to a given ik pair
         #
         # pair 1: u_k = v_ik, u_ik = u_jl = v_k
-        ik_idx = VonormListSellingReducer.SECONDARY_VONORM_LABELS_TO_IDXS[SellingPair(i, k)]
+        ik_idx = VonormListSellingReducer.SECONDARY_VONORM_LABELS_TO_IDXS[VoronoiVectorPair(i, k)]
         new_vonorm_list[k] = obj.vonorms[ik_idx]
         new_vonorm_list[ik_idx] = obj.vonorms[k]
 
         # pair 2: u_l = v_il, u_il = u_jk = v_l
-        il_idx = VonormListSellingReducer.SECONDARY_VONORM_LABELS_TO_IDXS[SellingPair(i, l)]
+        il_idx = VonormListSellingReducer.SECONDARY_VONORM_LABELS_TO_IDXS[VoronoiVectorPair(i, l)]
         new_vonorm_list[l] = obj.vonorms[il_idx]
         new_vonorm_list[il_idx] = obj.vonorms[l]
 
         # The i,j vonorm is reduced by 4 x v_i dot v_j
-        vector_pair = SellingPair(i, j)
+        vector_pair = VoronoiVectorPair(i, j)
         ij_idx = VonormListSellingReducer.SECONDARY_VONORM_LABELS_TO_IDXS[vector_pair]
         # assert VonormListSellingReducer.VECTOR_PAIRS_TO_CONORM_IDXS[vector_pair] == selected_conorm_idx
         conorm_v_i_dot_v_j = obj.conorms[conorm_idx]
