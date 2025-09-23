@@ -18,3 +18,6 @@ class VectorTuple():
     
     def __repr__(self):
         return self.tuple.__repr__()
+    
+    def __iter__(self):
+        return iter(self.tuple)

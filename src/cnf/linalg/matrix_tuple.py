@@ -1,5 +1,6 @@
 import numpy as np
 from .utils import is_unimodular
+from .vector_tuple import VectorTuple
 class MatrixTuple():
 
     @classmethod
@@ -25,6 +26,12 @@ class MatrixTuple():
     
     def to_list(self):
         return list(self.tuple)
+    
+    def to_cols(self) -> list[VectorTuple]:
+        cols = []
+        for col in self.matrix.T:
+            cols.append(VectorTuple(col))
+        return cols
     
     def __hash__(self):
         return self.tuple.__hash__()
