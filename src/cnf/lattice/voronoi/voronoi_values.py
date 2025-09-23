@@ -35,6 +35,9 @@ class Conorm(VoronoiValue):
     
     def __eq__(self, other: 'SecondaryVonorm'):
         return self.pair == other.pair
+    
+    def __hash__(self):
+        return (self.__class__.__name__, self.pair).__hash__()
 
 class PrimaryVonorm(VoronoiValue):
     
@@ -48,6 +51,9 @@ class PrimaryVonorm(VoronoiValue):
 
     def __repr__(self):
         return f"(V_{self.idx})^2"
+    
+    def __hash__(self):
+        return (self.__class__.__name__, self.idx).__hash__()
     
 class SecondaryVonorm(VoronoiValue):
 
@@ -74,6 +80,9 @@ class SecondaryVonorm(VoronoiValue):
 
     def __eq__(self, other: 'SecondaryVonorm'):
         return self.pair == other.pair
+    
+    def __hash__(self):
+        return (self.__class__.__name__, self.pair).__hash__()
 
 class VoronoiVector():
 

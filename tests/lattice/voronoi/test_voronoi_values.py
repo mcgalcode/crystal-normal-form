@@ -9,6 +9,16 @@ def test_can_instantiate_conorm():
         Conorm((1, 1))
     assert Conorm((1, 2)) == Conorm((2, 1))
 
+def test_can_hash_conorms():
+    my_set = set()
+    my_set.add(Conorm((1,2)))
+    my_set.add(Conorm((1,2)))
+    assert len(my_set) == 1
+    my_set.add(Conorm((2, 1)))
+    assert len(my_set) == 1
+    my_set.add(Conorm((2, 3)))
+    assert len(my_set) == 2
+
 
 def test_can_instantiate_primary_vonorm():
     v = PrimaryVonorm(1)
@@ -16,6 +26,18 @@ def test_can_instantiate_primary_vonorm():
     assert PrimaryVonorm(2) != PrimaryVonorm(1)
     with pytest.raises(ValueError):
         PrimaryVonorm(5)
+    
+def test_can_hash_primary_vonorms():
+    my_set = set()
+    my_set.add(PrimaryVonorm(2))
+    my_set.add(PrimaryVonorm(2))
+    assert len(my_set) == 1
+    my_set.add(PrimaryVonorm(1))
+    assert len(my_set) == 2
+    my_set.add(PrimaryVonorm(3))
+    assert len(my_set) == 3
+    my_set.add(PrimaryVonorm(3))
+    assert len(my_set) == 3
 
 def test_can_instantiate_secondary_vonorm():
     v = SecondaryVonorm((0, 1))
@@ -28,6 +50,16 @@ def test_can_instantiate_secondary_vonorm():
 
     with pytest.raises(ValueError):
         SecondaryVonorm((2,4))
+
+def test_can_hash_secondary_vonorms():
+    my_set = set()
+    my_set.add(SecondaryVonorm((1,2)))
+    my_set.add(SecondaryVonorm((1,2)))
+    assert len(my_set) == 1
+    my_set.add(SecondaryVonorm((2, 1)))
+    assert len(my_set) == 1
+    my_set.add(SecondaryVonorm((2, 3)))
+    assert len(my_set) == 2
 
 def test_can_dot_voronoi_vectors():
     # Conorms
