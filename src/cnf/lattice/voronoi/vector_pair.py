@@ -12,7 +12,6 @@ class VoronoiVectorPair(SortedTuple):
             raise ValueError(f"Tried to instantiate VoronoiVectorPair with non-viable pair: {instantiated}")
         return instantiated
 
-
     CANONICAL_PAIRS = [
         (0,1),
         (0,2),

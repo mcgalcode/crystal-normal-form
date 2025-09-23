@@ -1,0 +1,260 @@
+import pytest
+import numpy as np
+
+from cnf.lattice.voronoi.math import SignedVoronoiValue, Sign, SignedValueSet, SignedVector, SignedVectorSet, ConormCalculator, Transformation
+from cnf.lattice.voronoi.voronoi_values import PrimaryVonorm, SecondaryVonorm, Conorm, VoronoiVector
+from cnf.lattice.superbasis import get_v0_from_generating_vecs
+from cnf.linalg import MatrixTuple
+
+def test_can_init_voronoi_value():
+    v = SignedVoronoiValue.negative_one(PrimaryVonorm(0))
+    assert v.sign == Sign.NEGATIVE
+    assert v.count == 1
+    assert v.value == PrimaryVonorm(0)
+    assert v.value != PrimaryVonorm(1)
+
+def test_sign_multiplication():
+    assert Sign.POSITIVE.multiply(Sign.NEGATIVE) == Sign.NEGATIVE
+    assert Sign.NEGATIVE.multiply(Sign.POSITIVE) == Sign.NEGATIVE
+
+    assert Sign.NEGATIVE.multiply(Sign.NEGATIVE) == Sign.POSITIVE
+    assert Sign.POSITIVE.multiply(Sign.POSITIVE) == Sign.POSITIVE
+
+def test_can_init_voronoi_value_from_ct():
+    v = SignedVoronoiValue.from_signed_count(-2, PrimaryVonorm(0))
+    assert v.count == 2
+    assert v.sign == Sign.NEGATIVE
+
+    v = SignedVoronoiValue.from_signed_count(5, PrimaryVonorm(0))
+    assert v.count == 5
+    assert v.sign == Sign.POSITIVE
+
+def test_signed_value_equality():
+    v1 = SignedVoronoiValue([Sign.NEGATIVE, 2, PrimaryVonorm(1)])
+    
+    v2 = SignedVoronoiValue([Sign.NEGATIVE, 2, PrimaryVonorm(1)])
+    assert v1 == v2
+    assert v2 == v1
+
+    v3 = SignedVoronoiValue([Sign.NEGATIVE, 3, PrimaryVonorm(1)])
+    assert v1 != v3
+    assert v3 != v1
+
+    v4 = SignedVoronoiValue([Sign.POSITIVE, 2, PrimaryVonorm(1)])
+    assert v1 != v4
+    assert v4 != v1
+    v5 = SignedVoronoiValue([Sign.NEGATIVE, 2, PrimaryVonorm(2)])
+    assert v1 != v5
+    assert v5 != v1
+
+def test_signed_value_sign_multiplication():
+    pv1 = PrimaryVonorm(1)
+    sv = SignedVoronoiValue([Sign.POSITIVE, 2, pv1])
+    sv2 = sv.multiply_sign(Sign.NEGATIVE)
+    assert sv2 == SignedVoronoiValue([Sign.NEGATIVE, 2, pv1])
+
+
+def test_signed_value_set():
+    svs = SignedValueSet([])
+    pv0 = PrimaryVonorm(0)
+    assert svs.get_count(pv0) == 0
+    svs.add_val(SignedVoronoiValue.positive_one(pv0))
+    assert svs.get_count(pv0) == 1
+    svs.add_val(SignedVoronoiValue.positive_one(pv0))
+    assert svs.get_count(pv0) == 2
+    svs.add_val(SignedVoronoiValue.negative_one(pv0))
+    assert svs.get_count(pv0) == 1
+    svs.add_val(SignedVoronoiValue.negative_one(pv0))
+    svs.add_val(SignedVoronoiValue.negative_one(pv0))
+    assert svs.get_count(pv0) == -1
+
+    pv1 = PrimaryVonorm(1)
+    svs.add_val(SignedVoronoiValue.positive_one(pv1))
+    assert svs.get_count(pv0) == -1
+    assert svs.get_count(pv1) == 1
+
+    c12 = Conorm((1, 2))
+    svs.add_val(SignedVoronoiValue.positive_one(c12))
+    assert svs.get_count(pv0) == -1
+    assert svs.get_count(c12) == 1
+
+    c21 = Conorm((2, 1))
+    svs.add_val(SignedVoronoiValue.positive_one(c12))
+    assert svs.get_count(pv0) == -1
+    assert svs.get_count(c12) == 2
+    assert svs.get_count(c21) == 2
+
+def test_distribute_sign():
+    v1 = SignedVoronoiValue.positive_one(PrimaryVonorm(1))
+    v2 = SignedVoronoiValue.negative_one(SecondaryVonorm((0, 1)))
+    svs = SignedValueSet([v1, v2])
+
+    assert v1 in svs
+    assert v2 in svs
+
+    distributed = svs.distribute(Sign.NEGATIVE)
+    assert v1.negative() in distributed
+    assert v2.negative() in distributed
+
+def test_signed_vector():
+    v1 = SignedVector.negative_v1()
+    v2 = SignedVector.positive_v2()
+    result = v1.dot(v2)
+    assert isinstance(result, SignedVoronoiValue)
+    assert result.sign == Sign.NEGATIVE
+    assert result.value == Conorm((1, 2))
+
+    v1 = SignedVector.negative_v1()
+    v2 = SignedVector.positive_v1()
+    result = v1.dot(v2)
+    assert isinstance(result, SignedVoronoiValue)
+    assert result.sign == Sign.NEGATIVE
+    assert result.value == PrimaryVonorm(1)
+
+    v1 = SignedVector.positive_v1()
+    v2 = SignedVector.positive_v1()
+    result = v1.dot(v2)
+    assert isinstance(result, SignedVoronoiValue)
+    assert result.sign == Sign.POSITIVE
+    assert result.value == PrimaryVonorm(1)
+
+@pytest.fixture
+def vector_set_1():
+    return SignedVectorSet([
+        SignedVector.negative_v1(),
+        SignedVector.negative_v2()
+    ])
+
+@pytest.fixture
+def vector_set_2():
+    return SignedVectorSet([
+        SignedVector.positive_v1(),
+        SignedVector.positive_v3()
+    ])
+
+def test_signed_vector_set_multiplication(vector_set_1, vector_set_2):
+    result = vector_set_1.multiply(vector_set_2)
+    assert isinstance(result, SignedValueSet)
+    assert SignedVoronoiValue.negative_one(PrimaryVonorm(1)) in result
+    assert SignedVoronoiValue.negative_one(Conorm((1,3))) in result
+    assert SignedVoronoiValue.negative_one(Conorm((1,2))) in result
+    assert SignedVoronoiValue.negative_one(Conorm((2,3))) in result
+    assert len(result) == 4
+
+def test_vonorm_to_conorm_reduction(vector_set_1, vector_set_2):
+    result = ConormCalculator.vonorms_to_conorms(vector_set_1.multiply(vector_set_2))
+    assert isinstance(result, SignedValueSet)
+
+    assert not SignedVoronoiValue.negative_one(PrimaryVonorm(1)) in result
+    assert not SignedVoronoiValue.negative_one(Conorm((1,3))) in result
+    assert not SignedVoronoiValue.negative_one(Conorm((1,2))) in result
+    assert SignedVoronoiValue.negative_one(Conorm((2,3))) in result
+    assert SignedVoronoiValue.positive_one(Conorm((0,1))) in result
+    
+    assert len(result) == 2
+
+def test_transformation():
+    mat = np.array([
+        [1, 0, 0],
+        [-1, -1, 1],
+        [0, 0, -1]
+    ])
+    t = Transformation(MatrixTuple(mat))
+    expected_v0 = get_v0_from_generating_vecs(mat.T)
+    assert (t.v0() == expected_v0).all()
+    assert (t.v0() == -np.array([1, -1, -1])).all()
+
+def test_col_to_vector_set():
+    vector = [1, 0 ,1]
+    vectors = ConormCalculator.col_to_vector_set(vector)
+    assert SignedVector.positive_v1() in vectors
+    assert SignedVector.positive_v2() not in vectors
+    assert SignedVector.negative_v2() not in vectors
+    assert SignedVector.positive_v3() in vectors
+    assert len(vectors) == 2
+
+    vector = [0, -1 ,1]
+    vectors = ConormCalculator.col_to_vector_set(vector)
+    assert SignedVector.positive_v1() not in vectors
+    assert SignedVector.positive_v2() not in vectors
+    assert SignedVector.negative_v2() in vectors
+    assert SignedVector.positive_v3() in vectors
+    assert SignedVector.negative_v3() not in vectors
+    assert len(vectors) == 2
+
+def test_remove_zero_conorms():
+    c12 = SignedVoronoiValue.positive_one(Conorm((1, 2)))
+    c13 = SignedVoronoiValue.negative_one(Conorm((1, 3)))
+    c02 = SignedVoronoiValue.negative_one(Conorm((0, 2)))
+    val_set = SignedValueSet([c12, c13, c02])
+    zero_cs = set([Conorm((1,2)), Conorm((2,3)), Conorm((0, 2))])
+    filtered = ConormCalculator.remove_zeros(val_set, zero_cs)
+    assert Conorm((1,2)) not in filtered
+    assert Conorm((1,3)) in filtered
+    assert SignedVoronoiValue.negative_one(Conorm((1,3))) in filtered
+    
+
+def test_get_conorm():
+    t = np.array([
+        [1, 0, 0],
+        [0, 1, 0],
+        [1, 0, -1],
+    ])
+    t = Transformation(MatrixTuple(t))
+
+    # Without Filtering
+    cc = ConormCalculator(t)
+    result = cc.get_conorm(Conorm((0, 1)), log=False)
+    assert Conorm((0, 1)) in result
+    assert Conorm((2, 3)) in result
+    assert len(result) == 2
+
+    result = cc.get_conorm(Conorm((0, 2)), log=False)
+    assert Conorm((0, 2)) in result
+    assert Conorm((2, 3)) in result
+    assert len(result) == 2
+
+    result = cc.get_conorm(Conorm((0, 3)), log=False)
+    assert Conorm((1, 3)) in result
+    assert Conorm((2, 3)) in result
+    assert len(result) == 2
+
+    result = cc.get_conorm(Conorm((1, 2)), log=False)
+    assert Conorm((1, 2)) in result
+    assert Conorm((2, 3)) in result
+    assert len(result) == 2
+
+    result = cc.get_conorm(Conorm((1, 3)), log=False)
+    assert Conorm((0, 3)) in result
+    assert Conorm((2, 3)) in result
+    assert len(result) == 2
+
+    result = cc.get_conorm(Conorm((2, 3)), log=False)
+    assert Conorm((2, 3)) in result
+    assert len(result) == 1
+
+
+    # With Filtering
+    cc = ConormCalculator(t, set([Conorm((2, 3))]))
+    result = cc.get_conorm(Conorm((0, 1)), log=False)
+    assert Conorm((0, 1)) in result
+    assert len(result) == 1
+
+    result = cc.get_conorm(Conorm((0, 2)), log=False)
+    assert Conorm((0, 2)) in result
+    assert len(result) == 1
+
+    result = cc.get_conorm(Conorm((0, 3)), log=False)
+    assert Conorm((1, 3)) in result
+    assert len(result) == 1
+
+    result = cc.get_conorm(Conorm((1, 2)), log=False)
+    assert Conorm((1, 2)) in result
+    assert len(result) == 1
+
+    result = cc.get_conorm(Conorm((1, 3)), log=False)
+    assert Conorm((0, 3)) in result
+    assert len(result) == 1
+
+    result = cc.get_conorm(Conorm((2, 3)), log=False)
+    assert len(result) == 0
