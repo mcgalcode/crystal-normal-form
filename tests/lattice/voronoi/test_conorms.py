@@ -1,79 +1,56 @@
-from cnf.lattice.superbasis import Superbasis
-from cnf.lattice.selling import SuperbasisSellingReducer
-from cnf.lattice.permutations import is_permutation_set_closed
-from pymatgen.core.lattice import Lattice
 from cnf.lattice.voronoi import ConormListForm
 
-def test_v5_case():
-    cuboid = Lattice.cubic(1.0)
-    sb = Superbasis.from_pymatgen_lattice(cuboid)
-    r = SuperbasisSellingReducer()
-    sb: Superbasis = r.reduce(sb).reduced_object
+def _assert_all_permutation_matrices_maintain_superbasis(superbasis):
+    conorms = superbasis.compute_vonorms().conorms
+    tested = []
+    for cperm in conorms.form.permissible_permutations():
+        # print(mat, cperm.to_vonorm_permutation())
+        mats = []
+        for mat in conorms.form.matrices_for_perm(cperm):
+            permuted = superbasis.apply_matrix_transform(mat.matrix)
+            # print(f"Testing mat: {permuted.v0()}")
+            assert permuted.is_superbasis()
+            assert permuted.is_obtuse(tol=1e-8)
+            mats.append(mat)
+        tested.append((cperm, mats))
+    return tested
 
-    conorms = sb.compute_vonorms().conorms
+def test_v5_case(reduced_v5_superbasis):
+    conorms = reduced_v5_superbasis.compute_vonorms().conorms
     assert len(conorms.form) == 3
     assert conorms.form.voronoi_class == 5
     print(f"{conorms.form.voronoi_class}: {len(conorms.permissible_permutations)}")
+    tested = _assert_all_permutation_matrices_maintain_superbasis(reduced_v5_superbasis)
+
+    assert len(tested) == 96
 
 
-
-    good = []
-    bad = []
-    for cperm in conorms.permissible_permutations:
-        perm = cperm.to_vonorm_permutation()
-        # print(mat, cperm.to_vonorm_permutation())
-        permuted = sb.apply_permutation(perm)
-        if permuted.is_superbasis():
-            good.append(perm)
-        else:
-            bad.append(perm)
-        # assert permuted.is_superbasis()
-        # assert permuted.compute_vonorms().has_same_members(sb.compute_vonorms())
-    
-    print(len(good))
-
-
-def test_v4_case():
-    hexagonal_prism = Lattice.hexagonal(1.0, 2.0)
-    sb = Superbasis.from_pymatgen_lattice(hexagonal_prism)
-    conorms = sb.compute_vonorms().conorms
+def test_v4_case(reduced_v4_superbasis):
+    conorms = reduced_v4_superbasis.compute_vonorms().conorms
     assert len(conorms.form) == 2
     assert conorms.form.voronoi_class == 4
     print(f"{conorms.form.voronoi_class}: {len(conorms.permissible_permutations)}")
+    tested = _assert_all_permutation_matrices_maintain_superbasis(reduced_v4_superbasis)
+    assert len(tested) == 72
 
-def test_v3_case():
-    rhombic_dodecahedron = Lattice([
-        [1, 1, 0],
-        [1, -1, 0],
-        [-1, 0, 1],
-    ])
-    sb = Superbasis.from_pymatgen_lattice(rhombic_dodecahedron)
-    conorms = sb.compute_vonorms().conorms
+def test_v3_case(reduced_v3_superbasis):
+    conorms = reduced_v3_superbasis.compute_vonorms().conorms
     assert len(conorms.form) == 2
     assert conorms.form.voronoi_class == 3
     print(f"{conorms.form.voronoi_class}: {len(conorms.permissible_permutations)}")
+    tested = _assert_all_permutation_matrices_maintain_superbasis(reduced_v3_superbasis)
+    assert len(tested) == 72
 
-def test_v2_case():
-    hexarhombic_dodecahedron = Lattice([
-        [1, 1, 0],
-        [1, -1, 0],
-        [-1, 0.2, 1],
-    ])
-    sb = Superbasis.from_pymatgen_lattice(hexarhombic_dodecahedron)
-    conorms = sb.compute_vonorms().conorms
+def test_v2_case(reduced_v2_superbasis):
+    conorms = reduced_v2_superbasis.compute_vonorms().conorms
     assert len(conorms.form) == 1
     assert conorms.form.voronoi_class == 2
     print(f"{conorms.form.voronoi_class}: {len(conorms.permissible_permutations)}")
-    
+    tested = _assert_all_permutation_matrices_maintain_superbasis(reduced_v2_superbasis)
+    assert len(tested) == 48
 
-def test_v1_case():
-    truncated_octahedron = Lattice([
-        [1, 1, -1],
-        [1, -1, 1],
-        [-1, 1, 1],
-    ])
-    sb = Superbasis.from_pymatgen_lattice(truncated_octahedron)
-    conorms = sb.compute_vonorms().conorms
+def test_v1_case(reduced_v1_superbasis):
+    conorms = reduced_v1_superbasis.compute_vonorms().conorms
     assert len(conorms.form) == 0
     assert conorms.form.voronoi_class == 1
     print(f"{conorms.form.voronoi_class}: {len(conorms.permissible_permutations)}")
@@ -85,6 +62,8 @@ def test_v1_case():
     mat_tuples = [m.tuple for m in unimodular_matrices]
     print(f"{len(conorms.permissible_permutations)} distinct permutations")
     print(f"{len(set(mat_tuples))} distinct unimodular matrices")
+    tested = _assert_all_permutation_matrices_maintain_superbasis(reduced_v1_superbasis)
+    assert len(tested) == 24
 
 def test_build_all_conorm_lists():
     all_lists = ConormListForm.all_coforms()
