@@ -7,6 +7,7 @@ import tqdm
 from importlib.resources import files
 
 from .vonorm_unimodular import VonormPermutationMatrix
+from ..linalg import MatrixTuple
 
 
 VONORM_PERMUTATION_TO_CONORM_PERMUTATION = None
@@ -47,6 +48,26 @@ class VonormPermutation(Permutation):
 
     def to_conorm_permutation(self):
         return ConormPermutation(VONORM_PERMUTATION_TO_CONORM_PERMUTATION[self.perm])
+
+class PermutationMatrices():
+
+    def __init__(self, perm: Permutation, matrices: list[MatrixTuple]):
+        self.perm = perm
+        self.matrices = matrices
+
+    @property
+    def vonorm_permutation(self):
+        if isinstance(self.perm, VonormPermutation):
+            return self.perm
+        else:
+            return self.perm.to_vonorm_permutation()
+        
+    @property
+    def conorm_permutation(self):
+        if isinstance(self.perm, ConormPermutation):
+            return self.perm
+        else:
+            return self.perm.to_conorm_permutation()
 
 
 def permutation_to_matrix(permutation):
