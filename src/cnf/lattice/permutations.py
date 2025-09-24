@@ -121,7 +121,7 @@ def load_unimod_mats_to_perms():
         if zeros not in results:
             results[zeros] = {}
         
-        mat = tuple(item[1])
+        mat = MatrixTuple.from_tuple(tuple(item[1]))
         perms = [tuple(p) for p in item[2]]
         for perm in perms:
             if perm not in results[zeros]:
@@ -133,6 +133,14 @@ def load_unimod_mats_to_perms():
 ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS = load_unimod_mats_to_perms()
 
 class UnimodPermMapper:
+
+    @staticmethod
+    def all_unimodular_matrices():
+        all_mats = []
+        for zero_set, perm_map in ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS.items():
+            for perm, mats in perm_map.items():
+                all_mats = all_mats + mats
+        return mats
 
     @staticmethod
     def get_perms_for_zero_set(zeros: tuple):
