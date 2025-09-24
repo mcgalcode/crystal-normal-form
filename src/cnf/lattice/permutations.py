@@ -27,20 +27,26 @@ class ConormPermutation(Permutation):
     @staticmethod
     def all_conorm_perm_tuples():
         return list(CONORM_PERMUTATION_TO_VONORM_PERMUTATION.keys())
+    
+    @staticmethod
+    def all_conorm_perms():
+        return [ConormPermutation(p) for p in ConormPermutation.all_conorm_perm_tuples()]
 
     def to_vonorm_permutation(self):
         return VonormPermutation(CONORM_PERMUTATION_TO_VONORM_PERMUTATION[self.perm])
-
-    def to_unimodular_matrix(self):
-        return self.to_vonorm_permutation().to_unimodular_matrix()
     
 class VonormPermutation(Permutation):
 
+    @staticmethod
+    def all_vonorm_perm_tuples():
+        return list(CONORM_PERMUTATION_TO_VONORM_PERMUTATION.values())
+    
+    @staticmethod
+    def all_vonorm_perms():
+        return [VonormPermutation(p) for p in VonormPermutation.all_vonorm_perm_tuples()]
+
     def to_conorm_permutation(self):
         return ConormPermutation(VONORM_PERMUTATION_TO_CONORM_PERMUTATION[self.perm])
-    
-    def to_unimodular_matrix(self):
-        return VonormPermutationMatrix.from_permutation(self)
 
 
 def permutation_to_matrix(permutation):
@@ -109,7 +115,7 @@ class UnimodPermMapper:
 
     @staticmethod
     def get_perms_for_zero_set(zeros: tuple):
-        return list(ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS[zeros].keys())
+        return [ConormPermutation(t) for t in list(ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS[zeros].keys())]
     
     @staticmethod
     def get_matrices_for_zero_set_and_perm(zeros: tuple, perm: tuple):
