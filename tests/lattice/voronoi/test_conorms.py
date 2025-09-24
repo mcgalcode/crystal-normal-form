@@ -1,16 +1,29 @@
+
+from cnf.lattice.permutations import ConormPermutation, VonormPermutation
 from cnf.lattice.voronoi import ConormListForm
 
 def _assert_all_permutation_matrices_maintain_superbasis(superbasis):
-    conorms = superbasis.compute_vonorms().conorms
+    original_vonorms = superbasis.compute_vonorms()
+    original_conorms = original_vonorms.conorms
     tested = []
-    for cperm in conorms.form.permissible_permutations():
+    for cperm in original_conorms.form.permissible_permutations():
         # print(mat, cperm.to_vonorm_permutation())
         mats = []
-        for mat in conorms.form.matrices_for_perm(cperm):
+        cperm = ConormPermutation(cperm)
+        for mat in original_conorms.form.matrices_for_perm(cperm):
             permuted = superbasis.apply_matrix_transform(mat.matrix)
             # print(f"Testing mat: {permuted.v0()}")
             assert permuted.is_superbasis()
             assert permuted.is_obtuse(tol=1e-8)
+            assert permuted.compute_vonorms().has_same_members(original_vonorms)
+            assert permuted.compute_vonorms().conorms.has_same_members(original_conorms)
+
+            manually_permuted_vonorms = original_vonorms.apply_permutation(cperm.to_vonorm_permutation())
+            assert manually_permuted_vonorms.about_equal(permuted.compute_vonorms())
+
+            manually_permuted_conorms = original_conorms.apply_permutation(cperm)
+            assert manually_permuted_conorms.about_equal(permuted.compute_vonorms().conorms)
+            
             mats.append(mat)
         tested.append((cperm, mats))
     return tested
