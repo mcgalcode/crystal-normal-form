@@ -1,13 +1,27 @@
-from .constants import CONORM_INDICES_TO_CONORMS, CONORM_INDICES_TO_PAIRS
+from .voronoi_values import Conorm
+from .constants import CONORM_IDX_TO_PAIR
+from itertools import combinations
 
 class ConormListForm():
+
+    @staticmethod
+    def all_coforms() -> list['ConormListForm']:
+        all_conorm_idxs = range(0,6)
+        result = []
+        for num_zeros in range(0, 4):
+            idx_combos = combinations(all_conorm_idxs, num_zeros)
+            for c in idx_combos:
+                result.append(ConormListForm(c))
+        return result
+
 
     def __init__(self, zero_indices):
         self.zero_indices = zero_indices
         self.voronoi_class = self._compute_voronoi_class()
+        self.tuple = tuple(zero_indices)
 
     def zero_conorms(self):
-        return [CONORM_INDICES_TO_CONORMS[idx] for idx in self.zero_indices]
+        return [Conorm.from_idx(idx) for idx in self.zero_indices]
 
     def _compute_voronoi_class(self):
         if len(self.zero_indices) == 3:
@@ -22,13 +36,13 @@ class ConormListForm():
         if len(self.zero_indices) == 2:
             pair_1 = self.zero_indices[0]
             pair_2 = self.zero_indices[1]
-            if len(CONORM_INDICES_TO_PAIRS[pair_1].intersection(CONORM_INDICES_TO_PAIRS[pair_2])) == 0:
+            if len(set(CONORM_IDX_TO_PAIR[pair_1]).intersection(set(CONORM_IDX_TO_PAIR[pair_2]))) == 0:
                 return 3
             else:
                 return 4
 
     def __repr__(self):
-        return f"ConormListForm({self.zero_conorms})"
+        return f"ConormListForm({self.zero_indices})"
     
     def __len__(self):
         return len(self.zero_indices)
