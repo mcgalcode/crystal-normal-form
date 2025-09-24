@@ -83,6 +83,39 @@ def find_matching_permutations():
     with open("matching_perms.json", 'w+') as f:
         json.dump(matching_pairs, f)
 
+def load_unimod_mats_to_perms():
+    data = files("cnf.lattice").joinpath("data", "unimod_mats_to_perms.json").read_text()
+    values = json.loads(data)
+    
+    results = {}
+    for item in values:
+        
+        zeros = tuple(item[0])
+        if zeros not in results:
+            results[zeros] = {}
+        
+        mat = tuple(item[1])
+        perms = [tuple(p) for p in item[2]]
+        for perm in perms:
+            if perm not in results[zeros]:
+                results[zeros][perm] = []
+
+            results[zeros][perm].append(mat)
+    return results
+
+ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS = load_unimod_mats_to_perms()
+
+class UnimodPermMapper:
+
+    @staticmethod
+    def get_perms_for_zero_set(zeros: tuple):
+        return list(ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS[zeros].keys())
+    
+    @staticmethod
+    def get_matrices_for_zero_set_and_perm(zeros: tuple, perm: tuple):
+        return ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS[zeros][perm]
+
+
 def compose_permutations(p1, p2):
     return tuple(apply_permutation(p2, p1))
 
