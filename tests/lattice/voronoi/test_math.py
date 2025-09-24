@@ -6,6 +6,8 @@ from cnf.lattice.voronoi.voronoi_values import PrimaryVonorm, SecondaryVonorm, C
 from cnf.lattice.superbasis import get_v0_from_generating_vecs
 from cnf.linalg import MatrixTuple
 from cnf.lattice.permutations import ConormPermutation
+from cnf.linalg.unimodular import UNIMODULAR_MATRICES
+from cnf.lattice.voronoi.conorm_list_form import ConormListForm
 
 def test_can_init_voronoi_value():
     v = SignedVoronoiValue.negative_one(PrimaryVonorm(0))
@@ -264,3 +266,44 @@ def test_get_conorm():
     assert ConormPermutation([0,1,4,3,2,5,6]) in cc.get_permutations()
     assert ConormPermutation([0,1,4,3,2,6,5]) in cc.get_permutations()
     assert len(cc.get_permutations()) == 2
+
+def test_perm_should_be_present():
+    mat = MatrixTuple.from_tuple((-1, 0, 0, -1, 0, 1, -1, 1, 0))
+    mat = MatrixTuple.from_tuple((1, 0, 0, 0, 1, 0, 0, 0, 1))
+    mat = MatrixTuple.from_tuple((0, 1, 0, 1, 0, 0, 0, 0, 1))
+    print(mat.matrix)
+    cf = ConormListForm([0])
+    calc = ConormCalculator(Transformation(mat), cf.zero_conorms())
+    print(cf.zero_conorms())
+    perms = calc.get_permutations()
+    print(perms)
+    all_valid_perms = ConormPermutation.all_conorm_perm_tuples()
+    assert len(set(perms).intersection(all_valid_perms)) > 0
+
+def test_specific_perm_expectation_1():
+    zero_indices = []
+    cf = ConormListForm(zero_indices)
+    perms_with_matrices = []
+    mat_to_perms = {}
+    for u in UNIMODULAR_MATRICES:
+        t = Transformation(u)
+        calc = ConormCalculator(t, cf.zero_conorms())
+        try:
+            mat_to_perms[u] = calc.get_permutations()
+        except ValueError as e:
+            print(e.__repr__())
+    print(f"Considered zeros: {cf.zero_conorms()}")
+    print(f"Found {len(mat_to_perms)} matrices total")
+
+    def filter_invalid_perms(perm_list):
+        return list(set(ConormPermutation.all_conorm_perm_tuples()).intersection(perm_list))
+    
+    filtered_mat_to_perms = { mat: filter_invalid_perms(plist) for mat, plist in mat_to_perms.items() }
+    print(f"{len(filtered_mat_to_perms)} of them mapped to valid perms")
+    all_perms = set([p for mat, perm_list in mat_to_perms.items() for p in perm_list])
+    print(f"Found {len(all_perms)} perms")
+    valid_found_perms = set(ConormPermutation.all_conorm_perm_tuples()).intersection(all_perms)
+    print(f"Found {len(valid_found_perms)} valid perms")
+    # print(all_perms)
+    # for mat, perm in mat_to_perms.items():
+    #     print(mat, perm)

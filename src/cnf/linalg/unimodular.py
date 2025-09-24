@@ -16,7 +16,7 @@ def build_unimodular_matrices():
     print(f"Of which, {len(det_one)} had determinant == 1")
     for m in det_one:
         assert m.determinant() == 1
-        
+
     with open("unimodular.json", 'w') as f:
         json.dump([m.to_list() for m in det_one], f)
 
@@ -27,6 +27,7 @@ def load_unimodular():
     return matrices
 
 UNIMODULAR_MATRICES = load_unimodular()
+
 
 if __name__ == "__main__":
     build_unimodular_matrices()

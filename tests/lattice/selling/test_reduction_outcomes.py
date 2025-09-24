@@ -33,14 +33,8 @@ def test_reduction_pair_selection_is_the_same(acute_lattice_1):
 
     num_steps = 500
     for i in range(num_steps):
-        # print(i)
-        # print(basis.compute_vonorms())
-        # print(vonorm_list)
-        # print(basis.compute_vonorms().conorms)
-        # print(vonorm_list.conorms)
         basis, sb_swap = sb_reducer.apply_selling_transform(basis)
         vonorm_list, v_swap = vl_reducer.apply_selling_transform(vonorm_list)
-        # print(f"sb: {sb_swap}", f"vl: {v_swap}")
         assert basis.is_obtuse() == vonorm_list.is_obtuse()
         assert sb_swap == v_swap
         assert np.isclose(basis.compute_vonorms().vonorms, vonorm_list.vonorms).all()

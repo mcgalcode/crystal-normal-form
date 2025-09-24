@@ -2,6 +2,7 @@ from cnf.lattice.superbasis import Superbasis
 from cnf.lattice.selling import SuperbasisSellingReducer
 from cnf.lattice.permutations import is_permutation_set_closed
 from pymatgen.core.lattice import Lattice
+from cnf.lattice.voronoi import ConormListForm
 
 def test_v5_case():
     cuboid = Lattice.cubic(1.0)
@@ -84,5 +85,8 @@ def test_v1_case():
     mat_tuples = [m.tuple for m in unimodular_matrices]
     print(f"{len(conorms.permissible_permutations)} distinct permutations")
     print(f"{len(set(mat_tuples))} distinct unimodular matrices")
-    for m in unimodular_matrices:
-        print(m.matrix)
+
+def test_build_all_conorm_lists():
+    all_lists = ConormListForm.all_coforms()
+    assert len(all_lists) == 42
+    
