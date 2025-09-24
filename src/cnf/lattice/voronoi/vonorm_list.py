@@ -1,7 +1,7 @@
 import numpy as np
 from ..swaps.sorting import swap_vonorm_idxs
 from .conorm_list import ConormList
-from ..permutations import apply_permutation
+from ..permutations import apply_permutation, Permutation, ConormPermutation, VonormPermutation
 
 # This matrix is found on page 48 of David's thesis
 VONORM_TO_DOT_PRODUCTS = np.array([
@@ -46,6 +46,9 @@ class VonormList():
     def about_equal(self, other: 'VonormList', tol=1e-8):
         diff = np.abs(np.array(self.vonorms) - np.array(other.vonorms))
         return np.all(diff < tol)
+    
+    def matrices_for_perm(self, perm: Permutation):
+        return self.conorms.matrices_for_perm(perm)
 
     def apply_permutation(self, permutation: tuple):
         return VonormList(tuple(apply_permutation(self.vonorms, permutation)))
