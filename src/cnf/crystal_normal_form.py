@@ -31,20 +31,21 @@ class CrystalNormalForm:
 
         motif = motif.apply_unimodular(undisc_result.selling_transform_mat)
 
-        init_perm_mat_group = undisc_result.stabilizer_permutations[0]
+        # init_perm_mat_group = undisc_result.stabilizer_permutations[0]
+        for possible_perm_mat_group in undisc_result.stabilizer_permutations:
 
-        motif = motif.apply_unimodular(init_perm_mat_group.matrices[0])
-        motif = motif.apply_unimodular(disc_result.selling_transform_mat)
+            motif = motif.apply_unimodular(possible_perm_mat_group.matrices[0])
+            motif = motif.apply_unimodular(disc_result.selling_transform_mat)
 
-        bnfs: list[BasisNormalForm] = []
-        for stabilizer_permutation_mat_group in disc_result.stabilizer_permutations:
-            # print(f"Vonorm Permutation: {stabilizer_permutation}")
-            # print(f"Conorm Permutation: {stabilizer_permutation.to_conorm_permutation()}")
-            for unimodular_transform in stabilizer_permutation_mat_group.matrices:
-                transformed_motif = motif.apply_unimodular(unimodular_transform)
-                bnf = BasisNormalForm.from_motif(transformed_motif, motif_step_size)
-                print(stabilizer_permutation_mat_group.vonorm_permutation, bnf)
-                bnfs.append(bnf)
+            bnfs: list[BasisNormalForm] = []
+            for stabilizer_permutation_mat_group in disc_result.stabilizer_permutations:
+                # print(f"Vonorm Permutation: {stabilizer_permutation}")
+                # print(f"Conorm Permutation: {stabilizer_permutation.to_conorm_permutation()}")
+                for unimodular_transform in stabilizer_permutation_mat_group.matrices:
+                    transformed_motif = motif.apply_unimodular(unimodular_transform)
+                    bnf = BasisNormalForm.from_motif(transformed_motif, motif_step_size)
+                    print(stabilizer_permutation_mat_group.vonorm_permutation, bnf)
+                    bnfs.append(bnf)
     
         
         sorted_bnfs = sorted(bnfs, key=lambda bnf: bnf.coord_list, reverse=False)
