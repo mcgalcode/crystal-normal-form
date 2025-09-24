@@ -1,5 +1,5 @@
 import numpy as np
-from ..permutations import CONORM_PERMUTATION_TO_VONORM_PERMUTATION, ConormPermutation
+from ..permutations import Permutation, VonormPermutation
 from .conorm_list_form import ConormListForm
 
 class ConormList():
@@ -7,7 +7,7 @@ class ConormList():
     def __init__(self, conorms, tol=1e-8):
         self.conorms = conorms
         self.form = ConormListForm([idx for idx, conorm in enumerate(self.conorms) if np.abs(conorm) < tol])
-        self.permissible_permutations = self._compute_permissible_permutations()
+        self.permissible_permutations = self.form.permissible_permutations()
 
     def apply_permutation(self, permutation: tuple):
         permuted_vals = []
@@ -23,17 +23,16 @@ class ConormList():
         return permutation[-1] in self.form.zero_indices or permutation[-1] == 6
         # vperm = ConormPermutation(permutation).to_vonorm_permutation()
         # return 4 not in vperm[:4] and 5 not in vperm[:4] and 6 not in vperm[:4]
-    
-    def _compute_permissible_permutations(self) -> list[ConormPermutation]:
-        permissible_perms = []
-        for p in CONORM_PERMUTATION_TO_VONORM_PERMUTATION:
-            if self.is_permutation_permissible(p):
-                permissible_perms.append(ConormPermutation(p))
-        return permissible_perms
 
     def has_same_members(self, other: 'ConormList', tol=1e-8):
         diff = np.abs(np.array(sorted(self.conorms)) - np.array(sorted(other.conorms)))
         return np.all(diff < tol)
+    
+    def matrices_for_perm(self, perm: Permutation):
+        if isinstance(perm, VonormPermutation):
+            return self.form.matrices_for_perm(perm.to_conorm_permutation())
+        else:
+            return self.form.matrices_for_perm(perm)
     
     def about_equal(self, other: 'ConormList', tol=1e-8):
         diff = np.abs(np.array(self.conorms) - np.array(other.conorms))
