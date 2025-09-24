@@ -24,6 +24,10 @@ class Permutation(tuple):
 
 class ConormPermutation(Permutation):
 
+    @staticmethod
+    def all_conorm_perm_tuples():
+        return list(CONORM_PERMUTATION_TO_VONORM_PERMUTATION.keys())
+
     def to_vonorm_permutation(self):
         return VonormPermutation(CONORM_PERMUTATION_TO_VONORM_PERMUTATION[self.perm])
 
