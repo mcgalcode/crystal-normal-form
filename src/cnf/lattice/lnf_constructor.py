@@ -3,8 +3,9 @@ from pymatgen.core.lattice import Lattice
 from pymatgen.core.structure import Structure
 
 from .voronoi.vonorm_list import VonormList
+from .voronoi.conorm_list import ConormList
 from .selling import VonormListSellingReducer
-from .permutations import VonormPermutation
+from .permutations import VonormPermutation, PermutationMatrices
 from .rounding import DiscretizedVonormComputer
 from .superbasis import Superbasis
 from .lattice_normal_form import LatticeNormalForm
@@ -20,17 +21,17 @@ class VonormCanonicalizer():
         reducer = VonormListSellingReducer(tol=self.reduction_tolerance, verbose_logging=self._verbose_logging)
         reduction_result = reducer.reduce(vonorms)
         reduced_vonorms = reduction_result.reduced_object
-        conorms = reduced_vonorms.conorms
+        conorms: ConormList = reduced_vonorms.conorms
 
-        permuted_vonorm_lists: list[tuple[VonormList, VonormPermutation]] = []
-        for conorm_permutation in conorms.permissible_permutations:
-            vonorm_permutation = conorm_permutation.to_vonorm_permutation()
+        permuted_vonorm_lists: list[tuple[VonormList, PermutationMatrices]] = []
+        for perm_mat_group in conorms.form.permissible_permutations():
+            vonorm_permutation = perm_mat_group.vonorm_permutation
             permuted_vlist = reduced_vonorms.apply_permutation(vonorm_permutation)
-            permuted_vonorm_lists.append((permuted_vlist, vonorm_permutation))
+            permuted_vonorm_lists.append((permuted_vlist, perm_mat_group))
 
-        sorted_vlists = sorted(permuted_vonorm_lists, key=lambda pair: pair[0].vonorms, reverse=False)
+        sorted_vlists = sorted(permuted_vonorm_lists, key=lambda group: group[0].vonorms, reverse=False)
         canonical_vonorm_list = sorted_vlists[0][0]
-        stabilizer_permutations = [pair[1] for pair in permuted_vonorm_lists if pair[0] == canonical_vonorm_list]
+        stabilizer_permutations = [group[1] for group in permuted_vonorm_lists if group[0] == canonical_vonorm_list]
         return CanonicalizedVonormResult(
             canonical_vonorm_list,
             reduction_result.transform_matrix,
@@ -42,7 +43,7 @@ class CanonicalizedVonormResult():
     def __init__(self,
                  canonical_vonorm_list: VonormList,
                  selling_transform_matrix,
-                 stabilizer_permutations: list[VonormPermutation]):
+                 stabilizer_permutations: list[PermutationMatrices]):
         self.canonical_vonorms = canonical_vonorm_list
         self.selling_transform_mat = selling_transform_matrix
         self.stabilizer_permutations = stabilizer_permutations
@@ -74,6 +75,9 @@ class LatticeNormalFormConstructor():
 
         discretized_canonical_result = canonicalizer.get_canonicalized_vonorms(discretized_vonorms)
         lnf = LatticeNormalForm(discretized_canonical_result.canonical_vonorms, self.lattice_step_size)
+
+        # print(f"Undiscretized Coform: {undiscretized_canonical_result.canonical_vonorms.conorms.form}")
+        # print(f"Discretized Coform: {discretized_canonical_result.canonical_vonorms.conorms.form}")
         return LatticeNormalFormConstructionResult(
             lnf,
             undiscretized_canonical_result,

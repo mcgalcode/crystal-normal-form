@@ -22,9 +22,9 @@ def zr_fcc_lnfs_and_diff(zr_fcc_primitive_lattice_vecs):
 
     all_lnfs = []
     for v in sublattice_vec_sets:
-        print("New lattice!")
+        # print("New lattice!")
         all_lnfs.append(constructor.build_lnf_from_generating_vecs(v).lnf)
-        print(all_lnfs[-1])
+        # print(all_lnfs[-1])
 
     sublattice_organizer = {
         1: [],

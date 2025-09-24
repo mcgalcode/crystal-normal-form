@@ -25,21 +25,26 @@ class CrystalNormalForm:
                                   verbose_logging: bool = False):
         lnf_constructor = LatticeNormalFormConstructor(lattice_step_size, verbose_logging)
         lnf_construction_result = lnf_constructor.build_lnf_from_superbasis(superbasis)
-        
-        motif = motif.apply_unimodular(lnf_construction_result.undiscretized_canonicalization_result.selling_transform_mat)
-        initial_stabilizer_perm = lnf_construction_result.undiscretized_canonicalization_result.stabilizer_permutations[0]
-        initial_stabilizer_mat = initial_stabilizer_perm.to_unimodular_matrix()
-        motif = motif.apply_unimodular(initial_stabilizer_mat)
-        motif = motif.apply_unimodular(lnf_construction_result.discretized_canonicalization_result.selling_transform_mat)
+
+        undisc_result = lnf_construction_result.undiscretized_canonicalization_result
+        disc_result = lnf_construction_result.discretized_canonicalization_result
+
+        motif = motif.apply_unimodular(undisc_result.selling_transform_mat)
+
+        init_perm_mat_group = undisc_result.stabilizer_permutations[0]
+
+        motif = motif.apply_unimodular(init_perm_mat_group.matrices[0])
+        motif = motif.apply_unimodular(disc_result.selling_transform_mat)
 
         bnfs: list[BasisNormalForm] = []
-        for stabilizer_permutation in lnf_construction_result.discretized_canonicalization_result.stabilizer_permutations:
+        for stabilizer_permutation_mat_group in disc_result.stabilizer_permutations:
             # print(f"Vonorm Permutation: {stabilizer_permutation}")
             # print(f"Conorm Permutation: {stabilizer_permutation.to_conorm_permutation()}")
-            unimodular_transform = stabilizer_permutation.to_unimodular_matrix()
-            transformed_motif = motif.apply_unimodular(unimodular_transform)
-            bnf = BasisNormalForm.from_motif(transformed_motif, motif_step_size)
-            bnfs.append(bnf)
+            for unimodular_transform in stabilizer_permutation_mat_group.matrices:
+                transformed_motif = motif.apply_unimodular(unimodular_transform)
+                bnf = BasisNormalForm.from_motif(transformed_motif, motif_step_size)
+                print(stabilizer_permutation_mat_group.vonorm_permutation, bnf)
+                bnfs.append(bnf)
     
         
         sorted_bnfs = sorted(bnfs, key=lambda bnf: bnf.coord_list, reverse=False)

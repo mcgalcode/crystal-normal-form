@@ -1,16 +1,16 @@
 
 from cnf.lattice.permutations import ConormPermutation, VonormPermutation
-from cnf.lattice.voronoi import ConormListForm
+from cnf.lattice.voronoi import ConormListForm, ConormList
 
 def _assert_all_permutation_matrices_maintain_superbasis(superbasis):
     original_vonorms = superbasis.compute_vonorms()
     original_conorms = original_vonorms.conorms
     tested = []
-    for cperm in original_conorms.form.permissible_permutations():
+    for cperm_with_mats in original_conorms.form.permissible_permutations():
         # print(mat, cperm.to_vonorm_permutation())
+        cperm = cperm_with_mats.perm
         mats = []
-        cperm = ConormPermutation(cperm)
-        for mat in original_conorms.form.matrices_for_perm(cperm):
+        for mat in cperm_with_mats.matrices:
             permuted = superbasis.apply_matrix_transform(mat.matrix)
             # print(f"Testing mat: {permuted.v0()}")
             assert permuted.is_superbasis()
@@ -63,14 +63,14 @@ def test_v2_case(reduced_v2_superbasis):
     assert len(tested) == 48
 
 def test_v1_case(reduced_v1_superbasis):
-    conorms = reduced_v1_superbasis.compute_vonorms().conorms
+    conorms: ConormList = reduced_v1_superbasis.compute_vonorms().conorms
     assert len(conorms.form) == 0
     assert conorms.form.voronoi_class == 1
     print(f"{conorms.form.voronoi_class}: {len(conorms.permissible_permutations)}")
 
     unimodular_matrices = []
     for p in conorms.permissible_permutations:
-        unimodular_matrices.append(p.to_unimodular_matrix())
+        unimodular_matrices = unimodular_matrices + p.matrices
     
     mat_tuples = [m.tuple for m in unimodular_matrices]
     print(f"{len(conorms.permissible_permutations)} distinct permutations")
@@ -81,4 +81,3 @@ def test_v1_case(reduced_v1_superbasis):
 def test_build_all_conorm_lists():
     all_lists = ConormListForm.all_coforms()
     assert len(all_lists) == 42
-    

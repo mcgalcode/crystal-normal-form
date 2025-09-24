@@ -5,7 +5,7 @@ from itertools import permutations
 
 from cnf.linalg.matrix_tuple import MatrixTuple
 from cnf.lattice.vonorm_unimodular import get_unimodular_matrix_from_voronoi_vector_idxs
-from cnf.lattice.permutations import VonormPermutation, ConormPermutation, VONORM_PERMUTATION_TO_CONORM_PERMUTATION, compose_permutations, apply_permutation, is_permutation_set_closed
+from cnf.lattice.permutations import VonormPermutation, ConormPermutation, VONORM_PERMUTATION_TO_CONORM_PERMUTATION, compose_permutations, apply_permutation, is_permutation_set_closed, ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS, UnimodPermMapper
 from pymatgen.core.lattice import Lattice
 
 
@@ -24,9 +24,10 @@ def test_item_access():
     assert permutation[-1] == 0
 
 def test_unimodularity():
-    for vperm in VONORM_PERMUTATION_TO_CONORM_PERMUTATION:
-        u = VonormPermutation(vperm).to_unimodular_matrix()
-        assert np.abs(u.determinant()) == 1
+    for zeros, perm_map in ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS.items():
+        for perm, matrices in perm_map.items():
+            for m in matrices:
+                assert np.abs(m.determinant()) == 1
 
 def test_apply_permutation():
     perm = (3,1,2,0)
@@ -44,16 +45,6 @@ def test_compose_permutations():
     composition_2 = compose_permutations(perm2, perm1)
     assert composition_2 == (2, 0, 1)
 
-@pytest.mark.xfail
-def test_composed_permutations_match_matrices():
-    vperm1 = VonormPermutation([2, 4, 5, 1, 3, 0, 6])
-    vperm2 = VonormPermutation([5, 6, 2, 3, 4, 0, 1])
-
-    composed_vperm = VonormPermutation(compose_permutations(vperm1.perm, vperm2.perm))
-
-    composed_unimodular = vperm1.to_unimodular_matrix() @ vperm2.to_unimodular_matrix()
-    assert np.all(composed_vperm.to_unimodular_matrix() == composed_unimodular)
-
 def test_are_vonorm_permutations_an_s7_subgroup():
     # Note, this test is not for functionality, but for probing the
     # character of these groups
@@ -61,43 +52,24 @@ def test_are_vonorm_permutations_an_s7_subgroup():
     assert is_permutation_set_closed(vperms)
 
 @pytest.mark.xfail
-def test_are_vonorm_unimodular_matrices_a_group():
-    vperms = set(VONORM_PERMUTATION_TO_CONORM_PERMUTATION.keys())
-    vperm_matrices: list[MatrixTuple] = [MatrixTuple(VonormPermutation(vperm).to_unimodular_matrix()) for vperm in vperms]
-    for p1 in vperm_matrices:
-        for p2 in vperm_matrices:
-            composed = MatrixTuple(p1.matrix @ p2.matrix)
-            
-            assert composed in vperm_matrices
-
-@pytest.mark.xfail
 def test_are_vonorm_unimodular_with_postive_det_a_group():
-    vperms = set(VONORM_PERMUTATION_TO_CONORM_PERMUTATION.keys())
-    vperm_matrices: list[MatrixTuple] = [MatrixTuple(VonormPermutation(vperm).to_unimodular_matrix()) for vperm in vperms]
-    vperm_matrices: list[MatrixTuple] = [m for m in vperm_matrices if np.linalg.det(m.matrix) == 1]
-    for p1 in vperm_matrices:
-        for p2 in vperm_matrices:
+    mats = UnimodPermMapper.all_unimodular_matrices()
+    for p1 in mats:
+        for p2 in mats:
             composed = p1 @ p2
             
-            assert composed in vperm_matrices
+            assert composed in mats
 
 def test_are_vonorm_unimodular_matrix_products_also_unimodular():
-    vperms = set(VONORM_PERMUTATION_TO_CONORM_PERMUTATION.keys())
-    vperm_matrices: list[MatrixTuple] = [VonormPermutation(vperm).to_unimodular_matrix() for vperm in vperms]
-    vperm_matrices: list[MatrixTuple] = [m for m in vperm_matrices if m.determinant() == 1]
-    for p1 in vperm_matrices:
-        for p2 in vperm_matrices:
+    mats = UnimodPermMapper.all_unimodular_matrices()
+    for p1 in mats:
+        for p2 in mats:
             composed = p1 @ p2
             assert composed.is_unimodular()
 
 def test_are_vonorm_permutation_primary_idx_unique():
     p = [p[1:4] for p in VONORM_PERMUTATION_TO_CONORM_PERMUTATION]
     assert len(set(p)) == len(VONORM_PERMUTATION_TO_CONORM_PERMUTATION)
-
-def test_are_vonorm_permutations_unique_when_turned_to_unimodulars():
-    vperms = set(VONORM_PERMUTATION_TO_CONORM_PERMUTATION.keys())
-    vperm_matrices: list[MatrixTuple] = [VonormPermutation(vperm).to_unimodular_matrix() for vperm in vperms]    
-    assert len(vperm_matrices) == len(VONORM_PERMUTATION_TO_CONORM_PERMUTATION)
 
 def test_are_conorm_permutations_an_s7_subgroup():
     # Note, this test is not for functionality, but for probing the
@@ -120,33 +92,7 @@ def test_are_permutation_groups_isomorphic():
             c_composed = compose_permutations(c_p1, c_p2)
 
             #      f(a)f(b)   =  f(ab)
-            assert c_composed == VONORM_PERMUTATION_TO_CONORM_PERMUTATION[v_composed]
-
-
-@pytest.mark.xfail
-def test_positive_determinant():
-    pos = []
-    neg = []
-    for perm in VONORM_PERMUTATION_TO_CONORM_PERMUTATION:
-        mat = VonormPermutation(perm).to_unimodular_matrix()
-        determinant = np.linalg.det(mat)
-        if determinant == 1:
-            pos.append(MatrixTuple(mat).tuple)
-        elif determinant == -1:
-            neg.append(MatrixTuple(mat).tuple)
-        
-    print(f"Positives: {len(pos)}")
-    print(f"Negatives: {len(neg)}")
-    assert len(pos) + len(neg) == len(VONORM_PERMUTATION_TO_CONORM_PERMUTATION)
-
-    # Are these the same sets?
-    # They are not!
-
-    transformed_pos = [MatrixTuple(-MatrixTuple.from_tuple(mt).matrix).tuple for mt in pos]
-
-    assert len(transformed_pos) == len(neg)
-    assert set(transformed_pos) == set(neg)
-        
+            assert c_composed == VONORM_PERMUTATION_TO_CONORM_PERMUTATION[v_composed] 
 
 def test_s4_subgroup_isomorphism():
     s4_perms = set(permutations(range(4)))

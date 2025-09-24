@@ -25,8 +25,8 @@ def test_bcc_zr_unit_cells(zr_bcc_primitive_lattice_vecs):
     assert len(unique_lnfs) == 2
 
     unique_cnfs = set([CrystalNormalForm.from_unit_cell(cell, xi, delta) for cell in supercells])
-    for cnf in unique_cnfs:
-        print(cnf.coords)
+    # for cnf in unique_cnfs:
+    #     print(cnf.coords)
     assert len(unique_cnfs) == 2
 
 def test_fcc_zr_unit_cells(zr_fcc_primitive_lattice_vecs):

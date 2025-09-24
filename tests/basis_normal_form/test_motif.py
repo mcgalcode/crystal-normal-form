@@ -129,20 +129,12 @@ def test_cartesian_coords_not_changed_by_unimodular():
     motif = FractionalMotif.from_elements_and_positions(["Li", "Li"], [(0.25, 0.25, 0.25), (0.5, 0.5, 0)])
     original_cart_coords = motif.compute_cartesian_coords_in_basis(sb)
 
-    correct = []
-    incorrect = []
+    for perm in sb.compute_vonorms().conorms.permissible_permutations:
+        for mat in perm.matrices:
+            permuted_sb = sb.apply_matrix_transform(mat.matrix)
+            transformed_cart_corods = motif.apply_unimodular(mat).compute_cartesian_coords_in_basis(permuted_sb)
 
-    for perm in VONORM_PERMUTATION_TO_CONORM_PERMUTATION:
-        mat = VonormPermutation(perm).to_unimodular_matrix()
-        permuted_sb = sb.apply_matrix_transform(mat.matrix)
-        transformed_cart_corods = motif.apply_unimodular(mat).compute_cartesian_coords_in_basis(permuted_sb)
-
-        if original_cart_coords == transformed_cart_corods:
-            correct.append(perm)
-        else:
-            incorrect.append(perm)
-    
-    assert len(correct) == len(VONORM_PERMUTATION_TO_CONORM_PERMUTATION)
+            assert original_cart_coords == transformed_cart_corods
 
     
 
