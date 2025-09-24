@@ -31,6 +31,14 @@ class ConormList():
                 permissible_perms.append(ConormPermutation(p))
         return permissible_perms
 
+    def has_same_members(self, other: 'ConormList', tol=1e-8):
+        diff = np.abs(np.array(sorted(self.conorms)) - np.array(sorted(other.conorms)))
+        return np.all(diff < tol)
+    
+    def about_equal(self, other: 'ConormList', tol=1e-8):
+        diff = np.abs(np.array(self.conorms) - np.array(other.conorms))
+        return np.all(diff < tol)
+
     def __iter__(self):
         return iter(self.conorms)
  

@@ -39,8 +39,12 @@ class VonormList():
             new_vonorms = swap_vonorm_idxs(i, j, self.vonorms, in_place=False)
             return VonormList(new_vonorms)
     
-    def has_same_members(self, other: 'VonormList', tol=1e-3):
+    def has_same_members(self, other: 'VonormList', tol=1e-8):
         diff = np.abs(np.array(sorted(self.vonorms)) - np.array(sorted(other.vonorms)))
+        return np.all(diff < tol)
+    
+    def about_equal(self, other: 'VonormList', tol=1e-8):
+        diff = np.abs(np.array(self.vonorms) - np.array(other.vonorms))
         return np.all(diff < tol)
 
     def apply_permutation(self, permutation: tuple):
