@@ -66,7 +66,7 @@ class SignedVoronoiValue(tuple):
         if not isinstance(vals[0], Sign):
             raise ValueError(f"SignedVoronoiValue requires Sign in position 0, got: {vals[0]}")
         
-        if not isinstance(vals[1], int):
+        if not (isinstance(vals[1], int) or isinstance(vals[1], np.integer)):
             raise ValueError(f"SignedVoronoiValue requires positive int in position 1, got: {vals[1]}")
         
         if not vals[1] > 0:
@@ -259,7 +259,7 @@ class ConormCalculator():
         for idx, col_val in enumerate(col):
             vector_idx = idx + 1
             if col_val != 0:
-                signed_vec = SignedVector.one_from_int(col_val, VoronoiVector(vector_idx))
+                signed_vec = SignedVector.from_signed_count(col_val, VoronoiVector(vector_idx))
                 vector_set.add_val(signed_vec)
         return vector_set
     
@@ -274,15 +274,15 @@ class ConormCalculator():
     @staticmethod
     def validate_conorm_set(conorm_set: SignedValueSet):
         if len(conorm_set) > 1:
-            return False
+            raise ValueError(f"Computed ConormSet had too many vals: {conorm_set}")
         
         cnorm_signed = conorm_set.to_list()[0]
         if cnorm_signed.sign == Sign.NEGATIVE:
-            return False
+            raise ValueError(f"Computed ConormSet had negative coeff: {conorm_set}")
         if cnorm_signed.count != 1:
-            return False
+            raise ValueError(f"Computed ConormSet had too multiple conorms: {conorm_set}")
         if not isinstance(cnorm_signed.value, Conorm):
-            return False
+            raise ValueError(f"Computed ConormSet did not contain conorm: {conorm_set}")
         
         return cnorm_signed.value
     
@@ -296,6 +296,7 @@ class ConormCalculator():
     def get_conorm(self, c: Conorm, log=False):
         v1_idx = c.i
         v2_idx = c.j
+
         col1 = self.transformation.get_col(v1_idx)
         col2 = self.transformation.get_col(v2_idx)
         if log:
@@ -309,24 +310,26 @@ class ConormCalculator():
     
     
     def get_permutations(self):
-        template = []
-        permutable_indices = [6]
+        template = [None, None, None, None, None, None, None]
         
         for c in Conorm.all_conorms():
-            filtered_set = self.get_conorm(c)
-            if len(filtered_set) == 0:
-                permutable_indices.append(c.idx)
-                template.append(None)
-            else:
-                computed_conorm = ConormCalculator.validate_conorm_set(filtered_set)
+            # Compute the set of old conorms that constitute this new one
+            old_conorm_combination = self.get_conorm(c)
+            if len(old_conorm_combination) > 0:
+                computed_conorm = ConormCalculator.validate_conorm_set(old_conorm_combination)
                 if not computed_conorm:
                     raise ValueError("Conorm mask and transform did not yield valid permutation")
-                template.append(computed_conorm.idx)
-        template.append(None)
-        fillable_indices = [idx for idx, val in enumerate(template) if val is None]
+                template[c.idx] = computed_conorm.idx
+
+        # print(f"Template: {template}")
+        pinned_indices = [idx for idx, val in enumerate(template) if val is not None]
+        zeros = [c.idx for c in self.zero_conorms] + [6]
+        # print(f"Pinned indices: {pinned_indices}")
+        # print(f"Known zeros: {zeros}")
+        fillable_indices = list(set(range(7)) - set(pinned_indices))
 
         filled_permutations = []
-        for perm in permutations(permutable_indices):
+        for perm in permutations(zeros):
             # print(perm)
             filled_perm = copy.copy(template)
             for item in zip(fillable_indices, perm):
