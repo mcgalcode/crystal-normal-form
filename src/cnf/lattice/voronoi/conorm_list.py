@@ -1,6 +1,5 @@
 import numpy as np
 from ..permutations import CONORM_PERMUTATION_TO_VONORM_PERMUTATION, ConormPermutation
-from .constants import CONORM_INDICES_TO_PAIRS
 from .conorm_list_form import ConormListForm
 
 class ConormList():

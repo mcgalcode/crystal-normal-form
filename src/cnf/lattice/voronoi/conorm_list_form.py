@@ -1,5 +1,8 @@
 from .voronoi_values import Conorm
 from .constants import CONORM_IDX_TO_PAIR
+from ..permutations import UnimodPermMapper, ConormPermutation
+from ...linalg import MatrixTuple
+from ...utils.sorted_tuple import SortedTuple
 from itertools import combinations
 
 class ConormListForm():
@@ -16,9 +19,17 @@ class ConormListForm():
 
 
     def __init__(self, zero_indices):
-        self.zero_indices = zero_indices
+        self.zero_indices = SortedTuple(*zero_indices)
         self.voronoi_class = self._compute_voronoi_class()
         self.tuple = tuple(zero_indices)
+    
+    def permissible_permutations(self):
+        return UnimodPermMapper.get_perms_for_zero_set(self.zero_indices)
+    
+    def matrices_for_perm(self, cperm: ConormPermutation):
+        tuples = UnimodPermMapper.get_matrices_for_zero_set_and_perm(self.zero_indices, cperm)
+        mats = [MatrixTuple.from_tuple(t) for t in tuples]
+        return mats
 
     def zero_conorms(self):
         return [Conorm.from_idx(idx) for idx in self.zero_indices]
