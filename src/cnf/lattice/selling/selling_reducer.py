@@ -46,6 +46,9 @@ class SellingReducer(ABC):
     @abstractmethod
     def get_transformed_object(self, obj, pair):
         pass
+    
+    def apply_sign_flip_to_object(self, obj):
+        return obj
 
     def _logging_repr(self, obj):
         return f"{obj}"
@@ -61,7 +64,12 @@ class SellingReducer(ABC):
             if self._verbose_logging:
                 print(f"Selling transform {acute_pair}: {self._logging_repr(object)}")
 
-            transform_matrices.append(SellingTransformMatrix.from_pair(acute_pair))
+            transform_matrix = SellingTransformMatrix.from_pair(acute_pair)
+            if transform_matrix.determinant() == -1:
+                transform_matrix = transform_matrix.flip_signs()
+                object = self.apply_sign_flip_to_object(object)
+
+            transform_matrices.append(transform_matrix)
             num_steps += 1
             if num_steps > self.max_steps:
                 raise RuntimeError(f"Selling reduction failed to converge after {self.max_steps} steps")

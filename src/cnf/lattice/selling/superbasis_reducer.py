@@ -34,6 +34,9 @@ class SuperbasisSellingReducer(SellingReducer):
         i, j = pair
         return np.dot(obj.superbasis_vecs[i], obj.superbasis_vecs[j])
     
+    def apply_sign_flip_to_object(self, sb: Superbasis):
+        return Superbasis(-sb.superbasis_vecs)
+    
     def get_transformed_object(self, superbasis: Superbasis, pair):
         """Performs the Selling reduction step described in Lemma A.1 (reduction)
         in Kurlin, 2022 "A complete isometry classification of 3-dimensional
