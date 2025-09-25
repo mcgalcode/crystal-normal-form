@@ -56,3 +56,13 @@ def test_matrix_multiplication():
     mattuple2 = MatrixTuple(npmat2)
 
     assert np.all((mattuple1 @ mattuple2).matrix == npmat1 @ npmat2)
+
+def test_sign_flip():
+    npmat1 = np.array([
+        [4, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1],
+    ])
+    mattup1 = MatrixTuple(npmat1)
+    flipped = mattup1.flip_signs()
+    assert (flipped.matrix == -npmat1).all()

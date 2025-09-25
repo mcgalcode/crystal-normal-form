@@ -104,3 +104,7 @@ def test_s4_subgroup_isomorphism():
     for m1 in matrices:
         for m2 in matrices:
             assert MatrixTuple(m1 @ m2).tuple in mat_tuples
+
+def test_unimodulars_are_det_0():
+    for m in UnimodPermMapper.all_unimodular_matrices():
+        assert m.determinant() == 1

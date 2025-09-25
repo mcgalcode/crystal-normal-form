@@ -24,6 +24,9 @@ class MatrixTuple():
     def determinant(self):
         return np.linalg.det(self.matrix)
     
+    def flip_signs(self):
+        return self.__class__(-self.matrix)
+    
     def to_list(self):
         return list(self.tuple)
     
