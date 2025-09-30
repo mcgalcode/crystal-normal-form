@@ -22,4 +22,8 @@ class UnitCell():
         lattice_vec_sets = sg.generate_sublattice_vector_sets(self.superbasis.generating_vecs())
         motifs = sg.generate_sublattice_motifs(self.motif)
         return [UnitCell(Superbasis.from_generating_vecs(lvs), motif) for lvs, motif in zip(lattice_vec_sets, motifs)]
+    
+    def to_pymatgen_structure(self):
+        lattice_vecs = self.superbasis.generating_vecs()
+        return Structure(lattice_vecs, self.motif.atoms, self.motif.positions)        
 
