@@ -97,7 +97,12 @@ class FractionalMotif(AtomicMotif):
 
     @classmethod
     def from_pymatgen_structure(cls, pmg_struct: Structure):
-        elements = [site.species for site in pmg_struct.sites]
+        site_species = [site.species for site in pmg_struct.sites]
+        elements = []
+        for spec in site_species:
+            assert spec.num_atoms == 1
+            elements.append(spec.elements[0])
+
         coords = [site.frac_coords for site in pmg_struct.sites]
         return cls.from_elements_and_positions(elements, coords)
 
