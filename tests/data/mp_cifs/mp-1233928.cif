@@ -1,0 +1,45 @@
+# generated using pymatgen
+data_CaLa2Fe2(TeO6)2
+_symmetry_space_group_name_H-M   'P 1'
+_cell_length_a   5.59149105
+_cell_length_b   5.57125502
+_cell_length_c   9.91837641
+_cell_angle_alpha   89.89300279
+_cell_angle_beta   89.97422851
+_cell_angle_gamma   60.09591569
+_symmetry_Int_Tables_number   1
+_chemical_formula_structural   CaLa2Fe2(TeO6)2
+_chemical_formula_sum   'Ca1 La2 Fe2 Te2 O12'
+_cell_volume   267.83665056
+_cell_formula_units_Z   1
+loop_
+ _symmetry_equiv_pos_site_id
+ _symmetry_equiv_pos_as_xyz
+  1  'x, y, z'
+loop_
+ _atom_site_type_symbol
+ _atom_site_label
+ _atom_site_symmetry_multiplicity
+ _atom_site_fract_x
+ _atom_site_fract_y
+ _atom_site_fract_z
+ _atom_site_occupancy
+  Ca  Ca0  1  0.66630100  0.66761500  0.05523000  1
+  La  La1  1  0.00144600  0.99869100  0.49499200  1
+  La  La2  1  0.00063800  0.00056500  0.97158200  1
+  Fe  Fe3  1  0.32783500  0.33594100  0.74238300  1
+  Fe  Fe4  1  0.66714800  0.66704900  0.36487900  1
+  Te  Te5  1  0.66708300  0.66515900  0.73462000  1
+  Te  Te6  1  0.33331100  0.33387200  0.23577000  1
+  O  O7  1  0.96623300  0.37200300  0.63214700  1
+  O  O8  1  0.65875800  0.95778500  0.62580400  1
+  O  O9  1  0.37643300  0.64866900  0.63365900  1
+  O  O10  1  0.63553000  0.06542400  0.12636500  1
+  O  O11  1  0.29973400  0.63949000  0.12826300  1
+  O  O12  1  0.06344000  0.30221500  0.12643400  1
+  O  O13  1  0.04003100  0.60918700  0.35571200  1
+  O  O14  1  0.34918800  0.03789500  0.35383400  1
+  O  O15  1  0.61232500  0.34882600  0.35473100  1
+  O  O16  1  0.39967500  0.96706100  0.85344600  1
+  O  O17  1  0.63844500  0.40434200  0.85967200  1
+  O  O18  1  0.95894600  0.64070900  0.85672800  1

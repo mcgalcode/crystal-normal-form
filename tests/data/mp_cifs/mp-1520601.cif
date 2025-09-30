@@ -1,0 +1,46 @@
+# generated using pymatgen
+data_Pr2FeCuO6
+_symmetry_space_group_name_H-M   'P 1'
+_cell_length_a   5.49174246
+_cell_length_b   5.66436907
+_cell_length_c   7.78032606
+_cell_angle_alpha   89.99251913
+_cell_angle_beta   89.99265440
+_cell_angle_gamma   89.93475107
+_symmetry_Int_Tables_number   1
+_chemical_formula_structural   Pr2FeCuO6
+_chemical_formula_sum   'Pr4 Fe2 Cu2 O12'
+_cell_volume   242.02443467
+_cell_formula_units_Z   2
+loop_
+ _symmetry_equiv_pos_site_id
+ _symmetry_equiv_pos_as_xyz
+  1  'x, y, z'
+loop_
+ _atom_site_type_symbol
+ _atom_site_label
+ _atom_site_symmetry_multiplicity
+ _atom_site_fract_x
+ _atom_site_fract_y
+ _atom_site_fract_z
+ _atom_site_occupancy
+  Pr  Pr0  1  0.48796459  0.44492082  0.25014696  1
+  Pr  Pr1  1  0.01181434  0.94533144  0.24976753  1
+  Pr  Pr2  1  0.51203541  0.55507918  0.74985304  1
+  Pr  Pr3  1  -0.01181434  0.05466856  0.75023247  1
+  Fe  Fe4  1  0.50000000  -0.00000000  0.00000000  1
+  Fe  Fe5  1  -0.00000000  0.50000000  0.50000000  1
+  Cu  Cu6  1  -0.00000000  0.50000000  0.00000000  1
+  Cu  Cu7  1  0.50000000  -0.00000000  0.50000000  1
+  O  O8  1  0.21399525  0.20719728  0.04390579  1
+  O  O9  1  0.28574480  0.70716798  0.45647265  1
+  O  O10  1  0.78600475  0.79280272  -0.04390579  1
+  O  O11  1  0.71425520  0.29283202  0.54352735  1
+  O  O12  1  0.29188155  0.71018387  0.04426482  1
+  O  O13  1  0.20809343  0.21034744  0.45514603  1
+  O  O14  1  0.70811845  0.28981613  -0.04426482  1
+  O  O15  1  0.79190657  0.78965256  0.54485397  1
+  O  O16  1  0.58161378  0.01916701  0.24875955  1
+  O  O17  1  -0.08240467  0.52035526  0.25119362  1
+  O  O18  1  0.41838622  -0.01916701  0.75124045  1
+  O  O19  1  0.08240467  0.47964474  0.74880638  1
