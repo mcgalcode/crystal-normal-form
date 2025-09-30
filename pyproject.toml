@@ -23,5 +23,10 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "average-minimum-distance>=1.6.0",
     "pytest>=8.4.1",
 ]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+norecursedirs = ["tests/helpers"]
