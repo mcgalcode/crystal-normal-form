@@ -108,7 +108,9 @@ class CrystalNormalForm:
         # This method will use self.xi to convert integer vonorms back to floats,
         # run the `vonorm -> superbasis` algorithm, use self.permutation to
         # correctly label the basis, and then use self.delta to place the atoms.
-        pass
+        lattice_vecs = self.lattice_normal_form.to_superbasis().generating_vecs()
+        motif = self.basis_normal_form.to_motif()
+        return Structure(lattice_vecs, motif.atoms, motif.positions)
 
     def __repr__(self):
         return (f"CrystalNormalForm(lattice={self.lattice_normal_form}, motif={self.basis_normal_form}, "
