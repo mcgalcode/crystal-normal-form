@@ -47,8 +47,8 @@ class VonormList():
         diff = np.abs(np.array(self.vonorms) - np.array(other.vonorms))
         return np.all(diff < tol)
     
-    def matrices_for_perm(self, perm: Permutation):
-        return self.conorms.matrices_for_perm(perm)
+    def canonical_matrix_for_perm(self, perm: Permutation):
+        return self.conorms.canonical_matrix_for_perm(perm)
 
     def apply_permutation(self, permutation: tuple):
         return VonormList(tuple(apply_permutation(self.vonorms, permutation)))

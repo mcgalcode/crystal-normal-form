@@ -28,6 +28,5 @@ def load_unimodular():
 
 UNIMODULAR_MATRICES = load_unimodular()
 
-
 if __name__ == "__main__":
     build_unimodular_matrices()

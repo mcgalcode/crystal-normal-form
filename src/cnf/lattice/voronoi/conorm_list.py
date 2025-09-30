@@ -28,11 +28,11 @@ class ConormList():
         diff = np.abs(np.array(sorted(self.conorms)) - np.array(sorted(other.conorms)))
         return np.all(diff < tol)
     
-    def matrices_for_perm(self, perm: Permutation):
+    def canonical_matrix_for_perm(self, perm: Permutation):
         if isinstance(perm, VonormPermutation):
-            return self.form.matrices_for_perm(perm.to_conorm_permutation())
+            return self.form.canonical_matrix_for_perm(perm.to_conorm_permutation())
         else:
-            return self.form.matrices_for_perm(perm)
+            return self.form.canonical_matrix_for_perm(perm)
     
     def about_equal(self, other: 'ConormList', tol=1e-8):
         diff = np.abs(np.array(self.conorms) - np.array(other.conorms))

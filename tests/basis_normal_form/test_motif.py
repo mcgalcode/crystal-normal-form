@@ -130,11 +130,10 @@ def test_cartesian_coords_not_changed_by_unimodular():
     original_cart_coords = motif.compute_cartesian_coords_in_basis(sb)
 
     for perm in sb.compute_vonorms().conorms.permissible_permutations:
-        for mat in perm.matrices:
-            permuted_sb = sb.apply_matrix_transform(mat.matrix)
-            transformed_cart_corods = motif.apply_unimodular(mat).compute_cartesian_coords_in_basis(permuted_sb)
+        permuted_sb = sb.apply_matrix_transform(perm.matrix.matrix)
+        transformed_cart_corods = motif.apply_unimodular(perm.matrix).compute_cartesian_coords_in_basis(permuted_sb)
 
-            assert original_cart_coords == transformed_cart_corods
+        assert original_cart_coords == transformed_cart_corods
 
     
 

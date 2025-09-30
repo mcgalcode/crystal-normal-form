@@ -49,11 +49,11 @@ class VonormPermutation(Permutation):
     def to_conorm_permutation(self):
         return ConormPermutation(VONORM_PERMUTATION_TO_CONORM_PERMUTATION[self.perm])
 
-class PermutationMatrices():
+class PermutationMatrix():
 
-    def __init__(self, perm: Permutation, matrices: list[MatrixTuple]):
+    def __init__(self, perm: Permutation, matrix: MatrixTuple):
         self.perm = perm
-        self.matrices = matrices
+        self.matrix = matrix
 
     @property
     def vonorm_permutation(self):

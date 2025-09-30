@@ -1,6 +1,6 @@
 from .voronoi_values import Conorm
 from .constants import CONORM_IDX_TO_PAIR
-from ..permutations import UnimodPermMapper, ConormPermutation, PermutationMatrices
+from ..permutations import UnimodPermMapper, ConormPermutation, PermutationMatrix
 from ...linalg import MatrixTuple
 from ...utils.sorted_tuple import SortedTuple
 from itertools import combinations
@@ -23,13 +23,19 @@ class ConormListForm():
         self.voronoi_class = self._compute_voronoi_class()
         self.tuple = tuple(zero_indices)
     
-    def permissible_permutations(self) -> list[PermutationMatrices]:
+    def permissible_permutations(self) -> list[PermutationMatrix]:
         perms = UnimodPermMapper.get_perms_for_zero_set(self.zero_indices)
-        return [PermutationMatrices(p, self.matrices_for_perm(p)) for p in perms]
+        return [PermutationMatrix(p, self.canonical_matrix_for_perm(p)) for p in perms]
     
     def matrices_for_perm(self, cperm: ConormPermutation):
         mats = UnimodPermMapper.get_matrices_for_zero_set_and_perm(self.zero_indices, cperm)
         return mats
+    
+    def canonical_matrix_for_perm(self, cperm: ConormPermutation):
+        # NOTE: ONLY CONSIDER A SINGLE ONE OF THESE MATRICES
+        # Choose the one that is first in lexicographic order
+        mats = sorted(self.matrices_for_perm(cperm), key=lambda m: m.tuple)
+        return mats[0]
 
     def zero_conorms(self):
         return [Conorm.from_idx(idx) for idx in self.zero_indices]

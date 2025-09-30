@@ -5,7 +5,7 @@ from pymatgen.core.structure import Structure
 from .voronoi.vonorm_list import VonormList
 from .voronoi.conorm_list import ConormList
 from .selling import VonormListSellingReducer
-from .permutations import VonormPermutation, PermutationMatrices
+from .permutations import PermutationMatrix
 from .rounding import DiscretizedVonormComputer
 from .superbasis import Superbasis
 from .lattice_normal_form import LatticeNormalForm
@@ -18,12 +18,16 @@ class VonormCanonicalizer():
         self.reduction_tolerance = reduction_tolerance
     
     def get_canonicalized_vonorms(self, vonorms: VonormList):
-        reducer = VonormListSellingReducer(tol=self.reduction_tolerance, verbose_logging=self._verbose_logging)
+        reducer = VonormListSellingReducer(
+            tol=self.reduction_tolerance,
+            verbose_logging=self._verbose_logging
+        )
+
         reduction_result = reducer.reduce(vonorms)
         reduced_vonorms = reduction_result.reduced_object
         conorms: ConormList = reduced_vonorms.conorms
 
-        permuted_vonorm_lists: list[tuple[VonormList, PermutationMatrices]] = []
+        permuted_vonorm_lists: list[tuple[VonormList, PermutationMatrix]] = []
         for perm_mat_group in conorms.form.permissible_permutations():
             vonorm_permutation = perm_mat_group.vonorm_permutation
             permuted_vlist = reduced_vonorms.apply_permutation(vonorm_permutation)
@@ -43,7 +47,7 @@ class CanonicalizedVonormResult():
     def __init__(self,
                  canonical_vonorm_list: VonormList,
                  selling_transform_matrix,
-                 stabilizer_permutations: list[PermutationMatrices]):
+                 stabilizer_permutations: list[PermutationMatrix]):
         self.canonical_vonorms = canonical_vonorm_list
         self.selling_transform_mat = selling_transform_matrix
         self.stabilizer_permutations = stabilizer_permutations

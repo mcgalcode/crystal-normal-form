@@ -8,7 +8,6 @@ from cnf.lattice.vonorm_unimodular import get_unimodular_matrix_from_voronoi_vec
 from cnf.lattice.permutations import VonormPermutation, ConormPermutation, VONORM_PERMUTATION_TO_CONORM_PERMUTATION, compose_permutations, apply_permutation, is_permutation_set_closed, ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS, UnimodPermMapper
 from pymatgen.core.lattice import Lattice
 
-
 def test_vonorm_permutation():
     permutation = VonormPermutation((6, 5, 2, 3, 4, 1, 0))
     cpermutation = permutation.to_conorm_permutation()

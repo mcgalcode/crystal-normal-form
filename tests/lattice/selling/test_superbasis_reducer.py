@@ -73,8 +73,6 @@ def test_selling_transformation():
     assert np.all(transformed2.superbasis_vecs[2] == [-1, 0, -0.5])
     assert np.all(transformed2.superbasis_vecs[3] == [1, 1, 0.5])
 
-
-
 def test_can_selling_reduce_superbasis(monoclinic_lattice):
     tol = 1e-7
     reducer = SuperbasisSellingReducer(tol = tol)
