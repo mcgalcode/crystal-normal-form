@@ -1,2 +1,1 @@
-def main() -> None:
-    print("Hello from cnf!")
+from .crystal_normal_form import CrystalNormalForm
