@@ -135,6 +135,10 @@ ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS = load_unimod_mats_to_perms()
 class UnimodPermMapper:
 
     @staticmethod
+    def all_zero_sets():
+        return list(ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS.keys())
+
+    @staticmethod
     def all_unimodular_matrices():
         all_mats = []
         for zero_set, perm_map in ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS.items():
