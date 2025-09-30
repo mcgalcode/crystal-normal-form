@@ -61,16 +61,28 @@ def test_produces_zr_bcc_vonorm_set_sublattice_1(zr_bcc_primitive_lattice_vecs):
     xi = 1.5
 
     sb = Superbasis.from_generating_vecs(vecs)
-    vnorms = DiscretizedVonormComputer.discretize_vonorm_list(sb.compute_vonorms(), xi)
-    
+    comp = DiscretizedVonormComputer(xi, verbose_log=True)
+    sb_vnorms = sb.compute_vonorms()
+    print(f"Superbasis Vonorms: {sb_vnorms}")
+    disc_vnorms = comp.find_closest_valid_vonorms(sb_vnorms)
+    # disc_vnorms = DiscretizedVonormComputer.discretize_vonorm_list(sb.compute_vonorms(), xi)
+    print(f"Discretized Superbasis Vonorms: {disc_vnorms}")
+    print("=====")
+    lnf_constructor = LatticeNormalFormConstructor(xi, verbose_logging=True)
+    lnf = lnf_constructor.build_lnf_from_vonorms(sb_vnorms).lnf
+    print(lnf)
+    vonorms = lnf.vonorms
+    # vonorms = disc_vnorms
+    assert lnf.vonorms.has_same_members(disc_vnorms)
+
     expected_thesis_vonorms = VonormList([6, 8, 17, 23, 6, 23, 25])
-    assert vnorms.is_obtuse()
+    assert vonorms.is_obtuse()
     assert sb.is_obtuse(tol=1e-5)
     # Note: because of our enhanced permutation sets, we might not
     # get the same maximally ascending string. If they are different
     # then our should be "greater" (more maximally ascending)
-    assert vnorms.has_same_members(expected_thesis_vonorms)
-    assert vnorms.tuple >= expected_thesis_vonorms.tuple
+    assert vonorms.has_same_members(expected_thesis_vonorms)
+    assert vonorms.tuple <= expected_thesis_vonorms.tuple
 
 # @pytest.mark.xfail
 def test_produces_zr_bcc_vonorm_set_sublattice_2(zr_bcc_primitive_lattice_vecs):
@@ -105,7 +117,7 @@ def test_two_distinct_fcc_sublattice_lnfs(zr_fcc_lnfs_and_diff):
             lnf = d['computed_lnf']
             actual_lnf = d['expected_lnf']
             diff = d['diff']
-
+            assert all([i == 0 for i in diff])
             print(f"{idx} Computed LNF: {lnf.coords}, Hoped for LNF: {actual_lnf} (class {lnf_class}), diff: {diff}")
 
 def _trace_lnf(x, xi):

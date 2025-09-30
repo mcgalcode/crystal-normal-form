@@ -17,14 +17,23 @@ def test_bcc_zr_unit_cells(zr_bcc_primitive_lattice_vecs):
     delta = 30
 
     supercells = unit_cell.supercells(2)
+    print(f"Considering {len(supercells)} distinct supercells")
 
     lnf_constructor = LatticeNormalFormConstructor(xi)
     unique_lnfs = set([lnf_constructor.build_lnf_from_superbasis(cell.superbasis).lnf for cell in supercells])
-    # for cnf in unique_lnfs:
-    #     print(cnf.coords)
+    for cnf in unique_lnfs:
+        print(cnf.coords)
     assert len(unique_lnfs) == 2
 
-    unique_cnfs = set([CrystalNormalForm.from_unit_cell(cell, xi, delta) for cell in supercells])
+    cnfs = []
+    for cell in supercells:
+        # print(f"Putting cell into CNF: {cell.superbasis.compute_vonorms()}")
+        cnf = CrystalNormalForm.from_unit_cell(cell, xi, delta, False)
+        cnfs.append(cnf)
+        # print()
+        
+    unique_cnfs = set(cnfs)    
+    
     # for cnf in unique_cnfs:
     #     print(cnf.coords)
     assert len(unique_cnfs) == 2
@@ -38,8 +47,19 @@ def test_fcc_zr_unit_cells(zr_fcc_primitive_lattice_vecs):
     delta = 30
 
     supercells = unit_cell.supercells(2)
-    unique_cnfs = set([CrystalNormalForm.from_unit_cell(cell, xi, delta) for cell in supercells])
+    lnf_constructor = LatticeNormalFormConstructor(xi)
+    unique_lnfs = set([lnf_constructor.build_lnf_from_superbasis(cell.superbasis).lnf for cell in supercells])
+    assert len(unique_lnfs) == 2
+
+    cnfs = []
+    for cell in supercells:
+        # print(f"Putting cell into CNF: {cell.superbasis.compute_vonorms()}")
+        cnf = CrystalNormalForm.from_unit_cell(cell, xi, delta, False)
+        cnfs.append(cnf)
+        # print()
+
+    unique_cnfs = set(cnfs)
 
     assert len(unique_cnfs) == 2
-    for cnf in unique_cnfs:
-        print(cnf.coords)
+    # for cnf in unique_cnfs:
+    #     print(cnf.coords)
