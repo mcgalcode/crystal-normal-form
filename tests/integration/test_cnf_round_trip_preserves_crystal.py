@@ -1,11 +1,9 @@
-import pytest
-
 from cnf import CrystalNormalForm
 
 from pymatgen.core.structure import Structure
 import helpers
 
-@pytest.mark.skipif(helpers.IS_FAST, reason="Skipped because CNF_FAST_TEST env var was set to 1")
+@helpers.skip_if_fast
 def test_cnf_round_trip_yields_same_crystal_full_cells(mp_structures: list[Structure]):
     xi = 0.01
     delta = 10000
@@ -17,7 +15,7 @@ def test_cnf_round_trip_yields_same_crystal_full_cells(mp_structures: list[Struc
 
         helpers.assert_identical_by_pdd_distance(struct, recovered_struct)
 
-@pytest.mark.skipif(helpers.IS_FAST, reason="Skipped because CNF_FAST_TEST env var was set to 1")
+@helpers.skip_if_fast
 def test_cnf_round_trip_yields_same_crystal_primitive_cells(mp_structures: list[Structure]):
     xi = 0.01
     delta = 10000

@@ -422,7 +422,6 @@ name = "cnf"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "average-minimum-distance" },
     { name = "jupyterlab" },
     { name = "mp-api" },
     { name = "numpy" },
@@ -431,12 +430,12 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "average-minimum-distance" },
     { name = "pytest" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "average-minimum-distance", specifier = ">=1.6.0" },
     { name = "jupyterlab", specifier = ">=4.4.7" },
     { name = "mp-api", specifier = ">=0.45.8" },
     { name = "numpy", specifier = ">=2.3.2" },
@@ -444,7 +443,10 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=8.4.1" }]
+dev = [
+    { name = "average-minimum-distance", specifier = ">=1.6.0" },
+    { name = "pytest", specifier = ">=8.4.1" },
+]
 
 [[package]]
 name = "colorama"

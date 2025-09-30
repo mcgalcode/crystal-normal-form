@@ -2,6 +2,7 @@ import amd
 import tempfile
 from pymatgen.core.structure import Structure
 
+
 def assert_identical_by_pdd_distance(struct1: Structure, struct2: Structure, cutoff = 0.015, verbose=False):
         
     with tempfile.NamedTemporaryFile(suffix=".cif") as struct_1_file:

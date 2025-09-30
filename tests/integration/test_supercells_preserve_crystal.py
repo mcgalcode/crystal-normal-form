@@ -8,7 +8,7 @@ from pymatgen.core.structure import Structure
 
 import helpers
 
-@pytest.mark.skipif(helpers.IS_FAST, reason="Skipped because CNF_FAST_TEST env var was set to 1")
+@helpers.skip_if_fast
 def test_supercell_construction_preserves_crystal_structure(mp_structures: list[Structure]):
     MAX_IDX = 4
     for cell_idx in range(2, MAX_IDX + 1):
@@ -18,7 +18,7 @@ def test_supercell_construction_preserves_crystal_structure(mp_structures: list[
                 superstruct = cell.to_pymatgen_structure()
                 helpers.assert_identical_by_pdd_distance(struct, superstruct)
 
-@pytest.mark.skipif(helpers.IS_FAST, reason="Skipped because CNF_FAST_TEST env var was set to 1")
+@helpers.skip_if_fast
 def test_supercell_construction_preserves_crystal_structure_after_cnf(mp_structures: list[Structure]):
     xi = 0.001
     delta = 1000
