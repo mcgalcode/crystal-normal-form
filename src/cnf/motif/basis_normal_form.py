@@ -42,7 +42,7 @@ class BasisNormalForm():
         self.elements = element_list
         self.delta = delta
 
-    def to_element_position_map(self):
+    def to_motif(self):
         frac_coords = [c / self.delta for c in self.coord_list]
         separated_coord_lists = [frac_coords[start_idx:start_idx+3] for start_idx in range(0, len(frac_coords), 3)]
         separated_coord_lists = [[0, 0, 0]] + separated_coord_lists

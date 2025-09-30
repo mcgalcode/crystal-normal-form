@@ -22,11 +22,11 @@ def test_zr_hcp():
 def test_can_round_trip_to_position_map(sn2_o4_motif: FractionalMotif):
     bnf = BasisNormalForm.from_motif(sn2_o4_motif)
 
-    new_pos_map = bnf.to_element_position_map()
+    new_motif = bnf.to_motif()
 
-    assert tuple(sn2_o4_motif.sorted_elements) == tuple(new_pos_map.sorted_elements)
+    assert tuple(sn2_o4_motif.sorted_elements) == tuple(new_motif.sorted_elements)
 
     for element in sn2_o4_motif.sorted_elements:
         original_positions = {tuple(c) for c in sn2_o4_motif.get_element_positions(element)}
-        new_positions = {tuple(c) for c in new_pos_map.get_element_positions(element)}
+        new_positions = {tuple(c) for c in new_motif.get_element_positions(element)}
         assert original_positions == new_positions
