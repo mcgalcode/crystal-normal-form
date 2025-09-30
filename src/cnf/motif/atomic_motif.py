@@ -115,7 +115,7 @@ class FractionalMotif(AtomicMotif):
         return FractionalMotif.from_elements_and_positions(self.atoms, transformed_coords)
     
     def apply_unimodular(self, unimodular: MatrixTuple):
-        if unimodular.determinant() != 1:
+        if not np.isclose(unimodular.determinant(), 1):
             raise ValueError(f"Tried to transform motif w matrix with det {unimodular.determinant()}")
         transformed = unimodular.inverse() @ self.coord_matrix
         return FractionalMotif.from_elements_and_positions(self.atoms, transformed.T)
