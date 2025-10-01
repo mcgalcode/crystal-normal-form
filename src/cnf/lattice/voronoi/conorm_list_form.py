@@ -5,6 +5,12 @@ from ...linalg import MatrixTuple
 from ...utils.sorted_tuple import SortedTuple
 from itertools import combinations
 
+import random
+import numpy as np
+
+def perm_in_s4(perm):
+    return perm[4:] == (4, 5, 6)
+
 class ConormListForm():
 
     @staticmethod
@@ -25,7 +31,19 @@ class ConormListForm():
     
     def permissible_permutations(self) -> list[PermutationMatrix]:
         perms = UnimodPermMapper.get_perms_for_zero_set(self.zero_indices)
+        # perms = [p for p in perms if perm_in_s4(p)]
         return [PermutationMatrix(p, self.canonical_matrix_for_perm(p)) for p in perms]
+    
+    def grouped_vonorm_permutations(self) -> list[list[PermutationMatrix]]:
+        groups = {}
+        for p in self.permissible_permutations():
+            p = p.vonorm_permutation
+            s4_members = tuple(sorted(p.perm[:4]))
+            if s4_members in groups:
+                groups[s4_members].append(p)
+            else:
+                groups[s4_members] = [p]
+        return groups
     
     def matrices_for_perm(self, cperm: ConormPermutation):
         mats = UnimodPermMapper.get_matrices_for_zero_set_and_perm(self.zero_indices, cperm)
@@ -33,8 +51,11 @@ class ConormListForm():
     
     def canonical_matrix_for_perm(self, cperm: ConormPermutation):
         # NOTE: ONLY CONSIDER A SINGLE ONE OF THESE MATRICES
-        # Choose the one that is first in lexicographic order
-        mats = sorted(self.matrices_for_perm(cperm), key=lambda m: m.tuple)
+        # Choose the one that is closest to the identity
+        i = np.eye(3)
+        def _get_diff(mat: MatrixTuple):
+            return np.linalg.norm(i - mat.matrix)
+        mats = sorted(self.matrices_for_perm(cperm), key=_get_diff)
         return mats[0]
 
     def zero_conorms(self):
