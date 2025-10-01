@@ -17,21 +17,27 @@ class VonormCanonicalizer():
         self._verbose_logging = verbose_logging
         self.reduction_tolerance = reduction_tolerance
     
-    def get_canonicalized_vonorms(self, vonorms: VonormList):
-        reducer = VonormListSellingReducer(
-            tol=self.reduction_tolerance,
-            verbose_logging=self._verbose_logging
-        )
+    def get_canonicalized_vonorms(self, vonorms: VonormList, skip_reduction=False):
 
-        reduction_result = reducer.reduce(vonorms)
-        reduced_vonorms = reduction_result.reduced_object
-        conorms: ConormList = reduced_vonorms.conorms
+        if not skip_reduction:
+            reducer = VonormListSellingReducer(
+                tol=self.reduction_tolerance,
+                verbose_logging=self._verbose_logging
+            )
+
+            reduction_result = reducer.reduce(vonorms)
+            vonorms: VonormList = reduction_result.reduced_object
+            conorms: ConormList = vonorms.conorms
+            reduction_transform = reduction_result.transform_matrix
+        else:
+            conorms = vonorms.conorms
+            reduction_transform = None
 
         permuted_vonorm_lists: list[tuple[VonormList, PermutationMatrix]] = []
-        for perm_mat_group in conorms.form.permissible_permutations():
-            vonorm_permutation = perm_mat_group.vonorm_permutation
-            permuted_vlist = reduced_vonorms.apply_permutation(vonorm_permutation)
-            permuted_vonorm_lists.append((permuted_vlist, perm_mat_group))
+        for perm_mat in conorms.form.permissible_permutations():
+            vonorm_permutation = perm_mat.vonorm_permutation
+            permuted_vlist = vonorms.apply_permutation(vonorm_permutation)
+            permuted_vonorm_lists.append((permuted_vlist, perm_mat))
 
         sorted_vlists = sorted(permuted_vonorm_lists, key=lambda group: group[0].vonorms, reverse=False)
         canonical_vonorm_list = sorted_vlists[0][0]
@@ -39,7 +45,7 @@ class VonormCanonicalizer():
 
         return CanonicalizedVonormResult(
             canonical_vonorm_list,
-            reduction_result.transform_matrix,
+            reduction_transform,
             stabilizer_permutations
         )
 
