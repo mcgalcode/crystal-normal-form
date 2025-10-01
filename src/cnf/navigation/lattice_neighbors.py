@@ -21,7 +21,6 @@ class LatticeStep():
             for second_idx in range(first_idx + 1, 7):
                 vec = np.zeros(7)
                 vec[first_idx] = 1
-                print(first_idx, second_idx)
                 if is_primary_idx(first_idx) and is_primary_idx(second_idx):
                     vec[second_idx] = -1
 
