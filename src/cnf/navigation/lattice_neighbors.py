@@ -94,8 +94,9 @@ class LatticeNeighborFinder():
             permuted_vonorms = lnf_point.vonorms.apply_permutation(vonorm_perm)
 
             for step in LatticeStep.all_step_vecs():
-                neighbor_vonorms = self.get_vonorm_neighbor(permuted_vonorms, step)
-                if neighbor_vonorms is not None:
+                canonical_result = self.get_vonorm_neighbor(permuted_vonorms, step)
+                if canonical_result is not None:
+                    neighbor_vonorms = canonical_result.canonical_vonorms
                     neighbor_lnf = LatticeNormalForm(neighbor_vonorms, lnf_point.lattice_step_size)
                     neighbors.add(neighbor_lnf)
         return list(neighbors)

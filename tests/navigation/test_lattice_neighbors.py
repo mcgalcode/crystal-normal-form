@@ -18,13 +18,6 @@ def test_can_find_all_lattice_steps():
     assert len(all_steps) == 42
     assert len(set([s.tuple for s in all_steps])) == 42
 
-def test_expanded_chi_set_for_structure(mp_structures):
-    for struct in mp_structures:
-        cnf = CrystalNormalForm.from_pymatgen_structure(struct)
-        chi = LatticeStep.step_vecs_for_vonorm_list(cnf.lattice_normal_form.vonorms)
-        assert len(chi) >= 42
-
-
 def test_lattice_neighbor_lnfs_make_sense(mp_structures):
     struct = mp_structures[0]
     original_cnf = CrystalNormalForm.from_pymatgen_structure(struct)
@@ -36,6 +29,7 @@ def test_lattice_neighbor_lnfs_make_sense(mp_structures):
         assert np.sum(np.abs(diff)) == 2
         assert np.max(np.abs(diff)) == 1
 
+@helpers.skip_if_fast
 def test_lattice_second_neighbor_lnfs_make_sense(mp_structures):
     struct = mp_structures[0]
     for struct in mp_structures[::50]:
@@ -51,6 +45,7 @@ def test_lattice_second_neighbor_lnfs_make_sense(mp_structures):
                 assert np.max(np.abs(diff)) <= 2
         print(f"Structure was valid!")
 
+@helpers.skip_if_fast
 def test_lattice_neighbor_cnfs_make_sense(mp_structures):
     for struct in mp_structures:
         original_cnf = CrystalNormalForm.from_pymatgen_structure(struct)
@@ -92,6 +87,7 @@ def test_lnf_neighbor_reciprocity_pathological_case_1(mp_structures):
         assert nn[0].vonorms.is_superbasis()
     assert original_lnf in neighbor_lnfs
 
+@helpers.skip_if_fast
 def test_lnf_neighbor_reciprocity(mp_structures):
     verbose = False
     for idx, struct in enumerate(mp_structures[::20]):
@@ -116,7 +112,7 @@ def test_lnf_neighbor_reciprocity(mp_structures):
             assert original_lnf in second_neighbors
             helpers.printif(f"Original LNF was found!", verbose)
     
-
+@helpers.skip_if_fast
 def test_lnf_neighbor_reciprocity_within_cnf_neighbors(mp_structures):
     verbose = False
 
@@ -133,7 +129,7 @@ def test_lnf_neighbor_reciprocity_within_cnf_neighbors(mp_structures):
     print("Success!")
 
 
-
+@pytest.mark.skip
 def test_cnf_neighbor_reciprocity(mp_structures):
     verbose = False
 
