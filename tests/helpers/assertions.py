@@ -21,4 +21,4 @@ def assert_identical_by_pdd_distance(struct1: Structure, struct2: Structure, cut
             distance = amd.EMD(pdd1, pdd2)
             if verbose:
                 print(f"Got {distance} for structs with {struct1.num_sites} and {struct2.num_sites} sites respectively")
-            assert distance < cutoff
+            assert distance < cutoff, f"Distance {distance} was above cutoff {cutoff}"

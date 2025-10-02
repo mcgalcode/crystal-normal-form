@@ -86,20 +86,3 @@ def test_thesis_neighbors():
 
     print(f"Found {len(found_vonorm_sets)} of {len(DISTINCT_LATTICE_NEIGHBOR_VONORMS)} expected vonorm sets.")
     print(f"Missed {len(not_found_vonorm_sets)} of {len(DISTINCT_LATTICE_NEIGHBOR_VONORMS)} expected vonorm sets.")
-
-
-def test_neighbor_reciprocity(mp_structures):
-    # for struct in mp_structures[:51:50]:
-    struct = mp_structures[5]
-    original_cnf = CrystalNormalForm.from_pymatgen_structure(struct)
-
-    neighbors = LatticeNeighborFinder().find_cnf_neighbors(original_cnf)
-    for n in neighbors:
-        second_neighbors = LatticeNeighborFinder().find_cnf_neighbors(n)
-        if original_cnf not in second_neighbors:
-            print(f"Original: {original_cnf.coords}")
-            print("========================")
-            for n in second_neighbors:
-                print([s - o for s,o in  zip(n.coords, original_cnf.coords)])
-        break
-    print("Success!")
