@@ -37,8 +37,7 @@ class ConormListForm():
     def grouped_vonorm_permutations(self) -> list[list[PermutationMatrix]]:
         groups = {}
         for p in self.permissible_permutations():
-            p = p.vonorm_permutation
-            s4_members = tuple(sorted(p.perm[:4]))
+            s4_members = tuple(sorted(p.vonorm_permutation.perm[:4]))
             if s4_members in groups:
                 groups[s4_members].append(p)
             else:
