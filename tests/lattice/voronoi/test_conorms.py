@@ -58,6 +58,8 @@ def test_v2_case(reduced_v2_superbasis):
     print(f"{conorms.form.voronoi_class}: {len(conorms.permissible_permutations)}")
     tested = _assert_all_permutation_matrices_maintain_superbasis(reduced_v2_superbasis)
     assert len(tested) == 48
+    print(conorms.form.grouped_vonorm_permutations().keys())
+    assert len(conorms.form.grouped_vonorm_permutations()) == 2
 
 def test_v1_case(reduced_v1_superbasis):
     conorms: ConormList = reduced_v1_superbasis.compute_vonorms().conorms
