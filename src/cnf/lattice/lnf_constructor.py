@@ -95,6 +95,20 @@ class LatticeNormalFormConstructor():
             discretized_canonical_result
         )
 
+    def build_lnf_from_discretized_vonorms(self, vonorms: VonormList):
+        canonicalizer = VonormCanonicalizer(reduction_tolerance=1e-8, verbose_logging=self._verbose_logging)
+        result = canonicalizer.get_canonicalized_vonorms(vonorms)
+        lnf = LatticeNormalForm(result.canonical_vonorms, self.lattice_step_size)
+
+        
+        # print(f"Undiscretized Coform: {undiscretized_canonical_result.canonical_vonorms.conorms.form}")
+        # print(f"Discretized Coform: {discretized_canonical_result.canonical_vonorms.conorms.form}")
+        return LatticeNormalFormConstructionResult(
+            lnf,
+            None,
+            result
+        )
+
 class LatticeNormalFormConstructionResult():
 
     def __init__(self,
