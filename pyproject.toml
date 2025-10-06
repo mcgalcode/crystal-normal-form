@@ -12,6 +12,7 @@ dependencies = [
     "mp-api>=0.45.8",
     "numpy>=2.3.2",
     "pymatgen>=2025.6.14",
+    "pytest-xdist>=3.8.0",
 ]
 
 [project.scripts]
