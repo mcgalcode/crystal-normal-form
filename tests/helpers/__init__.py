@@ -2,7 +2,7 @@ import os
 import pytest
 
 from .assertions import *
-
+from .data import ALL_MP_STRUCTURES
 
 IS_FAST = int(os.getenv("CNF_FAST_TEST", 0)) == 1
 
