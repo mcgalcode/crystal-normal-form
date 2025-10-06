@@ -1,7 +1,7 @@
 import numpy as np
 from ..swaps.sorting import swap_vonorm_idxs
 from .conorm_list import ConormList
-from ..permutations import apply_permutation, Permutation, ConormPermutation, VonormPermutation
+from ..permutations import apply_permutation, Permutation, ConormPermutation, VonormPermutation, PermutationMatrix
 
 # This matrix is found on page 48 of David's thesis
 VONORM_TO_DOT_PRODUCTS = np.array([
@@ -52,6 +52,16 @@ class VonormList():
 
     def apply_permutation(self, permutation: tuple):
         return VonormList(tuple(apply_permutation(self.vonorms, permutation)))
+    
+    def stabilizer(self) -> list[PermutationMatrix]:
+        possible_perms = self.conorms.permissible_permutations
+        stabilizers = []
+        for p in possible_perms:
+            vonorm_perm = p.vonorm_permutation
+            permuted_self = self.apply_permutation(vonorm_perm)
+            if self == permuted_self:
+                stabilizers.append(p)
+        return stabilizers
 
     def recover_generators(self, lattice_step_size: float = 1.0):
         """
