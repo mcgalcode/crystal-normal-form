@@ -1,34 +1,43 @@
 import numpy as np
 from pymatgen.core.structure import Structure
-from .utils import shift_coords, discretize_coords, sort_elements, sort_number_lists
+from .utils import shift_coords, discretize_coords, sort_elements, sort_number_lists, move_coords_into_cell
 
 from ..lattice import Superbasis
 from ..linalg import MatrixTuple
+
+def construct_el_pos_map(elements, positions):
+    if len(elements) != len(positions):
+        raise ValueError("Must instantiate motifs with same num elements and positions")
+    element_to_positions_map = {}
+
+    for el, pos in zip(elements, positions):
+        if el in element_to_positions_map:
+            element_to_positions_map[el].append(np.array(pos))
+        else:
+            element_to_positions_map[el] = [np.array(pos)]
+    
+    return element_to_positions_map
+
 
 class AtomicMotif():
         
     @classmethod
     def from_elements_and_positions(cls, elements, positions):
-        if len(elements) != len(positions):
-            raise ValueError("Must instantiate motifs with same num elements and positions")
-        element_to_positions_map = {}
-
-        for el, pos in zip(elements, positions):
-            if el in element_to_positions_map:
-                element_to_positions_map[el].append(np.array(pos))
-            else:
-                element_to_positions_map[el] = [np.array(pos)]
-        
-        return cls(element_to_positions_map)
+        return cls(construct_el_pos_map(elements, positions))
 
     def __init__(self, element_to_positions_map: dict[str, list[np.array]]):
         self.map = element_to_positions_map
         self.sorted_elements = sort_elements(self.unique_elements())
         self.sorted_elements.reverse()
         elements, positions = self.to_elements_and_positions()
+        for pos in positions:
+            self.validate_positions(pos)
         self.atoms = elements
         self.positions = positions
         self.coord_matrix = np.array(self.positions).T
+    
+    def _get_kwargs(self):
+        return {}
     
     def get_element_positions(self, el: str):
         if el not in self.map:
@@ -41,6 +50,9 @@ class AtomicMotif():
 
     def element_count(self, el):
         return len(self.get_element_positions(el))
+
+    def validate_positions(self, pos):
+        return pos
 
     def to_elements_and_positions(self):
         elements  = []
@@ -60,13 +72,44 @@ class AtomicMotif():
         shift_vector = np.array(shift_vector)
         
         new_map = {}
-
         for el, pos_list in self.map.items():
             new_map[el] = []
             for pos in pos_list:
-                new_map[el].append(shift_coords(pos, shift_vector))
+                new_map[el].append(self.shift_coord(pos, shift_vector))
         
-        return self.__class__(new_map)
+        return self.__class__(new_map, **self._get_kwargs())
+    
+    def shift_coord(self, pos, shift_vector):
+        return shift_coords(pos, shift_vector, None)
+
+    def get_sorted_positions(self, element_order = None):
+        if element_order is None:
+            element_order = self.sorted_elements
+
+        sorted_positions = []
+        for el in element_order:
+            position_list = self.get_element_positions(el)
+            sorted_positions.extend(sort_number_lists(position_list))
+
+        return sorted_positions
+    
+    def to_bnf_list(self, element_order = None):
+        if element_order is None:
+            element_order = self.sorted_elements
+
+        sorted_positions = self.get_sorted_positions(element_order)
+        return tuple(el for coord_list in sorted_positions for el in coord_list)
+
+    def apply_unimodular(self, unimodular: MatrixTuple):
+        if not np.isclose(unimodular.determinant(), 1):
+            raise ValueError(f"Tried to transform motif w matrix with det {unimodular.determinant()}")
+        transformed = unimodular.inverse() @ self.coord_matrix
+        positions = transformed.T
+        positions = self._process_transformed_coords(positions)
+        return self.__class__.from_elements_and_positions(self.atoms, positions, **self._get_kwargs())
+    
+    def _process_transformed_coords(self, coords):
+        return coords
 
     def is_valid_shift_vector(self, shift_vector: np.array):
         return True
@@ -92,8 +135,43 @@ class AtomicMotif():
             other_positions = other.get_element_positions(el)
             if not lists_of_np_arrays_approx_eq(self_positions, other_positions):
                 return False
-        return True 
-class FractionalMotif(AtomicMotif):
+        return True
+    
+class PeriodicMotif(AtomicMotif):
+
+    @classmethod
+    def from_elements_and_positions(cls, elements, positions, mod):
+            return cls(construct_el_pos_map(elements, positions), mod)
+
+    def __init__(self, element_to_positions_map: dict[str, list[np.array]], mod = None):
+        if mod is None:
+            raise ValueError(f"Tried to instantiate {self.__class__} without mod")
+        
+        super().__init__(element_to_positions_map)
+        self._mod = mod
+
+    def validate_positions(self, pos):
+        if np.any(np.array(pos) < 0):
+            raise ValueError(f"AtomicMotif instantiated with negative position: {pos}")
+
+    def shift_coord(self, pos, shift_vector):
+        return shift_coords(pos, shift_vector, self._mod)
+    
+    def _process_transformed_coords(self, coords):
+        return move_coords_into_cell(coords, self._mod)
+
+    def _get_kwargs(self):
+        return { "mod": self._mod }
+    
+class FractionalMotif(PeriodicMotif):
+
+    @classmethod
+    def from_elements_and_positions(cls, elements, positions):
+        return cls(construct_el_pos_map(elements, positions))       
+
+    def __init__(self, element_to_positions_map: dict[str, list[np.array]]):
+        FRACTIONAL_MOD = 1
+        super().__init__(element_to_positions_map, FRACTIONAL_MOD)
 
     @classmethod
     def from_pymatgen_structure(cls, pmg_struct: Structure):
@@ -105,42 +183,40 @@ class FractionalMotif(AtomicMotif):
 
         coords = [site.frac_coords for site in pmg_struct.sites]
         return cls.from_elements_and_positions(elements, coords)
-
-    def get_discretized_positions(self, el: str, delta: int):
-        unrounded = self.get_element_positions(el)
-        return [discretize_coords(c, delta) for c in unrounded]
     
     def transform(self, transform: np.array):
         transformed_coords = self.coord_matrix.T @ transform
         return FractionalMotif.from_elements_and_positions(self.atoms, transformed_coords)
     
-    def apply_unimodular(self, unimodular: MatrixTuple):
-        if not np.isclose(unimodular.determinant(), 1):
-            raise ValueError(f"Tried to transform motif w matrix with det {unimodular.determinant()}")
-        transformed = unimodular.inverse() @ self.coord_matrix
-        return FractionalMotif.from_elements_and_positions(self.atoms, transformed.T)
-    
     def compute_cartesian_coords_in_basis(self, basis: Superbasis):
         cart_coords = basis.generating_vecs().T @ self.coord_matrix
         return CartesianMotif.from_elements_and_positions(self.atoms, cart_coords.T)
+    
+    def discretize(self, delta):
+        discretized = discretize_coords(self.coord_matrix.T, delta)
+        res =  DiscretizedMotif.from_elements_and_positions(self.atoms, discretized, delta)
+        return res
+    
+    def _get_kwargs(self):
+        return {}
 
-    def get_sorted_discretized_positions(self, delta, element_order = None):
-        if element_order is None:
-            element_order = self.sorted_elements
+class DiscretizedMotif(PeriodicMotif):
 
-        sorted_positions = []
-        for el in element_order:
-            position_list = self.get_discretized_positions(el, delta)
-            sorted_positions.extend(sort_number_lists(position_list))
+    @classmethod
+    def from_elements_and_positions(cls, elements, positions, delta):
+        return cls(construct_el_pos_map(elements, positions), delta)    
 
-        return sorted_positions
+    def __init__(self, element_to_positions_map: dict[str, list[np.array]], delta = None):
+        if not isinstance(delta, int):
+            raise ValueError(f"Tried to instantiate discretized motif w bad delta: {delta}")
+        self.delta = delta
+        super().__init__(element_to_positions_map, delta)
+    
+    def is_valid_shift_vector(self, shift_vector: np.array):
+        return np.all(shift_vector < self._mod)
 
-    def to_bnf_list(self, delta, element_order = None):
-        if element_order is None:
-            element_order = self.sorted_elements
-
-        discretized_positions_list = self.get_sorted_discretized_positions(delta, element_order)
-        return tuple(el for coord_list in discretized_positions_list for el in coord_list)
+    def _get_kwargs(self):
+        return { "delta": self.delta }
 
 
 class CartesianMotif(AtomicMotif):

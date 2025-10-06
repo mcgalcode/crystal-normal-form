@@ -12,7 +12,7 @@ import cnf.motif.utils as bnf_utils
     ]
 )
 def test_can_move_coords_into_pbc_cell(unnormalized_coords, expected_coords):
-    computed_cell_coords = bnf_utils.move_coords_into_cell(unnormalized_coords)
+    computed_cell_coords = bnf_utils.move_coords_into_cell(unnormalized_coords, mod=1)
     assert np.all(np.isclose(computed_cell_coords, expected_coords, 1e-16))
 
 @pytest.mark.parametrize(
@@ -39,7 +39,7 @@ def test_can_sort_elements(unsorted_element_list, expected_sorted_list):
     ]
 )
 def test_can_shift_coords(original_coords, shift_vec, expected_coords):
-    shifted = bnf_utils.shift_coords(original_coords, shift_vec)
+    shifted = bnf_utils.shift_coords(original_coords, shift_vec, mod=1)
     assert np.all(np.isclose(shifted, expected_coords))
 
 

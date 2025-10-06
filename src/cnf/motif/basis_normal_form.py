@@ -1,4 +1,4 @@
-from .atomic_motif import FractionalMotif
+from .atomic_motif import FractionalMotif, DiscretizedMotif
 from .utils import sort_number_lists
 
 class BasisNormalForm():
@@ -11,21 +11,20 @@ class BasisNormalForm():
     @classmethod
     def from_element_and_position_lists(cls, elements, positions):
         motif = FractionalMotif.from_elements_and_positions(elements, positions)
-        return cls.from_motif(motif)
-
+        return cls.from_fractional_motif(motif)
+    
     @classmethod
-    def from_motif(cls, motif: FractionalMotif, delta: int = 10):
-        sorted_elements = motif.sorted_elements
+    def from_discretized_motif(cls, disc_motif: DiscretizedMotif):
+        sorted_elements = disc_motif.sorted_elements
         origin_element = sorted_elements[0]
 
-        origin_element_positions = motif.get_element_positions(origin_element)
+        origin_element_positions = disc_motif.get_element_positions(origin_element)
 
         all_bnf_lists = []
-
         # For each possible origin, compute the list
         for origin_candidate in origin_element_positions:
-            shifted_motif = motif.shift_origin(-origin_candidate)
-            bnf_list = shifted_motif.to_bnf_list(delta, element_order=sorted_elements)
+            shifted_motif = disc_motif.shift_origin(-origin_candidate)
+            bnf_list = shifted_motif.to_bnf_list(element_order=sorted_elements)
             all_bnf_lists.append(bnf_list)
         
         sorted_bnf_lists = sort_number_lists(all_bnf_lists)
@@ -33,9 +32,14 @@ class BasisNormalForm():
         canonical_bnf_list = sorted_bnf_lists[0]
         truncated_bnf_list = canonical_bnf_list[3:]
 
-        element_list, _ = motif.to_elements_and_positions()
+        element_list, _ = disc_motif.to_elements_and_positions()
 
-        return cls(tuple([int(c) for c in truncated_bnf_list]), element_list, delta)
+        return cls(tuple([int(c) for c in truncated_bnf_list]), element_list, disc_motif.delta)        
+
+    @classmethod
+    def from_fractional_motif(cls, motif: FractionalMotif, delta: int = 10):
+        disc_motif = motif.discretize(delta)
+        return cls.from_discretized_motif(disc_motif)
 
     def __init__(self, coord_list, element_list, delta):
         self.coord_list = coord_list
@@ -48,6 +52,12 @@ class BasisNormalForm():
         separated_coord_lists = [[0, 0, 0]] + separated_coord_lists
 
         return FractionalMotif.from_elements_and_positions(self.elements, separated_coord_lists)
+    
+    def to_discretized_motif(self):
+        separated_coord_lists = [self.coord_list[start_idx:start_idx+3] for start_idx in range(0, len(self.coord_list), 3)]
+        separated_coord_lists = [[0, 0, 0]] + separated_coord_lists
+
+        return DiscretizedMotif.from_elements_and_positions(self.elements, separated_coord_lists, self.delta)
     
     def __repr__(self):
         return f"BasisNormalForm({self.coord_list},elements={self.elements},delta={self.delta})"
