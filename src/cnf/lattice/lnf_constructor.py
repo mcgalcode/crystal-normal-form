@@ -41,12 +41,12 @@ class VonormCanonicalizer():
 
         sorted_vlists = sorted(permuted_vonorm_lists, key=lambda group: group[0].vonorms, reverse=False)
         canonical_vonorm_list = sorted_vlists[0][0]
-        stabilizer_permutations = [group[1] for group in sorted_vlists if group[0] == canonical_vonorm_list]
+        equivalent_transformations = [group[1] for group in sorted_vlists if group[0] == canonical_vonorm_list]
 
         return CanonicalizedVonormResult(
             canonical_vonorm_list,
             reduction_transform,
-            stabilizer_permutations
+            equivalent_transformations
         )
 
 class CanonicalizedVonormResult():
@@ -54,10 +54,10 @@ class CanonicalizedVonormResult():
     def __init__(self,
                  canonical_vonorm_list: VonormList,
                  selling_transform_matrix,
-                 stabilizer_permutations: list[PermutationMatrix]):
+                 equivalent_transformations: list[PermutationMatrix]):
         self.canonical_vonorms = canonical_vonorm_list
         self.selling_transform_mat = selling_transform_matrix
-        self.stabilizer_permutations = stabilizer_permutations
+        self.equivalent_transformations = equivalent_transformations
 
 class LatticeNormalFormConstructor():
 
