@@ -23,6 +23,17 @@ class ConormListForm():
                 result.append(ConormListForm(c))
         return result
 
+    @staticmethod
+    def all_grouped_vonorm_permutations() -> list[list[PermutationMatrix]]:
+        groups = {}
+        for cf in ConormListForm.all_coforms():
+            for p in cf.permissible_permutations():
+                s4_members = tuple(sorted(p.vonorm_permutation.perm[:4]))
+                if s4_members in groups:
+                    groups[s4_members].append(p)
+                else:
+                    groups[s4_members] = [p]
+        return groups
 
     def __init__(self, zero_indices):
         self.zero_indices = SortedTuple(*zero_indices)
