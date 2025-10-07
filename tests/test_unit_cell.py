@@ -1,11 +1,7 @@
-import pytest
-import numpy as np
-
 from cnf.unit_cell import UnitCell
 from cnf.lattice import Superbasis
 from cnf.motif import FractionalMotif
-from cnf.crystal_normal_form import CrystalNormalForm
-from cnf.lattice.lattice_normal_form import LatticeNormalForm
+from cnf.cnf_constructor import CNFConstructor
 from cnf.lattice.lnf_constructor import LatticeNormalFormConstructor
 
 def test_bcc_zr_unit_cells(zr_bcc_primitive_lattice_vecs):
@@ -26,9 +22,10 @@ def test_bcc_zr_unit_cells(zr_bcc_primitive_lattice_vecs):
     assert len(unique_lnfs) == 2
 
     cnfs = []
+    cnf_constructor = CNFConstructor(xi, delta, False)
     for cell in supercells:
         # print(f"Putting cell into CNF: {cell.superbasis.compute_vonorms()}")
-        cnf = CrystalNormalForm.from_unit_cell(cell, xi, delta, False)
+        cnf = cnf_constructor.from_unit_cell(cell).cnf
         cnfs.append(cnf)
         # print()
         
@@ -52,9 +49,10 @@ def test_fcc_zr_unit_cells(zr_fcc_primitive_lattice_vecs):
     assert len(unique_lnfs) == 2
 
     cnfs = []
+    constructor = CNFConstructor(xi, delta, False)
     for cell in supercells:
         # print(f"Putting cell into CNF: {cell.superbasis.compute_vonorms()}")
-        cnf = CrystalNormalForm.from_unit_cell(cell, xi, delta, False)
+        cnf = constructor.from_unit_cell(cell).cnf
         cnfs.append(cnf)
         # print()
 

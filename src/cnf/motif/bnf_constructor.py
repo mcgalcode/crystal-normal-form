@@ -23,9 +23,11 @@ class BNFConstructionResult():
 
     def __init__(self,
                  original_motif: DiscretizedMotif,
+                 pretransforms: list[MatrixTuple],
                  pretransformed_motif: DiscretizedMotif,
                  sorted_bnf_candidates: list[BNFCandidate]):
         self.original_motif = original_motif
+        self.pretransforms = pretransforms
         self.pretransformed_motif = pretransformed_motif
         self.sorted_bnf_candidates = sorted_bnf_candidates
     
@@ -99,4 +101,9 @@ class BNFConstructor():
             )
                 
         sorted_candidates = sorted(bnf_candidates, key=lambda c: c.bnf_coords)
-        return BNFConstructionResult(disc_motif, pretransformed_motif, sorted_candidates)
+        return BNFConstructionResult(
+            disc_motif,
+            self.pre_transforms,
+            pretransformed_motif, 
+            sorted_candidates
+        )
