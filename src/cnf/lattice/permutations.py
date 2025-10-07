@@ -51,9 +51,10 @@ class VonormPermutation(Permutation):
 
 class PermutationMatrix():
 
-    def __init__(self, perm: Permutation, matrix: MatrixTuple):
+    def __init__(self, perm: Permutation, matrix: MatrixTuple, all_matrices: list[MatrixTuple]):
         self.perm = perm
         self.matrix = matrix
+        self.all_matrices = all_matrices
 
     @property
     def vonorm_permutation(self):
@@ -144,7 +145,7 @@ class UnimodPermMapper:
         for zero_set, perm_map in ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS.items():
             for perm, mats in perm_map.items():
                 all_mats = all_mats + mats
-        return mats
+        return all_mats
 
     @staticmethod
     def get_perms_for_zero_set(zeros: tuple):
