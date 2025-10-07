@@ -65,6 +65,11 @@ class LatticeNormalFormConstructor():
         self.lattice_step_size = lattice_step_size    
         self._verbose_logging = verbose_logging
 
+    def _log(self, msg):
+        if self._verbose_logging:
+            print(msg)
+
+
     def build_lnf_from_pymatgen_structure(self, structure: Structure):
         return self.build_lnf_from_superbasis(Superbasis.from_pymatgen_structure(structure))
 
@@ -87,22 +92,20 @@ class LatticeNormalFormConstructor():
         discretized_canonical_result = canonicalizer.get_canonicalized_vonorms(discretized_vonorms)
         lnf = LatticeNormalForm(discretized_canonical_result.canonical_vonorms, self.lattice_step_size)
 
-        # print(f"Undiscretized Coform: {undiscretized_canonical_result.canonical_vonorms.conorms.form}")
-        # print(f"Discretized Coform: {discretized_canonical_result.canonical_vonorms.conorms.form}")
         return LatticeNormalFormConstructionResult(
             lnf,
             undiscretized_canonical_result,
             discretized_canonical_result
         )
 
-    def build_lnf_from_discretized_vonorms(self, vonorms: VonormList):
+    def build_lnf_from_discretized_vonorms(self, vonorms: VonormList, skip_reduction = True):
         canonicalizer = VonormCanonicalizer(reduction_tolerance=1e-8, verbose_logging=self._verbose_logging)
-        result = canonicalizer.get_canonicalized_vonorms(vonorms)
+        result = canonicalizer.get_canonicalized_vonorms(vonorms, skip_reduction=skip_reduction)
         lnf = LatticeNormalForm(result.canonical_vonorms, self.lattice_step_size)
-
         
-        # print(f"Undiscretized Coform: {undiscretized_canonical_result.canonical_vonorms.conorms.form}")
-        # print(f"Discretized Coform: {discretized_canonical_result.canonical_vonorms.conorms.form}")
+        self._log(f"Canonicalized the neighbor vonorms: {result.canonical_vonorms}")
+        self._log(f"Found stabilizing permutations: {[p.vonorm_permutation for p in result.canonical_vonorms.stabilizer()]}")
+
         return LatticeNormalFormConstructionResult(
             lnf,
             None,

@@ -82,7 +82,7 @@ class CNFConstructor():
         # we do not need to perform discretization and we do not need to perform
         # selling reduction
         lnf_constructor = LatticeNormalFormConstructor(self.xi, self.verbose_logging)
-        lnf_construction_result = lnf_constructor.build_lnf_from_discretized_vonorms(discretized_vonorms)
+        lnf_construction_result = lnf_constructor.build_lnf_from_discretized_vonorms(discretized_vonorms, skip_reduction=True)
         lnf = lnf_construction_result.lnf
 
         if self.verbose_logging:
