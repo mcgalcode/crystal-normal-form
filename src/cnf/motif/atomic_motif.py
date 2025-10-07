@@ -108,6 +108,11 @@ class AtomicMotif():
         positions = self._process_transformed_coords(positions)
         return self.__class__.from_elements_and_positions(self.atoms, positions, **self._get_kwargs())
     
+    def transform(self, transform: np.array):
+        transformed_coords = self.coord_matrix.T @ transform
+        positions = self._process_transformed_coords(transformed_coords)
+        return self.__class__.from_elements_and_positions(self.atoms, positions, **self._get_kwargs())
+
     def _process_transformed_coords(self, coords):
         return coords
 
@@ -183,10 +188,6 @@ class FractionalMotif(PeriodicMotif):
 
         coords = [site.frac_coords for site in pmg_struct.sites]
         return cls.from_elements_and_positions(elements, coords)
-    
-    def transform(self, transform: np.array):
-        transformed_coords = self.coord_matrix.T @ transform
-        return FractionalMotif.from_elements_and_positions(self.atoms, transformed_coords)
     
     def compute_cartesian_coords_in_basis(self, basis: Superbasis):
         cart_coords = basis.generating_vecs().T @ self.coord_matrix

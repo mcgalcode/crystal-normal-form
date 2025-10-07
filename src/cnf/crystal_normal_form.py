@@ -1,24 +1,14 @@
 import numpy as np
 from pymatgen.core import Structure # Or other library
 from .lattice import Superbasis
-from .motif.atomic_motif import FractionalMotif
+from .motif.atomic_motif import FractionalMotif, DiscretizedMotif
 from .lattice.lnf_constructor import LatticeNormalFormConstructor, VonormCanonicalizer
 from .lattice.lattice_normal_form import LatticeNormalForm
 from .lattice.voronoi import VonormList
+from .lattice.permutations import PermutationMatrix
 from .motif.basis_normal_form import BasisNormalForm
+from .motif.bnf_constructor import BNFConstructor
 from .unit_cell import UnitCell
-
-def get_canonical_bnf_from_stabilizers(stabilizer_permutations, motif, motif_step_size):
-    bnfs: list[BasisNormalForm] = []
-
-    for stabilizer_perm in stabilizer_permutations:
-        transformed_motif = motif.apply_unimodular(stabilizer_perm.matrix)
-        bnf = BasisNormalForm.from_motif(transformed_motif, motif_step_size)
-        bnfs.append(bnf)
-    
-    sorted_bnfs = sorted(bnfs, key=lambda bnf: bnf.coord_list, reverse=True)
-    canonical_bnf = sorted_bnfs[0]    
-    return canonical_bnf
 
 class CrystalNormalForm:
 
@@ -43,6 +33,10 @@ class CrystalNormalForm:
                                   lattice_step_size: float,
                                   motif_step_size: int,
                                   verbose_logging: bool = False):
+        
+        if isinstance(motif, FractionalMotif):
+            motif = motif.discretize(motif_step_size)
+
         lnf_constructor = LatticeNormalFormConstructor(lattice_step_size, verbose_logging)
         lnf_construction_result = lnf_constructor.build_lnf_from_superbasis(superbasis)
 
@@ -50,24 +44,25 @@ class CrystalNormalForm:
         disc_result = lnf_construction_result.discretized_canonicalization_result
         if verbose_logging:
             print(f"Successfully constructed LNF! {lnf_construction_result.lnf}")
-        motif = motif.apply_unimodular(undisc_result.selling_transform_mat)
         
         if verbose_logging:
-            print(f"Found {len(disc_result.stabilizer_permutations)} stabilizer permutations...")
+            print(f"Found {len(disc_result.equivalent_transformations)} equivalent transformations...")
         
-        init_perm_mat_group = undisc_result.stabilizer_permutations[0]
-        motif = motif.apply_unimodular(init_perm_mat_group.matrix)
-        motif = motif.apply_unimodular(disc_result.selling_transform_mat)
+        pre_transforms = [
+            undisc_result.selling_transform_mat,
+            undisc_result.equivalent_transformations[0].matrix,
+            disc_result.selling_transform_mat,
+            disc_result.equivalent_transformations[0].matrix
+        ]
 
-        canonical_bnf = get_canonical_bnf_from_stabilizers(
-            disc_result.stabilizer_permutations,
-            motif,
-            motif_step_size
-        )
+        stabilizer = disc_result.canonical_vonorms.stabilizer()
+
+        bnf_constructor = BNFConstructor(pre_transforms, stabilizer)
+        bnf_construction_res = bnf_constructor.build(motif)
 
         if verbose_logging:
-            print(f"Found BNF! {canonical_bnf}")
-        return cls(lnf_construction_result.lnf, canonical_bnf)
+            print(f"Found BNF! {bnf_construction_res.bnf}")
+        return cls(lnf_construction_result.lnf, bnf_construction_res.bnf)
     
     @classmethod
     def from_discretized_vonorms_and_bnf(cls,
@@ -90,6 +85,9 @@ class CrystalNormalForm:
                                            lattice_step_size: float,
                                            motif_step_size: int,
                                            verbose_logging: bool = False):
+        if isinstance(motif, FractionalMotif):
+            motif = motif.discretize(motif_step_size)
+
         if not discretized_vonorms.is_obtuse():
             raise ValueError(f"Provided discretized Vonorms do not represent obtuse superbasis: {discretized_vonorms.vonorms}")
         
@@ -102,20 +100,20 @@ class CrystalNormalForm:
 
         if verbose_logging:
             print(f"Successfully constructed LNF! {lnf}")
-        
-        if verbose_logging:
-            print(f"Found {len(canonicalization_result.stabilizer_permutations)} stabilizer permutations...")
-        
-        canonical_bnf = get_canonical_bnf_from_stabilizers(
-            canonicalization_result.stabilizer_permutations,
-            motif,
-            motif_step_size
-        )
+
+        pre_transforms = [
+            canonicalization_result.equivalent_transformations[0].matrix
+        ]
+
+        stabilizer = canonicalization_result.canonical_vonorms.stabilizer()
+
+        bnf_constructor = BNFConstructor(pre_transforms, stabilizer)
+        bnf_construction_res = bnf_constructor.build(motif)
 
         if verbose_logging:
-            print(f"Found BNF! {canonical_bnf}")
+            print(f"Found BNF! {bnf_construction_res.bnf}")
         
-        return cls(lnf, canonical_bnf)
+        return cls(lnf, bnf_construction_res.bnf)
 
 
     @classmethod

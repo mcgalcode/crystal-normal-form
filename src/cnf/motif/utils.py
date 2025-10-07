@@ -1,6 +1,7 @@
 import numpy as np
 
 from pymatgen.core.composition import Element
+from ..lattice.permutations import apply_permutation
 
 def sort_elements(elements: list[str]) -> list[str]:
     return list(sorted(elements, key=lambda e: Element(e).number))
@@ -29,14 +30,15 @@ def sort_number_lists(list_of_lists: list[np.array], simultaneously_sort = None)
     list[np.array]
         The sorted list of lists
     """
-    number_tuples = [tuple(number_list) for number_list in list_of_lists]
+    number_tuples = [(tuple(number_list), idx) for idx, number_list in enumerate(list_of_lists)]
+    sorted_pairs = sorted(number_tuples, key=lambda x: x[0])
+    sorted_lists = [p[0] for p in sorted_pairs]
+    idxs = tuple([p[1] for p in sorted_pairs])
+    numpy_num_lists = [np.array(numbers) for numbers in sorted_lists]
     if simultaneously_sort is None:
-        return [np.array(numbers) for numbers in sorted(number_tuples)]
+        return numpy_num_lists
     else:
-        sorted_idxs = sorted(range(len(number_tuples)), key=number_tuples.__getitem__)
-        sorted_list_of_lists = list(map(list_of_lists.__getitem__, sorted_idxs))
-        other_sorted = [list(map(other_list.__getitem__, sorted_idxs)) for other_list in simultaneously_sort]
-        return sorted_list_of_lists, other_sorted
+        return numpy_num_lists, [apply_permutation(l, idxs) for l in simultaneously_sort]
 
 def discretize_coords(frac_coords: np.array, num_discretization_intervals: int):
     interval_size = 1 / num_discretization_intervals
