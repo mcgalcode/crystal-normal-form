@@ -61,5 +61,5 @@ def test_fcc_zr_unit_cells(zr_fcc_primitive_lattice_vecs):
     unique_cnfs = set(cnfs)
 
     assert len(unique_cnfs) == 2
-    # for cnf in unique_cnfs:
-    #     print(cnf.coords)
+    for cnf in unique_cnfs:
+        print(cnf.coords)

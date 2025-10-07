@@ -43,7 +43,14 @@ class ConormListForm():
     def permissible_permutations(self) -> list[PermutationMatrix]:
         perms = UnimodPermMapper.get_perms_for_zero_set(self.zero_indices)
         # perms = [p for p in perms if perm_in_s4(p)]
-        return [PermutationMatrix(p, self.canonical_matrix_for_perm(p)) for p in perms]
+        return [self.build_perm_matrix(p) for p in perms]
+    
+    def build_perm_matrix(self, perm):
+        return PermutationMatrix(
+            perm,
+            self.canonical_matrix_for_perm(perm),
+            self.matrices_for_perm(perm)
+        )
     
     def grouped_vonorm_permutations(self) -> list[list[PermutationMatrix]]:
         groups = {}
