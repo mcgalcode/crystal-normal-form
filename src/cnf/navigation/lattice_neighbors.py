@@ -30,12 +30,12 @@ class LatticeStep():
                 if is_secondary_idx(first_idx):
                     vec[second_idx] = -1
                 
-                steps.append(cls([int(v) for v in vec]))
-                steps.append(cls([-int(v) for v in vec]))
+                steps.append([int(v) for v in vec])
+                steps.append([-int(v) for v in vec])
         
         return steps
 
-    def __init__(self, vals, prereq_perm = None):
+    def __init__(self, vals, prereq_perm: PermutationMatrix = None):
         self.vals = vals
         self.tuple = tuple(vals)
         self.prereq_perm = prereq_perm
@@ -49,29 +49,130 @@ class LatticeStep():
     
     def __hash__(self):
         return (self.tuple, self.prereq_perm).__hash__()
+    
+    def __repr__(self):
+        return f"LatticeStep<vonorm_adj={self.vals}, perm={self.prereq_perm.vonorm_permutation.perm}>"
+
+class LatticeStepResult():
+
+    def __init__(self,
+                 step: LatticeStep,
+                 canonicalization: CanonicalizedVonormResult,
+                 result: LatticeNormalForm | CrystalNormalForm):
+        self.step = step
+        self.canonicalization = canonicalization
+        self.result = result
+    
+class LatticeNeighbor():
+
+    def __init__(self,
+                 lnf: LatticeNormalForm | CrystalNormalForm,
+                 step_results: list[LatticeStepResult] = None):
+        self.point = lnf
+        if step_results is not None:
+            self.step_results = step_results
+        else:
+            self.step_results = []
+        
+    def add_step(self, step_result: LatticeStepResult):
+        self.step_results.append(step_result)
+
+    def __eq__(self, other: 'LatticeNeighbor'):
+        return self.point == other.point
+    
+    def __hash__(self):
+        return self.point.__hash__()
+
+class LatticeNeighborSet():
+
+    def __init__(self):
+        self.neighbors_to_steps: dict[CrystalNormalForm | LatticeNormalForm, list[LatticeStepResult]] = {}
+    
+    def add_neighbor(self, step_result: LatticeStepResult):
+        nb_point = step_result.result
+        if nb_point in self.neighbors_to_steps:
+            self.neighbors_to_steps[nb_point].append(step_result)
+        else:
+            self.neighbors_to_steps[nb_point] = [step_result]
+    
+    @property
+    def neighbors(self) -> list[LatticeNeighbor | CrystalNormalForm]:
+        nbs = []
+        for nb, step_results in self.neighbors_to_steps.items():
+            nbs.append(LatticeNeighbor(nb, step_results))
+        return nbs
+    
+    def steps_for_neighbor(self, neighbor: LatticeNormalForm | CrystalNormalForm):
+        no_steps = []
+        return self.neighbors_to_steps.get(neighbor, [])
+    
+    def get_neighbor(self, nb_tuple: tuple):
+        matching = [n for n in self.neighbors if n.coords == nb_tuple]
+        if len(matching) == 1:
+            return matching[0]
+        else:
+            return None
+    
+    def __contains__(self, item: LatticeNormalForm | CrystalNormalForm):
+        if not (isinstance(item, LatticeNormalForm) or isinstance(item, CrystalNormalForm)):
+            raise ValueError(f"Can't tell if type {type(item)} is in LatticeNeighborSet")
+
+        return item in [n.point for n in self.neighbors]
+    
+    def __len__(self):
+        return len(self.neighbors_to_steps)
 
 class LatticeNeighborFinder():
 
-    def __init__(self, verbose_logging=False):
+    def __init__(self, cnf_point: CrystalNormalForm, verbose_logging=False):
         self.verbose_logging = verbose_logging
-        pass
+        self.point = cnf_point
+
+        if self._is_cnf_neighbor_finder():
+            self.discretized_motif = cnf_point.basis_normal_form.to_discretized_motif()
+
+    def _is_cnf_neighbor_finder(self):
+        return isinstance(self.point, CrystalNormalForm)
+    
+    def _lnf(self):
+        if self._is_cnf_neighbor_finder():
+            return self.point.lattice_normal_form
+        else:
+            return self.point
 
     def _log(self, msg):
         if self.verbose_logging:
             print(msg)
 
-    def get_vonorm_neighbor(self, vonorms: VonormList, step: LatticeStep):
-        canonicalizer = VonormCanonicalizer()
-        old_vonorms = np.array(vonorms.vonorms)
+    def possible_steps(self):
+        vonorms = self._lnf().vonorms
+        grouped_vnorm_perms = vonorms.conorms.form.grouped_vonorm_permutations()
+        steps: list[LatticeStep] = []
+        for _, perms in grouped_vnorm_perms.items():
+            # Choose a representative perm - any of these will work
+            # because the all_step_vecs chi vectors from David's thesis
+            # are already designed to cover S4. So we just need any representative
+            # that gets us to each of Kurlin's basis possibilities.
+            repr_perm = perms[0]
+            for step_vec in LatticeStep.all_step_vecs():
+                steps.append(LatticeStep(step_vec, repr_perm))
+        return steps
+
+    def get_vonorm_neighbor(self, step: LatticeStep):
+
+        lnf_point = self._lnf()
+        vonorms = lnf_point.vonorms
         self._log(f"Original vonorms: {vonorms}")
+
+        permuted_vonorms = vonorms.apply_permutation(step.prereq_perm.vonorm_permutation)
+        self._log(f"Permuted vonorms: {permuted_vonorms} (after applying {step.prereq_perm.vonorm_permutation})")
+        old_vonorms = np.array(permuted_vonorms.vonorms)
+        
         new_vonorms = VonormList(tuple([int(v) for v in old_vonorms + np.array(step.vals)]))
         self._log(f"Computed neighbor vonorms before canonicalization: {new_vonorms}")
+
         if new_vonorms.is_obtuse() and new_vonorms.is_superbasis():
-            c_result = canonicalizer.get_canonicalized_vonorms(new_vonorms, skip_reduction=True)
-            canonicalized_vonorms = c_result.canonical_vonorms        
-            self._log(f"Canonicalized the neighbor vonorms: {canonicalized_vonorms}")
-            self._log(f"Found stabilizing permutations: {[p.vonorm_permutation for p in c_result.stabilizer_permutations]}")
-            return c_result
+            return new_vonorms
         else:
             if self.verbose_logging:
                 if not new_vonorms.is_obtuse():
@@ -80,58 +181,54 @@ class LatticeNeighborFinder():
                 if not new_vonorms.is_superbasis():
                     self._log(f"Neighbor was not a superbasis.")
             return None
-
-    def find_lnf_neighbors(self, lnf_point: LatticeNormalForm) -> list[LatticeNormalForm]:
-        grouped_vnorm_perms = lnf_point.vonorms.conorms.form.grouped_vonorm_permutations()
-
-        neighbors = set()
-        for _, perms in grouped_vnorm_perms.items():
-            # Choose a representative perm - any of these will work
-            # because the all_step_vecs chi vectors from David's thesis
-            # are already designed to cover S4. So we just need any representative
-            # that gets us to each of Kurlin's basis possibilities.
-            vonorm_perm = perms[0].vonorm_permutation
-            permuted_vonorms = lnf_point.vonorms.apply_permutation(vonorm_perm)
-
-            for step in LatticeStep.all_step_vecs():
-                canonical_result = self.get_vonorm_neighbor(permuted_vonorms, step)
-                if canonical_result is not None:
-                    neighbor_vonorms = canonical_result.canonical_vonorms
-                    neighbor_lnf = LatticeNormalForm(neighbor_vonorms, lnf_point.lattice_step_size)
-                    neighbors.add(neighbor_lnf)
-        return list(neighbors)
     
-    def find_cnf_neighbors(self, cnf_point: CrystalNormalForm) -> list[CrystalNormalForm]:
-        grouped_vnorm_perms = cnf_point.lattice_normal_form.vonorms.conorms.form.grouped_vonorm_permutations()
+    def get_basis_neighbor(self, step: LatticeStep):
+        matrix = step.prereq_perm.matrix
+        return self.discretized_motif.apply_unimodular(matrix)
 
-        neighbors = set()
-        for _, perms in grouped_vnorm_perms.items():
-            # Choose a representative perm - any of these will work
-            # because the all_step_vecs chi vectors from David's thesis
-            # are already designed to cover S4. So we just need any representative
-            # that gets us to each of Kurlin's basis possibilities.
-            representative_perm = perms[0]
+    def find_lnf_neighbor(self, step: LatticeStep):
+        new_vonorms = self.get_vonorm_neighbor(step)
+        if new_vonorms is None:
+            return None
+        
+        lnf_constructor = LatticeNormalFormConstructor(self._lnf().lattice_step_size)
+        construction_result = lnf_constructor.build_lnf_from_discretized_vonorms(new_vonorms, skip_reduction=True)
+        neighbor_lnf = construction_result.lnf
+            
+        return LatticeStepResult(step, construction_result, neighbor_lnf)
+        
 
-            vonorm_perm = representative_perm.vonorm_permutation
+    def find_lnf_neighbors(self) -> LatticeNeighborSet:
+        neighbors = LatticeNeighborSet()
+        for step in self.possible_steps():
+            result = self.find_lnf_neighbor(step)
+            if result is not None:
+                neighbors.add_neighbor(result)
+        return neighbors
+    
+    def find_cnf_neighbor(self, step: LatticeStep) -> LatticeStepResult | None:
+        neighbor_vonorms = self.get_vonorm_neighbor(step)
+        if neighbor_vonorms is None:
+            return None
+        
+        neighbor_motif = self.get_basis_neighbor(step)
 
-            original_vonorms = cnf_point.lattice_normal_form.vonorms
-            original_motif = cnf_point.basis_normal_form.to_motif()
+        cnf_constructor = CNFConstructor(self.point.xi, self.point.delta, False)
+        cnf_construction_result = cnf_constructor.from_discretized_vonorms_and_motif(neighbor_vonorms, neighbor_motif)
+    
+        return LatticeStepResult(
+            step,
+            cnf_construction_result,
+            cnf_construction_result.cnf,
+        )
 
-            permuted_vonorms = original_vonorms.apply_permutation(vonorm_perm)
-            permuted_motif = original_motif.apply_unimodular(representative_perm.matrix)
-
-            for step in LatticeStep.all_step_vecs():
-                
-                neighbor_canonicalization_result = self.get_vonorm_neighbor(permuted_vonorms, step)
-
-                if neighbor_canonicalization_result is not None:
-                    neighbor_vonorms = neighbor_canonicalization_result.canonical_vonorms
-                    stabilizers = neighbor_canonicalization_result.stabilizer_permutations
-                    stabilized_bnf = get_canonical_bnf_from_stabilizers(stabilizers, permuted_motif, cnf_point.delta)
-
-                    new_point = CrystalNormalForm(
-                        LatticeNormalForm(neighbor_vonorms, cnf_point.xi),
-                        stabilized_bnf
-                    )
-                    neighbors.add(new_point)
-        return list(neighbors)
+    def find_cnf_neighbors(self) -> LatticeNeighborSet:
+        neighbors = LatticeNeighborSet()
+        self._log(f"Considering {len(self.possible_steps())} possible steps...")
+        for step in self.possible_steps():
+            self._log("")
+            self._log(f"Step: {step.vals}, {step.prereq_perm.perm.perm}")
+            result = self.find_cnf_neighbor(step)
+            if result is not None:
+                neighbors.add_neighbor(result)
+        return neighbors
