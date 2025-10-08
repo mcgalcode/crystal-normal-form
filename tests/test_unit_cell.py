@@ -1,8 +1,14 @@
+import pytest
+
+import helpers
+
 from cnf.unit_cell import UnitCell
 from cnf.lattice import Superbasis
 from cnf.motif import FractionalMotif
 from cnf.cnf_constructor import CNFConstructor
 from cnf.lattice.lnf_constructor import LatticeNormalFormConstructor
+
+from pymatgen.core.structure import Structure
 
 def test_bcc_zr_unit_cells(zr_bcc_primitive_lattice_vecs):
     sb = Superbasis.from_generating_vecs(zr_bcc_primitive_lattice_vecs)
@@ -61,3 +67,17 @@ def test_fcc_zr_unit_cells(zr_fcc_primitive_lattice_vecs):
     assert len(unique_cnfs) == 2
     for cnf in unique_cnfs:
         print(cnf.coords)
+
+STRUCT_SAMPLE_FREQ = 10
+
+@pytest.mark.parametrize("idx, struct", enumerate(helpers.ALL_MP_STRUCTURES[::STRUCT_SAMPLE_FREQ]))
+def test_unit_cell_doesnt_change_struct(idx: int, struct: Structure):
+    uc = UnitCell.from_pymatgen_structure(struct)
+    pmg_2 = uc.to_pymatgen_structure()
+    helpers.assert_identical_by_pdd_distance(struct, pmg_2, cutoff=1e-9)
+
+@pytest.mark.parametrize("idx, struct", enumerate(helpers.ALL_MP_STRUCTURES[::STRUCT_SAMPLE_FREQ]))
+def test_reduced_unit_cell_doesnt_change_struct(idx: int, struct: Structure):
+    uc = UnitCell.from_pymatgen_structure(struct).reduce()
+    pmg_2 = uc.to_pymatgen_structure()
+    helpers.assert_identical_by_pdd_distance(struct, pmg_2, cutoff=1e-7)
