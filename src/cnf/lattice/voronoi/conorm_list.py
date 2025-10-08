@@ -40,6 +40,9 @@ class ConormList():
 
     def __iter__(self):
         return iter(self.conorms)
+    
+    def __eq__(self, other: "ConormList"):
+        return np.all(np.isclose(self.conorms, other.conorms))
  
     def __getitem__(self, key):
         return self.conorms[key]
