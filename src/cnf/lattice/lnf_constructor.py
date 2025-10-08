@@ -58,6 +58,15 @@ class CanonicalizedVonormResult():
         self.canonical_vonorms = canonical_vonorm_list
         self.selling_transform_mat = selling_transform_matrix
         self.equivalent_transformations = equivalent_transformations
+    
+    def print_details(self):
+        print(f"Selling Transform: {self.selling_transform_mat}")
+        print(f"Identified equivalent canonicalizing transformations...")
+        for eq in self.equivalent_transformations:
+            print(f"Eq. Vo. Perm: {eq.vonorm_permutation}")
+            for mat in eq.all_matrices:
+                print(f"Mat: {mat.matrix}")
+        print(f"Canonicalized vonorms: {self.canonical_vonorms}")
 
 class LatticeNormalFormConstructor():
 
@@ -121,3 +130,12 @@ class LatticeNormalFormConstructionResult():
         self.lnf = lnf
         self.undiscretized_canonicalization_result = undiscretized_canonicalization_result
         self.discretized_canonicalization_result = discretized_canonicalization_result
+    
+    def print_details(self):
+        print(f"Found LNF: {self.lnf}")
+        if self.undiscretized_canonicalization_result is None:
+            print("Skipped undiscretized LNF step")
+        else:
+            self.undiscretized_canonicalization_result.print_details()
+        print("Discretized LNF step: ")
+        self.discretized_canonicalization_result.print_details()

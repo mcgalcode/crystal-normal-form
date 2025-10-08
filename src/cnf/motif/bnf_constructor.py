@@ -18,6 +18,15 @@ class BNFCandidate():
         self.stabilizer_member = stabilizer_member
         self.unimodular = unimodular
         self.shift = shift
+    
+    def __repr__(self):
+        repr = ""
+        repr += f"Stabilizer Matrix: {self.stabilizer_member.matrix.tuple}"
+        repr += "\n"
+        repr += f"Stabilizer Vo. Permutation: {self.stabilizer_member.vonorm_permutation.perm}"
+        repr += "\n"
+        repr += f"Shift: {self.shift}"
+        return repr
 
 class BNFConstructionResult():
 
@@ -25,11 +34,27 @@ class BNFConstructionResult():
                  original_motif: DiscretizedMotif,
                  pretransforms: list[MatrixTuple],
                  pretransformed_motif: DiscretizedMotif,
-                 sorted_bnf_candidates: list[BNFCandidate]):
+                 sorted_bnf_candidates: list[BNFCandidate],
+                 stabilizers: list[PermutationMatrix]):
         self.original_motif = original_motif
         self.pretransforms = pretransforms
         self.pretransformed_motif = pretransformed_motif
         self.sorted_bnf_candidates = sorted_bnf_candidates
+        self.stabilizers = stabilizers
+    
+    def print_details(self):
+        print(f"Found BNF: {self.bnf.coord_list}")
+        print(f"Applied the following pretransforms...")
+        for p in self.pretransforms:
+            print(p.tuple)
+
+        print(f"Considered stablizers:")
+        for p in self.stabilizers:
+            print(f"Vo Perm: {p.vonorm_permutation})")
+            for m in p.all_matrices:
+                print(f"Mat: {m.tuple}")
+        
+        print(f"Found phone-book first shift: {self.sorted_bnf_candidates[0].shift}")
     
     @property
     def bnf(self):
@@ -105,5 +130,6 @@ class BNFConstructor():
             disc_motif,
             self.pre_transforms,
             pretransformed_motif, 
-            sorted_candidates
+            sorted_candidates,
+            self.stabilizer
         )

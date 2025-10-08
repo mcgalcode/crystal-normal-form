@@ -4,9 +4,9 @@ from .lattice import Superbasis
 from .motif.atomic_motif import FractionalMotif, DiscretizedMotif
 from .lattice.lnf_constructor import LatticeNormalFormConstructor, LatticeNormalFormConstructionResult
 from .lattice.voronoi import VonormList
+from .lattice.permutations import MatrixTuple
 from .motif.bnf_constructor import BNFConstructor, BNFConstructionResult
 from .crystal_normal_form import CrystalNormalForm
-from .unit_cell import UnitCell
 
 class CNFConstructionResult():
 
@@ -17,24 +17,27 @@ class CNFConstructionResult():
         self.bnf_result = bnf_construction_result
     
     @property
-    def cnf(self):
+    def cnf(self) -> CrystalNormalForm:
         return CrystalNormalForm(self.lnf_result.lnf, self.bnf_result.bnf)
+    
+    def print_details(self):
+        self.lnf_result.print_details()
+        print()
+        self.bnf_result.print_details()
 
 class CNFConstructor():
 
     def __init__(self,
                  xi: float,
                  delta: int,
-                 verbose_logging: bool = False):
+                 verbose_logging: bool = False,
+                 extra_pretransforms: list[MatrixTuple] = None):
         self.xi = xi
         self.delta = delta
         self.verbose_logging = verbose_logging
-
-    def from_unit_cell(self, unit_cell: UnitCell):
-        return self.from_motif_and_superbasis(
-            unit_cell.motif,
-            unit_cell.superbasis
-        )
+        if extra_pretransforms is None:
+            extra_pretransforms = []
+        self.extra_pretransforms = extra_pretransforms
 
     def from_motif_and_superbasis(self, motif: FractionalMotif, superbasis: Superbasis):
         
@@ -43,7 +46,6 @@ class CNFConstructor():
 
         lnf_constructor = LatticeNormalFormConstructor(self.xi, self.verbose_logging)
         lnf_construction_result = lnf_constructor.build_lnf_from_superbasis(superbasis)
-
         undisc_result = lnf_construction_result.undiscretized_canonicalization_result
         disc_result = lnf_construction_result.discretized_canonicalization_result
         if self.verbose_logging:
@@ -52,18 +54,17 @@ class CNFConstructor():
         if self.verbose_logging:
             print(f"Found {len(disc_result.equivalent_transformations)} equivalent transformations...")
         
-        pre_transforms = [
+        pre_transforms = self._get_pretransforms([
             undisc_result.selling_transform_mat,
             undisc_result.equivalent_transformations[0].matrix,
             disc_result.selling_transform_mat,
             disc_result.equivalent_transformations[0].matrix
-        ]
+        ])
 
         stabilizer = disc_result.canonical_vonorms.stabilizer()
 
         bnf_constructor = BNFConstructor(pre_transforms, stabilizer)
         bnf_construction_res = bnf_constructor.build(motif)
-
         if self.verbose_logging:
             print(f"Found BNF! {bnf_construction_res.bnf}")
             
@@ -88,9 +89,9 @@ class CNFConstructor():
         if self.verbose_logging:
             print(f"Successfully constructed LNF! {lnf}")
 
-        pre_transforms = [
+        pre_transforms = self._get_pretransforms([
             lnf_construction_result.discretized_canonicalization_result.equivalent_transformations[0].matrix
-        ]
+        ])
 
         stabilizer = lnf_construction_result.discretized_canonicalization_result.canonical_vonorms.stabilizer()
 
@@ -102,6 +103,11 @@ class CNFConstructor():
         
         return CNFConstructionResult(lnf_construction_result, bnf_construction_res)
 
+    def _get_pretransforms(self, pretransforms):
+        return [
+            *self.extra_pretransforms,
+            *pretransforms
+        ]
 
     def from_motif_and_basis_vecs(self, motif: FractionalMotif, basis_vecs: np.array):
         superbasis = Superbasis.from_generating_vecs(basis_vecs)
