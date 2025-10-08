@@ -11,6 +11,27 @@ import numpy as np
 def perm_in_s4(perm):
     return perm[4:] == (4, 5, 6)
 
+# Note that for Voronoi class V5 requires that 3 conorms are zero. This
+# corresponds to a cuboid voronoi cell (i.e. 3 pairs of lattice vectors
+# are orthogonal to each other)
+#
+# There are several sets of 3 conorms that cannot be simultaneously zero.
+# These correspond to situations where a single voronoi vector is orthogonal
+# to all three zeros. For example,
+#
+# (0, 1, 2) -> p01, p02, p03 : V0 is orthogonal to all of v1, v2, and v3
+#
+# This is only possible of v1, v2, and v3 are coplanar. If v1, v2, and v3 are
+# coplanar, then the set {v0, v1, v3, v3} is not a superbasis (it does not
+# satisfy v0 = -v1 -v2 -v3)
+
+IMPOSSIBLE_ZERO_SETS = [
+    (0, 1, 2),
+    (0, 3, 4),
+    (1, 3, 5),
+    (2, 4, 5),
+]
+
 class ConormListForm():
 
     @staticmethod
@@ -20,8 +41,15 @@ class ConormListForm():
         for num_zeros in range(0, 4):
             idx_combos = combinations(all_conorm_idxs, num_zeros)
             for c in idx_combos:
-                result.append(ConormListForm(c))
+                if c not in IMPOSSIBLE_ZERO_SETS:
+                    result.append(ConormListForm(c))
         return result
+
+    @staticmethod
+    def get_coforms_of_voronoi_class(voronoi_class: int) -> list['ConormListForm']:
+        if not voronoi_class in range(1,6):
+            raise ValueError(f"Requested coforms for invalid voronoi class: {voronoi_class} (not in 1-5)")
+        return [cf for cf in ConormListForm.all_coforms() if cf.voronoi_class == voronoi_class]
 
     @staticmethod
     def all_grouped_vonorm_permutations() -> list[list[PermutationMatrix]]:
