@@ -1,9 +1,14 @@
 from pymatgen.core.structure import Structure
 
+from .linalg import MatrixTuple
 from .lattice import Superbasis
 from .motif import FractionalMotif
 from .sublattice.gamma_matrices import GammaMatrixGroup
 from .sublattice.sublattice_generator import SublatticeGenerator
+from cnf.lattice.selling import SuperbasisSellingReducer
+from cnf.lattice.permutations import VonormPermutation
+
+from .cnf_constructor import CNFConstructor
 
 class UnitCell():
 
@@ -23,7 +28,40 @@ class UnitCell():
         motifs = sg.generate_sublattice_motifs(self.motif)
         return [UnitCell(Superbasis.from_generating_vecs(lvs), motif) for lvs, motif in zip(lattice_vec_sets, motifs)]
     
+    def reduce(self):
+        reducer = SuperbasisSellingReducer()
+        result = reducer.reduce(self.superbasis)
+        reduced_sb = result.reduced_object
+        reduced_motif = self.motif.apply_unimodular(result.transform_matrix)        
+        return UnitCell(reduced_sb, reduced_motif)
+    
+    def apply_unimodular(self, u: MatrixTuple):
+        new_sb = self.superbasis.apply_matrix_transform(u.matrix)
+        new_motif = self.motif.apply_unimodular(u)
+        return UnitCell(new_sb, new_motif)
+    
     def to_pymatgen_structure(self):
         lattice_vecs = self.superbasis.generating_vecs()
-        return Structure(lattice_vecs, self.motif.atoms, self.motif.positions)        
+        return Structure(lattice_vecs, self.motif.atoms, self.motif.positions)  
+    
+    @property
+    def vonorms(self):
+        return self.superbasis.compute_vonorms()
+    
+    @property
+    def conorms(self):
+        return self.vonorms.conorms
+
+    def to_cnf(self, xi, delta):
+        c = CNFConstructor(xi, delta)
+        res = c.from_motif_and_superbasis(self.motif, self.superbasis)
+        return res.cnf
+    
+    def is_obtuse(self, tol=0):
+        return self.superbasis.is_obtuse(tol=tol)
+    
+    def to_cif(self, fpath):
+        if ".cif" not in fpath:
+            raise ValueError("Must provide CIF filepath ending in .cif!")
+        self.to_pymatgen_structure().to_file(fpath)
 
