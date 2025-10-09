@@ -28,10 +28,9 @@ def test_bcc_zr_unit_cells(zr_bcc_primitive_lattice_vecs):
     assert len(unique_lnfs) == 2
 
     cnfs = []
-    cnf_constructor = CNFConstructor(xi, delta, False)
     for cell in supercells:
         # print(f"Putting cell into CNF: {cell.superbasis.compute_vonorms()}")
-        cnf = cnf_constructor.from_unit_cell(cell).cnf
+        cnf = cell.to_cnf(xi, delta)
         cnfs.append(cnf)
         # print()
         
@@ -55,10 +54,9 @@ def test_fcc_zr_unit_cells(zr_fcc_primitive_lattice_vecs):
     assert len(unique_lnfs) == 2
 
     cnfs = []
-    constructor = CNFConstructor(xi, delta, False)
     for cell in supercells:
         # print(f"Putting cell into CNF: {cell.superbasis.compute_vonorms()}")
-        cnf = constructor.from_unit_cell(cell).cnf
+        cnf = cell.to_cnf(xi, delta)
         cnfs.append(cnf)
         # print()
 
@@ -70,13 +68,13 @@ def test_fcc_zr_unit_cells(zr_fcc_primitive_lattice_vecs):
 
 STRUCT_SAMPLE_FREQ = 10
 
-@pytest.mark.parametrize("idx, struct", enumerate(helpers.ALL_MP_STRUCTURES[::STRUCT_SAMPLE_FREQ]))
+@helpers.parameterized_by_mp_structs
 def test_unit_cell_doesnt_change_struct(idx: int, struct: Structure):
     uc = UnitCell.from_pymatgen_structure(struct)
     pmg_2 = uc.to_pymatgen_structure()
     helpers.assert_identical_by_pdd_distance(struct, pmg_2, cutoff=1e-9)
 
-@pytest.mark.parametrize("idx, struct", enumerate(helpers.ALL_MP_STRUCTURES[::STRUCT_SAMPLE_FREQ]))
+@helpers.parameterized_by_mp_structs
 def test_reduced_unit_cell_doesnt_change_struct(idx: int, struct: Structure):
     uc = UnitCell.from_pymatgen_structure(struct).reduce()
     pmg_2 = uc.to_pymatgen_structure()
