@@ -394,3 +394,4 @@ def test_pathological_case_1():
     assert len(perms) > 0
     for p in perms:
         assert all([isinstance(v, int) for v in p])
+        

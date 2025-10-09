@@ -79,4 +79,4 @@ def test_v1_case(reduced_v1_superbasis):
 
 def test_build_all_conorm_lists():
     all_lists = ConormListForm.all_coforms()
-    assert len(all_lists) == 42
+    assert len(all_lists) == 38

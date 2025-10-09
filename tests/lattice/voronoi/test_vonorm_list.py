@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+import helpers
 
 from cnf.lattice import Superbasis
 from cnf.lattice.voronoi import VonormList
