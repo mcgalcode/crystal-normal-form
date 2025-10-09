@@ -14,7 +14,12 @@ class VectorTuple():
         return self.tuple.__hash__()
     
     def __eq__(self, other: 'VectorTuple'):
-        return self.tuple == other.tuple
+        if isinstance(other, VectorTuple):
+            return self.tuple == other.tuple
+        elif isinstance(other, tuple):
+            return self.tuple == other
+        return False
+    
     
     def __repr__(self):
         return self.tuple.__repr__()
