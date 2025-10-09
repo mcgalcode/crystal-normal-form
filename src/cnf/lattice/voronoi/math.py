@@ -4,7 +4,7 @@ import numpy as np
 
 from itertools import permutations
 from .voronoi_values import VoronoiValue, VoronoiVector, PrimaryVonorm, Conorm
-from ...linalg import MatrixTuple
+from ...linalg import MatrixTuple, VectorTuple
 from ..permutations import ConormPermutation
 from ..superbasis import get_v0_from_generating_vecs
 
@@ -162,6 +162,15 @@ class SignedValueSet():
     
     def __repr__(self):
         return f"SignedValueSet({self.to_list()})"
+    
+    def __eq__(self, other: 'SignedValueSet'):
+        if not len(self) == len(other):
+            return False
+        
+        for item in self.to_list():
+            if not item in other:
+                return False
+        return True
     
     def get_count(self, val: VoronoiValue):
         return self.vals.get(val, 0)
