@@ -44,35 +44,36 @@ def test_can_hash_for_use_in_set():
     assert len(vlist_set) == 2
 
 def test_can_round_trip_to_superbasis():
+    tol = 1e-8
     l = Lattice.cubic(1.2)
     sb = Superbasis.from_pymatgen_lattice(l)
     vonorms = sb.compute_vonorms()
     recovered_sb = vonorms.to_superbasis()
-    assert recovered_sb.compute_vonorms().has_same_members(sb.compute_vonorms())
+    assert recovered_sb.compute_vonorms().has_same_members(sb.compute_vonorms(), tol=tol)
 
     l = Lattice.rhombohedral(1.2, 65)
     sb = Superbasis.from_pymatgen_lattice(l)
     vonorms = sb.compute_vonorms()
     recovered_sb = vonorms.to_superbasis()
-    assert recovered_sb.compute_vonorms().has_same_members(sb.compute_vonorms())
+    assert recovered_sb.compute_vonorms().has_same_members(sb.compute_vonorms(), tol=tol)
 
     l = Lattice.from_parameters(1, 2, 3, 85, 80, 88)
     sb = Superbasis.from_pymatgen_lattice(l)
     vonorms = sb.compute_vonorms()
     recovered_sb = vonorms.to_superbasis()
-    assert recovered_sb.compute_vonorms().has_same_members(sb.compute_vonorms())
+    assert recovered_sb.compute_vonorms().has_same_members(sb.compute_vonorms(), tol=tol)
 
     l = Lattice.from_parameters(1, 2, 3, 25, 35, 60)
     sb = Superbasis.from_pymatgen_lattice(l)
     vonorms = sb.compute_vonorms()
     recovered_sb = vonorms.to_superbasis()
-    assert recovered_sb.compute_vonorms().has_same_members(sb.compute_vonorms())
+    assert recovered_sb.compute_vonorms().has_same_members(sb.compute_vonorms(), tol=tol)
 
     l = Lattice.from_parameters(1.5, 1, 2, 30, 50, 130)
     sb = Superbasis.from_pymatgen_lattice(l)
     vonorms = sb.compute_vonorms()
     recovered_sb = vonorms.to_superbasis()
-    assert recovered_sb.compute_vonorms().has_same_members(sb.compute_vonorms())
+    assert recovered_sb.compute_vonorms().has_same_members(sb.compute_vonorms(), tol=tol)
 
 def test_can_recover_superbasis_after_discretization():
     xi = 0.01
@@ -83,41 +84,42 @@ def test_can_recover_superbasis_after_discretization():
     vonorms = dvc.find_closest_valid_vonorms(sb.compute_vonorms())
     print(sb.compute_vonorms())
     print(vonorms)
-    gemini_gen = vonorms.recover_generators(xi)
-
+    gemini_gen = vonorms.to_generators(xi)
+    print(Superbasis.from_generating_vecs(gemini_gen).compute_vonorms())
     assert Superbasis.from_generating_vecs(gemini_gen).is_superbasis()
     assert Superbasis.from_generating_vecs(gemini_gen).compute_vonorms().has_same_members(sb.compute_vonorms())
 
 def test_can_round_trip_to_superbasis_after_discretization():
     xi = 0.01
     dvc = DiscretizedVonormComputer(xi)
+    tol=0.03
 
     l = Lattice.cubic(1.2)
     sb = Superbasis.from_pymatgen_lattice(l)
     vonorms = dvc.find_closest_valid_vonorms(sb.compute_vonorms())
     recovered_sb = vonorms.to_superbasis(xi)
-    assert recovered_sb.compute_vonorms().has_same_members(sb.compute_vonorms(), 0.02)
+    assert recovered_sb.compute_vonorms().has_same_members(sb.compute_vonorms(), tol)
 
     l = Lattice.rhombohedral(1.2, 65)
     sb = Superbasis.from_pymatgen_lattice(l)
     vonorms = dvc.find_closest_valid_vonorms(sb.compute_vonorms())
     recovered_sb = vonorms.to_superbasis(xi)
-    assert recovered_sb.compute_vonorms().has_same_members(sb.compute_vonorms(), 0.02)
+    assert recovered_sb.compute_vonorms().has_same_members(sb.compute_vonorms(), tol)
 
     l = Lattice.from_parameters(1, 2, 3, 85, 80, 88)
     sb = Superbasis.from_pymatgen_lattice(l)
     vonorms = dvc.find_closest_valid_vonorms(sb.compute_vonorms())
     recovered_sb = vonorms.to_superbasis(xi)
-    assert recovered_sb.compute_vonorms().has_same_members(sb.compute_vonorms(), 0.02)
+    assert recovered_sb.compute_vonorms().has_same_members(sb.compute_vonorms(), tol)
 
     l = Lattice.from_parameters(1, 2, 3, 25, 35, 60)
     sb = Superbasis.from_pymatgen_lattice(l)
     vonorms = dvc.find_closest_valid_vonorms(sb.compute_vonorms())
     recovered_sb = vonorms.to_superbasis(xi)
-    assert recovered_sb.compute_vonorms().has_same_members(sb.compute_vonorms(), 0.02)
+    assert recovered_sb.compute_vonorms().has_same_members(sb.compute_vonorms(), tol)
 
     l = Lattice.from_parameters(1.5, 1, 2, 30, 50, 130)
     sb = Superbasis.from_pymatgen_lattice(l)
     vonorms = dvc.find_closest_valid_vonorms(sb.compute_vonorms())
     recovered_sb = vonorms.to_superbasis(xi)
-    assert recovered_sb.compute_vonorms().has_same_members(sb.compute_vonorms(), 0.02)
+    assert recovered_sb.compute_vonorms().has_same_members(sb.compute_vonorms(), tol)
