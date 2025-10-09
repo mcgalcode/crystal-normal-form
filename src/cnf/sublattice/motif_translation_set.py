@@ -50,7 +50,7 @@ class MotifTranslationSet():
         for el in motif.unique_elements():
             new_el_pos_map[el] = []
             for pos in motif.get_element_positions(el):
-                position_images = self.apply_to_coord(np.asarray(pos))
+                position_images = motif._process_transformed_coords(self.apply_to_coord(np.asarray(pos)))
                 new_el_pos_map[el].extend(position_images)
         
         return FractionalMotif(new_el_pos_map)
