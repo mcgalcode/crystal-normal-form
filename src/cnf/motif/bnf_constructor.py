@@ -1,4 +1,5 @@
 import numpy as np
+import itertools
 
 from .atomic_motif import FractionalMotif, DiscretizedMotif
 from ..lattice.permutations import PermutationMatrix
@@ -10,20 +11,16 @@ class BNFCandidate():
     def __init__(self,
                  bnf_coords: tuple,
                  motif: DiscretizedMotif,
-                 stabilizer_member: PermutationMatrix,
                  unimodular: MatrixTuple,
                  shift: np.array):
         self.bnf_coords = bnf_coords
         self.motif = motif
-        self.stabilizer_member = stabilizer_member
         self.unimodular = unimodular
         self.shift = shift
     
     def __repr__(self):
         repr = ""
-        repr += f"Stabilizer Matrix: {self.stabilizer_member.matrix.tuple}"
-        repr += "\n"
-        repr += f"Stabilizer Vo. Permutation: {self.stabilizer_member.vonorm_permutation.perm}"
+        repr += f"Stabilizer Matrix: {self.unimodular.tuple}"
         repr += "\n"
         repr += f"Shift: {self.shift}"
         return repr
@@ -33,14 +30,10 @@ class BNFConstructionResult():
     def __init__(self,
                  original_motif: DiscretizedMotif,
                  pretransforms: list[MatrixTuple],
-                 pretransformed_motif: DiscretizedMotif,
-                 sorted_bnf_candidates: list[BNFCandidate],
-                 stabilizers: list[PermutationMatrix]):
+                 sorted_bnf_candidates: list[BNFCandidate]):
         self.original_motif = original_motif
         self.pretransforms = pretransforms
-        self.pretransformed_motif = pretransformed_motif
         self.sorted_bnf_candidates = sorted_bnf_candidates
-        self.stabilizers = stabilizers
     
     def print_details(self):
         print(f"Found BNF: {self.bnf.coord_list}")
@@ -63,6 +56,17 @@ class BNFConstructionResult():
         canonical_bnf_coords= canonical_candidate.bnf_coords
 
         return BasisNormalForm(tuple([int(c) for c in canonical_bnf_coords]), element_list, canonical_candidate.motif.delta)        
+    
+class PreTransform():
+
+    def __init__(self, mats: list[MatrixTuple]):
+        if not isinstance(mats, list):
+            raise ValueError(f"PreTransform requires a list of MatrixTuples")
+        for m in mats:
+            if not isinstance(m, MatrixTuple):
+                raise ValueError(f"Tried to instantiate PreTransform for BNF construction with a bad object: {type(m)}")
+        self.mats = mats
+
 
 class BNFConstructor():
     """Implements methods for taking a list of atomic positions
@@ -72,16 +76,21 @@ class BNFConstructor():
     """
     
     def __init__(self,
-                 pre_transforms: list[MatrixTuple] = None,
-                 stabilizer: list[PermutationMatrix] = None):
+                 pre_transforms: list[PreTransform] = None):
         if pre_transforms is None:
             pre_transforms = []
-        
-        if stabilizer is None:
-            stabilizer = []
 
-        self.pre_transforms = pre_transforms
-        self.stabilizer = stabilizer
+        filtered_pre_transforms = []
+        for p in pre_transforms:
+            if len(p.mats) == 1 and p.mats[0].is_identity():
+                continue
+            filtered_pre_transforms.append(p)
+        
+        # print(f"Using pretransforms")
+        # for p in filtered_pre_transforms:
+        #     print(p.mats)
+        
+        self.pre_transforms = filtered_pre_transforms
 
     def build_from_fractional_motif(self,
                                     motif: FractionalMotif,
@@ -90,7 +99,7 @@ class BNFConstructor():
         return self.build(disc_motif)
     
 
-    def _add_shifted_candidates(self, candidates: list[BNFCandidate], transformed_motif: DiscretizedMotif, perm_matrix, mat):
+    def _add_shifted_candidates(self, candidates: list[BNFCandidate], transformed_motif: DiscretizedMotif, mat):
         sorted_elements = transformed_motif.sorted_elements
         origin_element = sorted_elements[0]
 
@@ -100,36 +109,28 @@ class BNFConstructor():
             shift = -origin_candidate
             shifted_motif = transformed_motif.shift_origin(shift)
             bnf_list = shifted_motif.to_bnf_list(element_order=sorted_elements)
-            candidate = BNFCandidate(bnf_list[3:], transformed_motif, perm_matrix, mat, shift)
+            candidate = BNFCandidate(bnf_list[3:], transformed_motif, mat, shift)
             candidates.append(candidate)
     
     def build(self, disc_motif: DiscretizedMotif):
         if not isinstance(disc_motif, DiscretizedMotif):
             raise ValueError("Tried to find canonical BNF for non-discretized motif!")
-    
-        pretransformed_motif = disc_motif
-        for t in self.pre_transforms:
-            pretransformed_motif = pretransformed_motif.apply_unimodular(t)
 
         bnf_candidates: list[BNFCandidate] = []
-
-        if len(self.stabilizer) > 0:
-            for perm_matrix in self.stabilizer:
-                for mat in perm_matrix.all_matrices:
-                    transformed_motif = pretransformed_motif.apply_unimodular(mat)
-                    self._add_shifted_candidates(
-                        bnf_candidates, transformed_motif, perm_matrix, mat
-                    )
-        else:
+            
+        mat_sets = [p.mats for p in self.pre_transforms]
+        for mat_chain in itertools.product(*mat_sets):
+            # print(mat_chain)
+            transformed_motif = disc_motif
+            for mat in mat_chain:
+                transformed_motif = transformed_motif.apply_unimodular(mat)
             self._add_shifted_candidates(
-                bnf_candidates, pretransformed_motif, None, None
-            )
-                
+                bnf_candidates, transformed_motif, mat_chain
+            )                
+
         sorted_candidates = sorted(bnf_candidates, key=lambda c: c.bnf_coords)
         return BNFConstructionResult(
             disc_motif,
             self.pre_transforms,
-            pretransformed_motif, 
-            sorted_candidates,
-            self.stabilizer
+            sorted_candidates
         )

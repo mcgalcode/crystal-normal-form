@@ -30,6 +30,9 @@ class MatrixTuple():
     def to_list(self):
         return list(self.tuple)
     
+    def is_identity(self):
+        return np.all(self.matrix == np.eye(3))
+    
     def to_cols(self) -> list[VectorTuple]:
         cols = []
         for col in self.matrix.T:

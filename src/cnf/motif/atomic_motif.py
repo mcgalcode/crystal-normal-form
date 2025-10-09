@@ -4,6 +4,9 @@ from .utils import shift_coords, discretize_coords, sort_elements, sort_number_l
 
 from ..lattice import Superbasis
 from ..linalg import MatrixTuple
+from ..lattice.permutations import apply_permutation
+
+import itertools
 
 def construct_el_pos_map(elements, positions):
     if len(elements) != len(positions):
@@ -53,6 +56,17 @@ class AtomicMotif():
 
     def validate_positions(self, pos):
         return pos
+    
+    def get_matching(self, other: 'AtomicMotif'):
+        assert len(self.atoms) == len(other.atoms)
+        for el in self.sorted_elements:
+            self_positions = [tuple(pos) for pos in self.get_element_positions(el)]
+            othe_positions = [tuple(pos) for pos in other.get_element_positions(el)]
+            if tuple(sorted(self_positions)) != tuple(sorted(othe_positions)):
+                return False
+        return True
+                
+
 
     def to_elements_and_positions(self):
         elements  = []

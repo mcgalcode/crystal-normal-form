@@ -9,7 +9,6 @@ class ConormList():
         self.conorms = conorms
         self.form = ConormListForm([idx for idx, conorm in enumerate(self.conorms) if np.abs(conorm) < tol])
 
-
     @property
     def permissible_permutations(self):
         return self.form.permissible_permutations()

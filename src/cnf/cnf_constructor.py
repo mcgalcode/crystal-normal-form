@@ -5,7 +5,7 @@ from .motif.atomic_motif import FractionalMotif, DiscretizedMotif
 from .lattice.lnf_constructor import LatticeNormalFormConstructor, LatticeNormalFormConstructionResult
 from .lattice.voronoi import VonormList
 from .lattice.permutations import MatrixTuple
-from .motif.bnf_constructor import BNFConstructor, BNFConstructionResult
+from .motif.bnf_constructor import BNFConstructor, BNFConstructionResult, PreTransform
 from .crystal_normal_form import CrystalNormalForm
 
 class CNFConstructionResult():
@@ -31,12 +31,14 @@ class CNFConstructor():
                  xi: float,
                  delta: int,
                  verbose_logging: bool = False,
-                 extra_pretransforms: list[MatrixTuple] = None):
+                 extra_pretransforms: list[list[MatrixTuple]] = None):
         self.xi = xi
         self.delta = delta
         self.verbose_logging = verbose_logging
         if extra_pretransforms is None:
             extra_pretransforms = []
+        else:
+            extra_pretransforms = [PreTransform(mats) for mats in extra_pretransforms]
         self.extra_pretransforms = extra_pretransforms
 
     def from_motif_and_superbasis(self, motif: FractionalMotif, superbasis: Superbasis):
@@ -54,16 +56,20 @@ class CNFConstructor():
         if self.verbose_logging:
             print(f"Found {len(disc_result.equivalent_transformations)} equivalent transformations...")
         
+        undisc_sort_transforms = [m.matrix for m in undisc_result.equivalent_transformations]
+        disc_sort_transforms = [m.matrix for m in disc_result.equivalent_transformations]
+
         pre_transforms = self._get_pretransforms([
-            undisc_result.selling_transform_mat,
-            undisc_result.equivalent_transformations[0].matrix,
-            disc_result.selling_transform_mat,
-            disc_result.equivalent_transformations[0].matrix
+            [undisc_result.selling_transform_mat],
+            undisc_sort_transforms,
+            [disc_result.selling_transform_mat],
+            disc_sort_transforms,
+            disc_result.canonical_vonorms.stabilizer_matrices()
         ])
 
-        stabilizer = disc_result.canonical_vonorms.stabilizer()
+        # stabilizer = 
 
-        bnf_constructor = BNFConstructor(pre_transforms, stabilizer)
+        bnf_constructor = BNFConstructor(pre_transforms)
         bnf_construction_res = bnf_constructor.build(motif)
         if self.verbose_logging:
             print(f"Found BNF! {bnf_construction_res.bnf}")
@@ -93,7 +99,7 @@ class CNFConstructor():
             lnf_construction_result.discretized_canonicalization_result.equivalent_transformations[0].matrix
         ])
 
-        stabilizer = lnf_construction_result.discretized_canonicalization_result.canonical_vonorms.stabilizer()
+        stabilizer = lnf_construction_result.discretized_canonicalization_result.canonical_vonorms.stabilizer_matrices()
 
         bnf_constructor = BNFConstructor(pre_transforms, stabilizer)
         bnf_construction_res = bnf_constructor.build(motif)
@@ -106,7 +112,7 @@ class CNFConstructor():
     def _get_pretransforms(self, pretransforms):
         return [
             *self.extra_pretransforms,
-            *pretransforms
+            *[PreTransform(p) for p in pretransforms]
         ]
 
     def from_motif_and_basis_vecs(self, motif: FractionalMotif, basis_vecs: np.array):
