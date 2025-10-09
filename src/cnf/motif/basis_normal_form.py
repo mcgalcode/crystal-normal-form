@@ -24,6 +24,6 @@ class BasisNormalForm():
         separated_coord_lists = [[0, 0, 0]] + separated_coord_lists
 
         return DiscretizedMotif.from_elements_and_positions(self.elements, separated_coord_lists, self.delta)
-    
+
     def __repr__(self):
         return f"BasisNormalForm({self.coord_list},elements={self.elements},delta={self.delta})"

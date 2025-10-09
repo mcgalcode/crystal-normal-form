@@ -212,7 +212,7 @@ class DiscretizedMotif(PeriodicMotif):
             raise ValueError(f"Tried to instantiate discretized motif w bad delta: {delta}")
         self.delta = delta
         super().__init__(element_to_positions_map, delta)
-    
+
     def is_valid_shift_vector(self, shift_vector: np.array):
         return np.all(shift_vector < self._mod)
 

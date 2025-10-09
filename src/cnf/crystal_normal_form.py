@@ -27,6 +27,13 @@ class CrystalNormalForm:
         lnf_coords = self.lattice_normal_form.coords
         bnf_coords = self.basis_normal_form.coord_list
         return tuple(lnf_coords) + tuple(bnf_coords)
+    
+    def to_discretized_motif(self):
+        return self.basis_normal_form.to_discretized_motif()
+
+    @property
+    def motif_coord_matrix(self):
+        return self.to_discretized_motif().coord_matrix
 
     def reconstruct(self) -> 'Structure':
         """
@@ -39,6 +46,10 @@ class CrystalNormalForm:
         lattice_vecs = self.lattice_normal_form.to_superbasis().generating_vecs()
         motif = self.basis_normal_form.to_motif()
         return Structure(lattice_vecs, motif.atoms, motif.positions)
+    
+    @property
+    def voronoi_class(self):
+        return self.lattice_normal_form.vonorms.conorms.form.voronoi_class
 
     def __repr__(self):
         return (f"CrystalNormalForm(lattice={self.lattice_normal_form}, motif={self.basis_normal_form}, "
