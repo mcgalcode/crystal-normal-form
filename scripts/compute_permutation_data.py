@@ -23,8 +23,8 @@ def map_unimod_to_conorm_perms():
     with open("unimod_mats_to_perms.json", 'w+') as f:
         json.dump(mat_to_perms, f)
 
-def read_matching():
-    with open("unimod_mats_to_perms.json", 'r') as f:
+def parse_mat_perm_mapping_file(fpath):
+    with open(fpath, 'r') as f:
         values = json.load(f)
     
     results = {}
@@ -41,6 +41,10 @@ def read_matching():
                 results[zeros][perm] = []
 
             results[zeros][perm].append(mat)
+    return results
+
+def read_matching():
+    results = parse_mat_perm_mapping_file("unimod_mats_to_perms.json")
 
     for zero_set, perm_map in results.items():
         print(f"Number of zero conorms: {len(zero_set)}")
@@ -49,8 +53,26 @@ def read_matching():
         print(f"Number of permutations with matching matrix: {len(perms_with_mats)}")
         print(f"Number of matrices mapped to by these perms: {len(mats)}")
 
+def compare_files():
+    new_mapping = parse_mat_perm_mapping_file("unimod_mats_to_perms.json")
+    old_mapping = parse_mat_perm_mapping_file("src/cnf/lattice/data/unimod_mats_to_perms.json")
+
+    for zero_set, new_mapping_perm_map in new_mapping.items():
+
+        print(f"Number of zero conorms: {len(zero_set)}")
+        old_mapping_perm_map = old_mapping[zero_set]
+        
+        old_mapping_perms_with_mats = set([p for p, mats in old_mapping_perm_map.items()])
+        old_mapping_mats = set([mat for p, mats in old_mapping_perm_map.items() for mat in mats])
+
+        new_mapping_perms_with_mats = set([p for p, mats in new_mapping_perm_map.items()])
+        new_mapping_mats = set([mat for p, mats in new_mapping_perm_map.items() for mat in mats])
+
+        print(f"Number of NEW permutations with matching matrix: {len(new_mapping_perms_with_mats) - len(old_mapping_perms_with_mats)}")
+        print(f"Number of NEW matrices mapped to by these perms: {len(new_mapping_mats) - len(old_mapping_mats)}")
 
 
 if __name__ == '__main__':
     # map_unimod_to_conorm_perms()
-    read_matching()
+    # read_matching()
+    compare_files()
