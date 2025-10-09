@@ -73,6 +73,6 @@ def compare_files():
 
 
 if __name__ == '__main__':
-    # map_unimod_to_conorm_perms()
+    map_unimod_to_conorm_perms()
     # read_matching()
     compare_files()
