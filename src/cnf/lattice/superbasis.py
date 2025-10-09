@@ -13,10 +13,7 @@ class Superbasis():
 
     @classmethod
     def from_pymatgen_lattice(cls, lattice: Lattice):
-        lattice_vecs = lattice.matrix
-        v0 = - lattice_vecs[0] - lattice_vecs[1] - lattice_vecs[2]
-        superbasis_vecs = np.array([v0, *lattice_vecs])
-        return cls(superbasis_vecs)
+        return cls.from_generating_vecs(np.array(lattice.matrix))
 
     @classmethod
     def from_pymatgen_structure(cls, struct: Structure):
@@ -24,16 +21,16 @@ class Superbasis():
     
     @classmethod
     def from_generating_vecs(cls, generating_vecs: np.ndarray):
-        v0 = get_v0_from_generating_vecs(generating_vecs)
-        superbasis_vecs = np.array([v0, *generating_vecs])
+        v3 = get_v0_from_generating_vecs(generating_vecs)
+        superbasis_vecs = np.array([*generating_vecs, v3])
         return cls(superbasis_vecs)
 
     def __init__(self, superbasis_vecs: np.ndarray):
         self.superbasis_vecs = superbasis_vecs
     
     def is_superbasis(self, tol=1e-5):
-        expected_v0 = get_v0_from_generating_vecs(self.generating_vecs())
-        return np.all(np.abs(expected_v0 - self.superbasis_vecs[0]) < tol)
+        expected_v3 = get_v0_from_generating_vecs(self.generating_vecs())
+        return np.all(np.abs(expected_v3 - self.superbasis_vecs[3]) < tol)
     
     def apply_permutation(self, perm: VonormPermutation):
         new_superbasis_vecs = []
@@ -53,7 +50,7 @@ class Superbasis():
         np.array
             A matrix in which each row represents a generating vector
         """
-        return self.superbasis_vecs[1:]
+        return self.superbasis_vecs[:3]
     
     def is_obtuse(self, tol=0):
         return self.compute_vonorms().is_obtuse(tol=tol)
