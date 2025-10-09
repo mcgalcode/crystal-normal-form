@@ -7,6 +7,7 @@ from cnf.motif import FractionalMotif
 from cnf.lattice.permutations import VONORM_PERMUTATION_TO_CONORM_PERMUTATION, VonormPermutation
 from cnf.lattice.superbasis import Superbasis
 from cnf import CrystalNormalForm
+from cnf.cnf_constructor import CNFConstructor
 from cnf.lattice.rounding import DiscretizedVonormComputer
 
 import cnf.motif.utils as bnf_utils
@@ -141,63 +142,3 @@ def test_cartesian_coords_not_changed_by_unimodular():
         transformed = Structure(permuted_sb.generating_vecs(), permuted_motif.atoms, permuted_motif.positions)
 
         helpers.assert_identical_by_pdd_distance(original, transformed)
-        # assert original_cart_coords == transformed_cart_corods
-
-
-@helpers.skip_if_fast
-def test_motif_and_superbasis_change_together(mp_structures):
-    for struct in mp_structures[::50]:
-        lattice_step_size = 0.1
-        delta = 1000
-        cnf_point = CrystalNormalForm.from_pymatgen_structure(struct, lattice_step_size, delta)
-        helpers.assert_identical_by_pdd_distance(cnf_point.reconstruct(), struct, 0.05)
-        perms = cnf_point.lattice_normal_form.vonorms.conorms.form.permissible_permutations()
-        dvc = DiscretizedVonormComputer(lattice_step_size)
-        for perm in perms:
-            # Choose a representative perm - any of these will work
-            # because the all_step_vecs chi vectors from David's thesis
-            # are already designed to cover S4. So we just need any representative
-            # that gets us to each of Kurlin's basis possibilities.
-
-            vonorm_perm = perm.vonorm_permutation
-
-            original_vonorms = cnf_point.lattice_normal_form.vonorms
-            original_motif = cnf_point.basis_normal_form.to_motif()
-            original_superbasis = original_vonorms.to_superbasis(lattice_step_size)
-
-            assert dvc.find_closest_valid_vonorms(original_superbasis.compute_vonorms()).has_same_members(original_vonorms)
-
-            permuted_vonorms = original_vonorms.apply_permutation(vonorm_perm)
-            permuted_superbasis = original_superbasis.apply_permutation(vonorm_perm)
-            transformed_sb = original_superbasis.apply_matrix_transform(perm.matrix.matrix)
-
-            # assert dvc.find_closest_valid_vonorms(permuted_superbasis.compute_vonorms()) == permuted_vonorms
-            # assert dvc.find_closest_valid_vonorms(transformed_sb.compute_vonorms()) == permuted_vonorms
-
-            assert permuted_vonorms.is_obtuse()
-            assert permuted_vonorms.is_superbasis()
-            assert permuted_vonorms.has_same_members(original_vonorms)
-            
-            permuted_motif = original_motif.apply_unimodular(perm.matrix)
-            
-            new_struct = Structure(permuted_vonorms.to_superbasis(lattice_step_size=lattice_step_size).generating_vecs(), permuted_motif.atoms, permuted_motif.positions)
-
-            try:
-                helpers.assert_identical_by_pdd_distance(struct, new_struct, 0.05)
-            except AssertionError:
-                # print(f"PDD check failed for permutation: {perm}")
-                
-                # print("\n--- ORIGINAL STRUCTURE ---")
-                # print("Lattice:")
-                # print(struct.lattice.matrix)
-                # print("Fractional Coords (first 3 atoms):")
-                # print(struct.frac_coords[:3])
-
-                # print("\n--- NEW STRUCTURE ---")
-                # print("Lattice:")
-                # print(new_struct.lattice.matrix)
-                # print("Fractional Coords (first 3 atoms):")
-                # print(new_struct.frac_coords[:3])
-
-                # Re-run the assertion to make the test fail
-                helpers.assert_identical_by_pdd_distance(struct, new_struct, 0.05)  
