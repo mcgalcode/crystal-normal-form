@@ -10,16 +10,16 @@ def test_can_instantiate():
     test_lattice = Lattice.rhombohedral(1.5, 80)
     sb = Superbasis.from_pymatgen_lattice(test_lattice)
 
-    assert (sb.superbasis_vecs[0] == -np.sum(test_lattice.matrix, axis=0)).all()
-    assert (sb.superbasis_vecs[1] == test_lattice.matrix[0]).all()
-    assert (sb.superbasis_vecs[2] == test_lattice.matrix[1]).all()
-    assert (sb.superbasis_vecs[3] == test_lattice.matrix[2]).all()
+    assert (sb.superbasis_vecs[3] == -np.sum(test_lattice.matrix, axis=0)).all()
+    assert (sb.superbasis_vecs[0] == test_lattice.matrix[0]).all()
+    assert (sb.superbasis_vecs[1] == test_lattice.matrix[1]).all()
+    assert (sb.superbasis_vecs[2] == test_lattice.matrix[2]).all()
 
     vonorms = sb.compute_vonorms()
-    assert vonorms[0] == np.dot(-np.sum(test_lattice.matrix, axis=0), -np.sum(test_lattice.matrix, axis=0))
-    assert vonorms[1] == np.dot(test_lattice.matrix[0], test_lattice.matrix[0])
-    assert vonorms[2] == np.dot(test_lattice.matrix[1], test_lattice.matrix[1])
-    assert vonorms[3] == np.dot(test_lattice.matrix[2], test_lattice.matrix[2])
+    assert vonorms[3] == np.dot(-np.sum(test_lattice.matrix, axis=0), -np.sum(test_lattice.matrix, axis=0))
+    assert vonorms[0] == np.dot(test_lattice.matrix[0], test_lattice.matrix[0])
+    assert vonorms[1] == np.dot(test_lattice.matrix[1], test_lattice.matrix[1])
+    assert vonorms[2] == np.dot(test_lattice.matrix[2], test_lattice.matrix[2])
 
     assert vonorms[4] == np.dot(-test_lattice.matrix[1] - test_lattice.matrix[2], -test_lattice.matrix[1] - test_lattice.matrix[2])
     assert vonorms[5] == np.dot(-test_lattice.matrix[0] - test_lattice.matrix[2], -test_lattice.matrix[0] - test_lattice.matrix[2])
@@ -83,20 +83,24 @@ def test_voronoi_class_two_superbases_have_same_vonorms():
     ])
     
     sb = Superbasis.from_pymatgen_lattice(hexarhombic_dodecahedron)
-    assert np.all(sb.superbasis_vecs[0] == -(sb.superbasis_vecs[1] + sb.superbasis_vecs[2] + sb.superbasis_vecs[3]))
+    # p_1_2 == 0 by design here - changes to choice of lattice vecs will break this
+    assert sb.compute_vonorms().conorms[3] == 0
+    assert np.all(sb.superbasis_vecs[3] == -(sb.superbasis_vecs[0] + sb.superbasis_vecs[1] + sb.superbasis_vecs[2]))
     assert sb.is_obtuse()
     old_vecs = sb.superbasis_vecs
     new_sb_vecs = np.array([
-        old_vecs[0] + old_vecs[3],
-        old_vecs[1] + old_vecs[3],
-        old_vecs[2],
-        -old_vecs[3]
+        old_vecs[0] + old_vecs[2],
+        # old_vecs[1] + old_vecs[3],
+        old_vecs[1],
+        # old_vecs[2],
+        -old_vecs[2],
+        old_vecs[3] + old_vecs[2]
     ])
-    assert np.all(new_sb_vecs[0] == np.array([0, 0.8, -1]))
-    assert np.all(new_sb_vecs[1] == np.array([0, 1.2, 1]))
-    assert np.all(new_sb_vecs[2] == np.array([1, -1, 0]))
-    assert np.all(new_sb_vecs[3] == np.array([-1, -1, 0]))
-    assert np.all(new_sb_vecs[0] == -(new_sb_vecs[1] + new_sb_vecs[2] + new_sb_vecs[3]))
+    assert np.all(new_sb_vecs[0] == np.array([0, 1.2, 1]))
+    assert np.all(new_sb_vecs[1] == np.array([1, -1, 0]))
+    assert np.all(new_sb_vecs[2] == np.array([-1, -1, 0]))
+    assert np.all(new_sb_vecs[3] == np.array([0, 0.8, -1]))
+    assert np.all(new_sb_vecs[3] == -(new_sb_vecs[0] + new_sb_vecs[1] + new_sb_vecs[2]))
 
     sb2 = Superbasis(new_sb_vecs)
     # print(sb.compute_vonorms().conorms)
