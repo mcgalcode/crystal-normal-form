@@ -51,13 +51,17 @@ class UnitCell():
     @property
     def conorms(self):
         return self.vonorms.conorms
+    
+    @property
+    def voronoi_class(self):
+        return self.conorms.form.voronoi_class
 
     def to_cnf(self, xi, delta):
         c = CNFConstructor(xi, delta)
         res = c.from_motif_and_superbasis(self.motif, self.superbasis)
         return res.cnf
     
-    def is_obtuse(self, tol=0):
+    def is_obtuse(self, tol=1e-8):
         return self.superbasis.is_obtuse(tol=tol)
     
     def to_cif(self, fpath):
