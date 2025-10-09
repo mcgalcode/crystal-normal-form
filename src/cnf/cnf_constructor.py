@@ -61,15 +61,15 @@ class CNFConstructor():
 
         pre_transforms = self._get_pretransforms([
             [undisc_result.selling_transform_mat],
-            undisc_sort_transforms,
+            undisc_sort_transforms[:1],
             [disc_result.selling_transform_mat],
-            disc_sort_transforms,
+            disc_sort_transforms[:1],
             disc_result.canonical_vonorms.stabilizer_matrices()
         ])
 
         # stabilizer = 
 
-        bnf_constructor = BNFConstructor(pre_transforms)
+        bnf_constructor = BNFConstructor(pre_transforms, verbose_logging=self.verbose_logging)
         bnf_construction_res = bnf_constructor.build(motif)
         if self.verbose_logging:
             print(f"Found BNF! {bnf_construction_res.bnf}")
@@ -95,13 +95,15 @@ class CNFConstructor():
         if self.verbose_logging:
             print(f"Successfully constructed LNF! {lnf}")
 
+        disc_sort_transforms = [m.matrix for m in lnf_construction_result.discretized_canonicalization_result.equivalent_transformations]
+        stabilizer = lnf_construction_result.discretized_canonicalization_result.canonical_vonorms.stabilizer_matrices()
         pre_transforms = self._get_pretransforms([
-            lnf_construction_result.discretized_canonicalization_result.equivalent_transformations[0].matrix
+            disc_sort_transforms,
+            stabilizer
         ])
 
-        stabilizer = lnf_construction_result.discretized_canonicalization_result.canonical_vonorms.stabilizer_matrices()
 
-        bnf_constructor = BNFConstructor(pre_transforms, stabilizer)
+        bnf_constructor = BNFConstructor(pre_transforms)
         bnf_construction_res = bnf_constructor.build(motif)
 
         if self.verbose_logging:

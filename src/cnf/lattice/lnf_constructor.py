@@ -113,7 +113,7 @@ class LatticeNormalFormConstructor():
         lnf = LatticeNormalForm(result.canonical_vonorms, self.lattice_step_size)
         
         self._log(f"Canonicalized the neighbor vonorms: {result.canonical_vonorms}")
-        self._log(f"Found stabilizing permutations: {[p.vonorm_permutation for p in result.canonical_vonorms.stabilizer()]}")
+        self._log(f"Found stabilizing permutations: {[p.vonorm_permutation for p in result.canonical_vonorms.stabilizer_perms()]}")
 
         return LatticeNormalFormConstructionResult(
             lnf,

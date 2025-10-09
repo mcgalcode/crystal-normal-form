@@ -5,6 +5,7 @@ from .atomic_motif import FractionalMotif, DiscretizedMotif
 from ..lattice.permutations import PermutationMatrix
 from ..linalg import MatrixTuple
 from .basis_normal_form import BasisNormalForm
+from ..lattice.unimodular import combine_unimodular_matrices
     
 class BNFCandidate():
 
@@ -76,7 +77,8 @@ class BNFConstructor():
     """
     
     def __init__(self,
-                 pre_transforms: list[PreTransform] = None):
+                 pre_transforms: list[PreTransform] = None,
+                 verbose_logging = False):
         if pre_transforms is None:
             pre_transforms = []
 
@@ -91,6 +93,7 @@ class BNFConstructor():
         #     print(p.mats)
         
         self.pre_transforms = filtered_pre_transforms
+        self.verbose_logging = verbose_logging
 
     def build_from_fractional_motif(self,
                                     motif: FractionalMotif,
@@ -120,10 +123,14 @@ class BNFConstructor():
             
         mat_sets = [p.mats for p in self.pre_transforms]
         for mat_chain in itertools.product(*mat_sets):
-            # print(mat_chain)
-            transformed_motif = disc_motif
-            for mat in mat_chain:
-                transformed_motif = transformed_motif.apply_unimodular(mat)
+            if len(mat_chain) == 0:
+                transformed_motif = disc_motif
+            else:               
+                combined = combine_unimodular_matrices(mat_chain)
+                transformed_motif = disc_motif.apply_unimodular(combined)
+                if self.verbose_logging:
+                    print(f"Trying mat chain: {mat_chain}")
+                    print(f"Equivalent single mat: {combined}")
             self._add_shifted_candidates(
                 bnf_candidates, transformed_motif, mat_chain
             )                
