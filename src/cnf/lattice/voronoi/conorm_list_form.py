@@ -80,6 +80,9 @@ class ConormListForm():
             self.matrices_for_perm(perm)
         )
     
+    def similar_coforms(self):
+        return ConormListForm.get_coforms_of_voronoi_class(self.voronoi_class)
+    
     def grouped_vonorm_permutations(self) -> list[list[PermutationMatrix]]:
         groups = {}
         for p in self.permissible_permutations():

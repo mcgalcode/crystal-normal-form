@@ -53,15 +53,22 @@ class VonormList():
     def apply_permutation(self, permutation: tuple):
         return VonormList(tuple(apply_permutation(self.vonorms, permutation)))
     
-    def stabilizer(self) -> list[PermutationMatrix]:
+    def stabilizer_perms(self, tol=1e-8) -> list[PermutationMatrix]:
         possible_perms = self.conorms.permissible_permutations
         stabilizers = []
         for p in possible_perms:
             vonorm_perm = p.vonorm_permutation
             permuted_self = self.apply_permutation(vonorm_perm)
-            if self == permuted_self:
+            if self.about_equal(permuted_self, tol):
                 stabilizers.append(p)
         return stabilizers
+
+    def stabilizer_matrices(self, tol=1e-8) -> list[PermutationMatrix]:
+        perm_stab = self.stabilizer_perms(tol)
+        mats = []
+        for p in perm_stab:
+            mats.extend(p.all_matrices)
+        return list(set(mats))
 
     def recover_generators(self, lattice_step_size: float = 1.0):
         """

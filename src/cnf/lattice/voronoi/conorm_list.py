@@ -1,10 +1,11 @@
 import numpy as np
 from ..permutations import Permutation, VonormPermutation
 from .conorm_list_form import ConormListForm
+from ...linalg import MatrixTuple
 
 class ConormList():
 
-    def __init__(self, conorms, tol=1e-8):
+    def __init__(self, conorms, tol=1e-5):
         self.conorms = conorms
         self.form = ConormListForm([idx for idx, conorm in enumerate(self.conorms) if np.abs(conorm) < tol])
         self.permissible_permutations = self.form.permissible_permutations()
@@ -17,6 +18,12 @@ class ConormList():
             else:
                 permuted_vals.append(0)
         return ConormList(tuple(permuted_vals[:6]))
+    
+    def all_permutation_matrices(self) -> list[MatrixTuple]:
+        mats = []
+        for perm in self.permissible_permutations:
+            mats.extend(perm.all_matrices)
+        return list(set(mats))
 
     def is_permutation_permissible(self, permutation):
         # return permutation[-1] == 6
