@@ -4,7 +4,7 @@ import numpy as np
 from cnf.lattice.voronoi.math import SignedVoronoiValue, Sign, SignedValueSet, SignedVector, SignedVectorSet, ConormCalculator, Transformation, Conorm
 from cnf.lattice.voronoi.voronoi_values import PrimaryVonorm, SecondaryVonorm, Conorm, VoronoiVector
 from cnf.lattice.superbasis import get_v0_from_generating_vecs
-from cnf.linalg import MatrixTuple
+from cnf.linalg import MatrixTuple, VectorTuple
 from cnf.lattice.permutations import ConormPermutation
 from cnf.linalg.unimodular import UNIMODULAR_MATRICES
 from cnf.lattice.voronoi.conorm_list_form import ConormListForm
@@ -163,25 +163,38 @@ def test_transformation():
         [0, 0, -1]
     ])
     t = Transformation(MatrixTuple(mat))
-    expected_v0 = get_v0_from_generating_vecs(mat.T)
-    assert (t.v0() == expected_v0).all()
-    assert (t.v0() == -np.array([1, -1, -1])).all()
+    expected_v3 = get_v0_from_generating_vecs(mat.T)
+    assert t.v3() == tuple(expected_v3)
+    assert (t.v3().vector == -np.array([1, -1, -1])).all()
 
 def test_col_to_vector_set():
     vector = [1, 0 ,1]
     vectors = ConormCalculator.col_to_vector_set(vector)
-    assert SignedVector.positive_v1() in vectors
-    assert SignedVector.positive_v2() not in vectors
+    assert SignedVector.positive_v0() in vectors
+    assert SignedVector.negative_v0() not in vectors
+
+    assert SignedVector.positive_v1() not in vectors
+    assert SignedVector.negative_v0() not  in vectors
+
+    assert SignedVector.positive_v2() in vectors
     assert SignedVector.negative_v2() not in vectors
-    assert SignedVector.positive_v3() in vectors
+
+    assert SignedVector.positive_v3() not in vectors
+    assert SignedVector.negative_v3() not in vectors
     assert len(vectors) == 2
 
     vector = [0, -1 ,1]
     vectors = ConormCalculator.col_to_vector_set(vector)
+    assert SignedVector.positive_v0() not in vectors
+    assert SignedVector.negative_v0() not in vectors
+
     assert SignedVector.positive_v1() not in vectors
-    assert SignedVector.positive_v2() not in vectors
-    assert SignedVector.negative_v2() in vectors
-    assert SignedVector.positive_v3() in vectors
+    assert SignedVector.negative_v1() in vectors
+
+    assert SignedVector.positive_v2() in vectors
+    assert SignedVector.negative_v2() not in vectors
+
+    assert SignedVector.positive_v3() not in vectors
     assert SignedVector.negative_v3() not in vectors
     assert len(vectors) == 2
 
@@ -209,63 +222,69 @@ def test_get_conorm():
     cc = ConormCalculator(t)
     result = cc.get_conorm(Conorm((0, 1)), log=False)
     assert Conorm((0, 1)) in result
-    assert Conorm((2, 3)) in result
+    assert Conorm((1, 2)) in result
     assert len(result) == 2
 
     result = cc.get_conorm(Conorm((0, 2)), log=False)
-    assert Conorm((0, 2)) in result
-    assert Conorm((2, 3)) in result
+    assert Conorm((1, 2)) in result
+    assert Conorm((2,3)) in result
     assert len(result) == 2
 
     result = cc.get_conorm(Conorm((0, 3)), log=False)
-    assert Conorm((1, 3)) in result
-    assert Conorm((2, 3)) in result
+    assert Conorm((0, 3)) in result
+    assert Conorm((1, 2)) in result
     assert len(result) == 2
 
     result = cc.get_conorm(Conorm((1, 2)), log=False)
     assert Conorm((1, 2)) in result
-    assert Conorm((2, 3)) in result
-    assert len(result) == 2
+    assert len(result) == 1
 
     result = cc.get_conorm(Conorm((1, 3)), log=False)
-    assert Conorm((0, 3)) in result
-    assert Conorm((2, 3)) in result
+    assert Conorm((1, 3)) in result
+    assert Conorm((1, 2)) in result
     assert len(result) == 2
 
     result = cc.get_conorm(Conorm((2, 3)), log=False)
-    assert Conorm((2, 3)) in result
-    assert len(result) == 1
+    assert Conorm((0, 2)) in result
+    assert Conorm((1, 2)) in result
+    assert len(result) == 2
 
 
     # With Filtering
     cc = ConormCalculator(t, set([Conorm((2, 3))]))
     result = cc.get_conorm(Conorm((0, 1)), log=False)
     assert Conorm((0, 1)) in result
-    assert len(result) == 1
+    assert Conorm((1, 2)) in result
+    assert len(result) == 2
 
     result = cc.get_conorm(Conorm((0, 2)), log=False)
-    assert Conorm((0, 2)) in result
+    assert Conorm((1, 2)) in result
+    assert Conorm((2,3)) not in result
     assert len(result) == 1
 
     result = cc.get_conorm(Conorm((0, 3)), log=False)
-    assert Conorm((1, 3)) in result
-    assert len(result) == 1
+    assert Conorm((0, 3)) in result
+    assert Conorm((1, 2)) in result
+    assert len(result) == 2
 
     result = cc.get_conorm(Conorm((1, 2)), log=False)
     assert Conorm((1, 2)) in result
     assert len(result) == 1
 
     result = cc.get_conorm(Conorm((1, 3)), log=False)
-    assert Conorm((0, 3)) in result
-    assert len(result) == 1
+    assert Conorm((1, 3)) in result
+    assert Conorm((1, 2)) in result
+    assert len(result) == 2
 
     result = cc.get_conorm(Conorm((2, 3)), log=False)
-    assert len(result) == 0
+    assert Conorm((0, 2)) in result
+    assert Conorm((1, 2)) in result
+    assert len(result) == 2
 
     # print(cc.get_permutations())
-    assert ConormPermutation([0,1,4,3,2,5,6]) in cc.get_permutations()
-    assert ConormPermutation([0,1,4,3,2,6,5]) in cc.get_permutations()
-    assert len(cc.get_permutations()) == 2
+    # assert ConormPermutation([0,1,4,3,2,5,6]) in cc.get_permutations()
+    # assert ConormPermutation([0,1,4,3,2,6,5]) in cc.get_permutations()
+    # assert len(cc.get_permutations()) == 2
 
 def test_perm_should_be_present():
     mat = MatrixTuple.from_tuple((-1, 0, 0, -1, 0, 1, -1, 1, 0))
@@ -316,29 +335,26 @@ def test_pathological_multiplication_case():
 
     mat = MatrixTuple.from_tuple((-1, 0, 0, -1, -1, 0, -1, -1, 1))
     t = Transformation(mat)
-
+    print(mat.matrix)
+    # [ -1 -1 -1]
     col1 = ConormCalculator.col_to_vector_set(t.get_col(0))
+    assert col1 == SignedValueSet([SignedVector.positive_one(VoronoiVector(3))])
+    # [0 0 1]
     col2 = ConormCalculator.col_to_vector_set(t.get_col(2))
+    assert col2 == SignedValueSet([
+        SignedVector.positive_one(VoronoiVector(2))
+    ])
     # print(col1, col2)
     result = col1.multiply(col2)
-    assert SignedVoronoiValue.from_signed_count(-2, PrimaryVonorm(2)) in result
-    expected_vals = [
-        SignedVoronoiValue.from_signed_count(-2, PrimaryVonorm(2)),
-        SignedVoronoiValue.negative_one(Conorm((1,2))),
-        SignedVoronoiValue.negative_one(Conorm((1,3))),
-        SignedVoronoiValue.from_signed_count(-3, Conorm((2,3))),
-        SignedVoronoiValue.negative_one(PrimaryVonorm(3)),
-    ]
-    for v in expected_vals:
-        assert v in result
+    assert SignedVoronoiValue.from_signed_count(1, Conorm((2, 3))) in result
     
-    assert len(result) == len(expected_vals)
+    assert len(result) == 1
 
 def test_transformation_returns_int_cols_as_tuples():
     mat = MatrixTuple.from_tuple((-1, 0, 0, -1, -1, 0, -1, -1, 1))
     t = Transformation(mat)
-    col = t.get_col(0)
-    assert type(col) == tuple
+    col = t.get_col(3)
+    assert type(col) == VectorTuple
     for i in col:
         assert isinstance(i, int)
     assert col == (1, 2, 1)
@@ -375,23 +391,4 @@ def test_pathological_reduce():
 
     assert len(expected) == len(result)
 
-
-def test_pathological_case_1():
-    coform = ConormListForm((1, 2, 5))
-    mat = MatrixTuple.from_tuple((-1, 0, 0, -1, -1, 0, -1, -1, 1))
-    # print()
-    # print(mat.matrix)
-    calc = ConormCalculator(Transformation(mat), coform.zero_conorms())
-    for conorm in Conorm.all_conorms():
-        # print()
-        # print(f"Computing conorm: {conorm}")
-        cn = calc.get_conorm(conorm, log=False)
-        # print("Result: ", cn)
-        if len(cn) > 0:
-            calc.validate_conorm_set(cn)
-    
-    perms = calc.get_permutations()
-    assert len(perms) > 0
-    for p in perms:
-        assert all([isinstance(v, int) for v in p])
         

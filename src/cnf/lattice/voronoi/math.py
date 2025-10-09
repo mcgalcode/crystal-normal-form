@@ -239,16 +239,16 @@ class Transformation():
     def get_col(self, idx):
         if idx not in range(0,4):
             raise ValueError(f"Can't get basis column with idx {idx}")
-        if idx == 0:
-            return self.v0()
+        if idx == 3:
+            return self.v3()
         else:
-            return self.mat.to_cols()[idx - 1]
+            return self.mat.to_cols()[idx]
     
-    def v0(self):
-        v0 = get_v0_from_generating_vecs([col.vector for col in self.mat.to_cols()])
+    def v3(self):
+        v3 = get_v0_from_generating_vecs([col.vector for col in self.mat.to_cols()])
         if all([isinstance(entry, int) for entry in self.mat.tuple]):
-            v0 = tuple([int(i) for i in v0])
-        return v0
+            v3 = VectorTuple.from_tuple(tuple([int(i) for i in v3]))
+        return v3
 
 
 class ConormCalculator():
@@ -280,11 +280,11 @@ class ConormCalculator():
         vector_set = SignedVectorSet([])
 
         if all([v == -1 for v in col]):
-            vector_set.add_val(SignedVector.positive_v0())
+            vector_set.add_val(SignedVector.positive_v3())
             return vector_set
         
         for idx, col_val in enumerate(col):
-            vector_idx = idx + 1
+            vector_idx = idx
             if col_val != 0:
                 signed_vec = SignedVector.from_signed_count(col_val, VoronoiVector(vector_idx))
                 vector_set.add_val(signed_vec)
