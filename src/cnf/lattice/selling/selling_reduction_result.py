@@ -1,4 +1,5 @@
 from .selling_transform_matrix import SellingTransformMatrix
+from ..unimodular import combine_unimodular_matrices
 
 class SellingReductionResult():
 
@@ -14,7 +15,4 @@ class SellingReductionResult():
     
     @property
     def transform_matrix(self):
-        combined_mat = self.all_transform_matrices[0]
-        for mat in self.all_transform_matrices[1:]:
-            combined_mat = combined_mat @ mat
-        return combined_mat
+        return combine_unimodular_matrices(self.all_transform_matrices)

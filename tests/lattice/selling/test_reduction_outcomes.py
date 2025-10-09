@@ -85,15 +85,45 @@ def test_parallel_reduction_monoclinic(monoclinic_lattice):
 
     for i in range(40):
         assert np.all(np.isclose(vl.vonorms, sb.compute_vonorms().vonorms))
-        sb_temp, _ = sb_reducer.apply_selling_transform(sb)
+        sb_temp, sb_selected_pair = sb_reducer.apply_selling_transform(sb)
         sb_converged = sb_temp == sb
 
         # if sb_converged:
         #     print("Superbasis converged!")
 
-        vl_temp, _ = vl_reducer.apply_selling_transform(vl)
+        vl_temp, vl_selected_pair = vl_reducer.apply_selling_transform(vl)
         vl_converged = vl_temp == vl
 
+        assert sb_selected_pair == vl_selected_pair
+        # if vl_converged:
+        #     print("Vonorms converged!")
+        
+        sb = sb_temp
+        vl = vl_temp
+        # print(f"Got through transform {i}")
+        if sb_converged and vl_converged:
+            break
+
+def test_reduction_mats_equal(monoclinic_lattice):
+
+    sb = Superbasis.from_pymatgen_lattice(monoclinic_lattice)
+    vl = sb.compute_vonorms()
+
+    sb_reducer = SuperbasisSellingReducer()
+    vl_reducer = VonormListSellingReducer()    
+
+    for i in range(40):
+        assert np.all(np.isclose(vl.vonorms, sb.compute_vonorms().vonorms))
+        sb_temp, sb_selected_pair = sb_reducer.apply_selling_transform(sb)
+        sb_converged = sb_temp == sb
+
+        # if sb_converged:
+        #     print("Superbasis converged!")
+
+        vl_temp, vl_selected_pair = vl_reducer.apply_selling_transform(vl)
+        vl_converged = vl_temp == vl
+
+        assert sb_selected_pair == vl_selected_pair
         # if vl_converged:
         #     print("Vonorms converged!")
         

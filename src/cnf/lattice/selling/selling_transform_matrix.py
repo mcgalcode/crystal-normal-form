@@ -4,10 +4,10 @@ from ...linalg.matrix_tuple import MatrixTuple
 from ..voronoi.vector_pair import VoronoiVectorPair
 
 LABELS_TO_COLS = {
-    1: np.array([1, 0, 0]),
-    2: np.array([0, 1, 0]),
-    3: np.array([0, 0, 1]),
-    0: np.array([-1, -1, -1]),
+    0: np.array([1, 0, 0]),
+    1: np.array([0, 1, 0]),
+    2: np.array([0, 0, 1]),
+    3: np.array([-1, -1, -1]),
 }
 
 class SellingTransformMatrix(MatrixTuple):
@@ -24,7 +24,7 @@ def build_st_mat_from_pair(pair: VoronoiVectorPair):
     columns = []
     i, j = pair
     # We only care about vectors 1,2, and 3
-    for lattice_vec_label in range(1,4):
+    for lattice_vec_label in range(0,3):
         if lattice_vec_label == i:
             col = - LABELS_TO_COLS[lattice_vec_label]
         elif lattice_vec_label == j:
