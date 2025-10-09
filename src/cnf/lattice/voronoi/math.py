@@ -105,6 +105,13 @@ class SignedVoronoiValue(tuple):
             self.count,
             self.value
         ])
+    
+    def multiply_count(self, count: int):
+        return SignedVoronoiValue([
+            self.sign,
+            self.count * count,
+            self.value
+        ])
 
     def __eq__(self, other: 'SignedVoronoiValue'):
         return self.sign == other.sign and \
@@ -199,8 +206,9 @@ class SignedVector(SignedVoronoiValue):
 
     def dot(self, other: 'SignedVector') :
         sign = self.sign.multiply(other.sign)
+        count = self.count * other.count
         val = self.value.dot(other.value)
-        return SignedVoronoiValue([sign, 1, val])
+        return SignedVoronoiValue([sign, count, val])
     
 class SignedVectorSet(SignedValueSet):
 
@@ -229,6 +237,8 @@ class Transformation():
     
     def v0(self):
         v0 = get_v0_from_generating_vecs([col.vector for col in self.mat.to_cols()])
+        if all([isinstance(entry, int) for entry in self.mat.tuple]):
+            v0 = tuple([int(i) for i in v0])
         return v0
 
 
@@ -238,10 +248,13 @@ class ConormCalculator():
     def vonorms_to_conorms(value_set: SignedValueSet):
         new_set = SignedValueSet([])
         for val in value_set.to_list():
+            # print(val)
             if isinstance(val.value, PrimaryVonorm):
                 new_vals = ConormCalculator.primary_vonorm_to_conorms(val.sign, val.value)
+                # print(f"Converted: {new_vals}")
                 for nv in new_vals.to_list():
-                    new_set.add_val(nv)
+                    scaled = nv.multiply_count(val.count)
+                    new_set.add_val(scaled)
             else:
                 new_set.add_val(val)
         return new_set
@@ -256,6 +269,11 @@ class ConormCalculator():
     @staticmethod
     def col_to_vector_set(col):
         vector_set = SignedVectorSet([])
+
+        if all([v == -1 for v in col]):
+            vector_set.add_val(SignedVector.positive_v0())
+            return vector_set
+        
         for idx, col_val in enumerate(col):
             vector_idx = idx + 1
             if col_val != 0:
@@ -299,13 +317,24 @@ class ConormCalculator():
 
         col1 = self.transformation.get_col(v1_idx)
         col2 = self.transformation.get_col(v2_idx)
+        
         if log:
             print(f"Finding dot product between: {col1} and {col2}")
         col1_vectors = ConormCalculator.col_to_vector_set(col1)
         col2_vectors = ConormCalculator.col_to_vector_set(col2)
+        if log:
+            print(f"Converted {col1} to {col1_vectors}")
+        if log:
+            print(f"Converted {col2} to {col2_vectors}")
         values = col1_vectors.multiply(col2_vectors)
+        if log:
+            print(f"Dot product is {values}")
         reduced = ConormCalculator.vonorms_to_conorms(values)
+        if log:
+            print(f"After reduction {reduced}")
         filtered = ConormCalculator.remove_zeros(reduced, self.zero_conorms)
+        if log:
+            print(f"After removing zero values ({self.zero_conorms}): {filtered}")
         return filtered
     
     

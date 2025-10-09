@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from cnf.lattice.voronoi.math import SignedVoronoiValue, Sign, SignedValueSet, SignedVector, SignedVectorSet, ConormCalculator, Transformation
+from cnf.lattice.voronoi.math import SignedVoronoiValue, Sign, SignedValueSet, SignedVector, SignedVectorSet, ConormCalculator, Transformation, Conorm
 from cnf.lattice.voronoi.voronoi_values import PrimaryVonorm, SecondaryVonorm, Conorm, VoronoiVector
 from cnf.lattice.superbasis import get_v0_from_generating_vecs
 from cnf.linalg import MatrixTuple
@@ -307,3 +307,90 @@ def test_specific_perm_expectation_1():
     # print(all_perms)
     # for mat, perm in mat_to_perms.items():
     #     print(mat, perm)
+
+def test_pathological_multiplication_case():
+
+    vec1 = SignedVector.from_signed_count(-2, VoronoiVector.V2())
+    vec2 = SignedVector.positive_one(VoronoiVector.V2())
+    assert vec1.dot(vec2) == SignedVoronoiValue.from_signed_count(-2, PrimaryVonorm(2))
+
+    mat = MatrixTuple.from_tuple((-1, 0, 0, -1, -1, 0, -1, -1, 1))
+    t = Transformation(mat)
+
+    col1 = ConormCalculator.col_to_vector_set(t.get_col(0))
+    col2 = ConormCalculator.col_to_vector_set(t.get_col(2))
+    # print(col1, col2)
+    result = col1.multiply(col2)
+    assert SignedVoronoiValue.from_signed_count(-2, PrimaryVonorm(2)) in result
+    expected_vals = [
+        SignedVoronoiValue.from_signed_count(-2, PrimaryVonorm(2)),
+        SignedVoronoiValue.negative_one(Conorm((1,2))),
+        SignedVoronoiValue.negative_one(Conorm((1,3))),
+        SignedVoronoiValue.from_signed_count(-3, Conorm((2,3))),
+        SignedVoronoiValue.negative_one(PrimaryVonorm(3)),
+    ]
+    for v in expected_vals:
+        assert v in result
+    
+    assert len(result) == len(expected_vals)
+
+def test_transformation_returns_int_cols_as_tuples():
+    mat = MatrixTuple.from_tuple((-1, 0, 0, -1, -1, 0, -1, -1, 1))
+    t = Transformation(mat)
+    col = t.get_col(0)
+    assert type(col) == tuple
+    for i in col:
+        assert isinstance(i, int)
+    assert col == (1, 2, 1)
+
+
+def test_scale_voronoi_value():
+    v = SignedVoronoiValue.negative_one(Conorm((1,2)))
+    assert v.multiply_count(2) == SignedVoronoiValue.from_signed_count(-2, Conorm((1,2)))
+    assert v.multiply_count(5) == SignedVoronoiValue.from_signed_count(-5, Conorm((1,2)))
+
+    v = SignedVoronoiValue.positive_one(PrimaryVonorm(2))
+    assert v.multiply_count(6) == SignedVoronoiValue.from_signed_count(6, PrimaryVonorm(2))
+    assert v.multiply_count(5) == SignedVoronoiValue.from_signed_count(5, PrimaryVonorm(2))
+
+def test_pathological_reduce():
+    #SignedValueSet([(-, 1, P(1,2)), (-, 1, P(1,3)), (-, 2, (V_2)^2), (-, 3, P(2,3)), (-, 1, (V_3)^2)])
+    svs = SignedValueSet([
+        SignedVoronoiValue.negative_one(Conorm((1,2))),
+        SignedVoronoiValue.negative_one(Conorm((1,3))),
+        SignedVoronoiValue.from_signed_count(-2, PrimaryVonorm(2)),
+        SignedVoronoiValue.from_signed_count(-3, Conorm((2,3))),
+        SignedVoronoiValue.from_signed_count(-1, PrimaryVonorm(3)),
+    ])
+    result = ConormCalculator.vonorms_to_conorms(svs)
+
+    expected = [
+        SignedVoronoiValue.from_signed_count(2, Conorm((0,2))),
+        SignedVoronoiValue.from_signed_count(1, Conorm((0,3))),
+        SignedVoronoiValue.from_signed_count(1, Conorm((1,2))),
+    ]
+
+    for e in expected:
+        assert e in result
+
+    assert len(expected) == len(result)
+
+
+def test_pathological_case_1():
+    coform = ConormListForm((1, 2, 5))
+    mat = MatrixTuple.from_tuple((-1, 0, 0, -1, -1, 0, -1, -1, 1))
+    # print()
+    # print(mat.matrix)
+    calc = ConormCalculator(Transformation(mat), coform.zero_conorms())
+    for conorm in Conorm.all_conorms():
+        # print()
+        # print(f"Computing conorm: {conorm}")
+        cn = calc.get_conorm(conorm, log=False)
+        # print("Result: ", cn)
+        if len(cn) > 0:
+            calc.validate_conorm_set(cn)
+    
+    perms = calc.get_permutations()
+    assert len(perms) > 0
+    for p in perms:
+        assert all([isinstance(v, int) for v in p])
