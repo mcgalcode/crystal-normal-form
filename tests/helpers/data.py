@@ -1,7 +1,14 @@
 from pathlib import Path
 from pymatgen.core.structure import Structure
 
-cif_dir = Path(__file__).parent / ".." / "data" / "mp_cifs"
+all_mp_cif_dir = Path(__file__).parent / ".." / "data" / "mp_cifs"
 ALL_MP_STRUCTURES = []
-for cif_path in cif_dir.iterdir():
+for cif_path in all_mp_cif_dir.iterdir():
     ALL_MP_STRUCTURES.append(Structure.from_file(cif_path))
+
+def load_pathological_pair(dir_name):
+    patho_dir = Path(__file__).parent / ".." / "data" / "patho_pairs" / dir_name
+    structs = []
+    for cif_path in patho_dir.iterdir():
+        structs.append(Structure.from_file(cif_path))
+    return structs
