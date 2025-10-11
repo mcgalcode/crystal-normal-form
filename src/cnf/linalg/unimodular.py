@@ -7,8 +7,8 @@ from importlib.resources import files
 
 
 
-def build_unimodular_matrices():
-    entry_choices = [-2, -1, 0, 1, 2]
+def build_unimodular_matrices(max_entry_val):
+    entry_choices = range(-max_entry_val, max_entry_val + 1)
     print(f"I expect {len(entry_choices) ** 9} matrices")
     combinations = list(product(entry_choices, repeat=9))
 
@@ -24,7 +24,7 @@ def build_unimodular_matrices():
     for m in det_one:
         assert m.determinant() == 1
 
-    with open("unimodular_2.json", 'w') as f:
+    with open(f"unimodular_{max_entry_val}.json", 'w') as f:
         json.dump([m.to_list() for m in det_one], f)
 
 def load_unimodular(fname = "unimodular.json"):
