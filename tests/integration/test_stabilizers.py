@@ -3,10 +3,12 @@ import helpers
 
 from pymatgen.core.structure import Structure
 
+from cnf.unit_cell import UnitCell
 from cnf.lattice.voronoi import VonormList
 from cnf.lattice import Superbasis
 from cnf.motif import FractionalMotif
 from cnf.lattice.selling import VonormListSellingReducer
+from cnf.linalg.unimodular import UNIMODULAR_MATRICES
 
 @helpers.skip_if_fast
 @helpers.parameterized_by_mp_structs
@@ -49,3 +51,29 @@ def test_vonorm_permutations_preserve_crystal(idx, struct):
         permuted_motif = motif.apply_unimodular(perm.matrix)
         recovered = Structure(permuted_vn.to_superbasis().generating_vecs(), permuted_motif.atoms, permuted_motif.positions)
         helpers.assert_identical_by_pdd_distance(struct, recovered, 0.001)
+
+@helpers.parameterized_by_mp_structs
+def test_vonorm_stabilizers_maintain_vonorm_order(idx: int, struct: Structure):
+    uc = UnitCell.from_pymatgen_structure(struct).reduce()
+    # relatively loose tol since these are undiscretize
+    tol = 1e-3
+    for u in uc.vonorms.stabilizer_matrices():
+        uc2 = uc.apply_unimodular(u)
+        assert uc2.vonorms.about_equal(uc.vonorms, tol=tol)
+        assert uc2.conorms.about_equal(uc.conorms, tol=tol)
+
+@helpers.parameterized_by_mp_structs
+def test_vonorm_stabilizer_is_complete(idx: int, struct: Structure):
+    uc = UnitCell.from_pymatgen_structure(struct).reduce()
+    # relatively loose tol since these are undiscretize
+    tol = 1e-5
+    stab = uc.vonorms.stabilizer_matrices(tol=1e-4)
+    for mat in UNIMODULAR_MATRICES:
+        uc2 = uc.apply_unimodular(mat)
+        if uc2.vonorms.about_equal(uc.vonorms, tol): 
+            if mat not in stab:
+                # where is the mat?
+                for perm_map in uc.conorms.permissible_permutations:
+                    if mat in perm_map.all_matrices:
+                        print(f"Found mat in: {perm_map.vonorm_permutation}")
+                assert mat not in stab
