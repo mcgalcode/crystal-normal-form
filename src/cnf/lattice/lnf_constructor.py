@@ -16,10 +16,16 @@ class VonormCanonicalizer():
     def __init__(self, verbose_logging=False, reduction_tolerance = 0):
         self._verbose_logging = verbose_logging
         self.reduction_tolerance = reduction_tolerance
-    
-    def get_canonicalized_vonorms(self, vonorms: VonormList, skip_reduction=False):
+        self.sorting_dec_places = 5
+
+    def _log(self, msg):
+        if self._verbose_logging:
+            print(msg)
+
+    def get_canonicalized_vonorms(self, vonorms: VonormList, skip_reduction=False, coform_tolerance=1e-3):
 
         if not skip_reduction:
+            self._log(f"Performing Selling Reduction...")
             reducer = VonormListSellingReducer(
                 tol=self.reduction_tolerance,
                 verbose_logging=self._verbose_logging
@@ -32,14 +38,16 @@ class VonormCanonicalizer():
         else:
             conorms = vonorms.conorms
             reduction_transform = None
-
+        
+        conorms = conorms.set_tol(coform_tolerance)
+        self._log(f"Searching through {len(conorms.form.permissible_permutations())} permissible permutations...")
         permuted_vonorm_lists: list[tuple[VonormList, PermutationMatrix]] = []
         for perm_mat in conorms.form.permissible_permutations():
             vonorm_permutation = perm_mat.vonorm_permutation
             permuted_vlist = vonorms.apply_permutation(vonorm_permutation)
             permuted_vonorm_lists.append((permuted_vlist, perm_mat))
 
-        sorted_vlists = sorted(permuted_vonorm_lists, key=lambda group: group[0].vonorms, reverse=False)
+        sorted_vlists = sorted(permuted_vonorm_lists, key=lambda group: tuple([round(v, self.sorting_dec_places) for v in group[0].vonorms]), reverse=False)
         canonical_vonorm_list = sorted_vlists[0][0]
         equivalent_transformations = [group[1] for group in sorted_vlists if group[0] == canonical_vonorm_list]
 
@@ -92,12 +100,15 @@ class LatticeNormalFormConstructor():
         return self.build_lnf_from_vonorms(superbasis.compute_vonorms())
 
     def build_lnf_from_vonorms(self, vonorms: VonormList):
+        self._log("Canonicalizing RAW vonorms...")
         canonicalizer = VonormCanonicalizer(reduction_tolerance=1e-8, verbose_logging=self._verbose_logging)
         undiscretized_canonical_result = canonicalizer.get_canonicalized_vonorms(vonorms)
 
+        self._log("Discretizing RAW vonorms...")
         dvc = DiscretizedVonormComputer(self.lattice_step_size, self._verbose_logging)
         discretized_vonorms = dvc.find_closest_valid_vonorms(undiscretized_canonical_result.canonical_vonorms)
 
+        self._log("Canonicalizing DISCRETE vonorms...")
         discretized_canonical_result = canonicalizer.get_canonicalized_vonorms(discretized_vonorms)
         lnf = LatticeNormalForm(discretized_canonical_result.canonical_vonorms, self.lattice_step_size)
 
