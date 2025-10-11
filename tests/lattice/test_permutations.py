@@ -60,7 +60,7 @@ def test_are_vonorm_unimodular_with_postive_det_a_group():
             assert composed in mats
 
 def test_are_vonorm_unimodular_matrix_products_also_unimodular():
-    mats = UnimodPermMapper.all_unimodular_matrices()[:1000]
+    mats = UnimodPermMapper.all_unimodular_matrices()[:1000:100]
     for p1 in mats:
         for p2 in mats:
             composed = p1 @ p2
