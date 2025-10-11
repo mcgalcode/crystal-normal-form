@@ -6,7 +6,7 @@ ALL_MP_STRUCTURES = []
 for cif_path in all_mp_cif_dir.iterdir():
     ALL_MP_STRUCTURES.append(Structure.from_file(cif_path))
 
-def load_pathological_pair(dir_name):
+def load_pathological_cifs(dir_name):
     patho_dir = Path(__file__).parent / ".." / "data" / "patho_pairs" / dir_name
     structs = []
     for cif_path in patho_dir.iterdir():
