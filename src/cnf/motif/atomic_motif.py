@@ -66,7 +66,9 @@ class AtomicMotif():
                 return False
         return True
                 
-
+    def print_details(self):
+        for atom, pos in zip(self.atoms, self.positions):
+            print(f"{atom}: {pos.tolist()}")
 
     def to_elements_and_positions(self):
         elements  = []
@@ -117,7 +119,8 @@ class AtomicMotif():
     def apply_unimodular(self, unimodular: MatrixTuple):
         if not np.isclose(unimodular.determinant(), 1):
             raise ValueError(f"Tried to transform motif w matrix with det {unimodular.determinant()}")
-        transformed = unimodular.inverse() @ self.coord_matrix
+        inv = unimodular.inverse()
+        transformed = inv @ self.coord_matrix
         positions = transformed.T
         positions = self._process_transformed_coords(positions)
         return self.__class__.from_elements_and_positions(self.atoms, positions, **self._get_kwargs())
