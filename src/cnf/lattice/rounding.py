@@ -13,14 +13,15 @@ class DiscretizedVonormComputer():
     def discretize_vonorm_list(true_vonorm_list: VonormList, lattice_step_size: float):
         return DiscretizedVonormComputer(lattice_step_size).find_closest_valid_vonorms(true_vonorm_list)
 
-    def __init__(self, lattice_step_size, verbose_log=False):
+    def __init__(self, lattice_step_size, verbose_log=False, error_prec=5):
         self.lattice_step_size = lattice_step_size
         self._verbose_log = verbose_log
+        self.error_prec = error_prec
 
     def compute_error_change_at_idx(self, true_vonorms, rounded_vnorms, idx, adjustment):
         old_error = np.abs(rounded_vnorms[idx] * self.lattice_step_size - true_vonorms[idx])
         new_error = np.abs((rounded_vnorms[idx] + adjustment) * self.lattice_step_size - true_vonorms[idx])
-        return new_error - old_error
+        return round(new_error - old_error, self.error_prec)
 
     def compute_norm_error_change(self, true_vonorms, rounded_vnorms, idx, adjustment):
         old_error = np.linalg.norm(rounded_vnorms * self.lattice_step_size - true_vonorms)
@@ -79,12 +80,12 @@ class DiscretizedVonormComputer():
                 print("====================")
                 for pc in possible_changes:
                     err, idx_to_adjust, adjustment = pc
-                    print(f"idx: {idx_to_adjust}, change: {adjustment}, diff: {round(err, 3)}")
+                    print(f"idx: {idx_to_adjust}, change: {adjustment}, diff: {err}")
             least_damaging_change = sorted(possible_changes)[0]
             err, idx_to_adjust, adjustment = least_damaging_change
             rounded_vonorms[idx_to_adjust] = rounded_vonorms[idx_to_adjust] + adjustment
             if self._verbose_log:
-                print(f"Selected Correction (idx: {idx_to_adjust}, change: {adjustment}, diff: {round(err, 3)}): {rounded_vonorms}...")
+                print(f"Selected Correction (idx: {idx_to_adjust}, change: {adjustment}, diff: {err}): {rounded_vonorms}...")
             primary_sum = np.sum(rounded_vonorms[:4])
             secondary_sum = np.sum(rounded_vonorms[4:])
         
