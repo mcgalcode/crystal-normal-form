@@ -1,5 +1,5 @@
 from pymatgen.core.structure import Structure
-
+import numpy as np
 from .linalg import MatrixTuple
 from .lattice import Superbasis
 from .motif import FractionalMotif
@@ -9,6 +9,7 @@ from cnf.lattice.selling import SuperbasisSellingReducer
 from cnf.lattice.permutations import VonormPermutation
 
 from .cnf_constructor import CNFConstructor
+from .crystal_normal_form import CrystalNormalForm
 
 class UnitCell():
 
@@ -17,6 +18,10 @@ class UnitCell():
         superbasis = Superbasis.from_pymatgen_structure(struct)
         motif = FractionalMotif.from_pymatgen_structure(struct)
         return cls(superbasis, motif)
+
+    @classmethod
+    def from_cnf(cls, cnf: CrystalNormalForm):
+        return cls.from_pymatgen_structure(cnf.reconstruct())
 
     def __init__(self, superbasis: Superbasis, motif: FractionalMotif):
         self.superbasis = superbasis
@@ -39,7 +44,7 @@ class UnitCell():
         new_sb = self.superbasis.apply_matrix_transform(u.matrix)
         new_motif = self.motif.apply_unimodular(u)
         return UnitCell(new_sb, new_motif)
-    
+
     def to_pymatgen_structure(self):
         lattice_vecs = self.superbasis.generating_vecs()
         return Structure(lattice_vecs, self.motif.atoms, self.motif.positions)  
@@ -56,8 +61,8 @@ class UnitCell():
     def voronoi_class(self):
         return self.conorms.form.voronoi_class
 
-    def to_cnf(self, xi, delta):
-        c = CNFConstructor(xi, delta)
+    def to_cnf(self, xi, delta, verbose=False):
+        c = CNFConstructor(xi, delta, verbose_logging=verbose)
         res = c.from_motif_and_superbasis(self.motif, self.superbasis)
         return res.cnf
     
@@ -68,4 +73,3 @@ class UnitCell():
         if ".cif" not in fpath:
             raise ValueError("Must provide CIF filepath ending in .cif!")
         self.to_pymatgen_structure().to_file(fpath)
-
