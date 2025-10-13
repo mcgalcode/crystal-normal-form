@@ -3,7 +3,7 @@ import pytest
 import helpers
 
 from cnf.cnf_constructor import CNFConstructor
-from cnf.linalg.unimodular import UNIMODULAR_MATRICES, UNIMODULAR_MATRICES_MAX_2, MatrixTuple, load_unimodular
+from cnf.linalg.unimodular import get_unimodulars_col_max, MatrixTuple, load_unimodular
 from cnf.motif.utils import move_coords_into_cell
 from cnf.motif import FractionalMotif
 from cnf.unit_cell import UnitCell
@@ -181,15 +181,14 @@ def test_any_unimod_matrices_dont_maintain_xtal():
     reduced_struct = uc1.to_pymatgen_structure()
 
     dontmaintain = []
-    for m in UNIMODULAR_MATRICES_MAX_2:
+    for m in get_unimodulars_col_max(2):
         tuc1 = uc1.apply_unimodular(m)
         dist = helpers.pdd(reduced_struct, tuc1.to_pymatgen_structure())
         if not dist < 1e-4:
             dontmaintain.append((m, dist))
     
     print(len(dontmaintain))
-    print(len(UNIMODULAR_MATRICES_MAX_2))
-    print(len(UNIMODULAR_MATRICES))
+    print(len(get_unimodulars_col_max(2)))
 
 def test_for_rotoinversion():
     from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
@@ -447,7 +446,7 @@ def test_debug_positions():
 
     matches = []
     uc1 = UnitCell.from_pymatgen_structure(structs[0])
-    for u in UNIMODULAR_MATRICES:
+    for u in get_unimodulars_col_max(2):
         tuc1 = uc1.apply_unimodular(u)
         if not uc1.vonorms.is_superbasis():
             continue

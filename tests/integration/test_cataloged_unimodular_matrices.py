@@ -6,7 +6,7 @@ from pymatgen.core.structure import Structure
 from cnf.unit_cell import UnitCell
 from cnf.lattice.voronoi import ConormListForm
 
-from cnf.linalg.unimodular import UNIMODULAR_MATRICES, UNIMODULAR_MATRICES_MAX_2
+from cnf.linalg.unimodular import UNIMODULAR_MATRICES, get_unimodulars_col_max
 from cnf.lattice.permutations import UnimodPermMapper
 
 # Generate all unimodular matrices up to col max norm 4 or 5
@@ -26,6 +26,7 @@ STRUCT_SAMPLE_FREQ = 10
 def test_unimodulars_are_det_0():
     for m in UnimodPermMapper.all_unimodular_matrices():
         assert np.isclose(m.determinant(), 1)
+        assert m.is_unimodular()
 
 def test_ALL_unimodular_mats_produce_all_possible_coforms():
     handled_vcs = []
@@ -38,7 +39,7 @@ def test_ALL_unimodular_mats_produce_all_possible_coforms():
             print(f"Trying struct for class {voronoi_class}")
             matching_coforms = ConormListForm.get_coforms_of_voronoi_class(voronoi_class)
             zero_sets = { cf.zero_indices: [] for cf in matching_coforms }
-            for u in UNIMODULAR_MATRICES_MAX_2:
+            for u in get_unimodulars_col_max(2):
                 uc2 = uc.apply_unimodular(u)
                 uc2.apply_unimodular(u)
                 if not uc2.superbasis.is_superbasis():
@@ -176,7 +177,7 @@ def test_uncataloged_matrices_dont_maintain_lattice(idx: int, struct: Structure)
     uc = UnitCell.from_pymatgen_structure(struct).reduce()
     known_perm_mats = uc.conorms.all_permutation_matrices()
     # print(f"Considerng {len(known_perm_mats)} matrices")
-    for umat in UNIMODULAR_MATRICES:
+    for umat in get_unimodulars_col_max(2):
         assert umat.determinant() == 1
         uc2 = uc.apply_unimodular(umat)
         fail = False
@@ -222,7 +223,7 @@ def test_uncataloged_matrices_dont_maintain_lattice_comprehensive(idx: int, stru
     for transformed_uc in reps:
         known_perm_mats = transformed_uc.conorms.all_permutation_matrices()
         # print(f"Considerng {len(known_perm_mats)} matrices")
-        for umat in UNIMODULAR_MATRICES:
+        for umat in get_unimodulars_col_max(2):
             assert umat.determinant() == 1
             uc2 = transformed_uc.apply_unimodular(umat)
             fail = False
@@ -277,7 +278,7 @@ def test_catalog_of_unimodular_matrices_is_complete(idx, struct: Structure):
     PDD_CUTOFF = 0.0000001
     equivalent_unit_cells: list[UnitCell] = []
     geo_eq_mats = []
-    for u in UNIMODULAR_MATRICES:
+    for u in get_unimodulars_col_max(2):
         new_uc = uc.apply_unimodular(u)
         if not new_uc.is_obtuse(tol=tol) or not new_uc.superbasis.is_superbasis(tol):
             continue
