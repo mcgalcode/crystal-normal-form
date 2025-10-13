@@ -83,6 +83,12 @@ class ConormListForm():
     def similar_coforms(self):
         return ConormListForm.get_coforms_of_voronoi_class(self.voronoi_class)
     
+    def all_matrices(self):
+        mats = []
+        for p in self.permissible_permutations():
+            mats.extend(p.all_matrices)
+        return list(set(mats))
+
     def all_matrices_for_similar_coforms(self):
         mats = []
         for cf in self.similar_coforms():
