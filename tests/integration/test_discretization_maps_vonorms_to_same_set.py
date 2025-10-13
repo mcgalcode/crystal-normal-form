@@ -11,7 +11,7 @@ from cnf.lattice.lnf_constructor import VonormCanonicalizer
 
 import pathlib
 
-from cnf.linalg.unimodular import UNIMODULAR_MATRICES
+from cnf.linalg.unimodular import get_unimodulars_col_max
 
 verbose = False
 delta = 20
@@ -29,7 +29,7 @@ def test_rounding_vonorms_maps_to_same_vonorm_set(idx, struct: Structure):
     print()
     helpers.printif(f"Original: {dvc.uncorrected_discretized_vonorms(original_vonorms)}", verbose)
 
-    for u in UNIMODULAR_MATRICES[::10]:
+    for u in get_unimodulars_col_max(2)[::10]:
         other_cell = uc.apply_unimodular(u).reduce()
         pdd = helpers.pdd(struct, other_cell.to_pymatgen_structure())
         if pdd < 1e-5:
@@ -54,7 +54,7 @@ def test_canonicalizing_leads_to_same_vonorm_list(idx, struct: Structure):
     print()
     helpers.printif(f"Original: {dvc.uncorrected_discretized_vonorms(original_vonorms)}", verbose)
 
-    for u in UNIMODULAR_MATRICES[::10]:
+    for u in get_unimodulars_col_max(2)[::10]:
         other_cell = uc.apply_unimodular(u).reduce()
         pdd = helpers.pdd(struct, other_cell.to_pymatgen_structure())
         if pdd < 1e-5:
@@ -82,7 +82,7 @@ def test_canonicalizing_then_rounding_vonorms_maps_to_same_vonorm_list(idx, stru
     print()
     helpers.printif(f"Original: {dvc.uncorrected_discretized_vonorms(original_vonorms)}", verbose)
 
-    for u in UNIMODULAR_MATRICES[::10]:
+    for u in get_unimodulars_col_max(2)[::10]:
         other_cell = uc.apply_unimodular(u).reduce()
         pdd = helpers.pdd(struct, other_cell.to_pymatgen_structure())
         if pdd < 1e-5:
@@ -110,7 +110,7 @@ def test_canonicalizing_then_discretizing_vonorms_maps_to_same_vonorm_list(idx, 
     dv_map = {}
     rv_map = {}
     
-    for u in UNIMODULAR_MATRICES[::10]:
+    for u in get_unimodulars_col_max(2)[::10]:
         other_cell = uc.apply_unimodular(u).reduce()
         pdd = helpers.pdd(struct, other_cell.to_pymatgen_structure())
         if pdd < 1e-5:
@@ -154,7 +154,7 @@ def test_canonicalizing_then_discretizing_then_canonicalizing_makes_vonorm_list_
     c = VonormCanonicalizer(reduction_tolerance=1e-5)
     dvc = DiscretizedVonormComputer(xi)
 
-    for u in UNIMODULAR_MATRICES[::10]:
+    for u in get_unimodulars_col_max(2)[::10]:
         other_cell = uc.apply_unimodular(u).reduce()
         pdd = helpers.pdd(struct, other_cell.to_pymatgen_structure())
         if pdd < 1e-5:
@@ -177,7 +177,7 @@ def test_discretized_vonorms_have_same_permissible_perms(idx, struct: Structure)
 
     dvc = DiscretizedVonormComputer(xi)
 
-    for u in UNIMODULAR_MATRICES[::10]:
+    for u in get_unimodulars_col_max(2)[::10]:
         other_cell = uc.apply_unimodular(u).reduce()
         pdd = helpers.pdd(struct, other_cell.to_pymatgen_structure())
         if pdd < 1e-5:
