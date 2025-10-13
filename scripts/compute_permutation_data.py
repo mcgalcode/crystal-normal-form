@@ -3,14 +3,17 @@ import json
 
 from cnf.lattice.voronoi import ConormListForm
 from cnf.lattice.permutations import ConormPermutation
-from cnf.linalg.unimodular import UNIMODULAR_MATRICES
+from cnf.linalg.unimodular import UNIMODULAR_MATRICES, load_unimodular
 from cnf.lattice.voronoi.math import ConormCalculator, Transformation
-
-def map_unimod_to_conorm_perms():
+from cnf.linalg.unimodular import generate_unimodular_matrices_3x3
+    
+def map_unimod_to_conorm_perms(matrices, fname = "unimodular_mats_to_perms.json"):
     mat_to_perms = []
     all_valid_perms = ConormPermutation.all_conorm_perm_tuples()
+    
     for conorm_form in tqdm.tqdm(ConormListForm.all_coforms()):
-        for u in UNIMODULAR_MATRICES:
+        print(f"Matching for coform: {conorm_form.zero_indices}, class {conorm_form.voronoi_class}")
+        for u in tqdm.tqdm(matrices):
             t = Transformation(u)
             calc = ConormCalculator(t, conorm_form.zero_conorms())
             try:
@@ -20,7 +23,7 @@ def map_unimod_to_conorm_perms():
             except:
                 pass
 
-    with open("unimod_mats_to_perms.json", 'w+') as f:
+    with open(fname, 'w+') as f:
         json.dump(mat_to_perms, f)
 
 def parse_mat_perm_mapping_file(fpath):
@@ -73,6 +76,7 @@ def compare_files():
 
 
 if __name__ == '__main__':
-    map_unimod_to_conorm_perms()
+    mats = generate_unimodular_matrices_3x3(6)
+    # map_unimod_to_conorm_perms(mats, "unimodular_mats_max_6_det_1_to_perms.json")
     # read_matching()
-    compare_files()
+    # compare_files()
