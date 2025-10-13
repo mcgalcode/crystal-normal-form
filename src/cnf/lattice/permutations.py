@@ -140,7 +140,7 @@ class UnimodPermMapper:
         return list(ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS.keys())
 
     @staticmethod
-    def all_unimodular_matrices():
+    def all_unimodular_matrices() -> list[MatrixTuple]:
         all_mats = []
         for zero_set, perm_map in ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS.items():
             for perm, mats in perm_map.items():

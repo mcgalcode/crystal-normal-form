@@ -98,7 +98,7 @@ def generate_unimodular_matrices_3x3(max_norm=5, num_processes=None):
     
     # Convert to MatrixTuple and save
     all_mats = [MatrixTuple(m) for m in all_matrices]
-    with open(f"unimodular_{max_norm}_det_-1.json", 'w') as f:
+    with open(f"unimodular_{max_norm}_det_1.json", 'w') as f:
         json.dump([m.to_list() for m in all_mats], f)
     
     print(f"Saved to unimodular_{max_norm}_det_1.json")
@@ -138,5 +138,13 @@ def load_unimodular(fname = "unimodular.json"):
     matrices = [MatrixTuple.from_tuple(tuple(l)) for l in matrix_lists]
     return matrices
 
+_UNIMODULARS = {}
+
+def get_unimodulars_col_max(col_max):
+    if col_max not in _UNIMODULARS:
+        unis = load_unimodular(f"unimodular_{col_max}_det_1.json")
+        _UNIMODULARS[col_max] = unis
+    return _UNIMODULARS[col_max]
+
 UNIMODULAR_MATRICES = load_unimodular("unimodular_6_det_1.json")
-UNIMODULAR_MATRICES_MAX_2 = load_unimodular("unimodular_2.json")
+UNIMODULAR_MATRICES_COL_MAX_NORM_1 = load_unimodular("unimodular.json")

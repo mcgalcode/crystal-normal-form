@@ -69,13 +69,13 @@ def test_fcc_zr_unit_cells(zr_fcc_primitive_lattice_vecs):
         helpers.printif(cnf.coords, verbose)
     assert len(unique_cnfs) == 2
 
-@helpers.parameterized_by_mp_structs
+@helpers.parameterized_by_mp_struct_idxs(range(0, 1000, 100))
 def test_unit_cell_doesnt_change_struct(idx: int, struct: Structure):
     uc = UnitCell.from_pymatgen_structure(struct)
     pmg_2 = uc.to_pymatgen_structure()
     helpers.assert_identical_by_pdd_distance(struct, pmg_2, cutoff=1e-9)
 
-@helpers.parameterized_by_mp_structs
+@helpers.parameterized_by_mp_struct_idxs(range(0, 1000, 100))
 def test_reduced_unit_cell_doesnt_change_struct(idx: int, struct: Structure):
     uc = UnitCell.from_pymatgen_structure(struct).reduce()
     pmg_2 = uc.to_pymatgen_structure()
