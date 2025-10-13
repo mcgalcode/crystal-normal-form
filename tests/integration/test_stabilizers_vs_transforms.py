@@ -31,7 +31,7 @@ def test_transforms_for_sort_equivalent_to_stabilizer():
     for struct in helpers.ALL_MP_STRUCTURES():
         uc = UnitCell.from_pymatgen_structure(struct).reduce()
 
-        sorted_vonorms, eq_transforms = VonormSorter(conorm_zero_tol=1e-3).get_canonicalized_vonorms(uc.vonorms)
+        sorted_vonorms, eq_transforms = VonormSorter().get_canonicalized_vonorms(uc.vonorms)
 
         if not len(sorted_vonorms.stabilizer_perms(tol=1e-3)) == len(eq_transforms):
             fail_structs.append(struct)

@@ -14,10 +14,9 @@ from .unimodular import combine_unimodular_matrices
 
 class VonormSorter():
 
-    def __init__(self, conorm_zero_tol=1e-5, verbose_logging=False):
+    def __init__(self, verbose_logging=False):
         self._verbose_logging = verbose_logging
         self.sorting_dec_places = 5
-        self.conorm_zero_tol = conorm_zero_tol
 
     def _log(self, msg):
         if self._verbose_logging:
@@ -28,7 +27,7 @@ class VonormSorter():
         conorms = conorms.set_tol(coform_tolerance)
         self._log(f"Searching through {len(conorms.form.permissible_permutations())} permissible permutations...")
         permuted_vonorm_lists: list[tuple[VonormList, PermutationMatrix]] = []
-        for perm_mat in conorms.set_tol(self.conorm_zero_tol).form.permissible_permutations():
+        for perm_mat in conorms.form.permissible_permutations():
             vonorm_permutation = perm_mat.vonorm_permutation
             permuted_vlist = vonorms.apply_permutation(vonorm_permutation)
             permuted_vonorm_lists.append((permuted_vlist, perm_mat))
