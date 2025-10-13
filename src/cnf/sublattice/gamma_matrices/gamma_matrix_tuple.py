@@ -75,4 +75,4 @@ class GammaMatrixTuple(MatrixTuple):
         return cls(mat)
 
     def generates_same_sublattice(self, other: 'GammaMatrixTuple'):
-        return MatrixTuple(self.inverse() @ other.matrix).is_unimodular()
+        return MatrixTuple(self.inverse().matrix @ other.matrix).is_unimodular()

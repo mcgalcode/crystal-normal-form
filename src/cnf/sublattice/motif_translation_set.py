@@ -4,7 +4,7 @@ from .gamma_matrices import GammaMatrixTuple
 from ..motif import FractionalMotif
 
 def transform_basis_position(basis_position: np.ndarray, gmat: GammaMatrixTuple):
-    return gmat.inverse() @ basis_position
+    return gmat.inverse().matrix @ basis_position
 
 
 class MotifTranslationSet():
@@ -21,7 +21,7 @@ class MotifTranslationSet():
                         continue
                     
                     z_vec = np.array([z1, z2, z3])
-                    transformed = np.mod(gamma_inv @ z_vec, 1)
+                    transformed = np.mod(gamma_inv.matrix @ z_vec, 1)
                     translation_vecs.append(transformed)
         return MotifTranslationSet(translation_vecs, gamma_mat)
 
