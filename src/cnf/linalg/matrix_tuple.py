@@ -19,7 +19,7 @@ class MatrixTuple():
         return is_unimodular(self.matrix)
     
     def inverse(self):
-        return np.linalg.inv(self.matrix)
+        return MatrixTuple(np.linalg.inv(self.matrix))
     
     def determinant(self):
         return np.linalg.det(self.matrix)
@@ -32,6 +32,9 @@ class MatrixTuple():
     
     def is_identity(self):
         return np.all(self.matrix == np.eye(3))
+    
+    def col_max_norm(self):
+        return max([sum(np.abs(col)) for col in self.matrix.T])
     
     def to_cols(self) -> list[VectorTuple]:
         cols = []
