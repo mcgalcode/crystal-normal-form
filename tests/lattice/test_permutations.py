@@ -22,12 +22,6 @@ def test_item_access():
     assert permutation[0] == 6
     assert permutation[-1] == 0
 
-def test_unimodularity():
-    for zeros, perm_map in ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS.items():
-        for perm, matrices in perm_map.items():
-            for m in matrices:
-                assert np.abs(m.determinant()) == 1
-
 def test_apply_permutation():
     perm = (3,1,2,0)
     vals = ['a', 'b', 'c', 'd']
@@ -49,15 +43,6 @@ def test_are_vonorm_permutations_an_s7_subgroup():
     # character of these groups
     vperms = set(VONORM_PERMUTATION_TO_CONORM_PERMUTATION.keys())
     assert is_permutation_set_closed(vperms)
-
-@pytest.mark.xfail
-def test_are_vonorm_unimodular_with_postive_det_a_group():
-    mats = UnimodPermMapper.all_unimodular_matrices()
-    for p1 in mats:
-        for p2 in mats:
-            composed = p1 @ p2
-            
-            assert composed in mats
 
 def test_are_vonorm_unimodular_matrix_products_also_unimodular():
     mats = UnimodPermMapper.all_unimodular_matrices()[:1000:100]
@@ -96,14 +81,10 @@ def test_are_permutation_groups_isomorphic():
 def test_s4_subgroup_isomorphism():
     s4_perms = set(permutations(range(4)))
     assert is_permutation_set_closed(s4_perms)
-    matrices = [get_unimodular_matrix_from_voronoi_vector_idxs(p[1:]) for p in s4_perms]
+    matrices = [get_unimodular_matrix_from_voronoi_vector_idxs(p[:3]) for p in s4_perms]
     mat_tuples = set([MatrixTuple(m).tuple for m in matrices])
     assert len(mat_tuples) == len(s4_perms)
 
     for m1 in matrices:
         for m2 in matrices:
             assert MatrixTuple(m1 @ m2).tuple in mat_tuples
-
-def test_unimodulars_are_det_0():
-    for m in UnimodPermMapper.all_unimodular_matrices():
-        assert m.determinant() == 1

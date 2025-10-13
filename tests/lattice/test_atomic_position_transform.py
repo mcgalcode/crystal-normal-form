@@ -59,9 +59,8 @@ def test_selling_reduce_atomic_positions():
     reducer = SuperbasisSellingReducer(tol=1e-7)
     reduce_result = reducer.reduce(sb)
     reduced_sb = reduce_result.reduced_object
-    print(reduce_result.all_transform_matrices)
     transform_mat = reduce_result.transform_matrix
-    reduced_frac_coords = transform_mat.inverse() @ fractional_coords
+    reduced_frac_coords = transform_mat.inverse().matrix @ fractional_coords
     reduced_cart_coords = reduced_sb.generating_vecs().T @ reduced_frac_coords
 
     assert np.all(np.isclose(reduced_cart_coords, original_cart_coords))

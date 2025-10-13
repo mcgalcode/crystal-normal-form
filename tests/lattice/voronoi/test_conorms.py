@@ -165,14 +165,15 @@ def test_v3_case(reduced_v3_superbasis):
     tested = _assert_all_representative_permutation_matrices_maintain_superbasis(reduced_v3_superbasis)
     assert len(tested) == 72
 
-def test_v2_case(reduced_v2_superbasis):
+def test_v2_case(reduced_v2_superbasis: Superbasis):
     conorms = reduced_v2_superbasis.compute_vonorms().conorms
     assert len(conorms.form) == 1
     assert conorms.form.voronoi_class == 2
     print(f"{conorms.form.voronoi_class}: {len(conorms.permissible_permutations)}")
     tested = _assert_all_representative_permutation_matrices_maintain_superbasis(reduced_v2_superbasis)
     assert len(tested) == 48
-    print(conorms.form.grouped_vonorm_permutations().keys())
+    print(f"Voronoi Class 2 has: {len(reduced_v2_superbasis.compute_vonorms().conorms.all_permutation_matrices())} unimodular matrices")
+
     assert len(conorms.form.grouped_vonorm_permutations()) == 2
 
 def test_v1_case(reduced_v1_superbasis):
