@@ -1,10 +1,12 @@
 import numpy as np
 
-from ..crystal_normal_form import CrystalNormalForm, get_canonical_bnf_from_stabilizers
+from ..crystal_normal_form import CrystalNormalForm
+from ..cnf_constructor import CNFConstructor, CNFConstructionResult
 from ..lattice import LatticeNormalForm
-from ..lattice.lnf_constructor import VonormCanonicalizer
-from ..lattice.voronoi import VonormList, ConormList, ConormListForm
-from ..lattice.permutations import apply_permutation, UnimodPermMapper
+from ..lattice.lnf_constructor import LatticeNormalFormConstructor, LatticeNormalFormConstructionResult
+from ..motif.atomic_motif import DiscretizedMotif
+from ..lattice.voronoi import VonormList
+from ..lattice.permutations import PermutationMatrix
 
 def is_primary_idx(idx):
     return idx >= 0 and idx < 4
@@ -52,16 +54,36 @@ class LatticeStep():
     
     def __repr__(self):
         return f"LatticeStep<vonorm_adj={self.vals}, perm={self.prereq_perm.vonorm_permutation.perm}>"
+    
+    def print_details(self):
+        print(f"Step adj. vec: {self.vals}")
+        print(f"Prerequisite Vo. perm: {self.prereq_perm.vonorm_permutation}")
+        print(f"Prerequisite Co. perm: {self.prereq_perm.conorm_permutation}")
+        print(f"Prerequisite matrix: {self.prereq_perm.matrix.tuple}")
+        print(f"Prerequisite matrix det: {self.prereq_perm.matrix.determinant()}")        
 
 class LatticeStepResult():
 
     def __init__(self,
                  step: LatticeStep,
-                 canonicalization: CanonicalizedVonormResult,
-                 result: LatticeNormalForm | CrystalNormalForm):
+                 adjusted_vonorms: VonormList,
+                 construction_result: CNFConstructionResult | LatticeNormalFormConstructionResult,
+                 result: LatticeNormalForm | CrystalNormalForm,
+                 adjusted_motif: DiscretizedMotif = None):
         self.step = step
-        self.canonicalization = canonicalization
+        self.adjusted_vonorms = adjusted_vonorms
+        self.adjusted_motif = adjusted_motif
+        self.construction_result = construction_result
         self.result = result
+    
+    def print_details(self):
+        print(f"Applied step:")
+        self.step.print_details()
+        print()
+        print(f"Got new Vonorm List:")
+        print(self.adjusted_vonorms)
+        print()
+        self.construction_result.print_details()
     
 class LatticeNeighbor():
 
@@ -130,6 +152,7 @@ class LatticeNeighborFinder():
 
         if self._is_cnf_neighbor_finder():
             self.discretized_motif = cnf_point.basis_normal_form.to_discretized_motif()
+            self.fractional_motif = cnf_point.basis_normal_form.to_motif()
 
     def _is_cnf_neighbor_finder(self):
         return isinstance(self.point, CrystalNormalForm)
@@ -159,7 +182,6 @@ class LatticeNeighborFinder():
         return steps
 
     def get_vonorm_neighbor(self, step: LatticeStep):
-
         lnf_point = self._lnf()
         vonorms = lnf_point.vonorms
         self._log(f"Original vonorms: {vonorms}")
@@ -195,7 +217,7 @@ class LatticeNeighborFinder():
         construction_result = lnf_constructor.build_lnf_from_discretized_vonorms(new_vonorms, skip_reduction=True)
         neighbor_lnf = construction_result.lnf
             
-        return LatticeStepResult(step, construction_result, neighbor_lnf)
+        return LatticeStepResult(step, new_vonorms, construction_result, neighbor_lnf)
         
 
     def find_lnf_neighbors(self) -> LatticeNeighborSet:
@@ -211,15 +233,25 @@ class LatticeNeighborFinder():
         if neighbor_vonorms is None:
             return None
         
-        neighbor_motif = self.get_basis_neighbor(step)
+        
+        cnf_results: list[CrystalNormalForm] = []
+        for mat in step.prereq_perm.all_matrices:
+            neighbor_motif = self.discretized_motif.apply_unimodular(mat)
+            cnf_constructor = CNFConstructor(
+                self.point.xi,
+                self.point.delta,
+                verbose_logging=self.verbose_logging,
+            )
 
-        cnf_constructor = CNFConstructor(self.point.xi, self.point.delta, False)
-        cnf_construction_result = cnf_constructor.from_discretized_vonorms_and_motif(neighbor_vonorms, neighbor_motif)
+            cnf_results.append(cnf_constructor.from_discretized_vonorms_and_motif(neighbor_vonorms, neighbor_motif).cnf)
+        
+        cnf_construction_result = sorted(cnf_results, key=lambda cnf: cnf.coords)[0]
     
         return LatticeStepResult(
             step,
+            neighbor_vonorms,
+            None,
             cnf_construction_result,
-            cnf_construction_result.cnf,
         )
 
     def find_cnf_neighbors(self) -> LatticeNeighborSet:
