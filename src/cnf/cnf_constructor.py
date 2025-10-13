@@ -16,14 +16,12 @@ from .lattice.unimodular import combine_unimodular_matrices
 class CNFConstructionResult():
 
     def __init__(self,
+                 cnf: CrystalNormalForm,
                  lnf_construction_result: LatticeNormalFormConstructionResult,
                  bnf_construction_result: BNFConstructionResult):
+        self.cnf = cnf
         self.lnf_result = lnf_construction_result
         self.bnf_result = bnf_construction_result
-    
-    @property
-    def cnf(self) -> CrystalNormalForm:
-        return CrystalNormalForm(self.lnf_result.lnf, self.bnf_result.bnf)
     
     def print_details(self):
         self.lnf_result.print_details()
@@ -64,8 +62,9 @@ class CNFConstructor():
             print(f"And shift {bnf_construction_res.sorted_bnf_candidates[0].shift}")
             print(f"Based on motif:")
             bnf_construction_res.sorted_bnf_candidates[0].motif.print_details()
-            
-        return CNFConstructionResult(lnf_construction_result, bnf_construction_res)
+
+        cnf = CrystalNormalForm(lnf_construction_result.lnf, bnf_construction_res.bnf)
+        return CNFConstructionResult(cnf, lnf_construction_result, bnf_construction_res)
         
     def from_discretized_vonorms_and_motif(self,
                                            discretized_vonorms: VonormList,
@@ -97,7 +96,8 @@ class CNFConstructor():
             print(f"Based on motif:")
             bnf_construction_res.sorted_bnf_candidates[0].motif.print_details()
 
-        return CNFConstructionResult(lnf_construction_result, bnf_construction_res)
+        cnf = CrystalNormalForm(lnf_construction_result.lnf, bnf_construction_res.bnf)
+        return CNFConstructionResult(cnf, lnf_construction_result, bnf_construction_res)
 
     def from_motif_and_superbasis_2(self, motif: FractionalMotif, superbasis: Superbasis):
         reducer     = VonormListSellingReducer(tol=1e-8)
@@ -149,7 +149,7 @@ class CNFConstructor():
                     cnf_candidates.append(CrystalNormalForm(lnf_candidate, bnf))
 
         sorted_cnfs = sorted(cnf_candidates, key=lambda cnf: cnf.coords)
-        return sorted_cnfs[0]
+        return CNFConstructionResult(sorted_cnfs[0], None, None)
     
     def from_motif_and_basis_vecs(self, motif: FractionalMotif, basis_vecs: np.array):
         superbasis = Superbasis.from_generating_vecs(basis_vecs)
