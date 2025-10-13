@@ -3,7 +3,7 @@ import os
 import pytest
 
 from .assertions import *
-from .data import ALL_MP_STRUCTURES
+from .data import _ALL_MP_STRUCTURES
 from cnf.motif.atomic_motif import FractionalMotif
 from cnf.unit_cell import UnitCell
 
@@ -18,14 +18,17 @@ if SPECIFIC_STRUCT_IDX is not None:
 def skip_if_fast(func):
     return pytest.mark.skipif(IS_FAST, reason="Skipped because CNF_FAST_TEST env var was set to 1")(func)
 
+def ALL_MP_STRUCTURES():
+    return _ALL_MP_STRUCTURES[::STRUCT_SAMPLE_FREQ]
+
 def parameterized_by_mp_structs(func):
     if SPECIFIC_STRUCT_IDX is None:
-        return pytest.mark.parametrize("idx, struct", zip(range(0, len(ALL_MP_STRUCTURES), STRUCT_SAMPLE_FREQ), ALL_MP_STRUCTURES[::STRUCT_SAMPLE_FREQ]))(func)
+        return pytest.mark.parametrize("idx, struct", zip(range(0, len(_ALL_MP_STRUCTURES), STRUCT_SAMPLE_FREQ), _ALL_MP_STRUCTURES[::STRUCT_SAMPLE_FREQ]))(func)
     else:
         return parameterized_by_mp_struct_idxs([SPECIFIC_STRUCT_IDX])(func)
 
 def parameterized_by_mp_struct_idxs(idxs):
-    structs = [ALL_MP_STRUCTURES[i] for i in idxs]
+    structs = [_ALL_MP_STRUCTURES[i] for i in idxs]
     def _wrapper(func):
         return pytest.mark.parametrize("idx, struct", zip(idxs, structs))(func)    
     return _wrapper

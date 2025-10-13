@@ -11,8 +11,8 @@ from pymatgen.core.structure import Structure
 STRUCT_SAMPLE_FREQ = 1
 
 @helpers.skip_if_fast
-@pytest.mark.parametrize("struct", helpers.ALL_MP_STRUCTURES[::STRUCT_SAMPLE_FREQ])
-def test_lnf_neighbor_reciprocity(struct: Structure):
+@helpers.parameterized_by_mp_structs
+def test_lnf_neighbor_reciprocity(idx, struct: Structure):
     verbose = False
     xi = 1.5
     delta = 30
@@ -39,8 +39,8 @@ def test_lnf_neighbor_reciprocity(struct: Structure):
         helpers.printif(f"Original LNF was found!", verbose)
     
 @helpers.skip_if_fast
-@pytest.mark.parametrize("struct", helpers.ALL_MP_STRUCTURES[::STRUCT_SAMPLE_FREQ])
-def test_lnf_neighbor_reciprocity_within_cnf_neighbors(struct: Structure):
+@helpers.parameterized_by_mp_structs
+def test_lnf_neighbor_reciprocity_within_cnf_neighbors(idx, struct: Structure):
     verbose = False
     xi = 1.5
     delta = 30
@@ -59,8 +59,8 @@ def test_lnf_neighbor_reciprocity_within_cnf_neighbors(struct: Structure):
         assert original_cnf.lattice_normal_form in second_neighbor_lnfs
 
 @helpers.skip_if_fast
-@pytest.mark.parametrize("struct", helpers.ALL_MP_STRUCTURES[::10])
-def test_neighbor_reciprocity_by_geometry(struct: Structure):
+@helpers.parameterized_by_mp_structs
+def test_neighbor_reciprocity_by_geometry(idx, struct: Structure):
     verbose = False
     xi = 0.1
     delta = 20
@@ -100,7 +100,7 @@ def test_neighbor_reciprocity_by_geometry(struct: Structure):
 
 # @pytest.xfail("This just is not a true fact")
 def test_neighbor_bnfs_yield_same_xtal_in_original_lattice():
-    struct = helpers.ALL_MP_STRUCTURES[260]
+    struct = helpers.ALL_MP_STRUCTURES()[260]
 
     xi = 0.1
     delta = 10
