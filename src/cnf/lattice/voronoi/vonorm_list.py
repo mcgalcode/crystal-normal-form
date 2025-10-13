@@ -1,6 +1,7 @@
 import numpy as np
 from ..swaps.sorting import swap_vonorm_idxs
 from .conorm_list import ConormList
+from ...linalg import MatrixTuple
 from ..permutations import apply_permutation, Permutation, ConormPermutation, VonormPermutation, PermutationMatrix
 
 # This matrix is found on page 48 of David's thesis
@@ -63,7 +64,7 @@ class VonormList():
                 stabilizers.append(p)
         return stabilizers
 
-    def stabilizer_matrices(self, tol=1e-8) -> list[PermutationMatrix]:
+    def stabilizer_matrices(self, tol=1e-8) -> list[MatrixTuple]:
         perm_stab = self.stabilizer_perms(tol)
         mats = []
         for p in perm_stab:
