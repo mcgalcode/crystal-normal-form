@@ -41,4 +41,4 @@ for p in VoronoiVectorPair.CANONICAL_PAIRS:
     SELLING_TRANSFORM_MATRICES[p] = build_st_mat_from_pair(p)
 
 for p in VoronoiVectorPair.CANONICAL_PAIRS:
-    SELLING_TRANSFORM_INVERSE_MATRICES[p] = SellingTransformMatrix(SELLING_TRANSFORM_MATRICES[p].inverse())
+    SELLING_TRANSFORM_INVERSE_MATRICES[p] = SellingTransformMatrix(SELLING_TRANSFORM_MATRICES[p].inverse().matrix)
