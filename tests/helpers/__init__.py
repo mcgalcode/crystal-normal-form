@@ -5,6 +5,7 @@ import pytest
 from .assertions import *
 from .data import ALL_MP_STRUCTURES
 from cnf.motif.atomic_motif import FractionalMotif
+from cnf.unit_cell import UnitCell
 
 IS_FAST = int(os.getenv("CNF_FAST_TEST", 0)) == 1
 
@@ -32,6 +33,24 @@ def parameterized_by_mp_struct_idxs(idxs):
 def printif(msg, flag):
     if flag:
         print(msg)
+    
+def are_geo_matches(uc1: UnitCell, uc2: UnitCell, tol=1e-5):
+    struct1 = uc1.to_pymatgen_structure()
+    struct2 = uc2.to_pymatgen_structure()
+
+    pdd_dist = pdd(struct1, struct2)
+    if pdd_dist > tol:
+        return False
+
+    # These might 
+    if uc1.motif.has_inversion_symmetry():
+        return True
+    else:
+        are_inversions = uc1.motif.find_inverted_match(uc2.motif, atol=tol)
+        if are_inversions:
+            return False
+        else:
+            return True
 
 def are_cnfs_mirror_images(cnf1: CrystalNormalForm, cnf2: CrystalNormalForm, atol=1e-6):
     motif1 = FractionalMotif.from_pymatgen_structure(cnf1.reconstruct())

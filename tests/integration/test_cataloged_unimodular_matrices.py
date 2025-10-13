@@ -1,11 +1,13 @@
 import pytest
 import helpers
+import numpy as np
 
 from pymatgen.core.structure import Structure
 from cnf.unit_cell import UnitCell
 from cnf.lattice.voronoi import ConormListForm
 
 from cnf.linalg.unimodular import UNIMODULAR_MATRICES, UNIMODULAR_MATRICES_MAX_2
+from cnf.lattice.permutations import UnimodPermMapper
 
 # Generate all unimodular matrices up to col max norm 4 or 5
 # Save those
@@ -20,6 +22,10 @@ from cnf.linalg.unimodular import UNIMODULAR_MATRICES, UNIMODULAR_MATRICES_MAX_2
 # 3) Do quickly (wish list)
 
 STRUCT_SAMPLE_FREQ = 10
+
+def test_unimodulars_are_det_0():
+    for m in UnimodPermMapper.all_unimodular_matrices():
+        assert np.isclose(m.determinant(), 1)
 
 def test_ALL_unimodular_mats_produce_all_possible_coforms():
     handled_vcs = []
@@ -258,17 +264,17 @@ def test_catalog_of_unimodular_matrices_is_complete(idx, struct: Structure):
     original_vonorms = uc.superbasis.compute_vonorms()
     assert original_vonorms.is_obtuse(tol=1e-5)
     assert uc.superbasis.is_obtuse(tol=1e-5)
+    tol=1e-5
     
     helpers.printif(original_vonorms.conorms, verbose)
     helpers.printif(original_vonorms.conorms.form.zero_indices, verbose)
-    og_perms = original_vonorms.conorms.form.permissible_permutations()
+    og_perms = original_vonorms.conorms.set_tol(1e-3).form.permissible_permutations()
     og_mats = [mat for p in og_perms for mat in p.all_matrices]
     # helpers.printif(, verbose)
     # helpers.printif(f"Struct {idx * STRUCT_SAMPLE_FREQ} has voronoi class: {original_vonorms.conorms.form.voronoi_class}", verbose)
     # helpers.printif(f"Struct has {len(og_mats)} permissible matrices", verbose)
 
     PDD_CUTOFF = 0.0000001
-    tol=1e-2
     equivalent_unit_cells: list[UnitCell] = []
     geo_eq_mats = []
     for u in UNIMODULAR_MATRICES:
@@ -278,7 +284,11 @@ def test_catalog_of_unimodular_matrices_is_complete(idx, struct: Structure):
 
         pmg_struct = new_uc.to_pymatgen_structure()        
         pdd_dist = helpers.pdd(struct, pmg_struct)
+        # If the structures are identical
+        # And if the original motif does not have inversion symmetry
+        # then they should not be mirror images
         if new_uc.vonorms.has_same_members(original_vonorms, tol=tol):
+            # if helpers.are_geo_matches(new_uc, uc, tol=1e-3):
             assert pdd_dist < PDD_CUTOFF
             equivalent_unit_cells.append(new_uc)
             geo_eq_mats.append(u)

@@ -138,5 +138,5 @@ def load_unimodular(fname = "unimodular.json"):
     matrices = [MatrixTuple.from_tuple(tuple(l)) for l in matrix_lists]
     return matrices
 
-UNIMODULAR_MATRICES = load_unimodular()
+UNIMODULAR_MATRICES = load_unimodular("unimodular_6_det_1.json")
 UNIMODULAR_MATRICES_MAX_2 = load_unimodular("unimodular_2.json")
