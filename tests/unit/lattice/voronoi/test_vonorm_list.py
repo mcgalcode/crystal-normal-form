@@ -26,11 +26,11 @@ def test_can_get_conorms():
 def test_can_check_obtuseness():
     nonobtuse_lattice = Lattice.rhombohedral(1.5,75)
     basis = Superbasis.from_pymatgen_lattice(nonobtuse_lattice)
-    assert not basis.compute_vonorms().is_obtuse()
+    assert not basis.compute_vonorms().is_obtuse(tol=1e-6)
 
     obtuse_lattice = Lattice.orthorhombic(1.5,2, 2.5)
     basis = Superbasis.from_pymatgen_lattice(obtuse_lattice)
-    assert basis.compute_vonorms().is_obtuse()
+    assert basis.compute_vonorms().is_obtuse(tol=1e-6)
 
 def test_can_hash_for_use_in_set():
     vlist1 = VonormList([1,2,3,4,5,6,7])
