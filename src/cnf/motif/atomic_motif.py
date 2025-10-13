@@ -119,7 +119,7 @@ class AtomicMotif():
     def apply_unimodular(self, unimodular: MatrixTuple):
         if not np.isclose(unimodular.determinant(), 1):
             raise ValueError(f"Tried to transform motif w matrix with det {unimodular.determinant()}")
-        inv = unimodular.inverse()
+        inv = unimodular.inverse().matrix
         transformed = inv @ self.coord_matrix
         positions = transformed.T
         positions = self._process_transformed_coords(positions)
