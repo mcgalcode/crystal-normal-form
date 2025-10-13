@@ -9,6 +9,7 @@ from cnf.lattice.superbasis import Superbasis
 from cnf import CrystalNormalForm
 from cnf.cnf_constructor import CNFConstructor
 from cnf.lattice.rounding import DiscretizedVonormComputer
+from cnf.linalg import MatrixTuple
 
 import cnf.motif.utils as bnf_utils
 
@@ -142,3 +143,122 @@ def test_cartesian_coords_not_changed_by_unimodular():
         transformed = Structure(permuted_sb.generating_vecs(), permuted_motif.atoms, permuted_motif.positions)
 
         helpers.assert_identical_by_pdd_distance(original, transformed)
+
+def test_finds_simple_match():
+    motif1 = FractionalMotif.from_elements_and_positions(
+        ["Li", "Li"],
+        [
+            (0.25, 0.5, 0.75),
+            (0.1, 0.2, 0.3)
+        ]
+    )
+
+    motif2 = FractionalMotif.from_elements_and_positions(
+        ["Li", "Li"],
+        [
+            (0.1, 0.2, 0.3),
+            (0.25, 0.5, 0.75),
+        ]
+    )
+
+    assert motif1.find_match(motif2)
+
+def test_doesnt_match_different_els():
+    motif1 = FractionalMotif.from_elements_and_positions(
+        ["Li", "Li"],
+        [
+            (0.25, 0.5, 0.75),
+            (0.1, 0.2, 0.3)
+        ]
+    )
+
+    motif2 = FractionalMotif.from_elements_and_positions(
+        ["Li", "Mg"],
+        [
+            (0.1, 0.2, 0.3),
+            (0.25, 0.5, 0.75),
+        ]
+    )
+
+    assert not motif1.find_match(motif2)
+
+def test_matches_multiple_els_complex():
+    motif1 = FractionalMotif.from_elements_and_positions(
+        ["Li", "Mg", "Li", "Mg", "As"],
+        [
+            (0.25, 0.5, 0.75),
+            (0.1, 0.2, 0.3),
+            (0.2, 0.5, 0.7),
+            (0.1, 0.4, 0.5),
+            (0.9, 0.9, 0.9)
+        ]
+    )
+
+    motif2 = FractionalMotif.from_elements_and_positions(
+        ["Li", "Li", "Mg", "As", "Mg"],
+        [
+            (0.25, 0.5, 0.75),
+            (0.2, 0.5, 0.7),
+            (0.1, 0.2, 0.3),
+            (0.9, 0.9, 0.9),
+            (0.1, 0.4, 0.5),
+        ]
+    )
+
+    assert motif1.find_match(motif2)
+
+    # same els, reordered positions
+    motif3 = FractionalMotif.from_elements_and_positions(
+        ["Li", "Mg", "Li", "Mg", "As"],
+        [
+            (0.1, 0.2, 0.3),
+            (0.25, 0.5, 0.75),
+            (0.1, 0.4, 0.5),
+            (0.2, 0.5, 0.7),
+            (0.9, 0.9, 0.9)
+        ]
+    )
+    assert not motif1.find_match(motif3)
+
+def test_identifies_inverted_match():
+    motif1 = FractionalMotif.from_elements_and_positions(
+        ["Li", "Mg"],
+        [
+            (0.4, 0.6, 0.2),
+            (0.8, 0.8, 0.1),
+        ]
+    )
+
+    motif2 = FractionalMotif.from_elements_and_positions(
+        ["Li", "Mg"],
+        [
+            (0.6, 0.4, 0.8),
+            (0.2, 0.2, 0.9),
+        ]
+    )
+
+    assert motif1.find_inverted_match(motif2)
+    assert motif2.find_inverted_match(motif1)
+
+def test_identifies_inversion_symmetry():
+    motif1 = FractionalMotif.from_elements_and_positions(
+        ["Li"],
+        [
+            (0.5, 0.5, 0.5),
+        ]
+    )
+
+    assert motif1.has_inversion_symmetry()
+
+def test_verify_positive_det():
+    motif1 = FractionalMotif.from_elements_and_positions(
+        ["Li", "Mg"],
+        [
+            (0.4, 0.6, 0.2),
+            (0.8, 0.8, 0.1),
+        ]
+    )
+    neg_det = -np.eye(3)
+    with pytest.raises(ValueError) as err:
+        motif1.apply_unimodular(MatrixTuple(neg_det))
+    assert "matrix with det" in err.value.__repr__()

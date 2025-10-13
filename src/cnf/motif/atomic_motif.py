@@ -116,8 +116,8 @@ class AtomicMotif():
         sorted_positions = self.get_sorted_positions(element_order)
         return tuple(el for coord_list in sorted_positions for el in coord_list)
 
-    def apply_unimodular(self, unimodular: MatrixTuple):
-        if not np.isclose(unimodular.determinant(), 1):
+    def apply_unimodular(self, unimodular: MatrixTuple, skip_det_check = False):
+        if not skip_det_check and not np.isclose(unimodular.determinant(), 1):
             raise ValueError(f"Tried to transform motif w matrix with det {unimodular.determinant()}")
         inv = unimodular.inverse().matrix
         transformed = inv @ self.coord_matrix
@@ -129,6 +129,51 @@ class AtomicMotif():
         transformed_coords = self.coord_matrix.T @ transform
         positions = self._process_transformed_coords(transformed_coords)
         return self.__class__.from_elements_and_positions(self.atoms, positions, **self._get_kwargs())
+    
+    def invert(self):
+        inversion = MatrixTuple(-np.eye(3))
+        return self.apply_unimodular(inversion, skip_det_check=True)
+
+    def has_inversion_symmetry(self, atol=1e-6):
+        return self.find_match(self.invert(), atol=atol)
+    
+    def find_inverted_match(self, other, atol=1e-6):
+        return self.invert().find_match(other, atol=atol)
+
+    def find_match(self, other: 'AtomicMotif', atol=1e-6):
+
+        species1, coords1 = self.to_elements_and_positions()
+        species2, coords2 = other.to_elements_and_positions()
+
+        coords1 = np.asarray(coords1)
+        coords2 = np.asarray(coords2)
+        
+        if coords1.shape != coords2.shape:
+            return False
+        
+        if len(species1) != len(species2):
+            return False
+                
+        # Build a list of (species, coords) for coords2
+        atoms2 = list(zip(species2, coords2))
+        
+        # For each inverted atom in coords1, find matching atom in coords2
+        for i, coord1 in enumerate(coords1):
+            species_to_match = species1[i]
+            found = False
+            
+            for j, (sp2, coord2) in enumerate(atoms2):
+                if sp2 == species_to_match:
+                    # Check if coordinates match (with PBC)
+                    diff = np.abs(coord1 - coord2)
+                    if np.all(diff < atol):
+                        found = True
+                        break
+            
+            if not found:
+                return False
+        
+        return True
 
     def _process_transformed_coords(self, coords):
         return coords
