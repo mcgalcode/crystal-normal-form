@@ -2,11 +2,16 @@ import numpy as np
 from pymatgen.core import Structure # Or other library
 from .lattice import Superbasis
 from .motif.atomic_motif import FractionalMotif, DiscretizedMotif
-from .lattice.lnf_constructor import LatticeNormalFormConstructor, LatticeNormalFormConstructionResult
+from .lattice.lnf_constructor import LatticeNormalFormConstructor, LatticeNormalFormConstructionResult, VonormSorter
 from .lattice.voronoi import VonormList
+from .lattice.selling import VonormListSellingReducer
+from .lattice.lattice_normal_form import LatticeNormalForm
+from .motif.basis_normal_form import BasisNormalForm
 from .lattice.permutations import MatrixTuple
-from .motif.bnf_constructor import BNFConstructor, BNFConstructionResult, PreTransform
+from .lattice.rounding import DiscretizedVonormComputer
+from .motif.bnf_constructor import BNFConstructor, BNFConstructionResult
 from .crystal_normal_form import CrystalNormalForm
+from .lattice.unimodular import combine_unimodular_matrices
 
 class CNFConstructionResult():
 
@@ -30,49 +35,35 @@ class CNFConstructor():
     def __init__(self,
                  xi: float,
                  delta: int,
-                 verbose_logging: bool = False,
-                 extra_pretransforms: list[list[MatrixTuple]] = None):
+                 verbose_logging: bool = False):
         self.xi = xi
         self.delta = delta
         self.verbose_logging = verbose_logging
-        if extra_pretransforms is None:
-            extra_pretransforms = []
-        else:
-            extra_pretransforms = [PreTransform(mats) for mats in extra_pretransforms]
-        self.extra_pretransforms = extra_pretransforms
 
     def from_motif_and_superbasis(self, motif: FractionalMotif, superbasis: Superbasis):
-        
-        if isinstance(motif, FractionalMotif):
-            motif = motif.discretize(self.delta)
-
         lnf_constructor = LatticeNormalFormConstructor(self.xi, self.verbose_logging)
         lnf_construction_result = lnf_constructor.build_lnf_from_superbasis(superbasis)
-        undisc_result = lnf_construction_result.undiscretized_canonicalization_result
-        disc_result = lnf_construction_result.discretized_canonicalization_result
         if self.verbose_logging:
             print(f"Successfully constructed LNF! {lnf_construction_result.lnf}")
+            print()
         
+        transform = lnf_construction_result.transform_mat
+
         if self.verbose_logging:
-            print(f"Found {len(disc_result.equivalent_transformations)} equivalent transformations...")
-        
-        undisc_sort_transforms = [m.matrix for m in undisc_result.equivalent_transformations]
-        disc_sort_transforms = [m.matrix for m in disc_result.equivalent_transformations]
+            print(f"Applying transformation mat:")
+            print(transform.matrix)
+        motif = motif.apply_unimodular(transform)
 
-        pre_transforms = self._get_pretransforms([
-            [undisc_result.selling_transform_mat],
-            undisc_sort_transforms[:1],
-            [disc_result.selling_transform_mat],
-            disc_sort_transforms[:1],
-            disc_result.canonical_vonorms.stabilizer_matrices()
-        ])
-
-        # stabilizer = 
-
-        bnf_constructor = BNFConstructor(pre_transforms, verbose_logging=self.verbose_logging)
+        if self.verbose_logging:
+            print(f"Found {len(lnf_construction_result.stabilizer())} stabilizers...")
+        bnf_constructor = BNFConstructor(self.delta, lnf_construction_result.stabilizer(), verbose_logging=self.verbose_logging)
         bnf_construction_res = bnf_constructor.build(motif)
         if self.verbose_logging:
             print(f"Found BNF! {bnf_construction_res.bnf}")
+            print(f"Achieved by matrix: {bnf_construction_res.sorted_bnf_candidates[0].unimodular}")
+            print(f"And shift {bnf_construction_res.sorted_bnf_candidates[0].shift}")
+            print(f"Based on motif:")
+            bnf_construction_res.sorted_bnf_candidates[0].motif.print_details()
             
         return CNFConstructionResult(lnf_construction_result, bnf_construction_res)
         
@@ -90,33 +81,76 @@ class CNFConstructor():
         # selling reduction
         lnf_constructor = LatticeNormalFormConstructor(self.xi, self.verbose_logging)
         lnf_construction_result = lnf_constructor.build_lnf_from_discretized_vonorms(discretized_vonorms, skip_reduction=True)
-        lnf = lnf_construction_result.lnf
-
         if self.verbose_logging:
-            print(f"Successfully constructed LNF! {lnf}")
+            print(f"Successfully constructed LNF! {lnf_construction_result.lnf}")
 
-        disc_sort_transforms = [m.matrix for m in lnf_construction_result.discretized_canonicalization_result.equivalent_transformations]
-        stabilizer = lnf_construction_result.discretized_canonicalization_result.canonical_vonorms.stabilizer_matrices()
-        pre_transforms = self._get_pretransforms([
-            disc_sort_transforms,
-            stabilizer
-        ])
+        transform = lnf_construction_result.transform_mat
+        motif = motif.apply_unimodular(transform)
 
-
-        bnf_constructor = BNFConstructor(pre_transforms)
+        bnf_constructor = BNFConstructor(self.delta, lnf_construction_result.stabilizer(), self.verbose_logging)
         bnf_construction_res = bnf_constructor.build(motif)
 
         if self.verbose_logging:
             print(f"Found BNF! {bnf_construction_res.bnf}")
-        
+            print(f"Achieved by matrix: {bnf_construction_res.sorted_bnf_candidates[0].unimodular}")
+            print(f"And shift {bnf_construction_res.sorted_bnf_candidates[0].shift}")
+            print(f"Based on motif:")
+            bnf_construction_res.sorted_bnf_candidates[0].motif.print_details()
+
         return CNFConstructionResult(lnf_construction_result, bnf_construction_res)
 
-    def _get_pretransforms(self, pretransforms):
-        return [
-            *self.extra_pretransforms,
-            *[PreTransform(p) for p in pretransforms]
-        ]
+    def from_motif_and_superbasis_2(self, motif: FractionalMotif, superbasis: Superbasis):
+        reducer     = VonormListSellingReducer(tol=1e-8)
+        sorter      = VonormSorter()
+        discretizer = DiscretizedVonormComputer(self.xi)
 
+        vonorms = superbasis.compute_vonorms()
+        reduction_res = reducer.reduce(vonorms)
+        vonorms = reduction_res.reduced_object
+        motif = motif.apply_unimodular(reduction_res.transform_matrix)
+
+        vonorms, transforms = sorter.get_canonicalized_vonorms(vonorms)
+        motif = motif.apply_unimodular(transforms[0].matrix)
+
+        discretized_vonorms = discretizer.find_closest_valid_vonorms(vonorms)
+
+        reduction_res = reducer.reduce(discretized_vonorms)
+        vonorms: VonormList = reduction_res.reduced_object
+        motif = motif.apply_unimodular(reduction_res.transform_matrix)
+        return self.from_discretized_vonorms_and_motif_2(vonorms, motif)
+
+    def from_discretized_vonorms_and_motif_2(self, vonorms: VonormList, motif: DiscretizedMotif):
+
+        cnf_candidates: list[CrystalNormalForm] = []
+        for perm in vonorms.conorms.permissible_permutations:
+            lnf_candidate = LatticeNormalForm(vonorms.apply_permutation(perm.vonorm_permutation), self.xi)
+            for mat in perm.all_matrices:
+                candidate_motif = motif.apply_unimodular(mat)
+                if self.verbose_logging:
+                    print()
+                    print(f"Trying mat: {mat}")
+                    candidate_motif.print_details()
+                    
+                if not isinstance(candidate_motif, DiscretizedMotif):
+                    candidate_motif = candidate_motif.discretize(self.delta)
+
+                sorted_elements = candidate_motif.sorted_elements
+                origin_element = sorted_elements[0]
+
+                origin_element_positions = candidate_motif.get_element_positions(origin_element)
+
+                # For each possible origin, compute the list
+                for origin_candidate in origin_element_positions:
+                    shift = -origin_candidate
+                    shifted_motif = candidate_motif.shift_origin(shift)
+                    bnf_list = shifted_motif.to_bnf_list(element_order=sorted_elements)
+                    element_list, _ = shifted_motif.to_elements_and_positions()
+                    bnf = BasisNormalForm(tuple([int(c) for c in bnf_list[3:]]), element_list, self.delta)
+                    cnf_candidates.append(CrystalNormalForm(lnf_candidate, bnf))
+
+        sorted_cnfs = sorted(cnf_candidates, key=lambda cnf: cnf.coords)
+        return sorted_cnfs[0]
+    
     def from_motif_and_basis_vecs(self, motif: FractionalMotif, basis_vecs: np.array):
         superbasis = Superbasis.from_generating_vecs(basis_vecs)
         return self.from_motif_and_superbasis(motif, superbasis)
@@ -124,4 +158,4 @@ class CNFConstructor():
     def from_pymatgen_structure(self, struct: Structure):
         motif = FractionalMotif.from_pymatgen_structure(struct)
         superbasis = Superbasis.from_pymatgen_structure(struct)
-        return self.from_motif_and_superbasis(motif, superbasis)
+        return self.from_motif_and_superbasis_2(motif, superbasis)

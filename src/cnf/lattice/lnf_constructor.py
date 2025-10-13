@@ -9,7 +9,33 @@ from .permutations import PermutationMatrix
 from .rounding import DiscretizedVonormComputer
 from .superbasis import Superbasis
 from .lattice_normal_form import LatticeNormalForm
+from .unimodular import combine_unimodular_matrices
 
+
+class VonormSorter():
+
+    def __init__(self, verbose_logging=False):
+        self._verbose_logging = verbose_logging
+        self.sorting_dec_places = 5
+
+    def _log(self, msg):
+        if self._verbose_logging:
+            print(msg)
+
+    def get_canonicalized_vonorms(self, vonorms: VonormList, coform_tolerance=1e-3):
+        conorms = vonorms.conorms
+        conorms = conorms.set_tol(coform_tolerance)
+        self._log(f"Searching through {len(conorms.form.permissible_permutations())} permissible permutations...")
+        permuted_vonorm_lists: list[tuple[VonormList, PermutationMatrix]] = []
+        for perm_mat in conorms.form.permissible_permutations():
+            vonorm_permutation = perm_mat.vonorm_permutation
+            permuted_vlist = vonorms.apply_permutation(vonorm_permutation)
+            permuted_vonorm_lists.append((permuted_vlist, perm_mat))
+
+        sorted_vlists = sorted(permuted_vonorm_lists, key=lambda group: tuple([round(v, self.sorting_dec_places) for v in group[0].vonorms]), reverse=False)
+        canonical_vonorm_list = sorted_vlists[0][0]
+        equivalent_transformations = [group[1] for group in sorted_vlists if group[0] == canonical_vonorm_list]
+        return canonical_vonorm_list, equivalent_transformations
 
 class VonormCanonicalizer():
 
@@ -33,23 +59,12 @@ class VonormCanonicalizer():
 
             reduction_result = reducer.reduce(vonorms)
             vonorms: VonormList = reduction_result.reduced_object
-            conorms: ConormList = vonorms.conorms
             reduction_transform = reduction_result.transform_matrix
         else:
-            conorms = vonorms.conorms
             reduction_transform = None
         
-        conorms = conorms.set_tol(coform_tolerance)
-        self._log(f"Searching through {len(conorms.form.permissible_permutations())} permissible permutations...")
-        permuted_vonorm_lists: list[tuple[VonormList, PermutationMatrix]] = []
-        for perm_mat in conorms.form.permissible_permutations():
-            vonorm_permutation = perm_mat.vonorm_permutation
-            permuted_vlist = vonorms.apply_permutation(vonorm_permutation)
-            permuted_vonorm_lists.append((permuted_vlist, perm_mat))
-
-        sorted_vlists = sorted(permuted_vonorm_lists, key=lambda group: tuple([round(v, self.sorting_dec_places) for v in group[0].vonorms]), reverse=False)
-        canonical_vonorm_list = sorted_vlists[0][0]
-        equivalent_transformations = [group[1] for group in sorted_vlists if group[0] == canonical_vonorm_list]
+        sorter = VonormSorter(self._verbose_logging)
+        canonical_vonorm_list, equivalent_transformations = sorter.get_canonicalized_vonorms(vonorms, coform_tolerance)
 
         return CanonicalizedVonormResult(
             canonical_vonorm_list,
@@ -142,6 +157,9 @@ class LatticeNormalFormConstructionResult():
         self.undiscretized_canonicalization_result = undiscretized_canonicalization_result
         self.discretized_canonicalization_result = discretized_canonicalization_result
     
+    def stabilizer(self, tol=1e-8):
+        return self.discretized_canonicalization_result.canonical_vonorms.stabilizer_matrices(tol)
+    
     def print_details(self):
         print(f"Found LNF: {self.lnf}")
         if self.undiscretized_canonicalization_result is None:
@@ -150,3 +168,18 @@ class LatticeNormalFormConstructionResult():
             self.undiscretized_canonicalization_result.print_details()
         print("Discretized LNF step: ")
         self.discretized_canonicalization_result.print_details()
+    
+    @property
+    def transform_mat(self):
+        transforms = []
+        if self.undiscretized_canonicalization_result is not None:
+            transforms.extend([
+                self.undiscretized_canonicalization_result.selling_transform_mat,
+                self.undiscretized_canonicalization_result.equivalent_transformations[0].matrix
+            ])
+
+        if self.discretized_canonicalization_result.selling_transform_mat is not None:
+            transforms.append(self.discretized_canonicalization_result.selling_transform_mat)
+
+        transforms.append(self.discretized_canonicalization_result.equivalent_transformations[0].matrix)
+        return combine_unimodular_matrices(transforms)
