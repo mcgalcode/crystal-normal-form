@@ -5,8 +5,6 @@ from cnf.lattice.rounding import DiscretizedVonormComputer
 from pymatgen.core.structure import Structure
 import helpers
 
-STRUCT_SAMPLE_FREQ = 10
-
 @helpers.skip_if_fast
 @helpers.parameterized_by_mp_structs
 def test_cnf_round_trip_yields_same_crystal_full_cells(idx, struct: Structure):
