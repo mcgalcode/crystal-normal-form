@@ -112,7 +112,7 @@ def find_matching_permutations():
         json.dump(matching_pairs, f)
 
 def load_unimod_mats_to_perms():
-    data = files("cnf.lattice").joinpath("data", "unimod_mats_to_perms.json").read_text()
+    data = files("cnf.lattice").joinpath("data", "unimodular_mats_max_6_det_1_to_perms.json").read_text()
     values = json.loads(data)
     
     results = {}
