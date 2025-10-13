@@ -11,6 +11,7 @@ from cnf.lattice.lnf_constructor import LatticeNormalFormConstructor
 from pymatgen.core.structure import Structure
 
 def test_bcc_zr_unit_cells(zr_bcc_primitive_lattice_vecs):
+    verbose = False
     sb = Superbasis.from_generating_vecs(zr_bcc_primitive_lattice_vecs)
     motif = FractionalMotif.from_elements_and_positions(["Zr"], [[0, 0, 0]])
     unit_cell = UnitCell(sb, motif)
@@ -23,8 +24,8 @@ def test_bcc_zr_unit_cells(zr_bcc_primitive_lattice_vecs):
 
     lnf_constructor = LatticeNormalFormConstructor(xi)
     unique_lnfs = set([lnf_constructor.build_lnf_from_superbasis(cell.superbasis).lnf for cell in supercells])
-    for cnf in unique_lnfs:
-        print(cnf.coords)
+    # for cnf in unique_lnfs:
+    #     print(cnf.coords)
     assert len(unique_lnfs) == 2
 
     cnfs = []
@@ -36,11 +37,13 @@ def test_bcc_zr_unit_cells(zr_bcc_primitive_lattice_vecs):
         
     unique_cnfs = set(cnfs)    
     
-    # for cnf in unique_cnfs:
-    #     print(cnf.coords)
+    for cnf in unique_cnfs:
+        helpers.printif(cnf.coords, verbose)
+
     assert len(unique_cnfs) == 2
 
 def test_fcc_zr_unit_cells(zr_fcc_primitive_lattice_vecs):
+    verbose = False
     sb = Superbasis.from_generating_vecs(zr_fcc_primitive_lattice_vecs)
     motif = FractionalMotif.from_elements_and_positions(["Zr"], [[0, 0, 0]])
     unit_cell = UnitCell(sb, motif)
@@ -62,11 +65,9 @@ def test_fcc_zr_unit_cells(zr_fcc_primitive_lattice_vecs):
 
     unique_cnfs = set(cnfs)
 
-    assert len(unique_cnfs) == 2
     for cnf in unique_cnfs:
-        print(cnf.coords)
-
-STRUCT_SAMPLE_FREQ = 10
+        helpers.printif(cnf.coords, verbose)
+    assert len(unique_cnfs) == 2
 
 @helpers.parameterized_by_mp_structs
 def test_unit_cell_doesnt_change_struct(idx: int, struct: Structure):
