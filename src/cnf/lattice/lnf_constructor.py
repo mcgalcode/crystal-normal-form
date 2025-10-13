@@ -123,17 +123,14 @@ class LatticeNormalFormConstructor():
         dvc = DiscretizedVonormComputer(self.lattice_step_size, self._verbose_logging)
         discretized_vonorms = dvc.find_closest_valid_vonorms(undiscretized_canonical_result.canonical_vonorms)
 
-        self._log("Canonicalizing DISCRETE vonorms...")
-        discretized_canonical_result = canonicalizer.get_canonicalized_vonorms(discretized_vonorms)
-        lnf = LatticeNormalForm(discretized_canonical_result.canonical_vonorms, self.lattice_step_size)
-
-        return LatticeNormalFormConstructionResult(
-            lnf,
-            undiscretized_canonical_result,
-            discretized_canonical_result
+        return self.build_lnf_from_discretized_vonorms(
+            discretized_vonorms,
+            skip_reduction=False,
+            undisc_can_result=undiscretized_canonical_result
         )
 
-    def build_lnf_from_discretized_vonorms(self, vonorms: VonormList, skip_reduction = True):
+    def build_lnf_from_discretized_vonorms(self, vonorms: VonormList, skip_reduction = True, undisc_can_result = None):
+        self._log("Canonicalizing DISCRETE vonorms...")
         canonicalizer = VonormCanonicalizer(reduction_tolerance=1e-8, verbose_logging=self._verbose_logging)
         result = canonicalizer.get_canonicalized_vonorms(vonorms, skip_reduction=skip_reduction)
         lnf = LatticeNormalForm(result.canonical_vonorms, self.lattice_step_size)
@@ -143,7 +140,7 @@ class LatticeNormalFormConstructor():
 
         return LatticeNormalFormConstructionResult(
             lnf,
-            None,
+            undisc_can_result,
             result
         )
 
@@ -160,6 +157,11 @@ class LatticeNormalFormConstructionResult():
     def stabilizer(self, tol=1e-8):
         return self.discretized_canonicalization_result.canonical_vonorms.stabilizer_matrices(tol)
     
+    def final_equiv_transforms(self):
+        tmat_perms = self.discretized_canonicalization_result.equivalent_transformations
+        mats = [m for p in tmat_perms for m in p.all_matrices]
+        return mats
+
     def print_details(self):
         print(f"Found LNF: {self.lnf}")
         if self.undiscretized_canonicalization_result is None:
@@ -181,5 +183,7 @@ class LatticeNormalFormConstructionResult():
         if self.discretized_canonicalization_result.selling_transform_mat is not None:
             transforms.append(self.discretized_canonicalization_result.selling_transform_mat)
 
-        transforms.append(self.discretized_canonicalization_result.equivalent_transformations[0].matrix)
-        return combine_unimodular_matrices(transforms)
+        if len(transforms) > 0:
+            return combine_unimodular_matrices(transforms)
+        else:
+            return None

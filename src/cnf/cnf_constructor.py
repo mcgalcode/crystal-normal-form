@@ -45,28 +45,9 @@ class CNFConstructor():
             print(f"Successfully constructed LNF! {lnf_construction_result.lnf}")
             print()
         
-        transform = lnf_construction_result.transform_mat
-
-        if self.verbose_logging:
-            print(f"Applying transformation mat:")
-            print(transform.matrix)
-        motif = motif.apply_unimodular(transform)
-
-        if self.verbose_logging:
-            print(f"Found {len(lnf_construction_result.stabilizer())} stabilizers...")
-        bnf_constructor = BNFConstructor(self.delta, lnf_construction_result.stabilizer(), verbose_logging=self.verbose_logging)
-        bnf_construction_res = bnf_constructor.build(motif)
-        if self.verbose_logging:
-            print(f"Found BNF! {bnf_construction_res.bnf}")
-            print(f"Achieved by matrix: {bnf_construction_res.sorted_bnf_candidates[0].unimodular}")
-            print(f"And shift {bnf_construction_res.sorted_bnf_candidates[0].shift}")
-            print(f"Based on motif:")
-            bnf_construction_res.sorted_bnf_candidates[0].motif.print_details()
-
-        cnf = CrystalNormalForm(lnf_construction_result.lnf, bnf_construction_res.bnf)
-        return CNFConstructionResult(cnf, lnf_construction_result, bnf_construction_res)
+        return self._from_lnf_construction_result(motif, lnf_construction_result)
         
-    def from_discretized_vonorms_and_motif(self,
+    def from_discretized_obtuse_vonorms_and_motif(self,
                                            discretized_vonorms: VonormList,
                                            motif: DiscretizedMotif):
         if isinstance(motif, FractionalMotif):
@@ -82,11 +63,25 @@ class CNFConstructor():
         lnf_construction_result = lnf_constructor.build_lnf_from_discretized_vonorms(discretized_vonorms, skip_reduction=True)
         if self.verbose_logging:
             print(f"Successfully constructed LNF! {lnf_construction_result.lnf}")
+        return self._from_lnf_construction_result(motif, lnf_construction_result)
 
+    def _from_lnf_construction_result(self, motif: FractionalMotif, lnf_construction_result: LatticeNormalFormConstructionResult):
         transform = lnf_construction_result.transform_mat
-        motif = motif.apply_unimodular(transform)
 
-        bnf_constructor = BNFConstructor(self.delta, lnf_construction_result.stabilizer(), self.verbose_logging)
+        if transform is not None:
+            if self.verbose_logging:
+                print(f"Applying transformation mat:")
+                print(transform.matrix)
+            motif = motif.apply_unimodular(transform)
+
+        stabilizer_perms = lnf_construction_result.discretized_canonicalization_result.equivalent_transformations
+        stabilizer_mats = [m for p in stabilizer_perms for m in p.all_matrices]
+        # stabilizer_mats = lnf_construction_result.stabilizer()
+
+        if self.verbose_logging:
+            print(f"Found {len(stabilizer_mats)} stabilizers...")
+
+        bnf_constructor = BNFConstructor(self.delta, stabilizer_mats, self.verbose_logging)
         bnf_construction_res = bnf_constructor.build(motif)
 
         if self.verbose_logging:

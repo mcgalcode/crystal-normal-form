@@ -277,6 +277,11 @@ class DiscretizedMotif(PeriodicMotif):
 
     def is_valid_shift_vector(self, shift_vector: np.array):
         return np.all(shift_vector < self._mod)
+    
+    def to_fractional_motif(self):
+        atoms = self.atoms
+        positions = np.array(self.positions) / self.delta
+        return FractionalMotif.from_elements_and_positions(atoms, positions)
 
     def _get_kwargs(self):
         return { "delta": self.delta }

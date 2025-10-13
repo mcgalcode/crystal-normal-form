@@ -39,7 +39,7 @@ def test_ALL_unimodular_mats_produce_all_possible_coforms():
             print(f"Trying struct for class {voronoi_class}")
             matching_coforms = ConormListForm.get_coforms_of_voronoi_class(voronoi_class)
             zero_sets = { cf.zero_indices: [] for cf in matching_coforms }
-            for u in get_unimodulars_col_max(2):
+            for u in get_unimodulars_col_max(4):
                 uc2 = uc.apply_unimodular(u)
                 uc2.apply_unimodular(u)
                 if not uc2.superbasis.is_superbasis():
@@ -70,41 +70,42 @@ def test_ALL_unimodular_mats_produce_all_possible_coforms():
                     print(zc)
     assert len(handled_vcs) == 5
 
-@helpers.parameterized_by_mp_structs
-def test_cataloged_unimodular_mats_and_structs_produce_all_possible_coforms(idx, struct):
+def test_cataloged_unimodular_mats_and_structs_produce_all_possible_coforms():
     handled_vcs = []
     verbose = False
-    uc = UnitCell.from_pymatgen_structure(struct).reduce()
-    voronoi_class = uc.conorms.form.voronoi_class
-    if voronoi_class not in handled_vcs:
-        helpers.printif("", verbose)
-        helpers.printif("", verbose)
-        helpers.printif(f"Trying struct for class {voronoi_class}", verbose)
-        matching_coforms = ConormListForm.get_coforms_of_voronoi_class(voronoi_class)
-        zero_sets = { cf.zero_indices: [] for cf in matching_coforms }
-        for perm in uc.conorms.permissible_permutations:
-            for u in perm.all_matrices:
-                uc2 = uc.apply_unimodular(u)
-                uc2.apply_unimodular(u)
+    
+    for struct in helpers.ALL_MP_STRUCTURES(10):
+        uc = UnitCell.from_pymatgen_structure(struct).reduce()
+        voronoi_class = uc.conorms.form.voronoi_class
+        if voronoi_class not in handled_vcs:
+            helpers.printif("", verbose)
+            helpers.printif("", verbose)
+            helpers.printif(f"Trying struct for class {voronoi_class}", verbose)
+            matching_coforms = ConormListForm.get_coforms_of_voronoi_class(voronoi_class)
+            zero_sets = { cf.zero_indices: [] for cf in matching_coforms }
+            for perm in uc.conorms.permissible_permutations:
+                for u in perm.all_matrices:
+                    uc2 = uc.apply_unimodular(u)
+                    uc2.apply_unimodular(u)
 
-                zero_sets[uc2.conorms.form.zero_indices].append(uc2)
-            
-            
-        satisfied_zeros = [zc for zc, cells in zero_sets.items() if len(cells) > 0]
-        unsatisfied_zeros = [zc for zc, cells in zero_sets.items() if len(cells) == 0]
+                    zero_sets[uc2.conorms.form.zero_indices].append(uc2)
+                
+                
+            satisfied_zeros = [zc for zc, cells in zero_sets.items() if len(cells) > 0]
+            unsatisfied_zeros = [zc for zc, cells in zero_sets.items() if len(cells) == 0]
 
-        helpers.printif(f"Covered {len(satisfied_zeros)} of {len(zero_sets)}...", verbose)
-        if len(satisfied_zeros) == len(zero_sets):
-            helpers.printif(f"Voronoi class {voronoi_class}", verbose)
-            for zs, structs in zero_sets.items():
-                helpers.printif(zs, verbose)
-                helpers.printif(len(structs), verbose)
-                # assert len(structs) > 0
-            handled_vcs.append(voronoi_class)
-        else:
-            helpers.printif("Couldn't construct representatives for zero sets:", verbose)
-            for zc in unsatisfied_zeros:
-                helpers.printif(zc, verbose)
+            helpers.printif(f"Covered {len(satisfied_zeros)} of {len(zero_sets)}...", verbose)
+            if len(satisfied_zeros) == len(zero_sets):
+                helpers.printif(f"Voronoi class {voronoi_class}", verbose)
+                for zs, structs in zero_sets.items():
+                    helpers.printif(zs, verbose)
+                    helpers.printif(len(structs), verbose)
+                    # assert len(structs) > 0
+                handled_vcs.append(voronoi_class)
+            else:
+                helpers.printif("Couldn't construct representatives for zero sets:", verbose)
+                for zc in unsatisfied_zeros:
+                    helpers.printif(zc, verbose)
     assert len(handled_vcs) == 5
 
 @helpers.parameterized_by_mp_structs

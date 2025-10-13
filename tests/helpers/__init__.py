@@ -3,7 +3,7 @@ import os
 import pytest
 
 from .assertions import *
-from .data import _ALL_MP_STRUCTURES
+from .data import _ALL_MP_STRUCTURES, load_pathological_cifs, get_data_file_path
 from cnf.motif.atomic_motif import FractionalMotif
 from cnf.unit_cell import UnitCell
 
@@ -18,8 +18,10 @@ if SPECIFIC_STRUCT_IDX is not None:
 def skip_if_fast(func):
     return pytest.mark.skipif(IS_FAST, reason="Skipped because CNF_FAST_TEST env var was set to 1")(func)
 
-def ALL_MP_STRUCTURES():
-    return _ALL_MP_STRUCTURES[::STRUCT_SAMPLE_FREQ]
+def ALL_MP_STRUCTURES(freq=None):
+    if freq is None:
+        freq = STRUCT_SAMPLE_FREQ
+    return _ALL_MP_STRUCTURES[::freq]
 
 def parameterized_by_mp_structs(func):
     if SPECIFIC_STRUCT_IDX is None:
@@ -36,7 +38,10 @@ def parameterized_by_mp_struct_idxs(idxs):
 def printif(msg, flag):
     if flag:
         print(msg)
-    
+
+def are_cnfs_geo_matches(cnf1: CrystalNormalForm, cnf2: CrystalNormalForm, tol=1e-5):
+    return are_geo_matches(UnitCell.from_cnf(cnf1), UnitCell.from_cnf(cnf2), tol=tol)
+
 def are_geo_matches(uc1: UnitCell, uc2: UnitCell, tol=1e-5):
     struct1 = uc1.to_pymatgen_structure()
     struct2 = uc2.to_pymatgen_structure()
@@ -44,7 +49,7 @@ def are_geo_matches(uc1: UnitCell, uc2: UnitCell, tol=1e-5):
     pdd_dist = pdd(struct1, struct2)
     if pdd_dist > tol:
         return False
-
+    
     # These might 
     if uc1.motif.has_inversion_symmetry():
         return True

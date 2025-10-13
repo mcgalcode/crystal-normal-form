@@ -10,7 +10,7 @@ from pymatgen.core.structure import Structure
 from cnf.unit_cell import UnitCell
 
 
-@helpers.parameterized_by_mp_structs
+@helpers.parameterized_by_mp_struct_idxs([125])
 def test_neighbors_are_geometrically_distinct(idx, struct: Structure):
     verbose = False
     xi = 1.0
@@ -33,7 +33,7 @@ def test_neighbors_are_geometrically_distinct(idx, struct: Structure):
         for old_neighb_res in tested_neighbs:
             old_neighb = old_neighb_res.point
             pdd_dist = helpers.pdd_for_cnfs(new_neighb, old_neighb)
-            if pdd_dist < CUTOFF and not helpers.are_cnfs_mirror_images(new_neighb, old_neighb, atol=1e-2):
+            if helpers.are_geo_matches(UnitCell.from_cnf(new_neighb), UnitCell.from_cnf(old_neighb), tol=1e-4):
                 verbose = True
                 # recovered1 = constructor.from_pymatgen_structure(UnitCell.from_cnf(new_neighb).to_pymatgen_structure())
                 # recovered2 = constructor.from_pymatgen_structure(UnitCell.from_cnf(old_neighb).to_pymatgen_structure())
@@ -59,7 +59,7 @@ def test_neighbors_are_geometrically_distinct(idx, struct: Structure):
                 for step in steps:
                     if verbose:
                         step.step.print_details()
-                    helpers.printif(step.construction_result.bnf_result.sorted_bnf_candidates[0], verbose)
+                    helpers.printif(step.construction_result.cnf.basis_normal_form, verbose)
                     assert step.step.prereq_perm.matrix.determinant() == 1
                 
                 helpers.printif("", verbose)

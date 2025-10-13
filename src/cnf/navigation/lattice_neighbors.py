@@ -234,7 +234,7 @@ class LatticeNeighborFinder():
             return None
         
         
-        cnf_results: list[CrystalNormalForm] = []
+        cnf_results: list[CNFConstructionResult] = []
         for mat in step.prereq_perm.all_matrices:
             neighbor_motif = self.discretized_motif.apply_unimodular(mat)
             cnf_constructor = CNFConstructor(
@@ -243,15 +243,25 @@ class LatticeNeighborFinder():
                 verbose_logging=self.verbose_logging,
             )
 
-            cnf_results.append(cnf_constructor.from_discretized_vonorms_and_motif(neighbor_vonorms, neighbor_motif).cnf)
+            cnf_results.append(
+                cnf_constructor.from_discretized_obtuse_vonorms_and_motif(neighbor_vonorms, neighbor_motif)
+            )
+
+            # cnf_results.append(
+            #     cnf_constructor.from_motif_and_superbasis(
+            #         neighbor_motif.to_fractional_motif(),
+            #         neighbor_vonorms.to_superbasis(self.point.xi),
+            #     )
+            # )
         
-        cnf_construction_result = sorted(cnf_results, key=lambda cnf: cnf.coords)[0]
+        cnf_construction_result = sorted(cnf_results, key=lambda cnf_res: cnf_res.cnf.coords)[0]
     
         return LatticeStepResult(
             step,
             neighbor_vonorms,
-            None,
             cnf_construction_result,
+            cnf_construction_result.cnf,
+            None
         )
 
     def find_cnf_neighbors(self) -> LatticeNeighborSet:

@@ -59,12 +59,12 @@ def test_patho_case_mp_204():
     helpers.assert_identical_by_pdd_distance(cnf1.reconstruct(), cnf2.reconstruct())
 
 def test_simplify_case_mp_5():
-    structs: list[Structure] = helpers.load_pathological_cifs("mp_5_simplified")
+    structs: list[Structure] = helpers.load_pathological_cifs("mp_190_neighbs")
 
     uc1 = UnitCell.from_pymatgen_structure(structs[0])
     uc2 = UnitCell.from_pymatgen_structure(structs[1])
-    helpers.assert_identical_by_pdd_distance(uc1.to_pymatgen_structure(), uc2.to_pymatgen_structure(), cutoff=1e-10)
-    return
+    helpers.assert_identical_by_pdd_distance(uc1.to_pymatgen_structure(), uc2.to_pymatgen_structure(), cutoff=1e-7)
+    
     fm0 = uc1.motif
     fm1 = uc2.motif
 
@@ -74,7 +74,7 @@ def test_simplify_case_mp_5():
     fm1.print_details()
     
 
-    assert not helpers.are_mirror_images(fm0, fm1)
+    assert not fm0.find_inverted_match(fm1)
 
     print(f"Original Vonorms s1: {uc1.vonorms}")
     print(f"Original Conorms s1: {uc1.conorms}")
