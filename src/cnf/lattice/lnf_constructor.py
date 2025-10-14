@@ -155,7 +155,7 @@ class LatticeNormalFormConstructionResult():
         self.discretized_canonicalization_result = discretized_canonicalization_result
     
     def stabilizer(self, tol=1e-8):
-        return self.discretized_canonicalization_result.canonical_vonorms.stabilizer_matrices(tol)
+        return self.lnf.vonorms.stabilizer_matrices(tol)
     
     def final_equiv_transforms(self):
         tmat_perms = self.discretized_canonicalization_result.equivalent_transformations
@@ -173,17 +173,28 @@ class LatticeNormalFormConstructionResult():
     
     @property
     def transform_mat(self):
-        transforms = []
+        mats = []
         if self.undiscretized_canonicalization_result is not None:
-            transforms.extend([
-                self.undiscretized_canonicalization_result.selling_transform_mat,
-                self.undiscretized_canonicalization_result.equivalent_transformations[0].matrix
+            mats.append(self.undiscretized_canonicalization_result.selling_transform_mat)
+            mats.append(self.undiscretized_canonicalization_result.equivalent_transformations[0].matrix)
+
+        if self.discretized_canonicalization_result.selling_transform_mat is not None:
+            mats.append(self.discretized_canonicalization_result.selling_transform_mat)
+
+        return combine_unimodular_matrices(mats)
+
+    @property
+    def transform_mats(self):
+        transform_groups = []
+        if self.undiscretized_canonicalization_result is not None:
+            transform_groups.extend([
+                [self.undiscretized_canonicalization_result.selling_transform_mat],
+                [t.matrix for t in self.undiscretized_canonicalization_result.equivalent_transformations[:1]]
             ])
 
         if self.discretized_canonicalization_result.selling_transform_mat is not None:
-            transforms.append(self.discretized_canonicalization_result.selling_transform_mat)
+            transform_groups.append([self.discretized_canonicalization_result.selling_transform_mat])
 
-        if len(transforms) > 0:
-            return combine_unimodular_matrices(transforms)
-        else:
-            return None
+        transform_candidates = itertools.product(*transform_groups)
+        transform_candidates = [combine_unimodular_matrices(tc) for tc in transform_candidates]
+        return transform_candidates
