@@ -3,7 +3,15 @@ from .lattice.lattice_normal_form import LatticeNormalForm
 from .motif.basis_normal_form import BasisNormalForm
 
 class CrystalNormalForm:
-    
+
+    @classmethod
+    def from_tuple(cls, tuple, elements, xi, delta):
+        lnf_tup = tuple[:7]
+        bnf_tup = tuple[7:]
+        lnf = LatticeNormalForm.from_coords(lnf_tup, xi)
+        bnf = BasisNormalForm(bnf_tup, elements, delta)
+        return cls(lnf, bnf)
+
     def __init__(self,
                  lattice_normal_form: LatticeNormalForm,
                  basis_normal_form: BasisNormalForm):

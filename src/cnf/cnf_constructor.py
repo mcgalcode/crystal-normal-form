@@ -75,15 +75,10 @@ class CNFConstructor():
 
     def _from_lnf_construction_result(self, motif: FractionalMotif, lnf_construction_result: LatticeNormalFormConstructionResult):
         transform = lnf_construction_result.transform_mat
-
-        if transform is not None:
-            if self.verbose_logging:
-                print(f"Applying transformation mat:")
-                print(transform.matrix)
-            motif = motif.apply_unimodular(transform)
-
+        motif = motif.apply_unimodular(transform)
         stabilizer_perms = lnf_construction_result.discretized_canonicalization_result.equivalent_transformations
         stabilizer_mats = [m for p in stabilizer_perms for m in p.all_matrices]
+        # motif = motif.apply_unimodular(lnf_construction_result.discretized_canonicalization_result.equivalent_transformations[0].matrix)
         # stabilizer_mats = lnf_construction_result.stabilizer()
 
         if self.verbose_logging:
@@ -101,58 +96,6 @@ class CNFConstructor():
 
         cnf = CrystalNormalForm(lnf_construction_result.lnf, bnf_construction_res.bnf)
         return CNFConstructionResult(cnf, lnf_construction_result, bnf_construction_res)
-
-    def from_motif_and_superbasis_2(self, motif: FractionalMotif, superbasis: Superbasis):
-        reducer     = VonormListSellingReducer(tol=1e-8)
-        sorter      = VonormSorter()
-        discretizer = DiscretizedVonormComputer(self.xi)
-
-        vonorms = superbasis.compute_vonorms()
-        reduction_res = reducer.reduce(vonorms)
-        vonorms = reduction_res.reduced_object
-        motif = motif.apply_unimodular(reduction_res.transform_matrix)
-
-        vonorms, transforms = sorter.get_canonicalized_vonorms(vonorms)
-        motif = motif.apply_unimodular(transforms[0].matrix)
-
-        discretized_vonorms = discretizer.find_closest_valid_vonorms(vonorms)
-
-        reduction_res = reducer.reduce(discretized_vonorms)
-        vonorms: VonormList = reduction_res.reduced_object
-        motif = motif.apply_unimodular(reduction_res.transform_matrix)
-        return self.from_discretized_vonorms_and_motif_2(vonorms, motif)
-
-    def from_discretized_vonorms_and_motif_2(self, vonorms: VonormList, motif: DiscretizedMotif):
-
-        cnf_candidates: list[CrystalNormalForm] = []
-        for perm in vonorms.conorms.permissible_permutations:
-            lnf_candidate = LatticeNormalForm(vonorms.apply_permutation(perm.vonorm_permutation), self.xi)
-            for mat in perm.all_matrices:
-                candidate_motif = motif.apply_unimodular(mat)
-                if self.verbose_logging:
-                    print()
-                    print(f"Trying mat: {mat}")
-                    candidate_motif.print_details()
-                    
-                if not isinstance(candidate_motif, DiscretizedMotif):
-                    candidate_motif = candidate_motif.discretize(self.delta)
-
-                sorted_elements = candidate_motif.sorted_elements
-                origin_element = sorted_elements[0]
-
-                origin_element_positions = candidate_motif.get_element_positions(origin_element)
-
-                # For each possible origin, compute the list
-                for origin_candidate in origin_element_positions:
-                    shift = -origin_candidate
-                    shifted_motif = candidate_motif.shift_origin(shift)
-                    bnf_list = shifted_motif.to_bnf_list(element_order=sorted_elements)
-                    element_list, _ = shifted_motif.to_elements_and_positions()
-                    bnf = BasisNormalForm(tuple([int(c) for c in bnf_list[3:]]), element_list, self.delta)
-                    cnf_candidates.append(CrystalNormalForm(lnf_candidate, bnf))
-
-        sorted_cnfs = sorted(cnf_candidates, key=lambda cnf: cnf.coords)
-        return CNFConstructionResult(sorted_cnfs[0], None, None)
     
     def from_motif_and_basis_vecs(self, motif: FractionalMotif, basis_vecs: np.array):
         superbasis = Superbasis.from_generating_vecs(basis_vecs)
@@ -161,4 +104,4 @@ class CNFConstructor():
     def from_pymatgen_structure(self, struct: Structure):
         motif = FractionalMotif.from_pymatgen_structure(struct)
         superbasis = Superbasis.from_pymatgen_structure(struct)
-        return self.from_motif_and_superbasis_2(motif, superbasis)
+        return self.from_motif_and_superbasis(motif, superbasis)
