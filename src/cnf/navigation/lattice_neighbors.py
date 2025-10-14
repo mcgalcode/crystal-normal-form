@@ -256,6 +256,9 @@ class LatticeNeighborFinder():
         
         cnf_construction_result = sorted(cnf_results, key=lambda cnf_res: cnf_res.cnf.coords)[0]
     
+        if cnf_construction_result.cnf == self.point:
+            return None
+
         return LatticeStepResult(
             step,
             neighbor_vonorms,
