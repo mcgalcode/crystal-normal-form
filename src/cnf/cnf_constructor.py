@@ -53,7 +53,8 @@ class CNFConstructor():
             print(f"Successfully constructed LNF! {lnf_construction_result.lnf}")
             print()
         
-        return self._from_lnf_construction_result(motif, lnf_construction_result)
+        res = self._from_lnf_construction_result(motif, lnf_construction_result)
+        return self.from_cnf(res.cnf)
         
     def from_discretized_obtuse_vonorms_and_motif(self,
                                            discretized_vonorms: VonormList,
