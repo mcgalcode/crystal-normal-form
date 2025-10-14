@@ -3,7 +3,7 @@ import numpy as np
 import helpers
 
 from cnf.cnf_constructor import CNFConstructor
-from cnf.navigation.lattice_neighbors import LatticeStep, LatticeNeighborFinder
+from cnf.navigation.lattice_neighbor_finder import LatticeStep, LatticeNeighborFinder
 
 @pytest.fixture()
 def cnf_constructor():
