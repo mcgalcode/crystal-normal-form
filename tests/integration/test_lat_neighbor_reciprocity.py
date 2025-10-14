@@ -5,7 +5,7 @@ import helpers
 from cnf import CrystalNormalForm
 from cnf.cnf_constructor import CNFConstructor
 from cnf.lattice.lnf_constructor import VonormCanonicalizer, LatticeNormalForm
-from cnf.navigation.lattice_neighbors import LatticeStep, LatticeNeighborFinder
+from cnf.navigation.lattice_neighbor_finder import LatticeStep, LatticeNeighborFinder
 from pymatgen.core.structure import Structure
 from cnf.unit_cell import UnitCell
 

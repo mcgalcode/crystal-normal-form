@@ -1,7 +1,7 @@
 import pytest
 
 from cnf import CrystalNormalForm, LatticeNormalForm, BasisNormalForm
-from cnf.navigation.lattice_neighbors import LatticeNeighborFinder
+from cnf.navigation.lattice_neighbor_finder import LatticeNeighborFinder
 
 LATTICE_NEIGHBORS = [
     (6, 6, 15, 16, 4, 18, 21, 2, 10, 10),

@@ -1,7 +1,7 @@
 import helpers
 from pymatgen.core.structure import Structure
 from cnf.cnf_constructor import CNFConstructor
-from cnf.navigation.lattice_neighbors import LatticeNeighborFinder
+from cnf.navigation.lattice_neighbor_finder import LatticeNeighborFinder
 
 @helpers.skip_if_fast
 @helpers.parameterized_by_mp_structs

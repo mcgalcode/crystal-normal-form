@@ -3,7 +3,7 @@ import helpers
 
 from cnf.crystal_normal_form import CrystalNormalForm, LatticeNormalForm
 from cnf.cnf_constructor import CNFConstructor
-from cnf.navigation.lattice_neighbors import LatticeNeighborFinder, PermutationMatrix, LatticeStep
+from cnf.navigation.lattice_neighbor_finder import LatticeNeighborFinder, PermutationMatrix, LatticeStep
 from cnf.lattice.permutations import ConormPermutation, MatrixTuple
 
 def test_pathological_reciprocity_case(mp_structures):
