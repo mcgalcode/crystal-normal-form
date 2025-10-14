@@ -147,6 +147,7 @@ def test_v5_case(reduced_v5_superbasis):
 
     tested_mats = _assert_all_permutation_matrices_maintain_superbasis(reduced_v5_superbasis)
     assert len(tested_mats) == 384
+    assert len(conorms.form.grouped_vonorm_permutations()) == 4
 
 
 def test_v4_case(reduced_v4_superbasis):
@@ -156,6 +157,8 @@ def test_v4_case(reduced_v4_superbasis):
     print(f"{conorms.form.voronoi_class}: {len(conorms.permissible_permutations)}")
     tested = _assert_all_representative_permutation_matrices_maintain_superbasis(reduced_v4_superbasis)
     assert len(tested) == 72
+    assert len(conorms.form.grouped_vonorm_permutations()) == 3
+
 
 def test_v3_case(reduced_v3_superbasis):
     conorms = reduced_v3_superbasis.compute_vonorms().conorms
@@ -164,6 +167,8 @@ def test_v3_case(reduced_v3_superbasis):
     print(f"{conorms.form.voronoi_class}: {len(conorms.permissible_permutations)}")
     tested = _assert_all_representative_permutation_matrices_maintain_superbasis(reduced_v3_superbasis)
     assert len(tested) == 72
+    assert len(conorms.form.grouped_vonorm_permutations()) == 3
+
 
 def test_v2_case(reduced_v2_superbasis: Superbasis):
     conorms = reduced_v2_superbasis.compute_vonorms().conorms
@@ -187,6 +192,8 @@ def test_v1_case(reduced_v1_superbasis):
     print(f"{len(set(mat_tuples))} distinct unimodular matrices")
     tested = _assert_all_representative_permutation_matrices_maintain_superbasis(reduced_v1_superbasis)
     assert len(tested) == 24
+    assert len(conorms.form.grouped_vonorm_permutations()) == 1
+
 
 def test_build_all_conorm_lists():
     all_lists = ConormListForm.all_coforms()
