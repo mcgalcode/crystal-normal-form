@@ -17,7 +17,7 @@ def test_cnf_neighbors_are_close(idx, struct: Structure):
     neigb_set = LatticeNeighborFinder(original_cnf).find_cnf_neighbors()
     for n in neigb_set.neighbors:
         helpers.printif(f"Neighbor CNF: {n.point.coords}", verbose)
-        pdd = helpers.assertions.pdd_for_cnfs(n.point, original_cnf)
+        pdd = helpers.assertions.pdd_for_cnfs(n.point, original_cnf, k=100)
         cond = (pdd > 0 and pdd < (xi / 2)) or not helpers.are_cnfs_geo_matches(n.point, original_cnf)
         # if not cond:
         #     n.point.to_file("cnf1.json")
