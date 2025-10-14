@@ -283,6 +283,14 @@ class DiscretizedMotif(PeriodicMotif):
         positions = np.array(self.positions) / self.delta
         return FractionalMotif.from_elements_and_positions(atoms, positions)
 
+    @property
+    def position_tuple_list(self):
+        tups = []
+        for p in self.positions:
+            tup = tuple([int(i) for i in p])
+            tups.append(tup)
+        return tups
+
     def _get_kwargs(self):
         return { "delta": self.delta }
 

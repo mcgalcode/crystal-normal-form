@@ -25,6 +25,18 @@ class BNFCandidate():
         repr += "\n"
         repr += f"Shift: {self.shift}"
         return repr
+    
+def get_all_shifted_motifs(m: DiscretizedMotif) -> list[DiscretizedMotif]:
+    sorted_elements = m.sorted_elements
+    origin_element = sorted_elements[0]
+    origin_element_positions = m.get_element_positions(origin_element)
+    shifted_ms = []
+    shifts = []
+    for pos in origin_element_positions:
+        shift = -pos
+        shifts.append(shift)
+        shifted_ms.append(m.shift_origin(shift))
+    return shifted_ms, shift
 
 class BNFConstructionResult():
 

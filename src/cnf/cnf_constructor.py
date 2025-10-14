@@ -51,10 +51,9 @@ class CNFConstructor():
         lnf_construction_result = lnf_constructor.build_lnf_from_superbasis(superbasis)
         if self.verbose_logging:
             print(f"Successfully constructed LNF! {lnf_construction_result.lnf}")
-            print()
         
         res = self._from_lnf_construction_result(motif, lnf_construction_result)
-        return self.from_cnf(res.cnf)
+        return res
         
     def from_discretized_obtuse_vonorms_and_motif(self,
                                            discretized_vonorms: VonormList,
@@ -72,10 +71,13 @@ class CNFConstructor():
         lnf_construction_result = lnf_constructor.build_lnf_from_discretized_vonorms(discretized_vonorms, skip_reduction=True)
         if self.verbose_logging:
             print(f"Successfully constructed LNF! {lnf_construction_result.lnf}")
-        return self._from_lnf_construction_result(motif, lnf_construction_result)
+        res = self._from_lnf_construction_result(motif, lnf_construction_result)
+        return res
 
     def _from_lnf_construction_result(self, motif: FractionalMotif, lnf_construction_result: LatticeNormalFormConstructionResult):
         transform = lnf_construction_result.transform_mat
+        if self.verbose_logging:
+            print(f"Applying transform: {transform}")
         motif = motif.apply_unimodular(transform)
         stabilizer_perms = lnf_construction_result.discretized_canonicalization_result.equivalent_transformations
         stabilizer_mats = [m for p in stabilizer_perms for m in p.all_matrices]

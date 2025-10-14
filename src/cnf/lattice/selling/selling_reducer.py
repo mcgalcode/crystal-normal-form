@@ -74,7 +74,7 @@ class SellingReducer(ABC):
             if num_steps > self.max_steps:
                 raise RuntimeError(f"Selling reduction failed to converge after {self.max_steps} steps")
         if self._verbose_logging:
-            print(f"Reduction complete!")
+            print(f"Reduction complete! (took {num_steps}) steps")
         return SellingReductionResult(object,
                                       transform_matrices=transform_matrices,
                                       num_steps=num_steps,
