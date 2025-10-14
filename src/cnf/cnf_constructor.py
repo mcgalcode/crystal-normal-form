@@ -38,6 +38,14 @@ class CNFConstructor():
         self.delta = delta
         self.verbose_logging = verbose_logging
 
+
+    def from_cnf(self, cnf: CrystalNormalForm):
+        assert cnf.xi == self.xi
+        assert cnf.delta == self.delta
+        disc_vns = cnf.lattice_normal_form.vonorms
+        motif = cnf.basis_normal_form.to_discretized_motif()
+        return self.from_discretized_obtuse_vonorms_and_motif(disc_vns, motif)
+
     def from_motif_and_superbasis(self, motif: FractionalMotif, superbasis: Superbasis):
         lnf_constructor = LatticeNormalFormConstructor(self.xi, self.verbose_logging)
         lnf_construction_result = lnf_constructor.build_lnf_from_superbasis(superbasis)
