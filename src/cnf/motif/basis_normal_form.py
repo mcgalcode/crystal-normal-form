@@ -9,7 +9,7 @@ class BasisNormalForm():
 
     def __init__(self, coord_list, element_list, delta):
         self.coord_list = coord_list
-        self.elements = element_list
+        self.elements = [str(e) for e in element_list]
         self.delta = delta
 
     def to_motif(self):
@@ -24,6 +24,21 @@ class BasisNormalForm():
         separated_coord_lists = [[0, 0, 0]] + separated_coord_lists
 
         return DiscretizedMotif.from_elements_and_positions(self.elements, separated_coord_lists, self.delta)
+
+    def to_dict(self):
+        return {
+            "delta": self.delta,
+            "elements": [str(e) for e in self.elements],
+            "coords": self.coord_list
+        }
+    
+    @classmethod
+    def from_dict(cls, d: dict):
+        return cls(
+            d["coords"],
+            d["elements"],
+            d["delta"]
+        )
 
     def __repr__(self):
         return f"BasisNormalForm({self.coord_list},elements={self.elements},delta={self.delta})"

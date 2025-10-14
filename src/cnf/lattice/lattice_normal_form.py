@@ -18,6 +18,16 @@ class LatticeNormalForm():
     def coords(self):
         return tuple([int(vo) for vo in self.vonorms.vonorms])
     
+    def to_dict(self):
+        return {
+            "coords": list(self.vonorms.vonorms),
+            "xi": self.lattice_step_size
+        }
+    
+    @classmethod
+    def from_dict(cls, d: dict):
+        return cls.from_coords(d["coords"], d["xi"])
+    
     def __repr__(self):
         return f"LatticeNormalForm(vonorms={self.vonorms.vonorms},step_size={self.lattice_step_size})"
 

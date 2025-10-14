@@ -1,6 +1,7 @@
 from pymatgen.core import Structure # Or other library
 from .lattice.lattice_normal_form import LatticeNormalForm
 from .motif.basis_normal_form import BasisNormalForm
+import json
 
 class CrystalNormalForm:
 
@@ -68,3 +69,25 @@ class CrystalNormalForm:
     
     def __hash__(self):
         return (self.coords + tuple([self.xi, self.delta])).__hash__()
+    
+    @classmethod
+    def from_dict(cls, d: dict):
+        lnf = LatticeNormalForm.from_dict(d["lnf"])
+        bnf = BasisNormalForm.from_dict(d["bnf"])
+        return cls(lnf, bnf)
+    
+    @classmethod
+    def from_file(cls, fname: str):
+        with open(fname, 'r') as f:
+            d = json.load(f)
+            return cls.from_dict(d)
+    
+    def to_file(self, fname: str):
+        with open(fname, 'w') as f:
+            json.dump(self.to_dict(), f)
+    
+    def to_dict(self):
+        return {
+            "lnf": self.lattice_normal_form.to_dict(),
+            "bnf": self.basis_normal_form.to_dict()
+        }
