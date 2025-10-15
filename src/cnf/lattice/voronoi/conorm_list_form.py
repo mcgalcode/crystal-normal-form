@@ -61,6 +61,7 @@ class ConormListForm():
                     groups[s4_members].append(p)
                 else:
                     groups[s4_members] = [p]
+                groups[s4_members] = sorted(groups[s4_members], key=lambda p: p.vonorm_permutation)
         return groups
 
     def __init__(self, zero_indices):
@@ -104,6 +105,7 @@ class ConormListForm():
                 groups[s4_members].append(p)
             else:
                 groups[s4_members] = [p]
+            groups[s4_members] = sorted(groups[s4_members], key=lambda p: p.vonorm_permutation)            
         return groups
     
     def matrices_for_perm(self, cperm: ConormPermutation):

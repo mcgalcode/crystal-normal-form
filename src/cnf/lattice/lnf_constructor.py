@@ -152,11 +152,7 @@ class LatticeNormalFormConstructionResult():
 
     def print_details(self):
         print(f"Found LNF: {self.lnf}")
-        if self.uncanonical_result is None:
-            print("Skipped undiscretized LNF step")
-        else:
-            self.uncanonical_result.print_details()
-        print("Discretized LNF step: ")
+        print("LNF step: ")
         self.canonical_result.print_details()
     
     def selling_transform_mat(self):
