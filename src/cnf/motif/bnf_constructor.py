@@ -8,7 +8,7 @@ class BNFCandidate():
 
     def __init__(self,
                  bnf_coords: tuple,
-                 motif: DiscretizedMotif,
+                 motif: DiscretizedMotif | FractionalMotif,
                  unimodular: MatrixTuple,
                  shift: np.array):
         self.bnf_coords = bnf_coords
@@ -42,10 +42,8 @@ class BNFConstructionResult():
             print(p.tuple)
 
         print(f"Considered stablizers:")
-        for p in self.stabilizers:
-            print(f"Vo Perm: {p.vonorm_permutation})")
-            for m in p.all_matrices:
-                print(f"Mat: {m.tuple}")
+        for m in self.stabilizers:
+            print(f"Mat: {m.tuple}")
         
         print(f"Found phone-book first shift: {self.sorted_bnf_candidates[0].shift}")
     
