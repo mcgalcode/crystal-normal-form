@@ -17,10 +17,10 @@ class CNFConstructionResult():
 
     def __init__(self,
                  cnf: CrystalNormalForm,
-                 lnf_construction_result: LatticeNormalFormConstructionResult,
+                 lnf_result: LatticeNormalFormConstructionResult,
                  bnf_construction_result: BNFConstructionResult):
         self.cnf = cnf
-        self.lnf_result = lnf_construction_result
+        self.lnf_result = lnf_result
         self.bnf_result = bnf_construction_result
     
     def print_details(self):
@@ -44,43 +44,34 @@ class CNFConstructor():
         assert cnf.delta == self.delta
         disc_vns = cnf.lattice_normal_form.vonorms
         motif = cnf.basis_normal_form.to_discretized_motif()
-        return self.from_discretized_obtuse_vonorms_and_motif(disc_vns, motif)
+        return self.from_vonorms_and_motif(disc_vns, motif)
 
     def from_motif_and_superbasis(self, motif: FractionalMotif, superbasis: Superbasis):
-        lnf_constructor = LatticeNormalFormConstructor(self.xi, self.verbose_logging)
-        lnf_construction_result = lnf_constructor.build_lnf_from_superbasis(superbasis)
-        if self.verbose_logging:
-            print(f"Successfully constructed LNF! {lnf_construction_result.lnf}")
-            print()
-        
-        res = self._from_lnf_construction_result(motif, lnf_construction_result)
-        return self.from_cnf(res.cnf)
-        
-    def from_discretized_obtuse_vonorms_and_motif(self,
-                                           discretized_vonorms: VonormList,
-                                           motif: DiscretizedMotif):
-        if isinstance(motif, FractionalMotif):
-            motif = motif.discretize(self.delta)
+        vonorms = superbasis.compute_vonorms()
 
-        if not discretized_vonorms.is_obtuse():
-            raise ValueError(f"Provided discretized Vonorms do not represent obtuse superbasis: {discretized_vonorms.vonorms}")
-        
-        # Here we follow the same procedure as in #from_motif_and_superbasis but
-        # we do not need to perform discretization and we do not need to perform
-        # selling reduction
-        lnf_constructor = LatticeNormalFormConstructor(self.xi, self.verbose_logging)
-        lnf_construction_result = lnf_constructor.build_lnf_from_discretized_vonorms(discretized_vonorms, skip_reduction=True)
-        if self.verbose_logging:
-            print(f"Successfully constructed LNF! {lnf_construction_result.lnf}")
-        return self._from_lnf_construction_result(motif, lnf_construction_result)
+        undisc_cnf = self.from_vonorms_and_motif(vonorms, motif)
+        vonorms = undisc_cnf.lnf_result.lnf.vonorms
 
-    def _from_lnf_construction_result(self, motif: FractionalMotif, lnf_construction_result: LatticeNormalFormConstructionResult):
-        transform = lnf_construction_result.transform_mat
-        motif = motif.apply_unimodular(transform)
-        stabilizer_perms = lnf_construction_result.discretized_canonicalization_result.equivalent_transformations
-        stabilizer_mats = [m for p in stabilizer_perms for m in p.all_matrices]
-        # motif = motif.apply_unimodular(lnf_construction_result.discretized_canonicalization_result.equivalent_transformations[0].matrix)
-        # stabilizer_mats = lnf_construction_result.stabilizer()
+        motif = undisc_cnf.bnf_result.sorted_bnf_candidates[0].motif
+        motif = motif.discretize(self.delta)
+
+        dvc = DiscretizedVonormComputer(self.xi, self.verbose_logging)
+        vonorms = dvc.find_closest_valid_vonorms(vonorms)
+
+        return self.from_vonorms_and_motif(vonorms, motif)
+        
+    def from_vonorms_and_motif(self, vonorms: VonormList, motif: DiscretizedMotif | FractionalMotif):
+        lnf_constructor = LatticeNormalFormConstructor(self.xi, self.verbose_logging)
+        lnf_result = lnf_constructor.build_lnf_from_vonorms(vonorms)
+        if self.verbose_logging:
+            print(f"Successfully constructed LNF! {lnf_result.lnf}")
+        motif = motif.apply_unimodular(lnf_result.selling_transform_mat())
+        # Option 1 - use the transforms TO the sorted list as the search set
+        stabilizer_mats = lnf_result.sorting_transforms()
+        
+        # Option 2 - transform via ANY ONE of the transforms to sorted list then use stabilizer as search set
+        # motif = motif.apply_unimodular(lnf_result.sorting_transforms()[0])
+        # stabilizer_mats = lnf_result.stabilizer()
 
         if self.verbose_logging:
             print(f"Found {len(stabilizer_mats)} stabilizers...")
@@ -95,8 +86,8 @@ class CNFConstructor():
             print(f"Based on motif:")
             bnf_construction_res.sorted_bnf_candidates[0].motif.print_details()
 
-        cnf = CrystalNormalForm(lnf_construction_result.lnf, bnf_construction_res.bnf)
-        return CNFConstructionResult(cnf, lnf_construction_result, bnf_construction_res)
+        cnf = CrystalNormalForm(lnf_result.lnf, bnf_construction_res.bnf)
+        return CNFConstructionResult(cnf, lnf_result, bnf_construction_res)
     
     def from_motif_and_basis_vecs(self, motif: FractionalMotif, basis_vecs: np.array):
         superbasis = Superbasis.from_generating_vecs(basis_vecs)

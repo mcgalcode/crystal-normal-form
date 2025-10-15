@@ -107,25 +107,22 @@ class BNFConstructor():
         bnf_candidates: list[BNFCandidate] = []
 
         for mat in self.stabilizer:
+            # print(original_motif.to_bnf_list())
+            # original_motif.print_details()
             transformed_motif = original_motif.apply_unimodular(mat)
-            if self.verbose_logging:
-                print()
-                print(f"Trying mat: {mat}")
-                transformed_motif.print_details()
-                
-            if not isinstance(transformed_motif, DiscretizedMotif):
-                transformed_motif = transformed_motif.discretize(self.delta)
+            # print(transformed_motif.to_bnf_list())
+            # if isinstance(transformed_motif, FractionalMotif):
+                # transformed_motif = transformed_motif.discretize(self.delta)
 
-            sorted_elements = transformed_motif.sorted_elements
-            origin_element = sorted_elements[0]
+            # if self.verbose_logging:
+            # print()
+            # transformed_motif.print_details()
+            # transformed_motif.print_details()
+            shifted_motifs, shifts = get_all_shifted_motifs(transformed_motif)
 
-            origin_element_positions = transformed_motif.get_element_positions(origin_element)
-
-            # For each possible origin, compute the list
-            for origin_candidate in origin_element_positions:
-                shift = -origin_candidate
-                shifted_motif = transformed_motif.shift_origin(shift)
-                bnf_list = shifted_motif.to_bnf_list(element_order=sorted_elements)
+            for shifted_motif, shift in zip(shifted_motifs, shifts):
+                bnf_list = shifted_motif.to_bnf_list()
+                # print(bnf_list)
                 candidate = BNFCandidate(bnf_list[3:], shifted_motif, mat, shift)
                 bnf_candidates.append(candidate)
 

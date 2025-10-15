@@ -77,7 +77,7 @@ class LatticeNeighborFinder():
             return None
         
         lnf_constructor = LatticeNormalFormConstructor(self._lnf().lattice_step_size)
-        construction_result = lnf_constructor.build_lnf_from_discretized_vonorms(new_vonorms, skip_reduction=True)
+        construction_result = lnf_constructor.build_lnf_from_vonorms(new_vonorms, skip_reduction=True)
         neighbor_lnf = construction_result.lnf
             
         return LatticeStepResult(step, new_vonorms, construction_result, neighbor_lnf)

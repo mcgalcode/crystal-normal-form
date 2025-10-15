@@ -3,6 +3,7 @@ from cnf import CrystalNormalForm
 from cnf.cnf_constructor import CNFConstructor
 from cnf.lattice.rounding import DiscretizedVonormComputer
 from pymatgen.core.structure import Structure
+from cnf.unit_cell import UnitCell
 import helpers
 
 @helpers.skip_if_fast
@@ -10,8 +11,10 @@ import helpers
 def test_cnf_round_trip_yields_same_crystal_full_cells(idx, struct: Structure):
     xi = 0.01
     delta = 10000
-    constructor = CNFConstructor(xi, delta)
-    cnf = constructor.from_pymatgen_structure(struct).cnf
+    constructor = CNFConstructor(xi, delta, verbose_logging=True)
+    uc = UnitCell.from_pymatgen_structure(struct)
+    # cnf = constructor.from_pymatgen_structure(struct).cnf
+    cnf = uc.to_cnf(xi, delta)
     recovered_struct = cnf.reconstruct()
     helpers.assert_identical_by_pdd_distance(struct, recovered_struct)
 

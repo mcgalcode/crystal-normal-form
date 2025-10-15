@@ -69,7 +69,7 @@ def test_produces_zr_bcc_vonorm_set_sublattice_1(zr_bcc_primitive_lattice_vecs):
     print(f"Discretized Superbasis Vonorms: {disc_vnorms}")
     print("=====")
     lnf_constructor = LatticeNormalFormConstructor(xi, verbose_logging=True)
-    lnf = lnf_constructor.build_lnf_from_vonorms(sb_vnorms).lnf
+    lnf = lnf_constructor.get_from_undiscretized_vnorms(sb_vnorms).lnf
     print(lnf)
     vonorms = lnf.vonorms
     # vonorms = disc_vnorms
@@ -97,7 +97,7 @@ def test_produces_zr_bcc_vonorm_set_sublattice_2(zr_bcc_primitive_lattice_vecs):
     sb = Superbasis.from_generating_vecs(vecs)
     vnorms = sb.compute_vonorms()
     lnf_constructor = LatticeNormalFormConstructor(xi)
-    lnf = lnf_constructor.build_lnf_from_vonorms(vnorms).lnf
+    lnf = lnf_constructor.get_from_undiscretized_vnorms(vnorms).lnf
     print(lnf)
 
     expected_thesis_vonorms = VonormList([8, 8, 8, 21, 15, 15, 15])
@@ -131,7 +131,7 @@ def _trace_lnf(x, xi):
     sb = Superbasis.from_generating_vecs(vecs)
     vnorms = sb.compute_vonorms()    
     lnf_constructor = LatticeNormalFormConstructor(xi, verbose_logging=True)
-    lnf = lnf_constructor.build_lnf_from_vonorms(vnorms).lnf
+    lnf = lnf_constructor.get_from_undiscretized_vnorms(vnorms).lnf
     print(lnf)
     assert lnf == computed_lnf
 # @pytest.mark.skip

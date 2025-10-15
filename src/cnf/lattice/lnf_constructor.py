@@ -10,6 +10,7 @@ from .rounding import DiscretizedVonormComputer
 from .superbasis import Superbasis
 from .lattice_normal_form import LatticeNormalForm
 from .unimodular import combine_unimodular_matrices
+from ..linalg import MatrixTuple
 
 
 class VonormSorter():
@@ -112,25 +113,15 @@ class LatticeNormalFormConstructor():
         return self.build_lnf_from_superbasis(Superbasis.from_generating_vecs(generating_vecs))
 
     def build_lnf_from_superbasis(self, superbasis: Superbasis):
-        return self.build_lnf_from_vonorms(superbasis.compute_vonorms())
+        return self.get_from_undiscretized_vnorms(superbasis.compute_vonorms())
 
-    def build_lnf_from_vonorms(self, vonorms: VonormList):
-        self._log("Canonicalizing RAW vonorms...")
-        canonicalizer = VonormCanonicalizer(reduction_tolerance=1e-8, verbose_logging=self._verbose_logging)
-        undiscretized_canonical_result = canonicalizer.get_canonicalized_vonorms(vonorms)
-
-        self._log("Discretizing RAW vonorms...")
-        dvc = DiscretizedVonormComputer(self.lattice_step_size, self._verbose_logging)
-        discretized_vonorms = dvc.find_closest_valid_vonorms(undiscretized_canonical_result.canonical_vonorms)
-
-        return self.build_lnf_from_discretized_vonorms(
-            discretized_vonorms,
-            skip_reduction=False,
-            undisc_can_result=undiscretized_canonical_result
-        )
-
-    def build_lnf_from_discretized_vonorms(self, vonorms: VonormList, skip_reduction = True, undisc_can_result = None):
-        self._log("Canonicalizing DISCRETE vonorms...")
+    def get_from_undiscretized_vnorms(self, vonorms: VonormList):
+        undisc = self.build_lnf_from_vonorms(vonorms)
+        dvc = DiscretizedVonormComputer(self.lattice_step_size)
+        disc = dvc.find_closest_valid_vonorms(undisc.lnf.vonorms)
+        return self.build_lnf_from_vonorms(disc)
+    
+    def build_lnf_from_vonorms(self, vonorms: VonormList, skip_reduction = False):
         canonicalizer = VonormCanonicalizer(reduction_tolerance=1e-8, verbose_logging=self._verbose_logging)
         result = canonicalizer.get_canonicalized_vonorms(vonorms, skip_reduction=skip_reduction)
         lnf = LatticeNormalForm(result.canonical_vonorms, self.lattice_step_size)
@@ -140,7 +131,6 @@ class LatticeNormalFormConstructor():
 
         return LatticeNormalFormConstructionResult(
             lnf,
-            undisc_can_result,
             result
         )
 
@@ -148,53 +138,29 @@ class LatticeNormalFormConstructionResult():
 
     def __init__(self,
                  lnf: LatticeNormalForm,
-                 undiscretized_canonicalization_result: CanonicalizedVonormResult,
-                 discretized_canonicalization_result: CanonicalizedVonormResult):
+                 canonical_result: CanonicalizedVonormResult):
         self.lnf = lnf
-        self.undiscretized_canonicalization_result = undiscretized_canonicalization_result
-        self.discretized_canonicalization_result = discretized_canonicalization_result
+        self.canonical_result = canonical_result
     
     def stabilizer(self, tol=1e-8):
         return self.lnf.vonorms.stabilizer_matrices(tol)
     
-    def final_equiv_transforms(self):
-        tmat_perms = self.discretized_canonicalization_result.equivalent_transformations
+    def sorting_transforms(self):
+        tmat_perms = self.canonical_result.equivalent_transformations
         mats = [m for p in tmat_perms for m in p.all_matrices]
         return mats
 
     def print_details(self):
         print(f"Found LNF: {self.lnf}")
-        if self.undiscretized_canonicalization_result is None:
+        if self.uncanonical_result is None:
             print("Skipped undiscretized LNF step")
         else:
-            self.undiscretized_canonicalization_result.print_details()
+            self.uncanonical_result.print_details()
         print("Discretized LNF step: ")
-        self.discretized_canonicalization_result.print_details()
+        self.canonical_result.print_details()
     
-    @property
-    def transform_mat(self):
-        mats = []
-        if self.undiscretized_canonicalization_result is not None:
-            mats.append(self.undiscretized_canonicalization_result.selling_transform_mat)
-            mats.append(self.undiscretized_canonicalization_result.equivalent_transformations[0].matrix)
-
-        if self.discretized_canonicalization_result.selling_transform_mat is not None:
-            mats.append(self.discretized_canonicalization_result.selling_transform_mat)
-
-        return combine_unimodular_matrices(mats)
-
-    @property
-    def transform_mats(self):
-        transform_groups = []
-        if self.undiscretized_canonicalization_result is not None:
-            transform_groups.extend([
-                [self.undiscretized_canonicalization_result.selling_transform_mat],
-                [t.matrix for t in self.undiscretized_canonicalization_result.equivalent_transformations[:1]]
-            ])
-
-        if self.discretized_canonicalization_result.selling_transform_mat is not None:
-            transform_groups.append([self.discretized_canonicalization_result.selling_transform_mat])
-
-        transform_candidates = itertools.product(*transform_groups)
-        transform_candidates = [combine_unimodular_matrices(tc) for tc in transform_candidates]
-        return transform_candidates
+    def selling_transform_mat(self):
+        mat = self.canonical_result.selling_transform_mat
+        if mat is None:
+            return MatrixTuple.identity()
+        return mat

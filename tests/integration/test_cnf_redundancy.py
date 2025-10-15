@@ -7,6 +7,7 @@ import os
 from pymatgen.core.structure import Structure, Lattice
 from cnf.unit_cell import UnitCell
 from cnf import CrystalNormalForm
+from cnf.motif.bnf_constructor import BNFConstructor, FractionalMotif
 
 import pathlib
 
