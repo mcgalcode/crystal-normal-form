@@ -1,11 +1,12 @@
 import numpy as np
 
 from ..crystal_normal_form import CrystalNormalForm
-from ..cnf_constructor import CNFConstructor, CNFConstructionResult
+from ..cnf_constructor import CNFConstructor
 from ..lattice.lnf_constructor import LatticeNormalFormConstructor
 from ..lattice.voronoi import VonormList
 from .lattice_step import LatticeStep, LatticeStepResult
 from .neighbor_set import NeighborSet
+from ..utils.pdd import pdd_for_cnfs
 
 class LatticeNeighborFinder():
 
@@ -95,31 +96,28 @@ class LatticeNeighborFinder():
         neighbor_vonorms = self.get_vonorm_neighbor(step)
         if neighbor_vonorms is None:
             return None
-        
-        
-        cnf_results: list[CNFConstructionResult] = []
-        for mat in step.prereq_perm.all_matrices:
-            neighbor_motif = self.discretized_motif.apply_unimodular(mat)
-            cnf_constructor = CNFConstructor(
-                self.point.xi,
-                self.point.delta,
-                verbose_logging=self.verbose_logging,
-            )
 
-            cnf_results.append(
-                cnf_constructor.from_vonorms_and_motif(neighbor_vonorms, neighbor_motif)
-            )
-        
-        cnf_construction_result = sorted(cnf_results, key=lambda cnf_res: cnf_res.cnf.coords)[0]
-    
-        if cnf_construction_result.cnf == self.point:
+        cnf_constructor = CNFConstructor(
+            self.point.xi,
+            self.point.delta,
+            verbose_logging=self.verbose_logging,
+        )
+
+        # Use only the representative matrix, not all matrices
+        cnf_results = []
+        for mat in step.prereq_perm.all_matrices:
+            neighbor_motif = self.fractional_motif.apply_unimodular(mat).discretize(self.point.delta)
+            cnf_results.append(cnf_constructor.from_vonorms_and_motif(neighbor_vonorms, neighbor_motif))
+        cnf_result = sorted(cnf_results, key = lambda cnfr: cnfr.cnf.coords )[0]
+
+        if cnf_result.cnf == self.point:
             return None
 
         return LatticeStepResult(
             step,
             neighbor_vonorms,
-            cnf_construction_result,
-            cnf_construction_result.cnf,
+            cnf_result,
+            cnf_result.cnf,
             None
         )
 
