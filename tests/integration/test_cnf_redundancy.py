@@ -8,6 +8,7 @@ from pymatgen.core.structure import Structure, Lattice
 from cnf.unit_cell import UnitCell
 from cnf import CrystalNormalForm
 from cnf.motif.bnf_constructor import BNFConstructor, FractionalMotif
+from cnf.cnf_constructor import CNFConstructor
 
 import pathlib
 
@@ -26,8 +27,8 @@ from cnf.linalg.unimodular import UNIMODULAR_MATRICES
 # 3) Do quickly (wish list)
 
 verbose = False
-delta = 20
-xi = 1.1
+delta = 100
+xi = 0.001
 # There are 642,000 unimodular mats
 sample_freq = 2000
 num_test_reqs = 100
@@ -100,6 +101,7 @@ def test_cnf_is_unique(idx, struct: Structure):
                 cnf_map[cnf.coords] = [other_cell]
     
     assert len(all_cnfs) > 100
+    # print(all_cnfs)[:10]
     cnfs = list(cnf_map.keys())
 
     # any_category_contains_95_percent = False
@@ -123,3 +125,23 @@ def test_cnf_is_unique(idx, struct: Structure):
     #             idx += 1
 
     assert len(set(cnfs)) == 1
+
+
+@helpers.parameterized_by_mp_structs
+def test_undiscretized_bnf_unique(idx, struct: Structure):
+    # struct = struct.to_primitive()
+    uc = UnitCell.from_pymatgen_structure(struct).reduce()
+    all_cells: list[UnitCell] = []
+    mats = UNIMODULAR_MATRICES[::sample_freq]
+    for u in mats:
+        other_cell = uc.apply_unimodular(u).reduce()
+        if helpers.are_geo_matches(uc, other_cell):
+            all_cells.append(other_cell)
+
+    assert len(all_cells) > 100
+    assert len(set([c.vonorms for c in all_cells])) > 10
+    assert len(set([c.motif.to_bnf_list() for c in all_cells])) > 10
+    con = CNFConstructor(1.5, 20)
+    cnfs = [con.from_vonorms_and_motif(cell.vonorms, cell.motif).cnf for cell in all_cells]
+
+    assert len(set([c.basis_normal_form.coord_list for c in cnfs])) == 1

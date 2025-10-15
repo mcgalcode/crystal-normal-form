@@ -6,6 +6,7 @@ from cnf import CrystalNormalForm
 from cnf.cnf_constructor import CNFConstructor
 from cnf.lattice.lnf_constructor import VonormCanonicalizer, LatticeNormalForm
 from cnf.navigation.lattice_neighbor_finder import LatticeStep, LatticeNeighborFinder
+from cnf.navigation.neighbor import Neighbor
 from pymatgen.core.structure import Structure
 from cnf.unit_cell import UnitCell
 
@@ -104,7 +105,7 @@ def test_neighbor_reciprocity_by_geometry(idx, struct: Structure):
 @helpers.skip_if_fast
 @helpers.parameterized_by_mp_structs
 def test_cnf_neighbor_reciprocity(idx, struct: Structure):
-    verbose = True
+    verbose = False
     xi = 1.5
     delta = 30
 
@@ -129,13 +130,18 @@ def test_cnf_neighbor_reciprocity(idx, struct: Structure):
     recipricol_nbs = [] 
     nonreciprocal_nbs = []
     geo_rec_neighbs = []
-    lnf_rec_neighbs = []
+    lnf_rec_neighbs: list[Neighbor] = []
 
     geo_matches = []
-    for n in neighbor_set.neighbors:
+    for nb_idx, n in enumerate(neighbor_set.neighbors):
         second_neighbors = LatticeNeighborFinder(n.point).find_cnf_neighbors()
         if original_cnf not in second_neighbors:
             print(f"No reciprocal relationship found!")
+            print(f"Original LNF: {original_cnf.lattice_normal_form.coords}")
+            print(f"Original BNF: {original_cnf.basis_normal_form.coord_list}")
+            print(f"Neighbor LNF: {n.point.lattice_normal_form.coords}")
+            print(f"Neighbor BNF: {n.point.basis_normal_form.coord_list}")
+            helpers.save_cnfs_to_dir(f"patho_neighbor_pairs/mp_{idx}_nb_{nb_idx}", [original_cnf, n.point])
             nonreciprocal_nbs.append(n.point)
             num_geo_matches = 0
             num_lnf_matches = 0
@@ -161,6 +167,13 @@ def test_cnf_neighbor_reciprocity(idx, struct: Structure):
     print(f"Found {len(nonreciprocal_nbs)} BAD neighbors")
     print(f"Found {len(geo_rec_neighbs)} GEO neighbors")
     print(f"Found {len(lnf_rec_neighbs)} LNF neighbors")
+    print()
+    print("LNF neighbor details")
+    if verbose:
+        for n in lnf_rec_neighbs:
+            print(f"Neighbor CNF: {n.point}")
+            for step in n.step_results:
+                step.print_details()
     # UnitCell.from_cnf(original_cnf).to_cif(str(helpers.get_data_file_path(Path("patho_pairs") / "mp_190_neighbs" / "n1.cif")))
     # UnitCell.from_cnf(geo_matches[0]).to_cif(str(helpers.get_data_file_path(Path("patho_pairs") / "mp_190_neighbs" / "n2.cif")))
     assert len(recipricol_nbs) == len(neighbor_set.neighbors)

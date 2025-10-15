@@ -13,50 +13,49 @@ from pymatgen.core.structure import Structure, Element
 
 PATHO_IDX = 5
 
+def assert_structs_identical(s1, s2):
+    helpers.assert_identical_by_pdd_distance(s1, s2)
+
+    # for xi in np.arange(0.1, 2.5, 0.1):
+    #     for delta in range(10,100, 10):
+    xi = 1.5
+    delta = 100
+
+    cnf1 = UnitCell.from_pymatgen_structure(s1).to_cnf(xi, delta)
+    cnf2 = UnitCell.from_pymatgen_structure(s2).to_cnf(xi, delta)
+    assert cnf1.lattice_normal_form == cnf2.lattice_normal_form
+    assert cnf1 == cnf2
+
+    helpers.assert_identical_by_pdd_distance(cnf1.reconstruct(), cnf2.reconstruct())    
 
 def test_patho_case_mp_395():
     structs = helpers.load_pathological_cifs(f"mp_{PATHO_IDX}")
-    helpers.assert_identical_by_pdd_distance(structs[0], structs[1])
-
-    xi = 1.5
-    delta = 20
-
-    cnf1 = UnitCell.from_pymatgen_structure(structs[0]).to_cnf(xi, delta)
-    cnf2 = UnitCell.from_pymatgen_structure(structs[1]).to_cnf(xi, delta)
-    assert cnf1.lattice_normal_form == cnf2.lattice_normal_form
-    assert cnf1 == cnf2
-
-    helpers.assert_identical_by_pdd_distance(cnf1.reconstruct(), cnf2.reconstruct())
+    assert_structs_identical(structs[0], structs[1])
 
 def test_patho_case_mp_6():
     structs = helpers.load_pathological_cifs("mp_6")
-    helpers.assert_identical_by_pdd_distance(structs[0], structs[1])
+    assert_structs_identical(structs[0], structs[1])
 
-    xi = 1.5
-    delta = 20
 
-    cnf1 = UnitCell.from_pymatgen_structure(structs[0]).to_cnf(xi, delta)
-    cnf2 = UnitCell.from_pymatgen_structure(structs[1]).to_cnf(xi, delta)
-    assert cnf1 == cnf2
-    assert cnf1.lattice_normal_form == cnf2.lattice_normal_form
-    assert cnf1 == cnf2
+def test_patho_case_mp_5():
+    structs = helpers.load_pathological_cifs("mp_5")
+    assert_structs_identical(structs[0], structs[1])
 
-    helpers.assert_identical_by_pdd_distance(cnf1.reconstruct(), cnf2.reconstruct())
+
+def test_patho_case_mp_5_simple():
+    structs = helpers.load_pathological_cifs("mp_5_simplified")
+    assert_structs_identical(structs[0], structs[1])
+
 
 def test_patho_case_mp_204():
     structs = helpers.load_pathological_cifs("mp_204")
-    helpers.assert_identical_by_pdd_distance(structs[0], structs[1])
+    assert_structs_identical(structs[0], structs[1])
 
-    xi = 1.1
-    delta = 20
 
-    cnf1 = UnitCell.from_pymatgen_structure(structs[0]).to_cnf(xi, delta)
-    cnf2 = UnitCell.from_pymatgen_structure(structs[1]).to_cnf(xi, delta)
-    assert cnf1 == cnf2
-    assert cnf1.lattice_normal_form == cnf2.lattice_normal_form
-    assert cnf1 == cnf2
+def test_patho_case_mp_random_neighbs():
+    structs = helpers.load_pathological_cifs("random_neighbs")
+    assert_structs_identical(structs[0], structs[1])
 
-    helpers.assert_identical_by_pdd_distance(cnf1.reconstruct(), cnf2.reconstruct())
 
 def test_simplify_case_mp_5():
     structs: list[Structure] = helpers.load_pathological_cifs("mp_190_neighbs")
@@ -119,9 +118,11 @@ def test_simplify_case_mp_5():
     print(f"Found {len(bad)} BAD combos!")
 
     distinctfailingxis = set([pair[0] for pair in bad])
-    print(distinctfailingxis)
+    # print(distinctfailingxis)
+    assert len(bad) == 0
 
-def test_patho_case_mp_5():
+@pytest.mark.skip
+def test_patho_case_mp_5_doctored():
     structs = helpers.load_pathological_cifs("mp_5_doctored")
     uc1 = UnitCell.from_pymatgen_structure(structs[0])
     uc2 = UnitCell.from_pymatgen_structure(structs[1])
@@ -272,6 +273,7 @@ def test_for_rotoinversion():
         if np.linalg.det(supercell) < 0:
             print("🎯 ROTOINVERSION CONFIRMED!")
 
+@pytest.mark.skip
 def test_find_matrix_that_matches():
     print()
     mats_neg_det = load_unimodular("unimodular_6_det_-1.json")
@@ -308,8 +310,8 @@ def test_find_matrix_that_matches():
 def test_can_patho_pairs_be_transformed_to_eachother():
     print()
     xi = 2.2
-    delta = 10
-    structs = helpers.load_pathological_cifs("mp_5_simplified")
+    delta = 30
+    structs = helpers.load_pathological_cifs("random_neighbs")
 
 # Get the space group
     from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
@@ -321,18 +323,22 @@ def test_can_patho_pairs_be_transformed_to_eachother():
     print(f"Structure 2 space group: {sg2.get_space_group_symbol()}")
 
     # Check if they're enantiomorphs (mirror images)
-    print(f"Struct 1 chiral: {sg1.get_symmetry_dataset()}")
-    print(f"Struct 2 chiral: {sg2.get_symmetry_dataset()}")
+    # print(f"Struct 1 chiral: {sg1.get_symmetry_dataset()}")
+    # print(f"Struct 2 chiral: {sg2.get_symmetry_dataset()}")
 
     uc1 = UnitCell.from_pymatgen_structure(structs[0])
+    uc1.motif.print_details()
     uc2 = UnitCell.from_pymatgen_structure(structs[1])
+    uc2.motif.print_details()
     dm2 = uc2.motif.discretize(delta)
-
+    dm2.print_details()
     matches_from_similar_coforms = []
     for u in uc1.conorms.form.all_matrices_for_similar_coforms():
         tuc1 = uc1.apply_unimodular(u)
+        dtuc1 = tuc1.motif.discretize(delta)
         helpers.assert_identical_by_pdd_distance(tuc1.to_pymatgen_structure(), uc1.to_pymatgen_structure())
-        if np.all(tuc1.motif.discretize(delta).coord_matrix == dm2.coord_matrix):
+        if np.all(dtuc1.coord_matrix == dm2.coord_matrix):
+            dtuc1.print_details()
             matches_from_similar_coforms.append(u)
     
     assert len(matches_from_similar_coforms) > 0

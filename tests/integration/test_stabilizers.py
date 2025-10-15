@@ -47,10 +47,10 @@ def test_vonorm_permutations_preserve_crystal(idx, struct):
     for perm in vn.conorms.permissible_permutations:
         permuted_vn = vn.apply_permutation(perm.vonorm_permutation)
         assert permuted_vn.has_same_members(vn)
-
-        permuted_motif = motif.apply_unimodular(perm.matrix)
-        recovered = Structure(permuted_vn.to_superbasis().generating_vecs(), permuted_motif.atoms, permuted_motif.positions)
-        helpers.assert_identical_by_pdd_distance(struct, recovered, 0.001)
+        for m in perm.all_matrices:
+            permuted_motif = motif.apply_unimodular(m)
+            recovered = Structure(permuted_vn.to_superbasis().generating_vecs(), permuted_motif.atoms, permuted_motif.positions)
+            helpers.assert_identical_by_pdd_distance(struct, recovered, 0.001)
 
 @helpers.parameterized_by_mp_structs
 def test_vonorm_stabilizers_maintain_vonorm_order(idx: int, struct: Structure):

@@ -46,9 +46,12 @@ def test_sandbox():
     uc1 = UnitCell.from_cnf(cnf1)
     uc2 = UnitCell.from_cnf(cnf2)
 
+    # uc1.to_cif("t1.cif")
+    # uc2.to_cif("t2.cif")
+
     s1 = uc1.to_pymatgen_structure()
     s2 = uc2.to_pymatgen_structure()
-    pdd = helpers.pdd(s1, s2)
+    pdd = helpers.pdd(s1, s2, k=100000)
 
     print(f"Structures have PDD dist of {pdd}")
 
@@ -75,10 +78,10 @@ def test_sandbox():
 
 
 
-    recovered_cnf1 = uc1.to_cnf(1.0, delta, verbose=False)
-    recovered_cnf2 = uc2.to_cnf(1.0, delta, verbose=False)
+    recovered_cnf1 = uc1.to_cnf(2.2, delta, verbose=True)
+    recovered_cnf2 = uc2.to_cnf(2.2, delta, verbose=True)
     assert recovered_cnf1 == recovered_cnf2
 
     con = CNFConstructor(xi, delta)
-    res = con.from_discretized_obtuse_vonorms_and_motif(cnf1.lattice_normal_form.vonorms, cnf1.basis_normal_form.to_discretized_motif())
+    res = con.from_vonorms_and_motif(cnf1.lattice_normal_form.vonorms, cnf1.basis_normal_form.to_discretized_motif())
     print(res.cnf)

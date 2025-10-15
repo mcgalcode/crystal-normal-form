@@ -10,7 +10,7 @@ from pymatgen.core.structure import Structure
 from cnf.unit_cell import UnitCell
 
 
-@helpers.parameterized_by_mp_struct_idxs([125])
+@helpers.parameterized_by_mp_structs
 def test_neighbors_are_geometrically_distinct(idx, struct: Structure):
     verbose = False
     xi = 1.0
