@@ -53,12 +53,34 @@ class BNFConstructionResult():
         print(f"Found phone-book first shift: {self.sorted_bnf_candidates[0].shift}")
     
     @property
+    def canonical_candidate(self):
+        return self.sorted_bnf_candidates[0]
+    
+    @property
+    def canonical_motif(self):
+        return self.canonical_candidate.motif
+    
+    @property
     def bnf(self):
-        canonical_candidate = self.sorted_bnf_candidates[0]
-        element_list, _ = canonical_candidate.motif.to_elements_and_positions()
-        canonical_bnf_coords= canonical_candidate.bnf_coords
+        element_list, _ = self.canonical_motif.to_elements_and_positions()
+        canonical_bnf_coords = self.canonical_candidate.bnf_coords
 
-        return BasisNormalForm(tuple([int(c) for c in canonical_bnf_coords]), element_list, self.delta)
+        return BasisNormalForm(canonical_bnf_coords, element_list, self.delta)
+
+def get_all_shifted_motifs(m: FractionalMotif) -> tuple[list[FractionalMotif], list[np.ndarray]]:
+    sorted_elements = m.sorted_elements
+    origin_element = sorted_elements[0]
+
+    origin_element_positions = m.get_element_positions(origin_element)
+    # For each possible origin, compute the list
+    shifted_motifs = []
+    shifts = []
+    for origin_candidate in origin_element_positions:
+        shift = -origin_candidate
+        shifted_motifs.append(m.shift_origin(shift))
+        shifts.append(shift)
+    return shifted_motifs, shifts
+
 
 class BNFConstructor():
     """Implements methods for taking a list of atomic positions
@@ -78,7 +100,6 @@ class BNFConstructor():
         self.verbose_logging = verbose_logging
     
     def build(self, original_motif: FractionalMotif):
-
         if self.verbose_logging:
             print(f"Initial motif positions:")
             original_motif.print_details()

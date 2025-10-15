@@ -114,7 +114,10 @@ class AtomicMotif():
             element_order = self.sorted_elements
 
         sorted_positions = self.get_sorted_positions(element_order)
-        return tuple(el for coord_list in sorted_positions for el in coord_list)
+        return tuple([self._process_bnf_list_coord(el) for coord_list in sorted_positions for el in coord_list])
+    
+    def _process_bnf_list_coord(self, coord):
+        return coord
 
     def apply_unimodular(self, unimodular: MatrixTuple, skip_det_check = False):
         if not skip_det_check and not np.isclose(unimodular.determinant(), 1):
@@ -250,6 +253,9 @@ class FractionalMotif(PeriodicMotif):
 
         coords = [site.frac_coords for site in pmg_struct.sites]
         return cls.from_elements_and_positions(elements, coords)
+
+    def _process_bnf_list_coord(self, coord):
+        return round(float(coord), 5)
     
     def compute_cartesian_coords_in_basis(self, basis: Superbasis):
         cart_coords = basis.generating_vecs().T @ self.coord_matrix
@@ -277,6 +283,9 @@ class DiscretizedMotif(PeriodicMotif):
 
     def is_valid_shift_vector(self, shift_vector: np.array):
         return np.all(shift_vector < self._mod)
+
+    def _process_bnf_list_coord(self, coord):
+        return int(coord)
     
     def to_fractional_motif(self):
         atoms = self.atoms
