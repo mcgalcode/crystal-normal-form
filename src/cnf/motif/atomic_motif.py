@@ -256,7 +256,7 @@ class FractionalMotif(PeriodicMotif):
         return cls.from_elements_and_positions(elements, coords)
 
     def _process_bnf_list_coord(self, coord):
-        return round(float(coord), 5)
+        return round(float(coord), 7)
     
     def compute_cartesian_coords_in_basis(self, basis: Superbasis):
         cart_coords = basis.generating_vecs().T @ self.coord_matrix
