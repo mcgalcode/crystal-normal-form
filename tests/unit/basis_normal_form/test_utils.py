@@ -143,3 +143,8 @@ def test_can_simultaneouslyt_sort():
 def test_can_discretize_coords(raw_coords, num_intervals, expected_ints):
     actual_ints = bnf_utils.discretize_coords(raw_coords, num_intervals)
     assert (actual_ints == expected_ints).all()
+
+def test_move_coords_into_cell_shouldnt_leave_limit():
+    coords = np.array([[1.0, 1.0, 1.0]])
+    result = bnf_utils.move_coords_into_cell(coords, 1)
+    assert np.all(result == np.array([0,0,0]))

@@ -8,6 +8,7 @@ def Zr_HCP_lattice():
     return Lattice.hexagonal(3.19, 1.60 * 3.19)
 
 def test_can_instantiate_from_element_pos_map(sn2_o4_motif: FractionalMotif):
+    sn2_o4_motif = sn2_o4_motif.discretize(10)
     constructor = BNFConstructor(10)
     bnf_result = constructor.build(sn2_o4_motif)
     bnf = bnf_result.bnf
@@ -17,13 +18,13 @@ def test_can_instantiate_from_element_pos_map(sn2_o4_motif: FractionalMotif):
 
 def test_zr_hcp():
     motif = FractionalMotif.from_elements_and_positions(["Zr", "Zr"], [[0,0,0], [2/3,1/3,1/2]])
-    
+    motif = motif.discretize(30)
     constructor = BNFConstructor(30)
     bnf = constructor.build(motif).bnf
     assert bnf.coord_list == (10,20,15)
 
 def test_can_round_trip_to_position_map(sn2_o4_motif: FractionalMotif):
-    bnf = BNFConstructor(10).build(sn2_o4_motif).bnf
+    bnf = BNFConstructor(10).build(sn2_o4_motif.discretize(10)).bnf
 
     new_motif = bnf.to_motif()
 
