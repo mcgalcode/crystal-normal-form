@@ -107,7 +107,7 @@ class LatticeNeighborFinder():
             )
 
             cnf_results.append(
-                cnf_constructor.from_discretized_obtuse_vonorms_and_motif(neighbor_vonorms, neighbor_motif)
+                cnf_constructor.from_vonorms_and_motif(neighbor_vonorms, neighbor_motif)
             )
         
         cnf_construction_result = sorted(cnf_results, key=lambda cnf_res: cnf_res.cnf.coords)[0]

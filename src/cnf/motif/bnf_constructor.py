@@ -1,11 +1,8 @@
 import numpy as np
-import itertools
 
 from .atomic_motif import FractionalMotif, DiscretizedMotif
-from ..lattice.permutations import PermutationMatrix
 from ..linalg import MatrixTuple
 from .basis_normal_form import BasisNormalForm
-from ..lattice.unimodular import combine_unimodular_matrices
     
 class BNFCandidate():
 
@@ -107,22 +104,16 @@ class BNFConstructor():
         bnf_candidates: list[BNFCandidate] = []
 
         for mat in self.stabilizer:
-            # print(original_motif.to_bnf_list())
-            # original_motif.print_details()
             transformed_motif = original_motif.apply_unimodular(mat)
-            # print(transformed_motif.to_bnf_list())
-            # if isinstance(transformed_motif, FractionalMotif):
-                # transformed_motif = transformed_motif.discretize(self.delta)
 
-            # if self.verbose_logging:
-            # print()
-            # transformed_motif.print_details()
-            # transformed_motif.print_details()
+            if self.verbose_logging:
+                print(f"Trying matrix: {mat}")
+                transformed_motif.print_details()
+
             shifted_motifs, shifts = get_all_shifted_motifs(transformed_motif)
 
             for shifted_motif, shift in zip(shifted_motifs, shifts):
                 bnf_list = shifted_motif.to_bnf_list()
-                # print(bnf_list)
                 candidate = BNFCandidate(bnf_list[3:], shifted_motif, mat, shift)
                 bnf_candidates.append(candidate)
 
