@@ -3,7 +3,7 @@ import os
 import pytest
 
 from .assertions import *
-from .data import _ALL_MP_STRUCTURES, load_pathological_cifs, get_data_file_path
+from .data import _ALL_MP_STRUCTURES, load_pathological_cifs, get_data_file_path, save_cnfs_to_dir
 from cnf.motif.atomic_motif import FractionalMotif
 from cnf.unit_cell import UnitCell
 
