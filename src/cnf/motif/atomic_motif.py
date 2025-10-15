@@ -55,7 +55,8 @@ class AtomicMotif():
         return len(self.get_element_positions(el))
 
     def validate_positions(self, pos):
-        return pos
+        if not isinstance(pos, np.ndarray):
+            raise ValueError(f"Encountered non-np.ndarray in AtomicMotif instantiation: {pos}")
     
     def get_matching(self, other: 'AtomicMotif'):
         assert len(self.atoms) == len(other.atoms)
