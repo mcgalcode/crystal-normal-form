@@ -38,7 +38,7 @@ class MotifTranslationSet():
         images.append(transformed)
         for v in self.vecs:
             images.append(transformed + v)
-        return images
+        return np.array(images)
     
     def apply_to_motif(self, motif: FractionalMotif):
         

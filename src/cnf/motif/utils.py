@@ -48,4 +48,5 @@ def discretize_coords(frac_coords: np.array, num_discretization_intervals: int):
     interval_size = 1 / num_discretization_intervals
     rounded_coords = np.round(frac_coords / interval_size) * interval_size
     coords_in_cell = move_coords_into_cell(rounded_coords, mod = 1)
-    return (coords_in_cell / interval_size).astype(np.int64)
+    res = np.round(coords_in_cell / interval_size).astype(int)
+    return res
