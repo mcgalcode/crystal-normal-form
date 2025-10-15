@@ -6,6 +6,10 @@ class MatrixTuple():
     @classmethod
     def from_tuple(cls, mat_tuple):
         return cls(np.array(mat_tuple).reshape((3,3)))
+    
+    @classmethod
+    def identity(cls):
+        return cls(np.eye(3))
 
     def __init__(self, matrix: np.array):
         self.matrix = np.copy(matrix)
