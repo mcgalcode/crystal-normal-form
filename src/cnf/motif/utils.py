@@ -9,9 +9,7 @@ def sort_elements(elements: list[str]) -> list[str]:
 def move_coords_into_cell(frac_coords: np.ndarray, mod) -> np.array:
     frac_coords_modded = frac_coords.round(13)
     frac_coords_modded = np.mod(frac_coords_modded, mod)
-    # frac_coords_modded = np.mod(frac_coords, mod)
     if (frac_coords_modded == mod).any():
-        print(frac_coords)
         raise RuntimeError(f"Encountered frac coord of mod {mod}! {frac_coords_modded}")
     return frac_coords_modded
 
