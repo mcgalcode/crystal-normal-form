@@ -48,7 +48,9 @@ class CNFConstructor():
 
     def from_motif_and_superbasis(self, motif: FractionalMotif, superbasis: Superbasis):
         vonorms = superbasis.compute_vonorms()
-
+        return self.from_vonorms_and_motif_undiscretized(vonorms, motif)
+    
+    def from_vonorms_and_motif_undiscretized(self, vonorms: VonormList, motif: FractionalMotif):
         undisc_cnf = self.from_vonorms_and_motif(vonorms, motif)
         vonorms = undisc_cnf.lnf_result.lnf.vonorms
 
