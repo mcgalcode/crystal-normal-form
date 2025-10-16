@@ -3,6 +3,7 @@ import os
 from cnf import CrystalNormalForm
 from pathlib import Path
 from pymatgen.core.structure import Structure
+from cnf.unit_cell import UnitCell
 
 def get_data_file_path(path_in_data_dir):
     return Path(__file__).parent / ".." / "data" / path_in_data_dir
@@ -18,6 +19,13 @@ def load_pathological_cifs(dir_name):
     for cif_path in patho_dir.iterdir():
         structs.append(Structure.from_file(cif_path))
     return structs
+
+def load_cnfs(dir_name):
+    patho_dir = Path(__file__).parent / ".." / "data" /  dir_name
+    unitcells = []
+    for cnf_path in patho_dir.iterdir():
+        unitcells.append(CrystalNormalForm.from_file(cnf_path))
+    return unitcells
 
 def load_pathological_neighbors(dir_name):
     patho_dir = Path(__file__).parent / ".." / "data" / "patho_neighbor_pairs" / dir_name

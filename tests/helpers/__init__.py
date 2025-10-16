@@ -3,7 +3,7 @@ import os
 import pytest
 
 from .assertions import *
-from .data import _ALL_MP_STRUCTURES, load_pathological_cifs, get_data_file_path, save_cnfs_to_dir
+from .data import _ALL_MP_STRUCTURES, load_pathological_cifs, get_data_file_path, save_cnfs_to_dir, load_cnfs
 from cnf.motif.atomic_motif import FractionalMotif
 from cnf.unit_cell import UnitCell
 
@@ -54,6 +54,11 @@ def are_geo_matches(uc1: UnitCell, uc2: UnitCell, tol=1e-5):
     if uc1.motif.has_inversion_symmetry():
         return True
     else:
+        # s_transform = get_structure_transformation(struct1, struct2, ltol=0.1, stol=0.01, angle_tol=1.0)
+        # if s_transform["determinant"] == -1.0:
+            # return False
+        # else:
+        #     return True
         are_inversions = uc1.motif.find_inverted_match(uc2.motif, atol=tol)
         if are_inversions:
             return False
@@ -64,4 +69,50 @@ def are_cnfs_mirror_images(cnf1: CrystalNormalForm, cnf2: CrystalNormalForm, ato
     motif1 = FractionalMotif.from_pymatgen_structure(cnf1.reconstruct())
     motif2 = FractionalMotif.from_pymatgen_structure(cnf2.reconstruct())
     return motif1.find_inverted_match(motif2, atol)
+
+def get_structure_transformation(struct1, struct2, ltol=0.01, stol=0.01, angle_tol=0.1):
+    """
+    Get the transformation matrix relating two structures using pymatgen's StructureMatcher.
+
+    Returns a dict with:
+        - 'match': bool, whether structures match
+        - 'supercell_matrix': 3x3 array, the transformation matrix (if match=True)
+        - 'translation': 3-array, translation vector (if match=True)
+        - 'mapping': list, atom index mapping (if match=True)
+        - 'determinant': float, determinant of transformation matrix (if match=True)
+
+    Args:
+        struct1, struct2: pymatgen Structure objects or CNFs
+        ltol, stol, angle_tol: tolerances for StructureMatcher
+    """
+    from pymatgen.analysis.structure_matcher import StructureMatcher
+    from cnf import CrystalNormalForm
+
+    # Handle CNF inputs
+    if isinstance(struct1, CrystalNormalForm):
+        struct1 = struct1.reconstruct()
+    if isinstance(struct2, CrystalNormalForm):
+        struct2 = struct2.reconstruct()
+
+    matcher = StructureMatcher(
+        ltol=ltol,
+        stol=stol,
+        angle_tol=angle_tol,
+        primitive_cell=False,
+        attempt_supercell=True
+    )
+
+    result = {'match': matcher.fit(struct1, struct2)}
+
+    if result['match']:
+        try:
+            supercell_matrix, translation, mapping = matcher.get_transformation(struct1, struct2)
+            result['supercell_matrix'] = supercell_matrix
+            result['translation'] = translation
+            result['mapping'] = mapping
+            result['determinant'] = np.linalg.det(supercell_matrix)
+        except Exception as e:
+            result['error'] = str(e)
+
+    return result
 
