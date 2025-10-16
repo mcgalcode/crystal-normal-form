@@ -92,10 +92,11 @@ class LatticeNeighborFinder():
                 neighbors.add_neighbor(result)
         return neighbors
     
-    def find_cnf_neighbor(self, step: LatticeStep) -> LatticeStepResult | None:
+    def find_cnf_neighbor_results(self, step: LatticeStep) -> list[LatticeStepResult]:
+        results = []
         neighbor_vonorms = self.get_vonorm_neighbor(step)
         if neighbor_vonorms is None:
-            return None
+            return results
 
         cnf_constructor = CNFConstructor(
             self.point.xi,
@@ -103,23 +104,31 @@ class LatticeNeighborFinder():
             verbose_logging=self.verbose_logging,
         )
 
-        # Use only the representative matrix, not all matrices
-        cnf_results = []
-        for mat in step.prereq_perm.all_matrices:
-            neighbor_motif = self.fractional_motif.apply_unimodular(mat).discretize(self.point.delta)
-            cnf_results.append(cnf_constructor.from_vonorms_and_motif(neighbor_vonorms, neighbor_motif))
-        cnf_result = sorted(cnf_results, key = lambda cnfr: cnfr.cnf.coords )[0]
+        undiscretized_vonorms = VonormList(tuple([round(float(v) * self.point.xi, 10) for v in neighbor_vonorms.vonorms]))
+        current_stabilizer = self.point.lattice_normal_form.vonorms.stabilizer_matrices()
 
-        if cnf_result.cnf == self.point:
-            return None
+        possible_motifs = {}
+        for s in current_stabilizer:
+            # stabilized_motif = self.discretized_motif.apply_unimodular(s).apply_unimodular(step.prereq_perm.matrix)
+            stabilized_motif = self.fractional_motif.apply_unimodular(s).apply_unimodular(step.prereq_perm.matrix)
+            if stabilized_motif in possible_motifs:
+                possible_motifs[stabilized_motif].append(s)
+            else:
+                possible_motifs[stabilized_motif] = [s]
 
-        return LatticeStepResult(
-            step,
-            neighbor_vonorms,
-            cnf_result,
-            cnf_result.cnf,
-            None
-        )
+
+        for motif, stabilizing_mats in possible_motifs.items():
+            cnf_result = cnf_constructor.from_vonorms_and_motif_undiscretized(undiscretized_vonorms, motif)
+            # cnf_result = cnf_constructor.from_vonorms_and_motif(neighbor_vonorms, motif)
+            results.append(LatticeStepResult(
+                step,
+                cnf_result.cnf.lattice_normal_form.vonorms,
+                cnf_result,
+                cnf_result.cnf,
+                stabilizing_mats
+            ))
+
+        return results
 
     def find_cnf_neighbors(self) -> NeighborSet:
         neighbors = NeighborSet()
@@ -127,7 +136,7 @@ class LatticeNeighborFinder():
         for step in self.possible_steps():
             self._log("")
             self._log(f"Step: {step.vals}, {step.prereq_perm.perm.perm}")
-            result = self.find_cnf_neighbor(step)
-            if result is not None:
-                neighbors.add_neighbor(result)
+            results = self.find_cnf_neighbor_results(step)
+            for r in results:
+                neighbors.add_neighbor(r)
         return neighbors

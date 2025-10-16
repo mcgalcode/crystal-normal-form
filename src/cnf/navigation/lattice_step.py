@@ -7,6 +7,7 @@ from ..lattice import LatticeNormalForm
 from ..lattice.lnf_constructor import LatticeNormalFormConstructionResult
 from ..motif.atomic_motif import DiscretizedMotif
 from ..lattice.voronoi import VonormList
+from ..linalg import MatrixTuple
 
 def is_primary_idx(idx):
     return idx >= 0 and idx < 4
@@ -69,10 +70,12 @@ class LatticeStepResult():
                  adjusted_vonorms: VonormList,
                  construction_result: CNFConstructionResult | LatticeNormalFormConstructionResult,
                  result: LatticeNormalForm | CrystalNormalForm,
-                 adjusted_motif: DiscretizedMotif = None):
+                 motif_stabilizers: list[MatrixTuple],
+                 stabilized_motif: DiscretizedMotif = None):
         self.step = step
         self.adjusted_vonorms = adjusted_vonorms
-        self.adjusted_motif = adjusted_motif
+        self.motif_stabilizers = motif_stabilizers
+        self.stabilized_motif = stabilized_motif
         self.construction_result = construction_result
         self.result = result
     
