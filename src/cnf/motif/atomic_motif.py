@@ -191,14 +191,17 @@ class AtomicMotif():
     def __repr__(self):
         return self.map.__repr__()
     
+    def __hash__(self):
+        return self.to_bnf_list().__hash__()
+    
     def __eq__(self, other: 'AtomicMotif'):
         els_eq = tuple(self.atoms) == tuple(other.atoms)
         if not els_eq:
             return False
         
         def lists_of_np_arrays_approx_eq(l1, l2):
-            l1_tuples = set([tuple(np.round(l, 5)) for l in l1])
-            l2_tuples = set([tuple(np.round(l, 5)) for l in l2])
+            l1_tuples = set([tuple(np.round(l, 7)) for l in l1])
+            l2_tuples = set([tuple(np.round(l, 7)) for l in l2])
             return l1_tuples == l2_tuples and len(l1) == len(l2)
             
         for el in self.unique_elements():
@@ -256,7 +259,7 @@ class FractionalMotif(PeriodicMotif):
         return cls.from_elements_and_positions(elements, coords)
 
     def _process_bnf_list_coord(self, coord):
-        return round(float(coord), 7)
+        return round(float(coord), 6)
     
     def compute_cartesian_coords_in_basis(self, basis: Superbasis):
         cart_coords = basis.generating_vecs().T @ self.coord_matrix
