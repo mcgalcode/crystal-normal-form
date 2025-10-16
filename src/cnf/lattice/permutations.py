@@ -51,6 +51,12 @@ class VonormPermutation(Permutation):
 
 class PermutationMatrix():
 
+    @classmethod
+    def identity(cls):
+        vperm = VonormPermutation((0,1,2,3,4,5,6))
+        mat = MatrixTuple.identity()
+        return cls(vperm, mat, [mat])
+
     def __init__(self, perm: Permutation, matrix: MatrixTuple, all_matrices: list[MatrixTuple]):
         self.perm = perm
         self.matrix = matrix
