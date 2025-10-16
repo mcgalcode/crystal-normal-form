@@ -7,19 +7,18 @@ from cnf.linalg.unimodular import get_unimodulars_col_max, MatrixTuple, load_uni
 from cnf.motif.utils import move_coords_into_cell
 from cnf.motif import FractionalMotif
 from cnf.unit_cell import UnitCell
+from cnf import CrystalNormalForm
 
 from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.core.structure import Structure, Element
 
 PATHO_IDX = 5
 
-def assert_structs_identical(s1, s2):
+def assert_structs_identical(s1, s2, xi=1.5, delta=100):
     helpers.assert_identical_by_pdd_distance(s1, s2)
 
     # for xi in np.arange(0.1, 2.5, 0.1):
     #     for delta in range(10,100, 10):
-    xi = 1.5
-    delta = 100
 
     cnf1 = UnitCell.from_pymatgen_structure(s1).to_cnf(xi, delta)
     cnf2 = UnitCell.from_pymatgen_structure(s2).to_cnf(xi, delta)
@@ -55,6 +54,28 @@ def test_patho_case_mp_204():
 def test_patho_case_mp_random_neighbs():
     structs = helpers.load_pathological_cifs("random_neighbs")
     assert_structs_identical(structs[0], structs[1])
+
+def test_patho_case_mp_35():
+    cnfs: list[CrystalNormalForm] = helpers.load_cnfs("patho_pairs/mp_35")
+    struct1 = cnfs[0].reconstruct()
+    struct2 = cnfs[1].reconstruct()
+    assert helpers.are_cnfs_geo_matches(*cnfs)
+    assert_structs_identical(struct1, struct2)
+
+
+def test_patho_case_mp_217():
+    cnfs: list[CrystalNormalForm] = helpers.load_cnfs("patho_pairs/mp_217")
+    xi = cnfs[0].xi
+    delta = cnfs[0].delta
+    struct1 = cnfs[0].reconstruct()
+    struct2 = cnfs[1].reconstruct()
+
+    cnf1 = UnitCell.from_pymatgen_structure(struct1).to_cnf(xi, delta, verbose=True)
+    print()
+    print()
+    cnf2 = UnitCell.from_pymatgen_structure(struct2).to_cnf(xi, delta, verbose=True)
+    assert helpers.are_cnfs_geo_matches(*cnfs)
+    assert_structs_identical(struct1, struct2, xi, delta)
 
 
 def test_simplify_case_mp_5():

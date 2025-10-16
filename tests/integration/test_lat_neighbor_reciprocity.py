@@ -107,7 +107,7 @@ def test_neighbor_reciprocity_by_geometry(idx, struct: Structure):
 def test_cnf_neighbor_reciprocity(idx, struct: Structure):
     verbose = False
     xi = 1.5
-    delta = 30
+    delta = 100
 
     helpers.printif("", verbose)
     helpers.printif(f"Attempting struct at idx {idx * STRUCT_SAMPLE_FREQ}", verbose)

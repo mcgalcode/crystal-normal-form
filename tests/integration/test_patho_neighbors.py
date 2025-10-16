@@ -29,10 +29,11 @@ def assert_reciprocal_lnf_neighbors(cnf1, cnf2, nbs1, nbs2):
 
 
 def test_are_neighbors_a_pair():
-    cnfs: list[CrystalNormalForm] = helpers.data.load_pathological_neighbors("mp_13_nb_15")
+    cnfs: list[CrystalNormalForm] = helpers.data.load_pathological_neighbors("mp_123_nb_11")
     
     cnf1 = cnfs[1]
     cnf2 = cnfs[0]
+
     print()
     print(f"PDD dist: {helpers.pdd_for_cnfs(cnf1, cnf2)}")
     print()
@@ -43,10 +44,21 @@ def test_are_neighbors_a_pair():
     print(f"CNF2 LNF: {cnf2.lattice_normal_form.coords}")
     print(f"CNF2 BNF: {cnf2.basis_normal_form.coord_list}")
     print(f"CNF2 Voronoi Class: {cnf2.voronoi_class}")
-    lf1 = LatticeNeighborFinder(cnf1)
-    lf2 = LatticeNeighborFinder(cnf2)
+    print()
+    print("================= Finding neighbors for CNF 1 ======================")
+    print()
+    print()
+    lf1 = LatticeNeighborFinder(cnf1, verbose_logging=True)
+    print()
+    print()
+    print("================= Finding neighbors for CNF 2 ======================")
+    print()
+    print()
+    lf2 = LatticeNeighborFinder(cnf2, verbose_logging=True)
+    print()
+    print()
 
-
+    print("========= RECAP OF STEPS THAT PRODUCED CNF1 from CNF2 =========")
     nbs1 = lf1.find_cnf_neighbors()
     nbs2 = lf2.find_cnf_neighbors()
     for n in nbs2.neighbors:

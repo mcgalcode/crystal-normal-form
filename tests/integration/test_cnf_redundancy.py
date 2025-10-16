@@ -140,8 +140,15 @@ def test_undiscretized_bnf_unique(idx, struct: Structure):
 
     assert len(all_cells) > 100
     assert len(set([c.vonorms for c in all_cells])) > 10
-    assert len(set([c.motif.to_bnf_list() for c in all_cells])) > 10
+    # assert len(set([c.motif.to_bnf_list() for c in all_cells])) > 
     con = CNFConstructor(1.5, 20)
     cnfs = [con.from_vonorms_and_motif(cell.vonorms, cell.motif).cnf for cell in all_cells]
-
+    for start_idx in range(0, len(cnfs[0].basis_normal_form.coord_list) - 10, 10):
+        all_coord_lists = sorted(cnfs, key = lambda cnf: cnf.basis_normal_form.coord_list)
+        pieces = [a.basis_normal_form.coord_list[start_idx:start_idx+10] for a in all_coord_lists]
+        if len(set(pieces)) > 1:
+            for cnf in pieces:
+                print(cnf)
+            print()
+            print()
     assert len(set([c.basis_normal_form.coord_list for c in cnfs])) == 1

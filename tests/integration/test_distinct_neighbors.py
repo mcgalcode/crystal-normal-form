@@ -12,10 +12,12 @@ from cnf.unit_cell import UnitCell
 
 @helpers.parameterized_by_mp_structs
 def test_neighbors_are_geometrically_distinct(idx, struct: Structure):
-    verbose = False
+    # if len(struct) >= 4:
+    #     return
+    verbose = True
     xi = 1.0
     delta = 20
-    constructor = CNFConstructor(xi, delta, verbose)
+    constructor = CNFConstructor(xi, delta, False)
     original_cnf = constructor.from_pymatgen_structure(struct).cnf
     nf = LatticeNeighborFinder(original_cnf)
     cnf_neighb_set = nf.find_cnf_neighbors()
@@ -33,8 +35,10 @@ def test_neighbors_are_geometrically_distinct(idx, struct: Structure):
         for old_neighb_res in tested_neighbs:
             old_neighb = old_neighb_res.point
             pdd_dist = helpers.pdd_for_cnfs(new_neighb, old_neighb)
-            if helpers.are_geo_matches(UnitCell.from_cnf(new_neighb), UnitCell.from_cnf(old_neighb), tol=1e-4):
+            if helpers.are_cnfs_geo_matches(new_neighb, old_neighb, tol=1e-4):
                 verbose = True
+                helpers.save_cnfs_to_dir(f"geo_pairs_neighbs/mp_{idx}", [new_neighb, old_neighb])
+
                 # recovered1 = constructor.from_pymatgen_structure(UnitCell.from_cnf(new_neighb).to_pymatgen_structure())
                 # recovered2 = constructor.from_pymatgen_structure(UnitCell.from_cnf(old_neighb).to_pymatgen_structure())
                 # assert recovered1.cnf == recovered2.cnf
