@@ -22,7 +22,7 @@ def test_can_find_all_lattice_steps():
     assert len(set([tuple(s) for s in all_steps])) == 42
 
 def test_lattice_neighbor_lnfs_make_sense(cnf_constructor):
-    struct = helpers.ALL_MP_STRUCTURES[0]
+    struct = helpers.ALL_MP_STRUCTURES()[0]
     original_cnf = cnf_constructor.from_pymatgen_structure(struct).cnf
 
     neighbor_set = LatticeNeighborFinder(original_cnf).find_lnf_neighbors()

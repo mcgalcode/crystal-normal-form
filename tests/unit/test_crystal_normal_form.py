@@ -24,11 +24,11 @@ def test_crystal_normal_form_equivalence():
         xi=0.15,
         delta=30
     )
-    cnf_1 = constructor.from_pymatgen_structure(helpers.ALL_MP_STRUCTURES[0]).cnf
-    cnf_1_1 = constructor.from_pymatgen_structure(helpers.ALL_MP_STRUCTURES[0]).cnf
+    cnf_1 = constructor.from_pymatgen_structure(helpers.ALL_MP_STRUCTURES()[0]).cnf
+    cnf_1_1 = constructor.from_pymatgen_structure(helpers.ALL_MP_STRUCTURES()[0]).cnf
     assert cnf_1 == cnf_1_1
     assert len(set([cnf_1, cnf_1_1])) == 1
 
-    cnf_2 = constructor.from_pymatgen_structure(helpers.ALL_MP_STRUCTURES[1]).cnf
+    cnf_2 = constructor.from_pymatgen_structure(helpers.ALL_MP_STRUCTURES()[1]).cnf
     assert cnf_2 != cnf_1
     assert len(set([cnf_1, cnf_2])) == 2
