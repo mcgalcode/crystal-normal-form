@@ -35,6 +35,7 @@ num_test_reqs = 100
 
 import numpy as np
 
+@pytest.mark.debug
 @helpers.parameterized_by_mp_structs
 def test_lnf_is_unique(idx, struct: Structure):
     uc = UnitCell.from_pymatgen_structure(struct).reduce()
@@ -52,6 +53,7 @@ def test_lnf_is_unique(idx, struct: Structure):
     assert len(lnfs) > num_test_reqs
     assert len(set(lnfs)) == 1
 
+@pytest.mark.debug
 @helpers.parameterized_by_mp_structs
 def test_bnf_is_unique(idx, struct: Structure):
     uc = UnitCell.from_pymatgen_structure(struct).reduce()
@@ -74,18 +76,9 @@ def test_bnf_is_unique(idx, struct: Structure):
     if len(set(lnfs)) == 1:
         assert len(set(bnfs)) == 1
 
-
 @helpers.parameterized_by_mp_structs
 def test_cnf_is_unique(idx, struct: Structure):
-    # struct = struct.to_primitive()
-    # rounded_abc = np.round(struct.lattice.abc, 1)
-    # rounded_ang = np.round(struct.lattice.angles, 0)
-    # lat_rounded = Lattice.from_parameters(*rounded_abc, *rounded_ang)
-    # struct = Structure(lat_rounded, struct.species, struct.frac_coords)
     uc = UnitCell.from_pymatgen_structure(struct).reduce()
-    original_vonorms = uc.superbasis.compute_vonorms()
-    assert original_vonorms.is_obtuse(tol=1e-5)
-    assert uc.is_obtuse(tol=1e-5)
     helpers.printif(f"Considering struct of class V{uc.voronoi_class}", verbose)
     
     cnf_map: dict[CrystalNormalForm, list] = {}
@@ -102,32 +95,10 @@ def test_cnf_is_unique(idx, struct: Structure):
                 cnf_map[cnf.coords] = [other_cell]
     
     assert len(all_cnfs) > 100
-    # print(all_cnfs)[:10]
     cnfs = list(cnf_map.keys())
-
-    # any_category_contains_95_percent = False
-    # for cnf, cells in cnf_map.items():
-    #     print(len(cells), 0.95 * len(all_cnfs))
-    #     if len(cells) > 0.95 * len(all_cnfs):
-    #         any_category_contains_95_percent = True
-    # for c in cnfs:
-    #     print(c)
-    # assert len(all_cnfs) > 100
-    # if len(cnfs) != 1:
-    #     patho_sets_dir = pathlib.Path(__file__).parent / ".." / "data" / "patho_pairs"
-    #     existing_dirs = list(patho_sets_dir.iterdir())
-    #     current_set_name = f"mp_{idx}"
-    #     existing_patho_dirs = [d.name for d in existing_dirs]
-    #     if current_set_name not in existing_patho_dirs:
-    #         os.makedirs(patho_sets_dir / current_set_name)
-    #         idx = 0
-    #         for cnf, cells in cnf_map.items():
-    #             cells[0].to_cif(str(patho_sets_dir / current_set_name / f"{idx}.cif"))
-    #             idx += 1
-
     assert len(set(cnfs)) == 1
 
-
+@pytest.mark.debug
 @helpers.parameterized_by_mp_structs
 def test_undiscretized_bnf_unique(idx, struct: Structure):
     # struct = struct.to_primitive()

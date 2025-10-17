@@ -6,20 +6,8 @@ from pymatgen.core.structure import Structure
 from cnf.unit_cell import UnitCell
 from cnf.lattice.voronoi import ConormListForm
 
-from cnf.linalg.unimodular import UNIMODULAR_MATRICES, get_unimodulars_col_max
+from cnf.linalg.unimodular import get_unimodulars_col_max
 from cnf.lattice.permutations import UnimodPermMapper
-
-# Generate all unimodular matrices up to col max norm 4 or 5
-# Save those
-# For a test case crystal:
-# 1) Generate every possible unit cell using these unimodular matrices
-#       - those whose vonorm values are not changed
-#       - those with determinant == 1 (no rotoinversions)
-#   -> Assert that the lattice normal form string is the same for all of these
-#   -> Assert that the crystal normal form string is the same
-# 2) For every unimodular matrix figure out if it changes the
-#    conorm string or the vonorm string (find stabilizers)
-# 3) Do quickly (wish list)
 
 STRUCT_SAMPLE_FREQ = 10
 

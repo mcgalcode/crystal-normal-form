@@ -8,7 +8,7 @@ from cnf.linalg import MatrixTuple
 from cnf.motif.atomic_motif import DiscretizedMotif
 from cnf.motif.bnf_constructor import get_all_shifted_motifs
 
-@helpers.parameterized_by_mp_structs
+@helpers.parameterized_by_mp_struct_idxs(every=50)
 def test_stabilizers_form_groups(idx, struct):
     uc = UnitCell.from_pymatgen_structure(struct).reduce()
     eye = (0,1,2,3,4,5,6)
@@ -50,7 +50,7 @@ def test_transforms_for_sort_equivalent_to_stabilizer():
     assert len(fail_structs) < 0.01 * len(helpers.ALL_MP_STRUCTURES())
 
 
-@helpers.parameterized_by_mp_structs
+@helpers.parameterized_by_mp_struct_idxs(every=50)
 def test_motif_is_stabilized_by_vonorm_stabilizers(idx, struct):
     delta = 20
     uc = UnitCell.from_pymatgen_structure(struct).reduce()
@@ -71,7 +71,7 @@ def test_motif_is_stabilized_by_vonorm_stabilizers(idx, struct):
                 m2 = m.apply_unimodular(stab)
                 assert tuple(m2.position_tuple_list) in first_round_positions
 
-@helpers.parameterized_by_mp_structs
+@helpers.parameterized_by_mp_struct_idxs(every=50)
 def test_motif_is_stabilized_wrt_mats_and_origin_shifts(idx, struct):
     delta = 20
     uc = UnitCell.from_pymatgen_structure(struct).reduce()

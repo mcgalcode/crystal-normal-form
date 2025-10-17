@@ -21,14 +21,16 @@ def test_supercell_construction_preserves_crystal_structure(idx, struct: Structu
 @helpers.skip_if_fast
 @helpers.parameterized_by_mp_structs
 def test_supercell_construction_preserves_crystal_structure_after_cnf(idx: int, struct: Structure):
-    xi = 0.001
-    delta = 10000
+    xi = 1.5
+    delta = 100
     MAX_IDX = 4
     constructor = CNFConstructor(xi, delta)
     for cell_idx in range(2, MAX_IDX + 1):
         supercells = UnitCell.from_pymatgen_structure(struct).supercells(cell_idx)
+        idx_delta = delta * cell_idx
+        constructor = CNFConstructor(xi, idx_delta)
         for cell in supercells:                
             superstruct = cell.to_pymatgen_structure()
             cnf = constructor.from_pymatgen_structure(superstruct).cnf
             recovered_struct = cnf.reconstruct()
-            helpers.assert_identical_by_pdd_distance(struct, recovered_struct, cutoff=0.05)
+            helpers.assert_identical_by_pdd_distance(struct, recovered_struct, cutoff=0.001)

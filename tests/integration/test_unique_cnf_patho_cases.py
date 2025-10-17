@@ -1,6 +1,8 @@
 import numpy as np
 import pytest
 import helpers
+from helpers.data import list_data_dir
+from pathlib import Path
 
 from cnf.cnf_constructor import CNFConstructor
 from cnf.linalg.unimodular import get_unimodulars_col_max, MatrixTuple, load_unimodular
@@ -62,9 +64,42 @@ def test_patho_case_mp_35():
     assert helpers.are_cnfs_geo_matches(*cnfs)
     assert_structs_identical(struct1, struct2)
 
+def test_all_patho_cases():
+    for mp_case in list_data_dir("geo_pairs_neighbs_cifs"):
+        mp_num = mp_case.name
+        for cluster in list_data_dir(Path("geo_pairs_neighbs_cifs") / mp_num):
+            cifs = helpers.load_cifs(cluster)
+            cnfs = set([UnitCell.from_pymatgen_structure(ps).to_cnf(1.0, 20) for ps in cifs])
+            assert len(cnfs) == 1
+            # print(mp_num, cluster.name, len(cifs))
+            # for cif in cifs:
+            #     print(helpers.is_struct_chiral(cif))
+
 
 def test_patho_case_mp_217():
-    cnfs: list[CrystalNormalForm] = helpers.load_cnfs("patho_pairs/mp_217")
+    cnfs: list[CrystalNormalForm] = helpers.load_cnfs("geo_pairs_basis_neighbs/mp_4/cluster_7")
+    print("Stabilizers for CNF 0")
+    print(cnfs[0].lattice_normal_form.vonorms)
+    print(cnfs[0].lattice_normal_form.vonorms.stabilizer_matrices())
+    print("Stabilizers for CNF 1")
+    print(cnfs[1].lattice_normal_form.vonorms)
+    print(cnfs[1].lattice_normal_form.vonorms.stabilizer_matrices(tol=1e-3))
+
+    u1 = UnitCell.from_cnf(cnfs[0]).reduce()
+    u2 = UnitCell.from_cnf(cnfs[1]).reduce()
+
+    for mat in cnfs[0].lattice_normal_form.vonorms.conorms.all_permutation_matrices():
+        print(f"Trying {mat}")
+        tu2 = u2.apply_unimodular(mat)
+        if tu2.vonorms.has_same_members(u1.vonorms):
+            if tu2.motif.find_match(u1.motif):
+                print(f"Match!")
+                print(tu2.vonorms)
+                print(u1.vonorms)
+                print(tu2.to_cnf(cnfs[0].xi, cnfs[0].delta).coords)
+                print(cnfs[0].coords)
+
+
     xi = cnfs[0].xi
     delta = cnfs[0].delta
     struct1 = cnfs[0].reconstruct()

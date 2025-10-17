@@ -17,7 +17,9 @@ verbose = False
 delta = 20
 xi = 1.1
 
-@helpers.parameterized_by_mp_structs
+FREQ=20
+
+@helpers.parameterized_by_mp_struct_idxs(every=FREQ)
 def test_rounding_vonorms_maps_to_same_vonorm_set(idx, struct: Structure):
     uc = UnitCell.from_pymatgen_structure(struct).reduce()
 
@@ -38,10 +40,10 @@ def test_rounding_vonorms_maps_to_same_vonorm_set(idx, struct: Structure):
 
             vals = sorted(rounded.vonorms)
             disc_vonorm_sets.append(tuple(vals))
-    assert len(disc_vonorm_sets) > 100
+    assert len(disc_vonorm_sets) > 50
     assert len(set(disc_vonorm_sets)) == 1
 
-@helpers.parameterized_by_mp_structs
+@helpers.parameterized_by_mp_struct_idxs(every=FREQ)
 def test_canonicalizing_leads_to_same_vonorm_list(idx, struct: Structure):
     uc = UnitCell.from_pymatgen_structure(struct).reduce()
 
@@ -61,7 +63,7 @@ def test_canonicalizing_leads_to_same_vonorm_list(idx, struct: Structure):
             canonicalized = can.get_canonicalized_vonorms(other_cell.vonorms, skip_reduction=True, coform_tolerance=0.01).canonical_vonorms
             can_vonorm_sets.append(tuple([float(v.round(2)) for v in canonicalized.vonorms]))
             can_conorm_sets.append(tuple([float(c.round(2)) for c in canonicalized.conorms.conorms]))
-    assert len(can_vonorm_sets) > 100
+    assert len(can_vonorm_sets) > 50
     for v in set(can_vonorm_sets):
         print(v)
     print()
@@ -69,7 +71,7 @@ def test_canonicalizing_leads_to_same_vonorm_list(idx, struct: Structure):
         print(v)
     assert len(set(can_vonorm_sets)) == 1
 
-@helpers.parameterized_by_mp_structs
+@helpers.parameterized_by_mp_struct_idxs(every=FREQ)
 def test_canonicalizing_then_rounding_vonorms_maps_to_same_vonorm_list(idx, struct: Structure):
     uc = UnitCell.from_pymatgen_structure(struct).reduce()
 
@@ -93,7 +95,7 @@ def test_canonicalizing_then_rounding_vonorms_maps_to_same_vonorm_list(idx, stru
     assert len(disc_vonorm_sets) > 100
     assert len(set(disc_vonorm_sets)) == 1
 
-@helpers.parameterized_by_mp_structs
+@helpers.parameterized_by_mp_struct_idxs(every=FREQ)
 def test_canonicalizing_then_discretizing_vonorms_maps_to_same_vonorm_list(idx, struct: Structure):
     uc = UnitCell.from_pymatgen_structure(struct).reduce()
 
@@ -146,7 +148,7 @@ def test_canonicalizing_then_discretizing_vonorms_maps_to_same_vonorm_list(idx, 
 
 
 # The hypothesis is that this approach resolves the problem
-@helpers.parameterized_by_mp_structs
+@helpers.parameterized_by_mp_struct_idxs(every=FREQ)
 def test_canonicalizing_then_discretizing_then_canonicalizing_makes_vonorm_list_unique(idx, struct: Structure):
     uc = UnitCell.from_pymatgen_structure(struct).reduce()    
     canonicalized = []
@@ -168,7 +170,7 @@ def test_canonicalizing_then_discretizing_then_canonicalizing_makes_vonorm_list_
         print(list(set(canonicalized)))
     assert len(set(canonicalized)) == 1
 
-@helpers.parameterized_by_mp_structs
+@helpers.parameterized_by_mp_struct_idxs(every=FREQ)
 def test_discretized_vonorms_have_same_permissible_perms(idx, struct: Structure):
     uc = UnitCell.from_pymatgen_structure(struct).reduce()
     

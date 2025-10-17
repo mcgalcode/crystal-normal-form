@@ -21,8 +21,8 @@ def test_can_find_all_lattice_steps():
     assert len(all_steps) == 42
     assert len(set([tuple(s) for s in all_steps])) == 42
 
-def test_lattice_neighbor_lnfs_make_sense(mp_structures, cnf_constructor):
-    struct = mp_structures[0]
+def test_lattice_neighbor_lnfs_make_sense(cnf_constructor):
+    struct = helpers.ALL_MP_STRUCTURES[0]
     original_cnf = cnf_constructor.from_pymatgen_structure(struct).cnf
 
     neighbor_set = LatticeNeighborFinder(original_cnf).find_lnf_neighbors()
@@ -32,23 +32,6 @@ def test_lattice_neighbor_lnfs_make_sense(mp_structures, cnf_constructor):
         diff = np.array(sorted(lnf.coords)) - np.array(sorted(original_cnf.lattice_normal_form.coords))
         assert np.sum(np.abs(diff)) == 2
         assert np.max(np.abs(diff)) == 1
-
-# @helpers.skip_if_fast
-# @helpers.parameterized_by_mp_struct_idxs(range(0,1000,100))
-# def test_lattice_second_neighbor_lnfs_make_sense(idx, struct, cnf_constructor):
-#     original_cnf = cnf_constructor.from_pymatgen_structure(struct).cnf
-
-#     neighbor_set = LatticeNeighborFinder(original_cnf).find_lnf_neighbors()
-
-#     for n in neighbor_set.neighbors:
-#         neighb_cnf = n.point
-#         second_neighb_lnf_set = LatticeNeighborFinder(neighb_cnf).find_lnf_neighbors()
-#         for sn in second_neighb_lnf_set.neighbors:
-#             sn_lnf = sn.point
-#             diff = np.array(sorted(sn_lnf.coords)) - np.array(sorted(original_cnf.lattice_normal_form.coords))
-#             assert np.sum(np.abs(diff)) <= 4
-#             assert np.max(np.abs(diff)) <= 2
-#     print(f"Structure was valid!")
 
 @helpers.skip_if_fast
 @helpers.parameterized_by_mp_struct_idxs(range(0,1000,100))

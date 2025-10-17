@@ -2,6 +2,7 @@ import pytest
 
 from cnf import CrystalNormalForm, LatticeNormalForm, BasisNormalForm
 from cnf.navigation.lattice_neighbor_finder import LatticeNeighborFinder
+from cnf.navigation.basis_neighbor_finder import BasisNeighborFinder
 
 LATTICE_NEIGHBORS = [
     (6, 6, 15, 16, 4, 18, 21, 2, 10, 10),
@@ -48,6 +49,17 @@ LATTICE_NEIGHBORS = [
     (5, 7, 15, 16, 4, 20, 19, 10, 2, 10)
 ]
 
+BASIS_NEIGHBORS = [
+    (6, 6, 15, 16, 4, 19, 20, 1, 9, 9),
+    (6, 6, 15, 16, 4, 19, 20, 3, 11, 11),
+    (6, 6, 15, 16, 4, 19, 20, 2, 10, 9),
+    (6, 6, 15, 16, 4, 19, 20, 2, 10, 11),
+    (6, 6, 15, 16, 4, 19, 20, 2, 9, 10),
+    (6, 6, 15, 16, 4, 19, 20, 2, 11, 10),
+    (6, 6, 15, 16, 4, 19, 20, 1, 10, 10),
+    (6, 6, 15, 16, 4, 19, 20, 3, 10, 10),
+]
+
 def test_thesis_neighbors():
     xi = 1.5
     delta = 20
@@ -56,15 +68,23 @@ def test_thesis_neighbors():
     starting_bnf = BasisNormalForm((2, 10, 10), ["Li", "Li"], delta)
     starting_cnf = CrystalNormalForm(starting_lnf, starting_bnf)
 
-    neighbor_finder = LatticeNeighborFinder()
+    lnf_neighbor_finder = LatticeNeighborFinder(starting_cnf)
+    bnf_neighbor_finder = BasisNeighborFinder(starting_cnf)
 
-    neighbors = neighbor_finder.find_cnf_neighbors(starting_cnf)
-    neighbor_coords = [n.coords for n in neighbors]
+    lnf_neighbor_set = lnf_neighbor_finder.find_cnf_neighbors()
+    lnf_neighbors = lnf_neighbor_set.neighbors
+    lnf_neighbors = [n.point for n in lnf_neighbors]
 
-    print(f"Found {len(set(neighbor_coords))} distinct neighbors!")
+    bnf_neighbor_set = bnf_neighbor_finder.find_basis_neighbors()
+    bnf_neighbors = bnf_neighbor_set.neighbors
+    bnf_neighbors = [n.point for n in bnf_neighbors]
 
-    found = set(LATTICE_NEIGHBORS).intersection(set(neighbor_coords))
-    not_found = set(LATTICE_NEIGHBORS) - set(neighbor_coords)
+    neighbors = lnf_neighbors
+
+    print(f"Found {len(set(neighbors))} distinct neighbors!")
+
+    found = set(LATTICE_NEIGHBORS).intersection(set(neighbors))
+    not_found = set(LATTICE_NEIGHBORS) - set(neighbors)
 
     print(f"Found {len(found)} of {len(LATTICE_NEIGHBORS)} expected CNF neighbors.")
     print(f"Missed {len(not_found)} of {len(LATTICE_NEIGHBORS)} expected CNF neighbors.")

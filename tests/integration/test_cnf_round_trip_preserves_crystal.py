@@ -8,14 +8,29 @@ import helpers
 
 @helpers.skip_if_fast
 @helpers.parameterized_by_mp_structs
+def test_cnf_round_trip_yields_same_crystal_no_disc(idx, struct: Structure):
+    xi = 1
+    delta = 100000
+    constructor = CNFConstructor(xi, delta, verbose_logging=True)
+    uc = UnitCell.from_pymatgen_structure(struct)
+
+    vonorms = uc.vonorms
+    motif = uc.motif.discretize(delta)
+    cnf = constructor.from_vonorms_and_motif(vonorms, motif).cnf
+    recovered_struct = cnf.reconstruct()
+    helpers.assert_identical_by_pdd_distance(struct, recovered_struct)
+
+@helpers.skip_if_fast
+@helpers.parameterized_by_mp_structs
 def test_cnf_round_trip_yields_same_crystal_full_cells(idx, struct: Structure):
-    xi = 0.01
-    delta = 10000
+    xi = 0.0001
+    delta = 100000
     constructor = CNFConstructor(xi, delta, verbose_logging=True)
     uc = UnitCell.from_pymatgen_structure(struct)
     # cnf = constructor.from_pymatgen_structure(struct).cnf
     cnf = uc.to_cnf(xi, delta)
     recovered_struct = cnf.reconstruct()
+    recovered_two = UnitCell.from_pymatgen_structure(recovered_struct).to_cnf(xi, delta).reconstruct()
     helpers.assert_identical_by_pdd_distance(struct, recovered_struct)
 
 @helpers.skip_if_fast

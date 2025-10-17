@@ -22,8 +22,7 @@ def test_can_discretize_vonorms(Zr_BCC_lattice):
 
     assert (np.abs(vonorms.vonorms - (np.array(rounded_vonorms.vonorms) * 1.5)) < 1.5).all()
 
-def test_pathological_case_1(mp_structures):
-    PATHO_IDX = 119
+def test_pathological_case_1():
     # These are two canonicalized vonorm lists
     xi = 1.1
     vonorms_1 = VonormList((np.float64(34.58861224423054), np.float64(34.58861506721064), np.float64(40.67657149762606), np.float64(40.90386871588968), np.float64(69.16390162496408), np.float64(40.796879456568746), np.float64(40.7968864434241)))

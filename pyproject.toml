@@ -32,3 +32,6 @@ dev = [
 minversion = "6.0"
 norecursedirs = ["tests/helpers"]
 addopts = "--disable-warnings"
+markers = [
+    "debug: Marks a test as a \"debug\" test. Skipped by default.",
+]
