@@ -13,3 +13,4 @@ wheels/
 .ipynb_checkpoints
 git
 .vscode
+.DS_Store
