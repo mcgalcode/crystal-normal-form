@@ -26,6 +26,16 @@ def ALL_MP_STRUCTURES(freq=None):
         freq = STRUCT_SAMPLE_FREQ
     return _ALL_MP_STRUCTURES[::freq]
 
+def parameterized_by_structs_with_num_sites_less_than(num):
+    matcher = lambda struct: len(struct) < num
+    return parameterized_by_matching_mp_structs(matcher)
+
+def parameterized_by_matching_mp_structs(matcher):
+    pairs = [(idx, struct) for idx, struct in enumerate(_ALL_MP_STRUCTURES) if matcher(struct)]
+    def _wrapper(func):
+        return pytest.mark.parametrize("idx, struct", pairs)(func)    
+    return _wrapper
+
 def parameterized_by_mp_structs(func):
     if SPECIFIC_STRUCT_IDX is None:
         return pytest.mark.parametrize("idx, struct", zip(range(0, len(_ALL_MP_STRUCTURES), STRUCT_SAMPLE_FREQ), _ALL_MP_STRUCTURES[::STRUCT_SAMPLE_FREQ]))(func)
