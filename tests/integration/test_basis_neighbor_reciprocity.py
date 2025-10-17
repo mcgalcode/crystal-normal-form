@@ -13,12 +13,8 @@ from pathlib import Path
 
 STRUCT_SAMPLE_FREQ = 1
 
-@helpers.skip_if_fast
-@helpers.parameterized_by_mp_structs
+@helpers.parameterized_by_structs_with_num_sites_less_than(8)
 def test_basis_neighbor_reciprocity(idx, struct: Structure):
-    struct = struct.to_primitive()
-    if len(struct) > 8:
-        return
     verbose = False
     xi = 1.5
     delta = 10

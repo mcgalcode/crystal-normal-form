@@ -10,11 +10,8 @@ from pymatgen.core.structure import Structure
 from cnf.unit_cell import UnitCell
 
 
-@helpers.parameterized_by_mp_structs
-def test_neighbors_are_geometrically_distinct(idx, struct: Structure):
-    struct = struct.to_primitive()
-    if len(struct) > 10:
-        return    
+@helpers.parameterized_by_structs_with_num_sites_less_than(10)
+def test_neighbors_are_geometrically_distinct(idx, struct: Structure):    
     verbose = False
     xi = 1.5
     delta = 20
