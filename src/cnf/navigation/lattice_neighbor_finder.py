@@ -1,5 +1,5 @@
 import numpy as np
-
+import itertools
 from ..crystal_normal_form import CrystalNormalForm
 from ..cnf_constructor import CNFConstructor
 from ..lattice.lnf_constructor import LatticeNormalFormConstructor
@@ -7,6 +7,7 @@ from ..lattice.voronoi import VonormList
 from .lattice_step import LatticeStep, LatticeStepResult
 from .neighbor_set import NeighborSet
 from ..utils.pdd import pdd_for_cnfs
+from ..lattice.unimodular import combine_unimodular_matrices
 
 class LatticeNeighborFinder():
 
@@ -33,25 +34,27 @@ class LatticeNeighborFinder():
 
     def possible_steps(self):
         vonorms = self._lnf().vonorms
-        grouped_vnorm_perms = vonorms.conorms.form.grouped_vonorm_permutations()
         steps: list[LatticeStep] = []
-        for _, perms in grouped_vnorm_perms.items():
-            # Choose a representative perm - any of these will work
-            # because the all_step_vecs chi vectors from David's thesis
-            # are already designed to cover S4. So we just need any representative
-            # that gets us to each of Kurlin's basis possibilities.
-            repr_perm = perms[0]
-            for step_vec in LatticeStep.all_step_vecs():
-                steps.append(LatticeStep(step_vec, repr_perm))
+        current_stabilizer = self.point.lattice_normal_form.vonorms.stabilizer_matrices()
+        for s4_idxs, data in vonorms.maximally_ascending_equivalence_class_members().items():           
+            permuted_vonorms = data['maximal_permuted_list']
+            transform_mats = data['transition_mats']
+
+            mat_sequences = itertools.product(current_stabilizer, transform_mats, permuted_vonorms.stabilizer_matrices())
+            unimodular_mats = set([combine_unimodular_matrices(mat_seq) for mat_seq in mat_sequences])
+            for mat in unimodular_mats:
+                transformed_motif = self.discretized_motif.apply_unimodular(mat)
+                for step_vec in LatticeStep.all_step_vecs():
+                    old_vonorms = np.array(permuted_vonorms.vonorms)                    
+                    new_vonorms = VonormList(tuple([int(v) for v in old_vonorms + np.array(step_vec)]))                    
+                    steps.append(LatticeStep(step_vec, new_vonorms, transformed_motif, mat))
+        steps = list(set(steps))
         return steps
 
-    def get_vonorm_neighbor(self, step: LatticeStep):
-        lnf_point = self._lnf()
-        vonorms = lnf_point.vonorms
-        self._log(f"Original vonorms: {vonorms}")
 
-        permuted_vonorms = vonorms.apply_permutation(step.prereq_perm.vonorm_permutation)
-        self._log(f"Permuted vonorms: {permuted_vonorms} (after applying {step.prereq_perm.vonorm_permutation})")
+    def get_vonorm_neighbor(self, step: LatticeStep):
+        permuted_vonorms = step.vonorms
+        self._log(f"Permuted vonorms: {permuted_vonorms}")
         old_vonorms = np.array(permuted_vonorms.vonorms)
         
         new_vonorms = VonormList(tuple([int(v) for v in old_vonorms + np.array(step.vals)]))
@@ -94,39 +97,29 @@ class LatticeNeighborFinder():
     
     def find_cnf_neighbor_results(self, step: LatticeStep) -> list[LatticeStepResult]:
         results = []
-        neighbor_vonorms = self.get_vonorm_neighbor(step)
-        if neighbor_vonorms is None:
+        if not (step.vonorms.is_obtuse() and step.vonorms.is_superbasis()):
+            if self.verbose_logging:
+                if not step.vonorms.is_obtuse():
+                    self._log(f"Neighbor was not obtuse.")
+
+                if not step.vonorms.is_superbasis():
+                    self._log(f"Neighbor was not a superbasis.")
             return results
 
         cnf_constructor = CNFConstructor(
             self.point.xi,
             self.point.delta,
-            verbose_logging=self.verbose_logging,
+            verbose_logging=False,
         )
 
-        undiscretized_vonorms = VonormList(tuple([round(float(v) * self.point.xi, 10) for v in neighbor_vonorms.vonorms]))
-        current_stabilizer = self.point.lattice_normal_form.vonorms.stabilizer_matrices()
-
-        possible_motifs = {}
-        for s in current_stabilizer:
-            # stabilized_motif = self.discretized_motif.apply_unimodular(s).apply_unimodular(step.prereq_perm.matrix)
-            stabilized_motif = self.fractional_motif.apply_unimodular(s).apply_unimodular(step.prereq_perm.matrix)
-            if stabilized_motif in possible_motifs:
-                possible_motifs[stabilized_motif].append(s)
-            else:
-                possible_motifs[stabilized_motif] = [s]
-
-
-        for motif, stabilizing_mats in possible_motifs.items():
-            cnf_result = cnf_constructor.from_vonorms_and_motif_undiscretized(undiscretized_vonorms, motif)
-            # cnf_result = cnf_constructor.from_vonorms_and_motif(neighbor_vonorms, motif)
-            results.append(LatticeStepResult(
-                step,
-                cnf_result.cnf.lattice_normal_form.vonorms,
-                cnf_result,
-                cnf_result.cnf,
-                stabilizing_mats
-            ))
+        cnf_result = cnf_constructor.from_vonorms_and_motif(step.vonorms, step.transformed_motif)
+        results.append(LatticeStepResult(
+            step,
+            cnf_result.cnf.lattice_normal_form.vonorms,
+            cnf_result,
+            cnf_result.cnf,
+            step.matrix
+        ))
 
         return results
 
@@ -135,7 +128,7 @@ class LatticeNeighborFinder():
         self._log(f"Considering {len(self.possible_steps())} possible steps...")
         for step in self.possible_steps():
             self._log("")
-            self._log(f"Step: {step.vals}, {step.prereq_perm.perm.perm}")
+            self._log(f"Step: {step.vals}, {step.matrix}")
             results = self.find_cnf_neighbor_results(step)
             for r in results:
                 neighbors.add_neighbor(r)

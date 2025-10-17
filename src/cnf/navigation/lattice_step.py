@@ -38,30 +38,33 @@ class LatticeStep():
         
         return steps
 
-    def __init__(self, vals, prereq_perm: PermutationMatrix = None):
+    def __init__(self, vals, vonorms: VonormList, transformed_motif: DiscretizedMotif, matrix: MatrixTuple):
         self.vals = vals
         self.tuple = tuple(vals)
-        self.prereq_perm = prereq_perm
+        self.vonorms = vonorms
+        self.matrix = matrix
+        self.transformed_motif = transformed_motif
 
         for idx, val in enumerate(vals):
             if np.abs(val) != 1 and val != 0:
                 raise ValueError(f"LatticeStep instantiated with invalid element != 1 at pos {idx}: {tuple(vals)}")
+            
+    def _as_tuple(self):
+        return (self.tuple, tuple(self.vonorms.vonorms), self.transformed_motif.to_bnf_list(), self.matrix.tuple)
     
     def __eq__(self, other: 'LatticeStep'):
-        return self.tuple == other.tuple and self.prereq_perm == other.prereq_perm
+        return self._as_tuple() == other._as_tuple()
     
     def __hash__(self):
-        return (self.tuple, self.prereq_perm).__hash__()
+        return self._as_tuple().__hash__()
     
     def __repr__(self):
-        return f"LatticeStep<vonorm_adj={self.vals}, perm={self.prereq_perm.vonorm_permutation.perm}>"
+        return f"LatticeStep<vonorm_adj={self.vals}, perm={self.vonorms}>"
     
     def print_details(self):
         print(f"Step adj. vec: {self.vals}")
-        print(f"Prerequisite Vo. perm: {self.prereq_perm.vonorm_permutation}")
-        print(f"Prerequisite Co. perm: {self.prereq_perm.conorm_permutation}")
-        print(f"Prerequisite matrix: {self.prereq_perm.matrix.tuple}")
-        print(f"Prerequisite matrix det: {self.prereq_perm.matrix.determinant()}")        
+        print(f"Vonorms: {self.vonorms}")
+        print(f"Prerequisite matrix: {self.matrix.tuple}")
 
 class LatticeStepResult():
 

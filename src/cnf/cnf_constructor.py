@@ -1,4 +1,5 @@
 import numpy as np
+from itertools import product
 from pymatgen.core import Structure # Or other library
 from .lattice import Superbasis
 from .motif.atomic_motif import FractionalMotif, DiscretizedMotif
@@ -67,18 +68,26 @@ class CNFConstructor():
         lnf_result = lnf_constructor.build_lnf_from_vonorms(vonorms)
         if self.verbose_logging:
             print(f"Successfully constructed LNF! {lnf_result.lnf}")
+
         motif = motif.apply_unimodular(lnf_result.selling_transform_mat())
+
+        stabilizer_1 = vonorms.stabilizer_matrices(1e-4)
+        sorting_transforms = lnf_result.sorting_transforms()[:1]
+        stabilizer_2 = lnf_result.stabilizer(1e-4)
+        
+        all_stabilizers = [combine_unimodular_matrices(stack) for stack in product(stabilizer_1, sorting_transforms, stabilizer_2)]
+        all_stabilizers = list(set(all_stabilizers))
         # Option 1 - use the transforms TO the sorted list as the search set
-        stabilizer_mats = lnf_result.sorting_transforms()
+        # stabilizer_mats = lnf_result.sorting_transforms()
         
         # Option 2 - transform via ANY ONE of the transforms to sorted list then use stabilizer as search set
         # motif = motif.apply_unimodular(lnf_result.sorting_transforms()[0])
-        # stabilizer_mats = lnf_result.stabilizer()
+        # stabilizer_mats = lnf_result.stabilizer(tol=1e-3)
 
         if self.verbose_logging:
-            print(f"Found {len(stabilizer_mats)} stabilizers...")
+            print(f"Found {len(all_stabilizers)} stabilizers...")
 
-        bnf_constructor = BNFConstructor(self.delta, stabilizer_mats, self.verbose_logging)
+        bnf_constructor = BNFConstructor(self.delta, all_stabilizers, self.verbose_logging)
         bnf_construction_res = bnf_constructor.build(motif)
 
         if self.verbose_logging:
