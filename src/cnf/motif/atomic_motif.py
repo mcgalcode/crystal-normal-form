@@ -33,6 +33,8 @@ class AtomicMotif():
         self.sorted_elements = sort_elements(self.unique_elements())
         self.sorted_elements.reverse()
         elements, positions = self.to_elements_and_positions()
+        positions = [np.array(pos) for pos in positions]
+        positions = [self._process_transformed_coords(c) for c in positions]
         for pos in positions:
             self.validate_positions(pos)
         self.atoms = elements
@@ -221,8 +223,8 @@ class PeriodicMotif(AtomicMotif):
         if mod is None:
             raise ValueError(f"Tried to instantiate {self.__class__} without mod")
         
-        super().__init__(element_to_positions_map)
         self._mod = mod
+        super().__init__(element_to_positions_map)
 
     def validate_positions(self, pos):
         if np.any(np.array(pos) < 0):
