@@ -97,7 +97,7 @@ class ConormListForm():
                 mats.extend(p.all_matrices)
         return list(set(mats))
     
-    def grouped_vonorm_permutations(self) -> list[list[PermutationMatrix]]:
+    def grouped_vonorm_permutations(self) -> dict[tuple[int, int, int, int], list[PermutationMatrix]]:
         groups = {}
         for p in self.permissible_permutations():
             s4_members = tuple(sorted(p.vonorm_permutation.perm[:4]))

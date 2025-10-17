@@ -63,7 +63,26 @@ class VonormList():
             if self.about_equal(permuted_self, tol):
                 stabilizers.append(p)
         return stabilizers
-
+    
+    def grouped_by_s4_permutations(self):
+        grouped_vonorms = self.conorms.form.grouped_vonorm_permutations()
+        return grouped_vonorms
+    
+    def maximally_ascending_equivalence_class_members(self):
+        grouped = self.grouped_by_s4_permutations()
+        result = {}
+        for group, perms in grouped.items():
+            candidates = [(self.apply_permutation(p.vonorm_permutation), p) for p in perms]
+            candidates = sorted(candidates, key=lambda p: p[0].vonorms)
+            maximal_vlist = candidates[0][0]
+            equivalent_perms = [c[1] for c in candidates if c[0] == maximal_vlist]
+            result[group] = {
+                "equivalent_perms": equivalent_perms,
+                "maximal_permuted_list": maximal_vlist,
+                "transition_mats": [m for p in equivalent_perms for m in p.all_matrices]
+            }
+        return result
+    
     def stabilizer_matrices(self, tol=1e-8) -> list[MatrixTuple]:
         perm_stab = self.stabilizer_perms(tol)
         mats = []
