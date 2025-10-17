@@ -109,13 +109,15 @@ class LatticeNeighborFinder():
         )
 
         cnf_result = cnf_constructor.from_vonorms_and_motif(step.vonorms, step.transformed_motif)
-        results.append(LatticeStepResult(
-            step,
-            cnf_result.cnf.lattice_normal_form.vonorms,
-            cnf_result,
-            cnf_result.cnf,
-            step.matrix
-        ))
+
+        if cnf_result.cnf != self.point:
+            results.append(LatticeStepResult(
+                step,
+                cnf_result.cnf.lattice_normal_form.vonorms,
+                cnf_result,
+                cnf_result.cnf,
+                step.matrix
+            ))
 
         return results
 

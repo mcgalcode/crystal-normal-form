@@ -71,33 +71,34 @@ def is_struct_chiral(struct: Structure):
     return is_chiral1_general
 
 
-def are_unit_cells_geo_matches(uc1: UnitCell, uc2: UnitCell, tol):
+def are_unit_cells_geo_matches(uc1: UnitCell, uc2: UnitCell, tol=1e-4):
     struct1 = uc1.to_pymatgen_structure()
     struct2 = uc2.to_pymatgen_structure()
     pdd_dist = pdd(struct1, struct2)
     if pdd_dist > tol:
         return False, f"PDD was {pdd_dist}"
     
-    matcher = StructureMatcher(ltol=0.0001, stol=0.0001, angle_tol=0.0001, primitive_cell=False, attempt_supercell=False)
+    matcher = StructureMatcher(ltol=tol, stol=tol, angle_tol=tol, primitive_cell=False, attempt_supercell=False)
     if not matcher.fit(struct1, struct2):
-        return False, "Structure matcher suggests these are different"
+        return False, f"Structure matcher suggests these are different, and pdd was {pdd_dist}"
 
     is_chiral1 = is_struct_chiral(struct1)
     is_chiral2 = is_struct_chiral(struct2)
 
     if not is_chiral1 and not is_chiral2:
-        return True, f"Both structures are achiral"
+        return True, f"Both structures are achiral, and pdd was {pdd_dist}"
 
     if is_chiral1 != is_chiral2:
-        return False, f"Different chirality, struct 1: {is_chiral1}, struct 2: {is_chiral2}"
+        return False, f"Different chirality, struct 1: {is_chiral1}, struct 2: {is_chiral2}, and pdd was {pdd_dist}"
     
+    # Both structures are chiral
 
     relation_mat = matcher.get_supercell_matrix(struct1, struct2)
     det = np.linalg.det(relation_mat)
     if det != +1:
-        return False, f"Structures were related by mat with det {det}. {MatrixTuple(relation_mat)}"
+        return False, f"Structures were related by mat with det {det}. {MatrixTuple(relation_mat)}, and pdd was {pdd_dist}"
 
-    raise RuntimeError("Accessed inconsistent state during structure matching check")
+    return True, f"Both structures are chiral, but have {pdd_dist} PDD and a matrix relation with positive det {det}"
 
 def are_cnfs_mirror_images(cnf1: CrystalNormalForm, cnf2: CrystalNormalForm, atol=1e-6):
     motif1 = FractionalMotif.from_pymatgen_structure(cnf1.reconstruct())

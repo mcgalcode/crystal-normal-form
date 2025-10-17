@@ -92,7 +92,8 @@ def test_cnf_is_unique(idx, struct: Structure):
     all_cnfs: list[CrystalNormalForm] = []
     for u in UNIMODULAR_MATRICES[::sample_freq]:
         other_cell = uc.apply_unimodular(u)
-        if helpers.are_geo_matches(uc, other_cell):
+        match, reason = helpers.are_unit_cells_geo_matches(uc, other_cell, tol=1e-4)
+        if match:
             cnf = other_cell.to_cnf(xi, delta)
             all_cnfs.append(cnf)
             if cnf.coords in cnf_map:

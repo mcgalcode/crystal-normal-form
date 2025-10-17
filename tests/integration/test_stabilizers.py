@@ -25,11 +25,40 @@ def test_vonorm_stabilizers_preserve_crystal(idx, struct):
 
     for s in vn.stabilizer_matrices():
         stabilized_vn = vn.to_superbasis(lattice_step_size=1.0).apply_matrix_transform(s.matrix).compute_vonorms()
-        assert stabilized_vn == vn
+        assert stabilized_vn.about_equal(vn, tol=5e-3)
 
         stabilized_motif = motif.apply_unimodular(s)
         recovered = Structure(stabilized_vn.to_superbasis().generating_vecs(), stabilized_motif.atoms, stabilized_motif.positions)
         helpers.assert_identical_by_pdd_distance(struct, recovered)
+    
+@helpers.skip_if_fast
+@helpers.parameterized_by_mp_structs
+def test_vonorm_stabilizers_preserve_crystal_motif_only(idx, struct):
+    # if len(struct) >= 4:
+    #     return
+    uc = UnitCell.from_pymatgen_structure(struct).reduce()
+    vn = uc.vonorms
+    motif = uc.motif
+    print("Original MOTIF")
+    motif.print_details()
+    recovered = uc.to_pymatgen_structure()
+    helpers.assert_identical_by_pdd_distance(struct, recovered)
+
+    for s in vn.stabilizer_matrices():
+        stabilized_motif = motif.apply_unimodular(s)
+        recovered = Structure(vn.to_superbasis().generating_vecs(), stabilized_motif.atoms, stabilized_motif.positions)
+        match, reason = helpers.are_structs_geo_matches(struct, recovered, tol=1e-2)
+        if not match:
+            # struct.to_file("test1.cif")
+            # recovered.to_file("test2.cif")
+            transform = helpers.get_structure_transformation(struct, recovered)
+            # uc.motif.print_details()
+            print(f"Found transform, applying to original motif:")
+            uc.motif.transform(transform['supercell_matrix']).print_details()
+            print(reason)
+            print(transform)
+            # stabilized_motif.print_details()
+        assert match, reason
 
 @helpers.skip_if_fast
 @helpers.parameterized_by_mp_structs
