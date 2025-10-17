@@ -17,9 +17,9 @@ class NeighborSet():
             self.neighbors_to_steps[nb_point].append(step_result)
         else:
             self.neighbors_to_steps[nb_point] = [step_result]
-    
+
     @property
-    def neighbors(self) -> list[Neighbor | CrystalNormalForm]:
+    def neighbors(self) -> list[Neighbor]:
         nbs = []
         for nb, step_results in self.neighbors_to_steps.items():
             nbs.append(Neighbor(nb, step_results))

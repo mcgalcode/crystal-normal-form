@@ -71,12 +71,8 @@ class LatticeNeighborFinder():
                     self._log(f"Neighbor was not a superbasis.")
             return None
     
-    def get_basis_neighbor(self, step: LatticeStep):
-        matrix = step.prereq_perm.matrix
-        return self.discretized_motif.apply_unimodular(matrix)
-
     def find_lnf_neighbor(self, step: LatticeStep):
-        new_vonorms = self.get_vonorm_neighbor(step)
+        new_vonorms = step.vonorms
         if new_vonorms is None:
             return None
         
@@ -84,7 +80,7 @@ class LatticeNeighborFinder():
         construction_result = lnf_constructor.build_lnf_from_vonorms(new_vonorms, skip_reduction=True)
         neighbor_lnf = construction_result.lnf
             
-        return LatticeStepResult(step, new_vonorms, construction_result, neighbor_lnf)
+        return LatticeStepResult(step, new_vonorms, construction_result, neighbor_lnf, step.matrix)
         
 
     def find_lnf_neighbors(self) -> NeighborSet:
