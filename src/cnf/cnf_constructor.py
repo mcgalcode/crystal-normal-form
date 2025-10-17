@@ -69,13 +69,12 @@ class CNFConstructor():
         if self.verbose_logging:
             print(f"Successfully constructed LNF! {lnf_result.lnf}")
 
-        motif = motif.apply_unimodular(lnf_result.selling_transform_mat())
-
         stabilizer_1 = vonorms.stabilizer_matrices(1e-4)
+        selling = [lnf_result.selling_transform_mat()]
         sorting_transforms = lnf_result.sorting_transforms()[:1]
         stabilizer_2 = lnf_result.stabilizer(1e-4)
         
-        all_stabilizers = [combine_unimodular_matrices(stack) for stack in product(stabilizer_1, sorting_transforms, stabilizer_2)]
+        all_stabilizers = [combine_unimodular_matrices(stack) for stack in product(stabilizer_1, selling, sorting_transforms, stabilizer_2)]
         all_stabilizers = list(set(all_stabilizers))
         # Option 1 - use the transforms TO the sorted list as the search set
         # stabilizer_mats = lnf_result.sorting_transforms()
