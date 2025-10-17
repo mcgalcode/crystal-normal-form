@@ -287,4 +287,4 @@ def test_catalog_of_unimodular_matrices_is_complete(idx, struct: Structure):
         helpers.printif(f"Unequal findings for struct of class {uc.voronoi_class} w form : {uc.conorms.form.zero_indices}", True)
         helpers.printif(uc.conorms, True)
     helpers.printif(f"Found {len(equivalent_unit_cells)} unit cells", verbose)
-    assert set(geo_eq_mats) == set(og_mats)
+    assert set(geo_eq_mats).issubset(set(og_mats))

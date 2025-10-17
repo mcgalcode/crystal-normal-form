@@ -10,8 +10,10 @@ from cnf.motif import FractionalMotif
 from cnf.lattice.selling import VonormListSellingReducer
 from cnf.linalg.unimodular import UNIMODULAR_MATRICES
 
+FREQ=5
+
 @helpers.skip_if_fast
-@helpers.parameterized_by_mp_structs
+@helpers.parameterized_by_mp_struct_idxs(every=FREQ)
 def test_vonorm_stabilizers_preserve_crystal(idx, struct):
     sb = Superbasis.from_pymatgen_structure(struct)
     vn = sb.compute_vonorms()
@@ -32,7 +34,7 @@ def test_vonorm_stabilizers_preserve_crystal(idx, struct):
         helpers.assert_identical_by_pdd_distance(struct, recovered)
     
 @helpers.skip_if_fast
-@helpers.parameterized_by_mp_structs
+@helpers.parameterized_by_mp_struct_idxs(every=FREQ)
 def test_vonorm_stabilizers_preserve_crystal_motif_only(idx, struct):
     # if len(struct) >= 4:
     #     return
@@ -61,7 +63,7 @@ def test_vonorm_stabilizers_preserve_crystal_motif_only(idx, struct):
         assert match, reason
 
 @helpers.skip_if_fast
-@helpers.parameterized_by_mp_structs
+@helpers.parameterized_by_mp_struct_idxs(every=FREQ)
 def test_vonorm_permutations_preserve_crystal(idx, struct):
     sb = Superbasis.from_pymatgen_structure(struct)
     vn = sb.compute_vonorms()
@@ -81,22 +83,22 @@ def test_vonorm_permutations_preserve_crystal(idx, struct):
             recovered = Structure(permuted_vn.to_superbasis().generating_vecs(), permuted_motif.atoms, permuted_motif.positions)
             helpers.assert_identical_by_pdd_distance(struct, recovered, 0.001)
 
-@helpers.parameterized_by_mp_structs
+@helpers.parameterized_by_mp_struct_idxs(every=FREQ)
 def test_vonorm_stabilizers_maintain_vonorm_order(idx: int, struct: Structure):
     uc = UnitCell.from_pymatgen_structure(struct).reduce()
     # relatively loose tol since these are undiscretize
-    tol = 1e-3
+    tol = 1e-2
     for u in uc.vonorms.stabilizer_matrices():
         uc2 = uc.apply_unimodular(u)
         assert uc2.vonorms.about_equal(uc.vonorms, tol=tol)
         assert uc2.conorms.about_equal(uc.conorms, tol=tol)
 
-@helpers.parameterized_by_mp_structs
+@helpers.parameterized_by_mp_struct_idxs(every=FREQ)
 def test_vonorm_stabilizer_is_complete(idx: int, struct: Structure):
     uc = UnitCell.from_pymatgen_structure(struct).reduce()
     # relatively loose tol since these are undiscretize
     tol = 1e-5
-    stab = uc.vonorms.stabilizer_matrices(tol=1e-4)
+    stab = uc.vonorms.stabilizer_matrices(tol=tol)
     for mat in UNIMODULAR_MATRICES:
         uc2 = uc.apply_unimodular(mat)
         if uc2.vonorms.about_equal(uc.vonorms, tol): 

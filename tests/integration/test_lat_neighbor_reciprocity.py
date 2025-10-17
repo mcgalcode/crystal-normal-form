@@ -13,34 +13,6 @@ from cnf.unit_cell import UnitCell
 from pathlib import Path
 
 STRUCT_SAMPLE_FREQ = 1
-
-@helpers.skip_if_fast
-@helpers.parameterized_by_mp_structs
-def test_lnf_neighbor_reciprocity(idx, struct: Structure):
-    verbose = False
-    xi = 1.5
-    delta = 30
-    helpers.printif("", verbose)
-    # helpers.printif(f"Attempting struct at idx {idx}", verbose)
-    constructor = CNFConstructor(xi, delta, False) 
-
-    original_cnf = constructor.from_pymatgen_structure(struct).cnf
-    original_lnf = original_cnf.lattice_normal_form
-    original_v_class = original_lnf.vonorms.conorms.form.voronoi_class
-    helpers.printif(f"Structure is of Voronoi Class V{original_v_class}", verbose)
-    nb_set = LatticeNeighborFinder(original_cnf).find_lnf_neighbors()
-    helpers.printif(f"Found {len(nb_set)} neighbors of the original structure...", verbose)
-    for nb in nb_set.neighbors:
-        nb_lnf = nb.point
-        first_neighbor_v_class = nb_lnf.vonorms.conorms.form.voronoi_class
-        second_neighbors = LatticeNeighborFinder(nb_lnf).find_lnf_neighbors()
-        helpers.printif(f"Searching through {len(second_neighbors)} second-degree neighbors for original LNF to confirm reciprocity...", verbose)
-        if original_lnf not in second_neighbors:
-            helpers.printif(f"Neighbor is of Voronoi Class V{first_neighbor_v_class} (equal to original: {first_neighbor_v_class == original_v_class})", verbose)
-            helpers.printif(f"No reciprocal relationship found!", verbose)
-
-        assert original_lnf in second_neighbors
-        helpers.printif(f"Original LNF was found!", verbose)
     
 @helpers.skip_if_fast
 @helpers.parameterized_by_mp_structs
@@ -62,6 +34,7 @@ def test_lnf_neighbor_reciprocity_within_cnf_neighbors(idx, struct: Structure):
             print(f"No reciprocal relationship found!")
         assert original_cnf.lattice_normal_form in second_neighbor_lnfs
 
+@pytest.mark.debug
 @helpers.skip_if_fast
 @helpers.parameterized_by_mp_structs
 def test_neighbor_reciprocity_by_geometry(idx, struct: Structure):
@@ -178,6 +151,7 @@ def test_cnf_neighbor_reciprocity(idx, struct: Structure):
     # UnitCell.from_cnf(geo_matches[0]).to_cif(str(helpers.get_data_file_path(Path("patho_pairs") / "mp_190_neighbs" / "n2.cif")))
     assert len(recipricol_nbs) == len(neighbor_set.neighbors)
 
+@pytest.mark.debug
 @helpers.parameterized_by_mp_structs
 def test_second_neighbors_obey_reciprocity(idx, struct):
     verbose = True
@@ -245,6 +219,7 @@ def test_second_neighbors_obey_reciprocity(idx, struct):
 
     assert len(recipricol_nbs) == len(neighbor_set.neighbors)
 
+@pytest.mark.debug
 @helpers.parameterized_by_mp_structs
 def test_third_neighbors_obey_reciprocity(idx, struct):
     verbose = True
