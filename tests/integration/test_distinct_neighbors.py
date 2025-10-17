@@ -12,11 +12,8 @@ from cnf.unit_cell import UnitCell
 
 @helpers.parameterized_by_mp_structs
 def test_neighbors_are_geometrically_distinct(idx, struct: Structure):
-    # if not helpers.does_struct_have_centrosymmetric_symm(struct) and not helpers.is_struct_chiral(struct):
-    #     return
-    # if len(struct) >= 4:
-    #     return
     verbose = False
+    save_pairs = False
     xi = 1.5
     delta = 20
     constructor = CNFConstructor(xi, delta, False)
@@ -31,16 +28,12 @@ def test_neighbors_are_geometrically_distinct(idx, struct: Structure):
     chiral_neighbs = 0
     helpers.printif(f"Original structure is Voronoi: {original_cnf.lattice_normal_form.vonorms.conorms.form.voronoi_class}", verbose)
     for neighb in cnf_neighb_set.neighbors:
-        # if not helpers.is_struct_chiral(neighb.point.reconstruct()):
-        #     continue
         steps = cnf_neighb_set.steps_for_neighbor(neighb.point)
         current_cnf = neighb.point
         is_duplicate = False
         dup = None
 
         for existing_cnf in clusters:
-            # if existing_cnf.lattice_normal_form != current_cnf.lattice_normal_form:
-            #     continue
             pdd_dist = helpers.pdd_for_cnfs(current_cnf, existing_cnf)
             match, reason = helpers.are_cnfs_geo_matches(current_cnf, existing_cnf, tol=1e-12)
             if match:
@@ -77,17 +70,18 @@ def test_neighbors_are_geometrically_distinct(idx, struct: Structure):
             tested_neighbs.append(neighb)
 
     
-    print()
-    if not len(clusters) == len(cnf_neighb_set):
-        cidx = 0
-        for _, identical_neighbs in clusters.items():
-            if len(identical_neighbs) > 1:
-                print(f"{cidx} Cluster")
-                for nb in identical_neighbs:
-                    print(nb.lattice_normal_form)
-                helpers.save_cnfs_to_dir(f"geo_pairs_neighbs/mp_{idx}/cluster_{cidx}", identical_neighbs)
-                helpers.save_cifs_to_dir(f"geo_pairs_neighbs_cifs/mp_{idx}/cluster_{cidx}", [c.reconstruct() for c in identical_neighbs])
-            cidx += 1
+    if save_pairs:
+        print()
+        if not len(clusters) == len(cnf_neighb_set):
+            cidx = 0
+            for _, identical_neighbs in clusters.items():
+                if len(identical_neighbs) > 1:
+                    print(f"{cidx} Cluster")
+                    for nb in identical_neighbs:
+                        print(nb.lattice_normal_form)
+                    helpers.save_cnfs_to_dir(f"geo_pairs_neighbs/mp_{idx}/cluster_{cidx}", identical_neighbs)
+                    helpers.save_cifs_to_dir(f"geo_pairs_neighbs_cifs/mp_{idx}/cluster_{cidx}", [c.reconstruct() for c in identical_neighbs])
+                cidx += 1
     
     assert len(clusters) == len(cnf_neighb_set)
     # assert len(clusters) == chiral_neighbs

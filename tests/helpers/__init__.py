@@ -40,12 +40,19 @@ def parameterized_by_mp_structs(func):
     if SPECIFIC_STRUCT_IDX is None:
         return pytest.mark.parametrize("idx, struct", zip(range(0, len(_ALL_MP_STRUCTURES), STRUCT_SAMPLE_FREQ), _ALL_MP_STRUCTURES[::STRUCT_SAMPLE_FREQ]))(func)
     else:
-        return parameterized_by_mp_struct_idxs([SPECIFIC_STRUCT_IDX])(func)
+        return parameterized_by_mp_struct_idxs(idxs=[SPECIFIC_STRUCT_IDX])(func)
 
-def parameterized_by_mp_struct_idxs(idxs):
-    structs = [_ALL_MP_STRUCTURES[i] for i in idxs]
+def parameterized_by_mp_struct_idxs(idxs=None, every=None):
+    if idxs is not None and every is not None:
+        raise RuntimeError("Don't supply both idxs and every to parameterized_by_mp_struct_idxs")
+    
+    if every is not None:
+        idxs = list(range(0,len(_ALL_MP_STRUCTURES),every))
+
+    structs = [(idx, _ALL_MP_STRUCTURES[idx]) for idx in idxs]
+
     def _wrapper(func):
-        return pytest.mark.parametrize("idx, struct", zip(idxs, structs))(func)    
+        return pytest.mark.parametrize("idx, struct", structs)(func)    
     return _wrapper
 
 def printif(msg, flag):
