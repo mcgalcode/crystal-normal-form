@@ -43,7 +43,7 @@ def test_bcc_zr_unit_cells(zr_bcc_primitive_lattice_vecs):
     assert len(unique_cnfs) == 2
 
 def test_fcc_zr_unit_cells(zr_fcc_primitive_lattice_vecs):
-    verbose = False
+    verbose = True
     sb = Superbasis.from_generating_vecs(zr_fcc_primitive_lattice_vecs)
     motif = FractionalMotif.from_elements_and_positions(["Zr"], [[0, 0, 0]])
     unit_cell = UnitCell(sb, motif)
@@ -67,7 +67,7 @@ def test_fcc_zr_unit_cells(zr_fcc_primitive_lattice_vecs):
 
     for cnf in unique_cnfs:
         helpers.printif(cnf.coords, verbose)
-    assert len(unique_cnfs) == 2
+    assert len(unique_cnfs) == 3
 
 @helpers.parameterized_by_mp_struct_idxs(range(0, 1000, 100))
 def test_unit_cell_doesnt_change_struct(idx: int, struct: Structure):
