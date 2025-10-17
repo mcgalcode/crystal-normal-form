@@ -3,9 +3,12 @@ import os
 import pytest
 
 from .assertions import *
-from .data import _ALL_MP_STRUCTURES, load_pathological_cifs, get_data_file_path, save_cnfs_to_dir, load_cnfs
+from .data import _ALL_MP_STRUCTURES, load_pathological_cifs, get_data_file_path, save_cnfs_to_dir, load_cnfs, save_cifs_to_dir, load_cifs
 from cnf.motif.atomic_motif import FractionalMotif
 from cnf.unit_cell import UnitCell
+from cnf.linalg import MatrixTuple
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from pymatgen.analysis.structure_matcher import StructureMatcher
 
 IS_FAST = int(os.getenv("CNF_FAST_TEST", 0)) == 1
 
@@ -40,30 +43,61 @@ def printif(msg, flag):
         print(msg)
 
 def are_cnfs_geo_matches(cnf1: CrystalNormalForm, cnf2: CrystalNormalForm, tol=1e-5):
-    return are_geo_matches(UnitCell.from_cnf(cnf1), UnitCell.from_cnf(cnf2), tol=tol)
+    return are_unit_cells_geo_matches(UnitCell.from_cnf(cnf1), UnitCell.from_cnf(cnf2), tol=tol)
 
-def are_geo_matches(uc1: UnitCell, uc2: UnitCell, tol=1e-5):
+def are_structs_geo_matches(struct1: Structure, struct2: Structure, tol=1e-5):
+    return are_unit_cells_geo_matches(UnitCell.from_pymatgen_structure(struct1), UnitCell.from_pymatgen_structure(struct2), tol=tol)
+
+def _get_spga(struct):
+    return SpacegroupAnalyzer(struct, symprec=0.0001, angle_tolerance=0.0001)
+def does_struct_have_centrosymmetric_symm(struct):
+    spga1 = SpacegroupAnalyzer(struct, symprec=0.0001, angle_tolerance=0.0001)
+    return spga1.is_laue()
+
+def is_struct_chiral(struct: Structure):
+    spga1 = SpacegroupAnalyzer(struct, symprec=0.0001, angle_tolerance=0.0001)
+
+    # cm1 = spga1.is_laue()
+    # print(f"Struct 1 centrosymmetry: {cm1}")
+
+    # point_group1 = spga1.get_point_group_symbol()
+    # print(f"Point Group: {point_group1}.")
+    # The get_symmetry_operations() method returns a list of symmetry operations.
+    # Improper rotations have a rotation matrix determinant of -1. This is the
+    # definitive test for chirality.
+    symm_ops1 = spga1.get_symmetry_dataset()['rotations']
+    has_improper1 = any(np.linalg.det(op) < 0 for op in symm_ops1)
+    is_chiral1_general = not has_improper1
+    return is_chiral1_general
+
+
+def are_unit_cells_geo_matches(uc1: UnitCell, uc2: UnitCell, tol):
     struct1 = uc1.to_pymatgen_structure()
     struct2 = uc2.to_pymatgen_structure()
-
     pdd_dist = pdd(struct1, struct2)
     if pdd_dist > tol:
-        return False
+        return False, f"PDD was {pdd_dist}"
     
-    # These might 
-    if uc1.motif.has_inversion_symmetry():
-        return True
-    else:
-        # s_transform = get_structure_transformation(struct1, struct2, ltol=0.1, stol=0.01, angle_tol=1.0)
-        # if s_transform["determinant"] == -1.0:
-            # return False
-        # else:
-        #     return True
-        are_inversions = uc1.motif.find_inverted_match(uc2.motif, atol=tol)
-        if are_inversions:
-            return False
-        else:
-            return True
+    matcher = StructureMatcher(ltol=0.0001, stol=0.0001, angle_tol=0.0001, primitive_cell=False, attempt_supercell=False)
+    if not matcher.fit(struct1, struct2):
+        return False, "Structure matcher suggests these are different"
+
+    is_chiral1 = is_struct_chiral(struct1)
+    is_chiral2 = is_struct_chiral(struct2)
+
+    if not is_chiral1 and not is_chiral2:
+        return True, f"Both structures are achiral"
+
+    if is_chiral1 != is_chiral2:
+        return False, f"Different chirality, struct 1: {is_chiral1}, struct 2: {is_chiral2}"
+    
+
+    relation_mat = matcher.get_supercell_matrix(struct1, struct2)
+    det = np.linalg.det(relation_mat)
+    if det != +1:
+        return False, f"Structures were related by mat with det {det}. {MatrixTuple(relation_mat)}"
+
+    raise RuntimeError("Accessed inconsistent state during structure matching check")
 
 def are_cnfs_mirror_images(cnf1: CrystalNormalForm, cnf2: CrystalNormalForm, atol=1e-6):
     motif1 = FractionalMotif.from_pymatgen_structure(cnf1.reconstruct())
@@ -99,7 +133,7 @@ def get_structure_transformation(struct1, struct2, ltol=0.01, stol=0.01, angle_t
         stol=stol,
         angle_tol=angle_tol,
         primitive_cell=False,
-        attempt_supercell=True
+        attempt_supercell=False
     )
 
     result = {'match': matcher.fit(struct1, struct2)}
