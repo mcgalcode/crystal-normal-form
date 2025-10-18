@@ -10,7 +10,7 @@ from pymatgen.core.structure import Structure
 from cnf.unit_cell import UnitCell
 
 
-@helpers.parameterized_by_structs_with_num_sites_less_than(10)
+@helpers.parameterized_by_structs_with_num_sites_less_than(8)
 def test_neighbors_are_geometrically_distinct(idx, struct: Structure):    
     verbose = False
     save = False

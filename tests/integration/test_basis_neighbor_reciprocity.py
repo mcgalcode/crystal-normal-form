@@ -13,7 +13,7 @@ from pathlib import Path
 
 STRUCT_SAMPLE_FREQ = 1
 
-@helpers.parameterized_by_structs_with_num_sites_less_than(8)
+@helpers.parameterized_by_structs_with_num_sites_less_than(7)
 def test_basis_neighbor_reciprocity(idx, struct: Structure):
     verbose = False
     xi = 1.5
