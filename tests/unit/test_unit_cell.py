@@ -11,7 +11,7 @@ from cnf.lattice.lnf_constructor import LatticeNormalFormConstructor
 from pymatgen.core.structure import Structure
 
 def test_bcc_zr_unit_cells(zr_bcc_primitive_lattice_vecs):
-    verbose = False
+    verbose = True
     sb = Superbasis.from_generating_vecs(zr_bcc_primitive_lattice_vecs)
     motif = FractionalMotif.from_elements_and_positions(["Zr"], [[0, 0, 0]])
     unit_cell = UnitCell(sb, motif)
@@ -42,6 +42,17 @@ def test_bcc_zr_unit_cells(zr_bcc_primitive_lattice_vecs):
 
     assert len(unique_cnfs) == 2
 
+    expected_cnfs = [
+        # We get a different BNF for this with the new
+        # stabilizers: 15, 15, 15 instead of 0, 15, 15
+        # (6, 8, 17, 23, 6, 23, 25, 0, 15, 15),
+        (8, 8, 8, 21, 15, 15, 15, 15, 15, 15)
+    ]
+
+    assert set(expected_cnfs).issubset(set([cnf.coords for cnf in unique_cnfs]))
+
+
+
 def test_fcc_zr_unit_cells(zr_fcc_primitive_lattice_vecs):
     verbose = True
     sb = Superbasis.from_generating_vecs(zr_fcc_primitive_lattice_vecs)
@@ -67,7 +78,15 @@ def test_fcc_zr_unit_cells(zr_fcc_primitive_lattice_vecs):
 
     for cnf in unique_cnfs:
         helpers.printif(cnf.coords, verbose)
-    assert len(unique_cnfs) == 3
+    
+    assert len(unique_cnfs) == 2
+
+    expected_cnfs = [
+        (6, 7, 13, 25, 13, 18, 20, 15, 15, 15),
+        (7, 7, 20, 20, 7, 20, 27, 0, 15, 15)
+    ]
+
+    assert set(expected_cnfs) == set([cnf.coords for cnf in unique_cnfs])
 
 @helpers.parameterized_by_mp_struct_idxs(range(0, 1000, 100))
 def test_unit_cell_doesnt_change_struct(idx: int, struct: Structure):
