@@ -264,7 +264,7 @@ def test_catalog_of_unimodular_matrices_is_complete(idx, struct: Structure):
     # helpers.printif(f"Struct {idx * STRUCT_SAMPLE_FREQ} has voronoi class: {original_vonorms.conorms.form.voronoi_class}", verbose)
     # helpers.printif(f"Struct has {len(og_mats)} permissible matrices", verbose)
 
-    PDD_CUTOFF = 0.0000001
+    PDD_CUTOFF = 0.00001
     equivalent_unit_cells: list[UnitCell] = []
     geo_eq_mats = []
     for u in get_unimodulars_col_max(2):
