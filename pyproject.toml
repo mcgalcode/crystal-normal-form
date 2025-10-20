@@ -13,6 +13,7 @@ dependencies = [
     "numpy>=2.3.2",
     "pymatgen>=2025.6.14",
     "pytest-xdist>=3.8.0",
+    "rustworkx>=0.17.1",
 ]
 
 [project.scripts]
