@@ -1,10 +1,12 @@
+import helpers
 import pytest
 import numpy as np
 
 from cnf.lattice import Superbasis
-from cnf.lattice.selling import SuperbasisSellingReducer, VonormListSellingReducer
+from cnf.lattice.selling import SuperbasisSellingReducer, VonormListSellingReducer, SellingTransformMatrix
 
 from pymatgen.core.lattice import Lattice
+from cnf.unit_cell import UnitCell
 
 def test_can_selling_transform(monoclinic_lattice):
     basis = Superbasis.from_pymatgen_lattice(monoclinic_lattice)
@@ -160,3 +162,35 @@ def test_selling_reductions_equivalent(lattice):
     assert sb_reduction_result.reduced_object.compute_vonorms().is_superbasis()
     assert vl_reduction_result.reduced_object.is_superbasis()
     assert sb_reduction_result.reduced_object.compute_vonorms().has_same_members(vl_reduction_result.reduced_object)
+
+@helpers.parameterized_by_mp_struct_idxs([446])
+def test_steps_maintain_structure(idx, struct):
+    uc = UnitCell.from_pymatgen_structure(struct)
+    helpers.assert_identical_by_pdd_distance(struct, uc.to_pymatgen_structure(), 0.000001)
+
+    sb = uc.superbasis
+    vl = uc.vonorms
+    motif = uc.motif
+
+    sb_reducer = SuperbasisSellingReducer(tol=1e-3)
+    # vl_reducer = VonormListSellingReducer()
+
+    for i in range(10):
+        if sb.is_obtuse():
+            break
+        sb, sb_pair = sb_reducer.apply_selling_transform(sb)
+        print()
+        print(sb.compute_vonorms().conorms)
+        print(sb.compute_vonorms())
+        mat = SellingTransformMatrix.from_pair(sb_pair)
+        if mat.determinant() == -1:
+            mat = mat.flip_signs()
+            sb = sb_reducer.apply_sign_flip_to_object(sb)        
+
+        motif = motif.apply_unimodular(mat)
+        new_uc = UnitCell(sb, motif)
+        new_uc.to_cif(f"selling_step_{i}_struct_{idx}.cif")
+        reduced = new_uc.to_pymatgen_structure()
+
+        pdd = helpers.pdd(struct, reduced)
+        print(f"PDD was {pdd} after {i} steps.")
