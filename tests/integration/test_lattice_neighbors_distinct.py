@@ -44,8 +44,8 @@ def test_neighbors_are_geometrically_distinct(idx, struct: Structure):
                 print(current_cnf.lattice_normal_form)
                 print()
                 assert existing_cnf.lattice_normal_form == current_cnf.lattice_normal_form
-                helpers.printif(existing_cnf.basis_normal_form.coord_list, verbose)
-                helpers.printif(current_cnf.basis_normal_form.coord_list, verbose)
+                helpers.printif(existing_cnf.motif_normal_form.coord_list, verbose)
+                helpers.printif(current_cnf.motif_normal_form.coord_list, verbose)
                 helpers.printif(f"PDD Distance: {pdd_dist}", verbose)
                 helpers.printif(f"Neighbor 1 is Voronoi: {existing_cnf.voronoi_class}", verbose)
                 helpers.printif(f"Neighbor 2 is Voronoi: {current_cnf.voronoi_class}", verbose)
@@ -53,7 +53,7 @@ def test_neighbors_are_geometrically_distinct(idx, struct: Structure):
                 for step in steps:
                     if verbose:
                         step.step.print_details()
-                    helpers.printif(step.construction_result.cnf.basis_normal_form, verbose)
+                    helpers.printif(step.construction_result.cnf.motif_normal_form, verbose)
                 
                 helpers.printif("", verbose)
                 helpers.printif(f"Steps leading to old point: ", verbose)

@@ -95,7 +95,7 @@ def test_cnf_neighbor_reciprocity(idx, struct: Structure):
     # helpers.assert_identical_by_pdd_distance(struct, original_xtal, cutoff=0.1)
 
     print(f"Original CNF: {original_cnf.coords}")
-    print("Original elements: ", original_cnf.basis_normal_form.elements)
+    print("Original elements: ", original_cnf.motif_normal_form.elements)
     print(f"Original Voronoi: {original_cnf.voronoi_class}, {original_cnf.lattice_normal_form.vonorms.conorms.form}")
     CUTOFF = 0.015
     neighbor_set = LatticeNeighborFinder(original_cnf).find_cnf_neighbors()
@@ -111,9 +111,9 @@ def test_cnf_neighbor_reciprocity(idx, struct: Structure):
         if original_cnf not in second_neighbors:
             print(f"No reciprocal relationship found!")
             print(f"Original LNF: {original_cnf.lattice_normal_form.coords}")
-            print(f"Original BNF: {original_cnf.basis_normal_form.coord_list}")
+            print(f"Original MNF: {original_cnf.motif_normal_form.coord_list}")
             print(f"Neighbor LNF: {n.point.lattice_normal_form.coords}")
-            print(f"Neighbor BNF: {n.point.basis_normal_form.coord_list}")
+            print(f"Neighbor MNF: {n.point.motif_normal_form.coord_list}")
             helpers.save_cnfs_to_dir(f"patho_neighbor_pairs/mp_{idx}_nb_{nb_idx}", [original_cnf, n.point])
             nonreciprocal_nbs.append(n.point)
             num_geo_matches = 0

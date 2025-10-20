@@ -1,6 +1,6 @@
 from pymatgen.core import Structure # Or other library
 from .lattice.lattice_normal_form import LatticeNormalForm
-from .motif.basis_normal_form import BasisNormalForm
+from .motif.motif_normal_form import MotifNormalForm
 import json
 
 class CrystalNormalForm:
@@ -8,14 +8,14 @@ class CrystalNormalForm:
     @classmethod
     def from_tuple(cls, tuple, elements, xi, delta):
         lnf_tup = tuple[:7]
-        bnf_tup = tuple[7:]
+        mnf_tup = tuple[7:]
         lnf = LatticeNormalForm.from_coords(lnf_tup, xi)
-        bnf = BasisNormalForm(bnf_tup, elements, delta)
-        return cls(lnf, bnf)
+        mnf = MotifNormalForm(mnf_tup, elements, delta)
+        return cls(lnf, mnf)
 
     def __init__(self,
                  lattice_normal_form: LatticeNormalForm,
-                 basis_normal_form: BasisNormalForm):
+                 motif_normal_form: MotifNormalForm):
         """
         Represents a crystal structure in its unique, discretized normal form.
 
@@ -27,18 +27,18 @@ class CrystalNormalForm:
             delta (int): The basis discretization parameter (number of divisions).
         """
         self.lattice_normal_form = lattice_normal_form
-        self.basis_normal_form = basis_normal_form
+        self.motif_normal_form = motif_normal_form
         self.xi = lattice_normal_form.lattice_step_size
-        self.delta = basis_normal_form.delta
+        self.delta = motif_normal_form.delta
     
     @property
     def coords(self):
         lnf_coords = self.lattice_normal_form.coords
-        bnf_coords = self.basis_normal_form.coord_list
-        return tuple(lnf_coords) + tuple(bnf_coords)
+        mnf_coords = self.motif_normal_form.coord_list
+        return tuple(lnf_coords) + tuple(mnf_coords)
     
     def to_discretized_motif(self):
-        return self.basis_normal_form.to_discretized_motif()
+        return self.motif_normal_form.to_discretized_motif()
 
     @property
     def motif_coord_matrix(self):
@@ -53,7 +53,7 @@ class CrystalNormalForm:
         # run the `vonorm -> superbasis` algorithm, use self.permutation to
         # correctly label the basis, and then use self.delta to place the atoms.
         lattice_vecs = self.lattice_normal_form.to_superbasis().generating_vecs()
-        motif = self.basis_normal_form.to_motif()
+        motif = self.motif_normal_form.to_motif()
         return Structure(lattice_vecs, motif.atoms, motif.positions)
     
     @property
@@ -61,7 +61,7 @@ class CrystalNormalForm:
         return self.lattice_normal_form.vonorms.conorms.form.voronoi_class
 
     def __repr__(self):
-        return (f"CrystalNormalForm(lattice={self.lattice_normal_form}, motif={self.basis_normal_form}, "
+        return (f"CrystalNormalForm(lattice={self.lattice_normal_form}, motif={self.motif_normal_form}, "
                 f"xi={self.xi}, delta={self.delta})")
     
     def __eq__(self, other: 'CrystalNormalForm'):
@@ -73,8 +73,8 @@ class CrystalNormalForm:
     @classmethod
     def from_dict(cls, d: dict):
         lnf = LatticeNormalForm.from_dict(d["lnf"])
-        bnf = BasisNormalForm.from_dict(d["bnf"])
-        return cls(lnf, bnf)
+        mnf = MotifNormalForm.from_dict(d["mnf"])
+        return cls(lnf, mnf)
     
     @classmethod
     def from_file(cls, fname: str):
@@ -89,5 +89,5 @@ class CrystalNormalForm:
     def to_dict(self):
         return {
             "lnf": self.lattice_normal_form.to_dict(),
-            "bnf": self.basis_normal_form.to_dict()
+            "mnf": self.motif_normal_form.to_dict()
         }

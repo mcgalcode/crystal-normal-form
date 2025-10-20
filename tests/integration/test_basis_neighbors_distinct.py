@@ -5,7 +5,7 @@ import helpers
 from cnf import CrystalNormalForm
 from cnf.cnf_constructor import CNFConstructor
 from cnf.lattice.lnf_constructor import VonormCanonicalizer, LatticeNormalForm
-from cnf.navigation.basis_neighbor_finder import BasisStepResult, BasisNeighborFinder
+from cnf.navigation.motif_neighbor_finder import MotifStepResult, MotifNeighborFinder
 from pymatgen.core.structure import Structure
 from cnf.unit_cell import UnitCell
 
@@ -18,8 +18,8 @@ def test_neighbors_are_geometrically_distinct(idx, struct: Structure):
     delta = 20
     constructor = CNFConstructor(xi, delta, False)
     original_cnf = constructor.from_pymatgen_structure(struct).cnf
-    nf = BasisNeighborFinder(original_cnf)
-    neighb_set = nf.find_basis_neighbors()
+    nf = MotifNeighborFinder(original_cnf)
+    neighb_set = nf.find_motif_neighbors()
     tested_neighbs: list[CrystalNormalForm] = []
     clusters: dict[CrystalNormalForm, list[CrystalNormalForm]] = {}
 
@@ -34,8 +34,8 @@ def test_neighbors_are_geometrically_distinct(idx, struct: Structure):
             if match:
                 is_duplicate = True
                 verbose = False
-                print(existing_cnf.basis_normal_form.coord_list)
-                print(current_cnf.basis_normal_form.coord_list)
+                print(existing_cnf.motif_normal_form.coord_list)
+                print(current_cnf.motif_normal_form.coord_list)
                 helpers.printif(f"This neighbor was reached by {len(steps)} steps", verbose)
                 clusters[existing_cnf].append(current_cnf)
                 helpers.printif("", verbose)
@@ -52,7 +52,7 @@ def test_neighbors_are_geometrically_distinct(idx, struct: Structure):
                 if len(identical_neighbs) > 1:
                     print(f"{cidx} Cluster")
                     for nb in identical_neighbs:
-                        print(nb.basis_normal_form)
+                        print(nb.motif_normal_form)
                     helpers.save_cnfs_to_dir(f"geo_pairs_basis_neighbs/mp_{idx}/cluster_{cidx}", identical_neighbs)
                     helpers.save_cifs_to_dir(f"geo_pairs_basis_neighbs_cifs/mp_{idx}/cluster_{cidx}", [c.reconstruct() for c in identical_neighbs])
                 cidx += 1

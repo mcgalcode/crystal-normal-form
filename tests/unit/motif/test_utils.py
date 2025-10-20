@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-import cnf.motif.utils as bnf_utils
+import cnf.motif.utils as mnf_utils
 
 @pytest.mark.parametrize(
     "unnormalized_coords,expected_coords",
@@ -12,7 +12,7 @@ import cnf.motif.utils as bnf_utils
     ]
 )
 def test_can_move_coords_into_pbc_cell(unnormalized_coords, expected_coords):
-    computed_cell_coords = bnf_utils.move_coords_into_cell(unnormalized_coords, mod=1)
+    computed_cell_coords = mnf_utils.move_coords_into_cell(unnormalized_coords, mod=1)
     assert np.all(np.isclose(computed_cell_coords, expected_coords, 1e-16))
 
 @pytest.mark.parametrize(
@@ -24,8 +24,8 @@ def test_can_move_coords_into_pbc_cell(unnormalized_coords, expected_coords):
     ]
 )
 def test_can_sort_elements(unsorted_element_list, expected_sorted_list):
-    bnf_sorted = bnf_utils.sort_elements(unsorted_element_list)
-    for actual, expected in zip(bnf_sorted, expected_sorted_list):
+    mnf_sorted = mnf_utils.sort_elements(unsorted_element_list)
+    for actual, expected in zip(mnf_sorted, expected_sorted_list):
         assert actual == expected
 
 @pytest.mark.parametrize(
@@ -39,7 +39,7 @@ def test_can_sort_elements(unsorted_element_list, expected_sorted_list):
     ]
 )
 def test_can_shift_coords(original_coords, shift_vec, expected_coords):
-    shifted = bnf_utils.shift_coords(original_coords, shift_vec, mod=1)
+    shifted = mnf_utils.shift_coords(original_coords, shift_vec, mod=1)
     assert np.all(np.isclose(shifted, expected_coords))
 
 
@@ -91,7 +91,7 @@ def test_can_shift_coords(original_coords, shift_vec, expected_coords):
     ]
 )
 def test_can_sort_positions(unsorted_positions, expected_positions):
-    sorted_positions = bnf_utils.sort_number_lists(unsorted_positions)
+    sorted_positions = mnf_utils.sort_number_lists(unsorted_positions)
 
     for actual, expected in zip(sorted_positions, expected_positions):
         assert np.isclose(actual, expected, 1e-16).all()
@@ -108,7 +108,7 @@ def test_can_simultaneouslyt_sort():
         ["a", "b", "c"],
         ["x", "v", "f"]
     ]
-    sorted_list_of_lists, sorted_other_lists = bnf_utils.sort_number_lists(list_of_lists, other_lists)
+    sorted_list_of_lists, sorted_other_lists = mnf_utils.sort_number_lists(list_of_lists, other_lists)
 
     assert (sorted_list_of_lists[0] == np.array([0, 0, 3])).all()
     assert (sorted_list_of_lists[1] == np.array([1, 0, 3])).all()
@@ -141,10 +141,10 @@ def test_can_simultaneouslyt_sort():
     ),
 ])
 def test_can_discretize_coords(raw_coords, num_intervals, expected_ints):
-    actual_ints = bnf_utils.discretize_coords(raw_coords, num_intervals)
+    actual_ints = mnf_utils.discretize_coords(raw_coords, num_intervals)
     assert (actual_ints == expected_ints).all()
 
 def test_move_coords_into_cell_shouldnt_leave_limit():
     coords = np.array([[1.0, 1.0, 1.0]])
-    result = bnf_utils.move_coords_into_cell(coords, 1)
+    result = mnf_utils.move_coords_into_cell(coords, 1)
     assert np.all(result == np.array([0,0,0]))

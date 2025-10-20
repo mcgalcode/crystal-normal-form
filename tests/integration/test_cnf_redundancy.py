@@ -7,7 +7,7 @@ import os
 from pymatgen.core.structure import Structure, Lattice
 from cnf.unit_cell import UnitCell
 from cnf import CrystalNormalForm
-from cnf.motif.bnf_constructor import BNFConstructor, FractionalMotif
+from cnf.motif.mnf_constructor import MNFConstructor, FractionalMotif
 from cnf.cnf_constructor import CNFConstructor
 
 import pathlib
@@ -55,7 +55,7 @@ def test_lnf_is_unique(idx, struct: Structure):
 
 @pytest.mark.debug
 @helpers.parameterized_by_mp_structs
-def test_bnf_is_unique(idx, struct: Structure):
+def test_mnf_is_unique(idx, struct: Structure):
     uc = UnitCell.from_pymatgen_structure(struct).reduce()
 
     original_vonorms = uc.superbasis.compute_vonorms()
@@ -63,18 +63,18 @@ def test_bnf_is_unique(idx, struct: Structure):
     assert uc.is_obtuse(tol=1e-5)
     helpers.printif(f"Considering struct of class V{uc.voronoi_class}", verbose)
     
-    bnfs = []
+    mnfs = []
     lnfs = []
     for u in UNIMODULAR_MATRICES[::sample_freq]:
         other_cell = uc.apply_unimodular(u)
         if helpers.are_geo_matches(uc, other_cell, tol=1e-4):
             cnf = other_cell.to_cnf(xi, delta)
-            bnfs.append(tuple(cnf.basis_normal_form.coord_list))
+            mnfs.append(tuple(cnf.motif_normal_form.coord_list))
             lnfs.append(cnf.lattice_normal_form)
 
     assert len(lnfs) > num_test_reqs
     if len(set(lnfs)) == 1:
-        assert len(set(bnfs)) == 1
+        assert len(set(mnfs)) == 1
 
 @helpers.parameterized_by_mp_structs
 def test_cnf_is_unique(idx, struct: Structure):
@@ -100,7 +100,7 @@ def test_cnf_is_unique(idx, struct: Structure):
 
 @pytest.mark.debug
 @helpers.parameterized_by_mp_structs
-def test_undiscretized_bnf_unique(idx, struct: Structure):
+def test_undiscretized_mnf_unique(idx, struct: Structure):
     # struct = struct.to_primitive()
     uc = UnitCell.from_pymatgen_structure(struct).reduce()
     all_cells: list[UnitCell] = []
@@ -112,15 +112,15 @@ def test_undiscretized_bnf_unique(idx, struct: Structure):
 
     assert len(all_cells) > 100
     assert len(set([c.vonorms for c in all_cells])) > 10
-    # assert len(set([c.motif.to_bnf_list() for c in all_cells])) > 
+    # assert len(set([c.motif.to_mnf_list() for c in all_cells])) > 
     con = CNFConstructor(1.5, 20)
     cnfs = [con.from_vonorms_and_motif(cell.vonorms, cell.motif).cnf for cell in all_cells]
-    for start_idx in range(0, len(cnfs[0].basis_normal_form.coord_list) - 10, 10):
-        all_coord_lists = sorted(cnfs, key = lambda cnf: cnf.basis_normal_form.coord_list)
-        pieces = [a.basis_normal_form.coord_list[start_idx:start_idx+10] for a in all_coord_lists]
+    for start_idx in range(0, len(cnfs[0].motif_normal_form.coord_list) - 10, 10):
+        all_coord_lists = sorted(cnfs, key = lambda cnf: cnf.motif_normal_form.coord_list)
+        pieces = [a.motif_normal_form.coord_list[start_idx:start_idx+10] for a in all_coord_lists]
         if len(set(pieces)) > 1:
             for cnf in pieces:
                 print(cnf)
             print()
             print()
-    assert len(set([c.basis_normal_form.coord_list for c in cnfs])) == 1
+    assert len(set([c.motif_normal_form.coord_list for c in cnfs])) == 1

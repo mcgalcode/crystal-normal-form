@@ -16,8 +16,8 @@ class LatticeNeighborFinder():
         self.point = cnf_point
 
         if self._is_cnf_neighbor_finder():
-            self.discretized_motif = cnf_point.basis_normal_form.to_discretized_motif()
-            self.fractional_motif = cnf_point.basis_normal_form.to_motif()
+            self.discretized_motif = cnf_point.motif_normal_form.to_discretized_motif()
+            self.fractional_motif = cnf_point.motif_normal_form.to_motif()
 
     def _is_cnf_neighbor_finder(self):
         return isinstance(self.point, CrystalNormalForm)

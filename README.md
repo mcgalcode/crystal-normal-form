@@ -16,7 +16,7 @@ A Python implementation of the crystallographic mapping algorithm described in [
 The CNF algorithm represents any 3D crystal structure using two components:
 
 1. **Lattice Normal Form (LNF)**: Uses the Selling reduction to represent the lattice via 7 squared "vonorms" (vector norms from an obtuse superbasis), discretized to integers
-2. **Basis Normal Form (BNF)**: Represents atomic positions in fractional coordinates, discretized to integer intervals
+2. **Motif Normal Form (MNF)**: Represents atomic positions in fractional coordinates, discretized to integer intervals
 
 Together, these form a unique integer coordinate string that:
 - Eliminates redundancies (origin choice, cell choice, atom labeling)

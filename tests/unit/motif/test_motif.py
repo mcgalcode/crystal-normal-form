@@ -11,7 +11,7 @@ from cnf.cnf_constructor import CNFConstructor
 from cnf.lattice.rounding import DiscretizedVonormComputer
 from cnf.linalg import MatrixTuple
 
-import cnf.motif.utils as bnf_utils
+import cnf.motif.utils as mnf_utils
 
 def test_can_initialize(sn2_o4_els_and_positions):
     els, positions = sn2_o4_els_and_positions
@@ -59,7 +59,7 @@ def test_can_shift_positions(
     sn2_o4_els_and_positions
 ):
     els, original_positions = sn2_o4_els_and_positions
-    shifted_positions = [bnf_utils.shift_coords(np.array(c), shift_vector, 1) for c in original_positions]
+    shifted_positions = [mnf_utils.shift_coords(np.array(c), shift_vector, 1) for c in original_positions]
 
     original_map = FractionalMotif.from_elements_and_positions(els, original_positions)
     shifted_map = original_map.shift_origin(shift_vector)

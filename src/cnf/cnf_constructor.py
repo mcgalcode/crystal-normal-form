@@ -7,10 +7,10 @@ from .lattice.lnf_constructor import LatticeNormalFormConstructor, LatticeNormal
 from .lattice.voronoi import VonormList
 from .lattice.selling import VonormListSellingReducer
 from .lattice.lattice_normal_form import LatticeNormalForm
-from .motif.basis_normal_form import BasisNormalForm
+from .motif.motif_normal_form import MotifNormalForm
 from .lattice.permutations import MatrixTuple
 from .lattice.rounding import DiscretizedVonormComputer
-from .motif.bnf_constructor import BNFConstructor, BNFConstructionResult
+from .motif.mnf_constructor import MNFConstructor, MNFConstructionResult
 from .crystal_normal_form import CrystalNormalForm
 from .lattice.unimodular import combine_unimodular_matrices
 
@@ -19,15 +19,15 @@ class CNFConstructionResult():
     def __init__(self,
                  cnf: CrystalNormalForm,
                  lnf_result: LatticeNormalFormConstructionResult,
-                 bnf_construction_result: BNFConstructionResult):
+                 mnf_construction_result: MNFConstructionResult):
         self.cnf = cnf
         self.lnf_result = lnf_result
-        self.bnf_result = bnf_construction_result
+        self.mnf_result = mnf_construction_result
     
     def print_details(self):
         self.lnf_result.print_details()
         print()
-        self.bnf_result.print_details()
+        self.mnf_result.print_details()
 
 class CNFConstructor():
 
@@ -44,7 +44,7 @@ class CNFConstructor():
         assert cnf.xi == self.xi
         assert cnf.delta == self.delta
         disc_vns = cnf.lattice_normal_form.vonorms
-        motif = cnf.basis_normal_form.to_discretized_motif()
+        motif = cnf.motif_normal_form.to_discretized_motif()
         return self.from_vonorms_and_motif(disc_vns, motif)
 
     def from_motif_and_superbasis(self, motif: FractionalMotif, superbasis: Superbasis):
@@ -55,7 +55,7 @@ class CNFConstructor():
         undisc_cnf = self.from_vonorms_and_motif(vonorms, motif)
         vonorms = undisc_cnf.lnf_result.lnf.vonorms
 
-        motif = undisc_cnf.bnf_result.sorted_bnf_candidates[0].motif
+        motif = undisc_cnf.mnf_result.sorted_mnf_candidates[0].motif
         motif = motif.discretize(self.delta)
 
         dvc = DiscretizedVonormComputer(self.xi, self.verbose_logging)
@@ -86,18 +86,18 @@ class CNFConstructor():
         if self.verbose_logging:
             print(f"Found {len(all_stabilizers)} stabilizers...")
 
-        bnf_constructor = BNFConstructor(self.delta, all_stabilizers, self.verbose_logging)
-        bnf_construction_res = bnf_constructor.build(motif)
+        mnf_constructor = MNFConstructor(self.delta, all_stabilizers, self.verbose_logging)
+        mnf_construction_res = mnf_constructor.build(motif)
 
         if self.verbose_logging:
-            print(f"Found BNF! {bnf_construction_res.bnf}")
-            print(f"Achieved by matrix: {bnf_construction_res.sorted_bnf_candidates[0].unimodular}")
-            print(f"And shift {bnf_construction_res.sorted_bnf_candidates[0].shift}")
+            print(f"Found MNF! {mnf_construction_res.mnf}")
+            print(f"Achieved by matrix: {mnf_construction_res.sorted_mnf_candidates[0].unimodular}")
+            print(f"And shift {mnf_construction_res.sorted_mnf_candidates[0].shift}")
             print(f"Based on motif:")
-            bnf_construction_res.sorted_bnf_candidates[0].motif.print_details()
+            mnf_construction_res.sorted_mnf_candidates[0].motif.print_details()
 
-        cnf = CrystalNormalForm(lnf_result.lnf, bnf_construction_res.bnf)
-        return CNFConstructionResult(cnf, lnf_result, bnf_construction_res)
+        cnf = CrystalNormalForm(lnf_result.lnf, mnf_construction_res.mnf)
+        return CNFConstructionResult(cnf, lnf_result, mnf_construction_res)
     
     def from_motif_and_basis_vecs(self, motif: FractionalMotif, basis_vecs: np.array):
         superbasis = Superbasis.from_generating_vecs(basis_vecs)

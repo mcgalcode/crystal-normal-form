@@ -1,8 +1,8 @@
 from .atomic_motif import FractionalMotif, DiscretizedMotif
 
-class BasisNormalForm():
+class MotifNormalForm():
     """Implements methods for taking a list of atomic positions
-    in fractional coordinates and producing the Basis Normal Form string
+    in fractional coordinates and producing the Motif Normal Form string
     as described in the section "Representation of Crystalline Atomic Bases" on
     pp. 52 of David Mrdjenovich's thesis.
     """
@@ -41,4 +41,4 @@ class BasisNormalForm():
         )
 
     def __repr__(self):
-        return f"BasisNormalForm({self.coord_list},elements={self.elements},delta={self.delta})"
+        return f"MotifNormalForm({self.coord_list},elements={self.elements},delta={self.delta})"

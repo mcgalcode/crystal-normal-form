@@ -3,8 +3,8 @@ import numpy as np
 from .gamma_matrices import GammaMatrixTuple
 from ..motif import FractionalMotif
 
-def transform_basis_position(basis_position: np.ndarray, gmat: GammaMatrixTuple):
-    return gmat.inverse().matrix @ basis_position
+def transform_motif_position(motif_position: np.ndarray, gmat: GammaMatrixTuple):
+    return gmat.inverse().matrix @ motif_position
 
 
 class MotifTranslationSet():
@@ -34,7 +34,7 @@ class MotifTranslationSet():
     
     def apply_to_coord(self, pos: np.ndarray):
         images = []
-        transformed = transform_basis_position(pos, self.generating_matrix)
+        transformed = transform_motif_position(pos, self.generating_matrix)
         images.append(transformed)
         for v in self.vecs:
             images.append(transformed + v)

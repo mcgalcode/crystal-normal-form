@@ -65,7 +65,7 @@ def test_motif_and_superbasis_change_together_with_perms(idx, struct):
         vonorm_perm = perm.vonorm_permutation
 
         original_vonorms = cnf_point.lattice_normal_form.vonorms
-        original_motif = cnf_point.basis_normal_form.to_motif()
+        original_motif = cnf_point.motif_normal_form.to_motif()
         original_superbasis = original_vonorms.to_superbasis(lattice_step_size)
 
         assert dvc.find_closest_valid_vonorms(original_superbasis.compute_vonorms()).has_same_members(original_vonorms)

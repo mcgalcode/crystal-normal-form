@@ -4,7 +4,7 @@ import helpers
 
 from cnf import CrystalNormalForm
 from cnf.cnf_constructor import CNFConstructor
-from cnf.navigation.basis_neighbor_finder import BasisStepResult, BasisNeighborFinder
+from cnf.navigation.motif_neighbor_finder import MotifStepResult, MotifNeighborFinder
 from cnf.navigation.neighbor import Neighbor
 from pymatgen.core.structure import Structure
 from cnf.unit_cell import UnitCell
@@ -14,7 +14,7 @@ from pathlib import Path
 STRUCT_SAMPLE_FREQ = 1
 
 @helpers.parameterized_by_structs_with_num_sites_less_than(7)
-def test_basis_neighbor_reciprocity(idx, struct: Structure):
+def test_motif_neighbor_reciprocity(idx, struct: Structure):
     verbose = False
     xi = 1.5
     delta = 10
@@ -27,7 +27,7 @@ def test_basis_neighbor_reciprocity(idx, struct: Structure):
     
     original_cnf = constructor.from_pymatgen_structure(struct).cnf
 
-    neighbor_set = BasisNeighborFinder(original_cnf).find_basis_neighbors()
+    neighbor_set = MotifNeighborFinder(original_cnf).find_motif_neighbors()
     print(f"Structure had {len(struct)} sites")
     print(f"Found {len(neighbor_set)} basis neighbors!")
     recipricol_nbs = [] 
@@ -36,7 +36,7 @@ def test_basis_neighbor_reciprocity(idx, struct: Structure):
     geo_matches = []
     for nb_idx, n in enumerate(neighbor_set.neighbors):
         assert n.point.lattice_normal_form == original_cnf.lattice_normal_form
-        second_neighbors = BasisNeighborFinder(n.point).find_basis_neighbors()
+        second_neighbors = MotifNeighborFinder(n.point).find_motif_neighbors()
         print(f"Found {len(neighbor_set)} basis SECOND neighbors!")
         if original_cnf not in second_neighbors:
             # helpers.save_cnfs_to_dir(f"patho_neighbor_pairs/mp_{idx}_nb_{nb_idx}", [original_cnf, n.point])

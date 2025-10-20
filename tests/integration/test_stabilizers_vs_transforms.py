@@ -6,7 +6,7 @@ from cnf.lattice.lnf_constructor import VonormSorter
 from cnf.unit_cell import UnitCell
 from cnf.linalg import MatrixTuple
 from cnf.motif.atomic_motif import DiscretizedMotif
-from cnf.motif.bnf_constructor import get_all_shifted_motifs
+from cnf.motif.mnf_constructor import get_all_shifted_motifs
 
 @helpers.parameterized_by_mp_struct_idxs(every=50)
 def test_stabilizers_form_groups(idx, struct):

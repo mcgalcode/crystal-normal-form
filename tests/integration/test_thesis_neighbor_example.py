@@ -1,8 +1,8 @@
 import pytest
 
-from cnf import CrystalNormalForm, LatticeNormalForm, BasisNormalForm
+from cnf import CrystalNormalForm, LatticeNormalForm, MotifNormalForm
 from cnf.navigation.lattice_neighbor_finder import LatticeNeighborFinder
-from cnf.navigation.basis_neighbor_finder import BasisNeighborFinder
+from cnf.navigation.motif_neighbor_finder import MotifNeighborFinder
 
 LATTICE_NEIGHBORS = [
     (6, 6, 15, 16, 4, 18, 21, 2, 10, 10),
@@ -65,19 +65,19 @@ def test_thesis_neighbors():
     delta = 20
 
     starting_lnf = LatticeNormalForm.from_coords((6, 6, 15, 16, 4, 19, 20), xi)
-    starting_bnf = BasisNormalForm((2, 10, 10), ["Li", "Li"], delta)
-    starting_cnf = CrystalNormalForm(starting_lnf, starting_bnf)
+    starting_mnf = MotifNormalForm((2, 10, 10), ["Li", "Li"], delta)
+    starting_cnf = CrystalNormalForm(starting_lnf, starting_mnf)
 
     lnf_neighbor_finder = LatticeNeighborFinder(starting_cnf)
-    bnf_neighbor_finder = BasisNeighborFinder(starting_cnf)
+    mnf_neighbor_finder = MotifNeighborFinder(starting_cnf)
 
     lnf_neighbor_set = lnf_neighbor_finder.find_cnf_neighbors()
     lnf_neighbors = lnf_neighbor_set.neighbors
     lnf_neighbors = [n.point for n in lnf_neighbors]
 
-    bnf_neighbor_set = bnf_neighbor_finder.find_basis_neighbors()
-    bnf_neighbors = bnf_neighbor_set.neighbors
-    bnf_neighbors = [n.point for n in bnf_neighbors]
+    mnf_neighbor_set = mnf_neighbor_finder.find_motif_neighbors()
+    mnf_neighbors = mnf_neighbor_set.neighbors
+    mnf_neighbors = [n.point for n in mnf_neighbors]
 
     neighbors = lnf_neighbors
 

@@ -50,7 +50,7 @@ class LatticeStep():
                 raise ValueError(f"LatticeStep instantiated with invalid element != 1 at pos {idx}: {tuple(vals)}")
             
     def _as_tuple(self):
-        return (self.tuple, tuple(self.vonorms.vonorms), self.transformed_motif.to_bnf_list(), self.matrix.tuple)
+        return (self.tuple, tuple(self.vonorms.vonorms), self.transformed_motif.to_mnf_list(), self.matrix.tuple)
     
     def __eq__(self, other: 'LatticeStep'):
         return self._as_tuple() == other._as_tuple()

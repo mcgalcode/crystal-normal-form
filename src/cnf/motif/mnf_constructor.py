@@ -2,16 +2,16 @@ import numpy as np
 
 from .atomic_motif import FractionalMotif, DiscretizedMotif
 from ..linalg import MatrixTuple
-from .basis_normal_form import BasisNormalForm
+from .motif_normal_form import MotifNormalForm
     
-class BNFCandidate():
+class MNFCandidate():
 
     def __init__(self,
-                 bnf_coords: tuple,
+                 mnf_coords: tuple,
                  motif: DiscretizedMotif | FractionalMotif,
                  unimodular: MatrixTuple,
                  shift: np.array):
-        self.bnf_coords = bnf_coords
+        self.mnf_coords = mnf_coords
         self.motif = motif
         self.unimodular = unimodular
         self.shift = shift
@@ -35,20 +35,20 @@ def get_all_shifted_motifs(m: DiscretizedMotif) -> list[DiscretizedMotif]:
         shifted_ms.append(m.shift_origin(shift))
     return shifted_ms, shift
 
-class BNFConstructionResult():
+class MNFConstructionResult():
 
     def __init__(self,
                  original_motif: DiscretizedMotif,
                  delta: int,
                  stabilizers: list[MatrixTuple],
-                 sorted_bnf_candidates: list[BNFCandidate]):
+                 sorted_mnf_candidates: list[MNFCandidate]):
         self.delta = delta
         self.original_motif = original_motif
         self.stabilizers = stabilizers
-        self.sorted_bnf_candidates = sorted_bnf_candidates
+        self.sorted_mnf_candidates = sorted_mnf_candidates
     
     def print_details(self):
-        print(f"Found BNF: {self.bnf.coord_list}")
+        print(f"Found MNF: {self.mnf.coord_list}")
         print(f"Applied the following stabilizers...")
         for p in self.stabilizers:
             print(p.tuple)
@@ -57,22 +57,22 @@ class BNFConstructionResult():
         for m in self.stabilizers:
             print(f"Mat: {m.tuple}")
         
-        print(f"Found phone-book first shift: {self.sorted_bnf_candidates[0].shift}")
+        print(f"Found phone-book first shift: {self.sorted_mnf_candidates[0].shift}")
     
     @property
     def canonical_candidate(self):
-        return self.sorted_bnf_candidates[0]
+        return self.sorted_mnf_candidates[0]
     
     @property
     def canonical_motif(self):
         return self.canonical_candidate.motif
     
     @property
-    def bnf(self):
+    def mnf(self):
         element_list, _ = self.canonical_motif.to_elements_and_positions()
-        canonical_bnf_coords = self.canonical_candidate.bnf_coords
+        canonical_mnf_coords = self.canonical_candidate.mnf_coords
 
-        return BasisNormalForm(canonical_bnf_coords, element_list, self.delta)
+        return MotifNormalForm(canonical_mnf_coords, element_list, self.delta)
 
 def get_all_shifted_motifs(m: FractionalMotif) -> tuple[list[FractionalMotif], list[np.ndarray]]:
     sorted_elements = m.sorted_elements
@@ -89,9 +89,9 @@ def get_all_shifted_motifs(m: FractionalMotif) -> tuple[list[FractionalMotif], l
     return shifted_motifs, shifts
 
 
-class BNFConstructor():
+class MNFConstructor():
     """Implements methods for taking a list of atomic positions
-    in fractional coordinates and producing the Basis Normal Form string
+    in fractional coordinates and producing the Motif Normal Form string
     as described in the section "Representation of Crystalline Atomic Bases" on
     pp. 52 of David Mrdjenovich's thesis.
     """
@@ -107,7 +107,7 @@ class BNFConstructor():
         self.verbose_logging = verbose_logging
     
     def build(self, original_motif: FractionalMotif):
-        bnf_candidates: list[BNFCandidate] = []
+        mnf_candidates: list[MNFCandidate] = []
 
         if self.verbose_logging:
             print(f"Initial motif positions:")
@@ -122,26 +122,26 @@ class BNFConstructor():
             shifted_motifs, shifts = get_all_shifted_motifs(transformed_motif)
 
             for shifted_motif, shift in zip(shifted_motifs, shifts):
-                bnf_list = shifted_motif.to_bnf_list()
-                candidate = BNFCandidate(bnf_list[3:], shifted_motif, mat, shift)
-                bnf_candidates.append(candidate)
+                mnf_list = shifted_motif.to_mnf_list()
+                candidate = MNFCandidate(mnf_list[3:], shifted_motif, mat, shift)
+                mnf_candidates.append(candidate)
 
         if self.verbose_logging:
-            print("Found BNF candidates:")
+            print("Found MNF candidates:")
             by_coords = {}
-            for bc in bnf_candidates:
-                if bc.bnf_coords not in by_coords:
-                    by_coords[bc.bnf_coords] = [bc]
+            for bc in mnf_candidates:
+                if bc.mnf_coords not in by_coords:
+                    by_coords[bc.mnf_coords] = [bc]
                 else:
-                    by_coords[bc.bnf_coords].append(bc)
+                    by_coords[bc.mnf_coords].append(bc)
             
             for coords, candidates in by_coords.items():
                 print(f"Candidate: {coords}")
                 print(f"Generated by: ", [c.unimodular for c in candidates])
 
-        sorted_candidates = sorted(bnf_candidates, key=lambda c: c.bnf_coords)
+        sorted_candidates = sorted(mnf_candidates, key=lambda c: c.mnf_coords)
         
-        return BNFConstructionResult(
+        return MNFConstructionResult(
             original_motif,
             self.delta,
             self.stabilizer,
