@@ -7,7 +7,7 @@ from ..lattice.voronoi import VonormList
 from .lattice_step import LatticeStep, LatticeStepResult
 from .neighbor_set import NeighborSet
 from ..utils.pdd import pdd_for_cnfs
-from ..lattice.unimodular import combine_unimodular_matrices
+from ..linalg.unimodular import combine_unimodular_matrices
 
 class LatticeNeighborFinder():
 

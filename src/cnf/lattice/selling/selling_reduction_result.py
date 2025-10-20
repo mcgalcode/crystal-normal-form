@@ -1,5 +1,5 @@
 from .selling_transform_matrix import SellingTransformMatrix
-from ..unimodular import combine_unimodular_matrices
+from ...linalg.unimodular import combine_unimodular_matrices
 
 class SellingReductionResult():
 

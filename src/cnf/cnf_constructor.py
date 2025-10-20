@@ -12,7 +12,7 @@ from .lattice.permutations import MatrixTuple
 from .lattice.rounding import DiscretizedVonormComputer
 from .motif.mnf_constructor import MNFConstructor, MNFConstructionResult
 from .crystal_normal_form import CrystalNormalForm
-from .lattice.unimodular import combine_unimodular_matrices
+from .linalg.unimodular import combine_unimodular_matrices
 
 class CNFConstructionResult():
 
