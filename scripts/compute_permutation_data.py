@@ -1,7 +1,7 @@
 import tqdm
 import json
 
-from cnf.lattice.voronoi import ConormListForm
+from cnf.lattice.voronoi import Coform
 from cnf.lattice.permutations import ConormPermutation
 from cnf.linalg.unimodular import UNIMODULAR_MATRICES, load_unimodular
 from cnf.lattice.voronoi.math import ConormCalculator, Transformation
@@ -11,7 +11,7 @@ def map_unimod_to_conorm_perms(matrices, fname = "unimodular_mats_to_perms.json"
     mat_to_perms = []
     all_valid_perms = ConormPermutation.all_conorm_perm_tuples()
     
-    for conorm_form in tqdm.tqdm(ConormListForm.all_coforms()):
+    for conorm_form in tqdm.tqdm(Coform.all_coforms()):
         print(f"Matching for coform: {conorm_form.zero_indices}, class {conorm_form.voronoi_class}")
         for u in tqdm.tqdm(matrices):
             t = Transformation(u)

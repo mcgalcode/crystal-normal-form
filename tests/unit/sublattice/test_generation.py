@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 
 from cnf.sublattice.sublattice_generator import transform_lattice_vecs
-from cnf.sublattice.motif_translation_set import MotifTranslationSet, transform_basis_position
+from cnf.sublattice.motif_translation_set import MotifTranslationSet, transform_motif_position
 from cnf.sublattice.gamma_matrices import GammaMatrixGroup, GammaMatrixTuple
 from cnf.motif import FractionalMotif
 
@@ -58,14 +58,14 @@ def test_generates_correct_motif_translations():
                 assert np.all(v < 1.0)
                 assert np.all(v >= 0)
 
-def test_can_transform_basis_position():
+def test_can_transform_motif_position():
     mat = GammaMatrixTuple(np.array([
         [2, 0, 0],
         [0, 2, 0],
         [0, 0, 2],
     ]))
     pos = np.array((0.5, 0.5, 0.5))
-    transformed_pos = transform_basis_position(pos, mat)
+    transformed_pos = transform_motif_position(pos, mat)
     assert np.all(np.isclose(transformed_pos, np.array((0.25, 0.25, 0.25))))
 
     mat = GammaMatrixTuple(np.array([
@@ -74,7 +74,7 @@ def test_can_transform_basis_position():
         [0, 0, 2],
     ]))
     pos = np.array((0.5, 0.5, 0.5))
-    transformed_pos = transform_basis_position(pos, mat)
+    transformed_pos = transform_motif_position(pos, mat)
     assert np.all(np.isclose(transformed_pos, np.array((0.25, 0.5, 0.25))))
 
 def test_motif_translations_for_simple_gamma():

@@ -4,7 +4,7 @@ import numpy as np
 
 from pymatgen.core.structure import Structure
 from cnf.unit_cell import UnitCell
-from cnf.lattice.voronoi import ConormListForm
+from cnf.lattice.voronoi import Coform
 
 from cnf.linalg.unimodular import get_unimodulars_col_max
 from cnf.lattice.permutations import UnimodPermMapper
@@ -18,14 +18,14 @@ def test_unimodulars_are_det_0():
 
 def test_ALL_unimodular_mats_produce_all_possible_coforms():
     handled_vcs = []
-    for struct in helpers.ALL_MP_STRUCTURES():
+    for struct in helpers.ALL_MP_STRUCTURES(1):
         uc = UnitCell.from_pymatgen_structure(struct).reduce()
         voronoi_class = uc.conorms.form.voronoi_class
         if voronoi_class not in handled_vcs:
             print()
             print()
             print(f"Trying struct for class {voronoi_class}")
-            matching_coforms = ConormListForm.get_coforms_of_voronoi_class(voronoi_class)
+            matching_coforms = Coform.get_coforms_of_voronoi_class(voronoi_class)
             zero_sets = { cf.zero_indices: [] for cf in matching_coforms }
             for u in get_unimodulars_col_max(4):
                 uc2 = uc.apply_unimodular(u)
@@ -69,7 +69,7 @@ def test_cataloged_unimodular_mats_and_structs_produce_all_possible_coforms():
             helpers.printif("", verbose)
             helpers.printif("", verbose)
             helpers.printif(f"Trying struct for class {voronoi_class}", verbose)
-            matching_coforms = ConormListForm.get_coforms_of_voronoi_class(voronoi_class)
+            matching_coforms = Coform.get_coforms_of_voronoi_class(voronoi_class)
             zero_sets = { cf.zero_indices: [] for cf in matching_coforms }
             for perm in uc.conorms.permissible_permutations:
                 for u in perm.all_matrices:

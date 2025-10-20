@@ -5,12 +5,12 @@ from itertools import permutations, product
 
 from cnf.linalg import MatrixTuple
 from cnf.lattice.permutations import UnimodPermMapper
-from cnf.lattice.voronoi import ConormListForm
+from cnf.lattice.voronoi import Coform
 from cnf.lattice.voronoi.constants import CONORM_IDX_TO_PAIR
 
 def get_zero_sets_for_voronoi_class(v_class):
     def _mask_selector(zero_mask):
-        return ConormListForm(zero_mask).voronoi_class == v_class
+        return Coform(zero_mask).voronoi_class == v_class
     
     relevant_zero_sets = [zs for zs in UnimodPermMapper.all_zero_sets() if _mask_selector(zs)]
     return relevant_zero_sets
@@ -20,7 +20,7 @@ def find_matching_perms(mat_tup, voronoi_search_class):
     relevant_zero_sets = get_zero_sets_for_voronoi_class(voronoi_search_class)
 
     for zs in relevant_zero_sets:
-        clf = ConormListForm(zs)
+        clf = Coform(zs)
         perm_matrix_map = UnimodPermMapper.get_perms_for_zero_set(zs)
         for perm in perm_matrix_map:
             canonical_matrix = clf.canonical_matrix_for_perm(perm)

@@ -1,4 +1,4 @@
-from cnf.lattice.voronoi.conorm_list_form import ConormListForm
+from cnf.lattice.voronoi.coform import Coform
 
 import sys
 
@@ -10,7 +10,7 @@ def main():
     for voronoi_class in vclasses:
         print()
         print(f"========== Summarizing Voronoi Class {voronoi_class} =============")
-        for cf in ConormListForm.get_coforms_of_voronoi_class(voronoi_class):
+        for cf in Coform.get_coforms_of_voronoi_class(voronoi_class):
             print()
             print(f"Coform with Zero Conorm IDXS: {cf.zero_indices}")
             print(f"TOTAL matrices: {len(cf.all_matrices())}")

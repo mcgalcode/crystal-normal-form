@@ -32,29 +32,29 @@ IMPOSSIBLE_ZERO_SETS = [
     (2, 4, 5),
 ]
 
-class ConormListForm():
+class Coform():
 
     @staticmethod
-    def all_coforms() -> list['ConormListForm']:
+    def all_coforms() -> list['Coform']:
         all_conorm_idxs = range(0,6)
         result = []
         for num_zeros in range(0, 4):
             idx_combos = combinations(all_conorm_idxs, num_zeros)
             for c in idx_combos:
                 if c not in IMPOSSIBLE_ZERO_SETS:
-                    result.append(ConormListForm(c))
+                    result.append(Coform(c))
         return result
 
     @staticmethod
-    def get_coforms_of_voronoi_class(voronoi_class: int) -> list['ConormListForm']:
+    def get_coforms_of_voronoi_class(voronoi_class: int) -> list['Coform']:
         if not voronoi_class in range(1,6):
             raise ValueError(f"Requested coforms for invalid voronoi class: {voronoi_class} (not in 1-5)")
-        return [cf for cf in ConormListForm.all_coforms() if cf.voronoi_class == voronoi_class]
+        return [cf for cf in Coform.all_coforms() if cf.voronoi_class == voronoi_class]
 
     @staticmethod
     def all_grouped_vonorm_permutations() -> list[list[PermutationMatrix]]:
         groups = {}
-        for cf in ConormListForm.all_coforms():
+        for cf in Coform.all_coforms():
             for p in cf.permissible_permutations():
                 s4_members = tuple(sorted(p.vonorm_permutation.perm[:4]))
                 if s4_members in groups:
@@ -82,7 +82,7 @@ class ConormListForm():
         )
     
     def similar_coforms(self):
-        return ConormListForm.get_coforms_of_voronoi_class(self.voronoi_class)
+        return Coform.get_coforms_of_voronoi_class(self.voronoi_class)
     
     def all_matrices(self):
         mats = []
@@ -143,7 +143,7 @@ class ConormListForm():
                 return 4
 
     def __repr__(self):
-        return f"ConormListForm({self.zero_indices})"
+        return f"Coform({self.zero_indices})"
     
     def __len__(self):
         return len(self.zero_indices)

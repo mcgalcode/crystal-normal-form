@@ -1,13 +1,13 @@
 import numpy as np
 from ..permutations import Permutation, VonormPermutation
-from .conorm_list_form import ConormListForm
+from .coform import Coform
 from ...linalg import MatrixTuple
 
 class ConormList():
 
     def __init__(self, conorms, tol=1e-3):
         self.conorms = conorms
-        self.form = ConormListForm([idx for idx, conorm in enumerate(self.conorms) if np.abs(conorm) < tol])
+        self.form = Coform([idx for idx, conorm in enumerate(self.conorms) if np.abs(conorm) < tol])
 
     def set_tol(self, new_tol):
         return ConormList(self.conorms, new_tol)

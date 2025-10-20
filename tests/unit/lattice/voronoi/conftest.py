@@ -4,7 +4,7 @@ from cnf.lattice.superbasis import Superbasis
 from cnf.lattice.selling import SuperbasisSellingReducer
 from cnf.lattice.permutations import is_permutation_set_closed
 from pymatgen.core.lattice import Lattice
-from cnf.lattice.voronoi import ConormListForm
+from cnf.lattice.voronoi import Coform
 
 @pytest.fixture
 def v5_lattice():

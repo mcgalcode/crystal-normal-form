@@ -4,7 +4,7 @@ import itertools
 from cnf.linalg import MatrixTuple
 from cnf.lattice import Superbasis
 from cnf.lattice.permutations import ConormPermutation, VonormPermutation
-from cnf.lattice.voronoi import ConormListForm, ConormList
+from cnf.lattice.voronoi import Coform, ConormList
 from cnf.linalg.unimodular import UNIMODULAR_MATRICES
 
 cols = [
@@ -196,5 +196,5 @@ def test_v1_case(reduced_v1_superbasis):
 
 
 def test_build_all_conorm_lists():
-    all_lists = ConormListForm.all_coforms()
+    all_lists = Coform.all_coforms()
     assert len(all_lists) == 38

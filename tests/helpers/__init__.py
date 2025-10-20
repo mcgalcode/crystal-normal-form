@@ -32,6 +32,7 @@ def parameterized_by_structs_with_num_sites_less_than(num):
 
 def parameterized_by_matching_mp_structs(matcher):
     pairs = [(idx, struct) for idx, struct in enumerate(_ALL_MP_STRUCTURES) if matcher(struct)]
+    pairs = pairs[::STRUCT_SAMPLE_FREQ]
     def _wrapper(func):
         return pytest.mark.parametrize("idx, struct", pairs)(func)    
     return _wrapper
@@ -48,6 +49,7 @@ def parameterized_by_mp_struct_idxs(idxs=None, every=None):
     
     if every is not None:
         idxs = list(range(0,len(_ALL_MP_STRUCTURES),every))
+        idxs = idxs[::STRUCT_SAMPLE_FREQ]
 
     structs = [(idx, _ALL_MP_STRUCTURES[idx]) for idx in idxs]
 

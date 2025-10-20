@@ -7,7 +7,7 @@ from cnf.lattice.superbasis import get_v0_from_generating_vecs
 from cnf.linalg import MatrixTuple, VectorTuple
 from cnf.lattice.permutations import ConormPermutation
 from cnf.linalg.unimodular import get_unimodulars_col_max
-from cnf.lattice.voronoi.conorm_list_form import ConormListForm
+from cnf.lattice.voronoi.coform import Coform
 
 def test_can_init_voronoi_value():
     v = SignedVoronoiValue.negative_one(PrimaryVonorm(0))
@@ -291,7 +291,7 @@ def test_perm_should_be_present():
     mat = MatrixTuple.from_tuple((1, 0, 0, 0, 1, 0, 0, 0, 1))
     mat = MatrixTuple.from_tuple((0, 1, 0, 1, 0, 0, 0, 0, 1))
     print(mat.matrix)
-    cf = ConormListForm([0])
+    cf = Coform([0])
     calc = ConormCalculator(Transformation(mat), cf.zero_conorms())
     print(cf.zero_conorms())
     perms = calc.get_permutations()
@@ -301,7 +301,7 @@ def test_perm_should_be_present():
 
 def test_specific_perm_expectation_1():
     zero_indices = []
-    cf = ConormListForm(zero_indices)
+    cf = Coform(zero_indices)
     perms_with_matrices = []
     mat_to_perms = {}
     for u in get_unimodulars_col_max(2):

@@ -43,7 +43,7 @@ def test_bcc_zr_unit_cells(zr_bcc_primitive_lattice_vecs):
     assert len(unique_cnfs) == 2
 
     expected_cnfs = [
-        # We get a different BNF for this with the new
+        # We get a different MNF for this with the new
         # stabilizers: 15, 15, 15 instead of 0, 15, 15
         # (6, 8, 17, 23, 6, 23, 25, 0, 15, 15),
         (8, 8, 8, 21, 15, 15, 15, 15, 15, 15)
