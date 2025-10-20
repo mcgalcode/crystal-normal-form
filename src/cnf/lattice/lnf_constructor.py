@@ -9,7 +9,6 @@ from .permutations import PermutationMatrix
 from .rounding import DiscretizedVonormComputer
 from .superbasis import Superbasis
 from .lattice_normal_form import LatticeNormalForm
-from .unimodular import combine_unimodular_matrices
 from ..linalg import MatrixTuple
 
 
