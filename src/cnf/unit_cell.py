@@ -48,6 +48,10 @@ class UnitCell():
     def to_pymatgen_structure(self):
         lattice_vecs = self.superbasis.generating_vecs()
         return Structure(lattice_vecs, self.motif.atoms, self.motif.positions)  
+
+    @property
+    def volume(self):
+        return self.to_pymatgen_structure().volume
     
     @property
     def vonorms(self):
@@ -73,3 +77,6 @@ class UnitCell():
         if ".cif" not in fpath:
             raise ValueError("Must provide CIF filepath ending in .cif!")
         self.to_pymatgen_structure().to_file(fpath)
+
+    def __len__(self):
+        return len(self.motif)

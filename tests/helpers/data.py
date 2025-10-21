@@ -8,6 +8,10 @@ from cnf.unit_cell import UnitCell
 def get_data_file_path(path_in_data_dir):
     return Path(__file__).parent / ".." / "data" / path_in_data_dir
 
+def load_specific_cif(cif_name: str):
+    p = Path(__file__).parent / ".." / "data" / "specific_cifs" / cif_name
+    return Structure.from_file(p)
+
 all_mp_cif_dir = Path(__file__).parent / ".." / "data" / "mp_cifs"
 _ALL_MP_STRUCTURES = []
 for cif_path in all_mp_cif_dir.iterdir():

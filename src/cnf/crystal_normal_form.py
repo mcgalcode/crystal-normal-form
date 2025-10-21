@@ -6,6 +6,11 @@ import json
 class CrystalNormalForm:
 
     @classmethod
+    def from_pmg_struct(self, struct: Structure, xi: float, delta: int):
+        from .cnf_constructor import CNFConstructor
+        return CNFConstructor(xi, delta).from_pymatgen_structure(struct).cnf
+
+    @classmethod
     def from_tuple(cls, tuple, elements, xi, delta):
         lnf_tup = tuple[:7]
         mnf_tup = tuple[7:]

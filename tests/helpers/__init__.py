@@ -3,7 +3,7 @@ import os
 import pytest
 
 from .assertions import *
-from .data import _ALL_MP_STRUCTURES, load_pathological_cifs, get_data_file_path, save_cnfs_to_dir, load_cnfs, save_cifs_to_dir, load_cifs
+from .data import _ALL_MP_STRUCTURES, load_pathological_cifs, get_data_file_path, save_cnfs_to_dir, load_cnfs, save_cifs_to_dir, load_cifs, load_specific_cif
 from cnf.motif.atomic_motif import FractionalMotif
 from cnf.unit_cell import UnitCell
 from cnf.linalg import MatrixTuple
