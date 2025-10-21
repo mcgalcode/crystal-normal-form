@@ -1,5 +1,6 @@
 import numpy as np
 from pymatgen.core.structure import Structure
+from pymatgen.core.composition import Element
 from .utils import shift_coords, discretize_coords, sort_elements, sort_number_lists, move_coords_into_cell
 
 from ..lattice import Superbasis
@@ -278,7 +279,11 @@ class FractionalMotif(PeriodicMotif):
         elements = []
         for spec in site_species:
             assert spec.num_atoms == 1
-            elements.append(spec.elements[0])
+            el = spec.elements[0]
+            if isinstance(el, Element):
+                elements.append(el)
+            else:
+                elements.append(el.element)
 
         coords = [site.frac_coords for site in pmg_struct.sites]
         return cls.from_elements_and_positions(elements, coords)
