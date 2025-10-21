@@ -43,6 +43,10 @@ class CrystalNormalForm:
     @property
     def motif_coord_matrix(self):
         return self.to_discretized_motif().coord_matrix
+    
+    @property
+    def elements(self):
+        return self.motif_normal_form.elements
 
     def reconstruct(self) -> 'Structure':
         """
