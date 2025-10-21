@@ -22,5 +22,5 @@ class NeighborFinder():
         for mot_neighb in mnf_neighbors.neighbors:
             all_neighbor_points.add(mot_neighb.point)
         
-        return all_neighbor_points
+        return list(all_neighbor_points)
         
