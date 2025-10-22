@@ -2,6 +2,9 @@ import helpers
 import pytest
 import os
 
+from cnf.lattice import Superbasis
+from cnf.motif.atomic_motif import FractionalMotif
+from cnf import UnitCell
 import numpy as np
 from pathlib import Path
 from pymatgen.core.structure import Structure
@@ -32,11 +35,22 @@ def zr_fcc_primitive_lattice_vecs():
     ]) * zr_lattice_param / 2
     return fcc_primitive_vecs
 
+@pytest.fixture
+def zr_bcc_manual_unit_cell(zr_bcc_primitive_lattice_vecs):
+    sb = Superbasis.from_generating_vecs(zr_bcc_primitive_lattice_vecs)
+    motif = FractionalMotif.from_elements_and_positions(["Zr"], [[0, 0, 0]])
+    return UnitCell(sb, motif)
 
 @pytest.fixture
-def zr_hcp():
+def zr_fcc_manual_unit_cell(zr_fcc_primitive_lattice_vecs):
+    sb = Superbasis.from_generating_vecs(zr_fcc_primitive_lattice_vecs)
+    motif = FractionalMotif.from_elements_and_positions(["Zr"], [[0, 0, 0]])
+    return UnitCell(sb, motif)
+
+@pytest.fixture
+def zr_hcp_mp():
     return helpers.load_specific_cif("Zr_HCP.cif")
 
 @pytest.fixture
-def zr_bcc():
+def zr_bcc_mp():
     return helpers.load_specific_cif("Zr_BCC.cif")

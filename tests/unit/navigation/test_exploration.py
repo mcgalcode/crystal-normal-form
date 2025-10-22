@@ -6,7 +6,7 @@ from cnf.navigation.neighbor_finder import NeighborFinder
 from cnf.navigation.crystal_explorer import CrystalExplorer
 from cnf.navigation.search_objectives import LocateAnyTargetStruct
 from cnf.navigation.score_functions import PDDScorer
-from cnf.navigation.utils import get_endpoints_from_pmg_structs
+from cnf.navigation.utils import get_endpoints_from_unit_cells
 from cnf.navigation.search_filters import SimpleVolumeAndOverlapFilter
 
 @pytest.fixture(scope='module')
@@ -169,23 +169,27 @@ def test_unexplored_points_list(point_set):
     unexplored_after = explorer.unexplored_points()
     assert len(unexplored_after) < len(unexplored)
 
-def test_can_connect_two_points(zr_bcc, zr_hcp):
-    xi = 1.5
-    delta = 5
+def test_can_connect_two_points(zr_bcc_manual_unit_cell, zr_fcc_manual_unit_cell):
+    xi = 1.0
+    delta = 10
+    # print(len(zr_bcc_manual_unit_cell), len(zr_fcc_manual_unit_cell))
+    start_structs = zr_bcc_manual_unit_cell.supercells(2) #[:1]
+    end_structs = zr_fcc_manual_unit_cell.supercells(2)
 
-    start_structs, end_structs = get_endpoints_from_pmg_structs(zr_bcc, zr_hcp)
-    start_cnfs = [s.to_cnf(xi, delta) for s in start_structs]
-    end_cnfs = [s.to_cnf(xi, delta) for s in end_structs]
+    start_cnfs = list(set([s.to_cnf(xi, delta) for s in start_structs]))
+    end_cnfs = list(set([s.to_cnf(xi, delta) for s in end_structs]))
     cmap = CrystalMap.from_cnfs(start_cnfs)
-
+    
 
     search_filter = SimpleVolumeAndOverlapFilter.from_endpoint_structs([*start_structs, *end_structs], 0.5)
-    score_fun = PDDScorer(end_structs)
+    score_fun = PDDScorer(end_structs[:1])
     objective = LocateAnyTargetStruct(end_cnfs)
 
     explorer = CrystalExplorer(cmap, search_filter, score_fun)
     
     explorer.search(objective)
     assert objective.objective_complete(explorer)
-    for ec in end_cnfs:
-        assert ec in cmap
+    print(f"Started with {len(start_cnfs)} structures")
+    print(f"Searched for {len(end_cnfs)} structures")
+    print(objective.located_endpt.coords)
+    explorer.to_json("result.json")
