@@ -35,12 +35,10 @@ class CrystalNormalForm:
         self.motif_normal_form = motif_normal_form
         self.xi = lattice_normal_form.lattice_step_size
         self.delta = motif_normal_form.delta
-    
-    @property
-    def coords(self):
         lnf_coords = self.lattice_normal_form.coords
-        mnf_coords = self.motif_normal_form.coord_list
-        return tuple(lnf_coords) + tuple(mnf_coords)
+        mnf_coords = self.motif_normal_form.coord_list      
+        self.coords = tuple(lnf_coords) + tuple(mnf_coords)
+        self._hash_tuple = self.coords + tuple([self.xi, self.delta])
     
     def to_discretized_motif(self):
         return self.motif_normal_form.to_discretized_motif()
@@ -77,7 +75,7 @@ class CrystalNormalForm:
         return self.coords == other.coords and self.xi == other.xi and self.delta == other.delta
     
     def __hash__(self):
-        return (self.coords + tuple([self.xi, self.delta])).__hash__()
+        return self._hash_tuple.__hash__()
     
     @classmethod
     def from_dict(cls, d: dict):
