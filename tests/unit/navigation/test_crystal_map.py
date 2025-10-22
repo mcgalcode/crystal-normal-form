@@ -190,11 +190,13 @@ def test_can_connect_two_points(zr_bcc, zr_hcp):
     tries = 0
     found_endpt = None
     while not any_endpts_found:
-        print(f"Starting round {tries} of searching for endpts, map has {len(cmap)} pts")
+        if tries % 10 == 0:
+            print(f"Starting round {tries} of searching for endpts, map has {len(cmap)} pts")
+            print(f"")
+            print(f"Current best score: {explorer.best_current_score()}")
         total_added = 0
         pt_to_explore = explorer.best_current_point()
-        print(f"")
-        print(f"Current best score: {explorer.best_current_score()}")
+        
         diff = 0
         # print(explorer.sorted_pts())
         for pt_pair in explorer.sorted_pts():
@@ -202,13 +204,13 @@ def test_can_connect_two_points(zr_bcc, zr_hcp):
             pt = cmap.get_point_by_id(pt_id)
             if not explorer.is_point_explored(pt):
                 pt_id = cmap.get_point_id(pt)
-                print(f"Exploring pt: {pt.coords} (score: {explorer.score_for_point(pt_id)})")
+                # print(f"Exploring pt: {pt.coords} (score: {explorer.score_for_point(pt_id)})")
                 before_len = len(cmap)
                 explorer.explore_point(pt_id)
                 after_len = len(cmap)
                 diff = after_len - before_len
                 total_added += diff
-                print(f"Added {after_len - before_len} pts ({before_len} -> {after_len})")
+                # print(f"Added {after_len - before_len} pts ({before_len} -> {after_len})")
                 if diff > 0:
                     break
 
