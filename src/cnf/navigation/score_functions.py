@@ -1,8 +1,7 @@
 from ..crystal_normal_form import CrystalNormalForm
 from cnf.utils.pdd import pdd
 from abc import ABC, abstractmethod
-from pymatgen.core.structure import Structure
-
+from ..unit_cell import UnitCell
 
 class ScoreFunction(ABC):
 
@@ -12,8 +11,8 @@ class ScoreFunction(ABC):
 
 class PDDScorer(ScoreFunction):
 
-    def __init__(self, target_structs: list[Structure]):
-        self.target_structs = target_structs
+    def __init__(self, target_structs: list[UnitCell]):
+        self.target_structs = [t.to_pymatgen_structure() for t in target_structs]
     
     def score(self, pt: CrystalNormalForm) -> float:
         pt_struct = pt.reconstruct()
