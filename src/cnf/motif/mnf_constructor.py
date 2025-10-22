@@ -93,7 +93,7 @@ def get_mnf_strs_from_coord_mats(coord_mats: np.ndarray):
     return [cm.T.reshape(-1)[3:] for cm in coord_mats]
 
 def move_coords_into_bounds(coord_mats, mod):
-    all_motifs = np.array(coord_mats).round(13)
+    all_motifs = np.array(coord_mats).round(6)
     all_motifs = np.mod(all_motifs, mod) 
     return all_motifs
 
