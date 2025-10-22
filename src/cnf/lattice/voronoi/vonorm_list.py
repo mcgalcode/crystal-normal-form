@@ -1,4 +1,5 @@
 import numpy as np
+from functools import cached_property
 from ..swaps.sorting import swap_vonorm_idxs
 from .conorm_list import ConormList
 from ...linalg import MatrixTuple
@@ -20,8 +21,9 @@ class VonormList():
         if not (isinstance(vonorms, tuple) or isinstance(vonorms, list) or isinstance(vonorms, np.ndarray)):
             raise ValueError(f"Tried to intialize VonormList with bad type {type(vonorms)}")
         self.vonorms = vonorms
+        self.tuple = tuple(vonorms)
 
-    @property
+    @cached_property
     def conorms(self):
         return ConormList((1 / 2) * VONORM_TO_DOT_PRODUCTS @ self.vonorms[:6])
     
@@ -45,22 +47,23 @@ class VonormList():
         return np.all(diff < tol)
     
     def about_equal(self, other: 'VonormList', tol=1e-8):
-        diff = np.abs(np.array(self.vonorms) - np.array(other.vonorms))
-        return np.all(diff < tol)
+        return np.all(np.isclose(self.vonorms, other.vonorms, atol=tol))
     
     def canonical_matrix_for_perm(self, perm: Permutation):
         return self.conorms.canonical_matrix_for_perm(perm)
 
     def apply_permutation(self, permutation: tuple):
-        return VonormList(tuple(apply_permutation(self.vonorms, permutation)))
-    
+        p = apply_permutation(self.vonorms, permutation)
+        t = tuple(p)        
+        return VonormList(t)
+
     def stabilizer_perms(self, tol=1e-8) -> list[PermutationMatrix]:
         possible_perms = self.conorms.permissible_permutations
         stabilizers = []
         for p in possible_perms:
             vonorm_perm = p.vonorm_permutation
             permuted_self = self.apply_permutation(vonorm_perm)
-            if self.about_equal(permuted_self, tol):
+            if self == permuted_self:
                 stabilizers.append(p)
         return stabilizers
     
@@ -82,7 +85,7 @@ class VonormList():
                 "transition_mats": [m for p in equivalent_perms for m in p.all_matrices]
             }
         return result
-    
+
     def stabilizer_matrices(self, tol=1e-8) -> list[MatrixTuple]:
         perm_stab = self.stabilizer_perms(tol)
         mats = []
@@ -137,6 +140,9 @@ class VonormList():
     def to_superbasis(self, lattice_step_size: float = 1.0):
         from ..superbasis import Superbasis
         return Superbasis.from_generating_vecs(self.to_generators(lattice_step_size=lattice_step_size))
+    
+    def round(self, places):
+        return VonormList([round(v, places) for v in self.vonorms])
 
     def primary_sum(self):
         return sum(self.vonorms[:4])
@@ -147,16 +153,12 @@ class VonormList():
     def is_superbasis(self):
         return np.isclose(self.primary_sum(), self.secondary_sum())
     
-    @property
-    def tuple(self):
-        return tuple(self.vonorms)
-    
     def __repr__(self):
         numbers = " ".join([str(v) for v in self.vonorms])
         return f"Vonorms({numbers})"
         
     def __eq__(self, other: "VonormList"):
-        return np.all(np.isclose(self.vonorms, other.vonorms))
+        return self.tuple == other.tuple
     
     def __hash__(self):
         return self.tuple.__hash__()
