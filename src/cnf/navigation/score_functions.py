@@ -16,5 +16,6 @@ class PDDScorer(ScoreFunction):
     
     def score(self, pt: CrystalNormalForm) -> float:
         pt_struct = pt.reconstruct()
-        dist = min([pdd(pt_struct, target, k=100) for target in self.target_structs])
+        dists = [pdd(pt_struct, target, k=100) for target in self.target_structs]
+        dist = min(dists)
         return dist

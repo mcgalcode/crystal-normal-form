@@ -20,3 +20,4 @@ class LocateAnyTargetStruct(SearchObjective):
             if cnf in explorer.map:
                 self.located_endpt = cnf       
                 return True
+        return False

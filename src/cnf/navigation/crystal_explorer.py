@@ -162,16 +162,11 @@ class CrystalExplorer():
     @classmethod
     def from_dict(cls, d):
         cmap = CrystalMap.from_dict(d["crystal_map"])
-        xi = cmap.xi
-        delta = cmap.delta
-        elements = cmap.element_list
-        target_pts = [CrystalNormalForm.from_tuple(tuple(l), elements, xi, delta) for l in d["target_pts"]]
         scores = { int(nid): score for nid, score in d["scores"].items() }
         e = cls(
             cmap,
-            vol_lower_lim=d["vll"],
-            vol_upper_lim=d["vul"],
-            target_pts=target_pts,
+            None,
+            None,
             skip_scoring=True,
             preload_scores=scores
         )
@@ -195,8 +190,6 @@ class CrystalExplorer():
     def to_dict(self):
         return {
             "crystal_map": self.map.as_dict(),
-            "vll": self.vll,
-            "vul": self.vul,
             "scores": self.scores,
             "explored_ids": list(self._explored_pts),
         }
