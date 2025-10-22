@@ -162,3 +162,24 @@ def combine_unimodular_matrices(unimodular_mats):
     for mat in unimodular_mats:
         combined_mat = combined_mat @ mat
     return combined_mat
+
+def combine_unimodular_mats_np(unimodular_mats):
+    """
+    Optimized version using numpy.linalg.multi_dot.
+
+    This function is specifically designed to be the fastest way
+    to compute the dot product of two or more arrays.
+
+    It needs special handling for 0 or 1 matrix in the list
+    to match the original function's behavior.
+    """
+    if not unimodular_mats:
+        # Original returns np.eye(3) for an empty list
+        return np.eye(3)
+
+    if len(unimodular_mats) == 1:
+        # Original returns np.eye(3) @ m1 = m1
+        return unimodular_mats[0]
+    
+    # For 2 or more matrices, multi_dot is the most performant
+    return np.linalg.multi_dot(unimodular_mats)
