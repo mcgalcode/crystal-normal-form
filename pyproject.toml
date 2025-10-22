@@ -15,6 +15,7 @@ dependencies = [
     "pymatgen>=2025.6.14",
     "pytest-xdist>=3.8.0",
     "rustworkx>=0.17.1",
+    "sortedcontainers>=2.4.0",
 ]
 
 [project.scripts]

@@ -5,7 +5,7 @@ from cnf.navigation.crystal_map import CrystalMap
 from cnf.navigation.neighbor_finder import NeighborFinder
 from cnf.navigation.exploration import get_endpoints_from_structs, CrystalExplorer
 from tqdm import tqdm
-
+import time
 @pytest.fixture(scope='module')
 def point_set():
     struct = helpers.ALL_MP_STRUCTURES(1)[0]
@@ -182,37 +182,44 @@ def test_can_connect_two_points(zr_bcc, zr_hcp):
     min_vol = min(volumes) * 0.8
     max_vol = max(volumes) * 1.2
 
-    explorer = CrystalExplorer(cmap, min_vol, max_vol, end_cnfs)
     for cnf in start_cnfs:
         cmap.add_point(cnf)
+    explorer = CrystalExplorer(cmap, min_vol, max_vol, end_cnfs)
     
     any_endpts_found = False
     tries = 0
     found_endpt = None
+    prev_len = len(cmap)
+    start_time = time.perf_counter()
     while not any_endpts_found:
         if tries % 10 == 0:
+            end_time = time.perf_counter()
+            print("===========================================================")
             print(f"Starting round {tries} of searching for endpts, map has {len(cmap)} pts")
-            print(f"")
             print(f"Current best score: {explorer.best_current_score()}")
+            curr_len = len(cmap)
+            diff = curr_len - prev_len
+            print(f"Added {diff} points in last 10 rounds")
+            elapsed_time = end_time - start_time
+            print(f"10 tries took {elapsed_time:.6f} seconds")
+            prev_len = curr_len
+            start_time = time.perf_counter()
         total_added = 0
-        pt_to_explore = explorer.best_current_point()
         
         diff = 0
         # print(explorer.sorted_pts())
-        for pt_pair in explorer.sorted_pts():
-            score, pt_id = pt_pair
+        for pt_id in explorer.unexplored_points():
             pt = cmap.get_point_by_id(pt_id)
-            if not explorer.is_point_explored(pt):
-                pt_id = cmap.get_point_id(pt)
-                # print(f"Exploring pt: {pt.coords} (score: {explorer.score_for_point(pt_id)})")
-                before_len = len(cmap)
-                explorer.explore_point(pt_id)
-                after_len = len(cmap)
-                diff = after_len - before_len
-                total_added += diff
-                # print(f"Added {after_len - before_len} pts ({before_len} -> {after_len})")
-                if diff > 0:
-                    break
+            # print(f"Exploring pt: {pt.coords} (score: {explorer.score_for_point(pt_id)})")
+            pt_id = cmap.get_point_id(pt)
+            before_len = len(cmap)
+            explorer.explore_point(pt_id)
+            after_len = len(cmap)
+            diff = after_len - before_len
+            total_added += diff
+            # print(f"Added {after_len - before_len} pts ({before_len} -> {after_len})")
+            if diff > 0:
+                break
 
         
         for cnf in end_cnfs:

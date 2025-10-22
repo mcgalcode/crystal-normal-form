@@ -33,8 +33,8 @@ class CrystalMap():
             raise ValueError(f"Tried to add CNF with incompatible element list to CrystalMap (incoming: {cnf.elements}, map: {self.element_list})")
 
     def add_point(self, point: CrystalNormalForm):
-        self.validate_point(point)
-        if point in set(self.all_points()):
+        # self.validate_point(point)
+        if point in self._all_points_set:
             return None
         node_id = self._graph.add_node(point)
         self._all_points_set.add(point)

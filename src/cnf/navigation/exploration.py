@@ -6,6 +6,8 @@ from .crystal_map import CrystalMap
 from .neighbor_finder import NeighborFinder
 from ..crystal_normal_form import CrystalNormalForm
 from heapq import heappop, heappush, heapify
+from sortedcontainers import SortedSet
+import time
 
 from pymatgen.core import Structure, Lattice
 from typing import List, Tuple
@@ -123,18 +125,21 @@ class CrystalExplorer():
     def __init__(self, cmap: CrystalMap, vol_lower_lim: float, vol_upper_lim: float, target_pts: list[CrystalNormalForm]):
         self.map = cmap
         self._is_explored = {}
-        self._metric_tracker = []
-        heapify(self._metric_tracker)
         self._target_pts = target_pts
         self._target_structs = [pt.reconstruct() for pt in target_pts]
-
-        for pt in cmap.all_node_ids():
-            self._is_explored[pt] = False
-            pt = cmap.get_point_by_id(pt)
-            self.score_pt(pt)
         self.vll = vol_lower_lim
         self.vul = vol_upper_lim
+        self.scores = {}
+        self._unexplored_pts = set()
+        self.unexplored_score_list = SortedSet()
+        self._explored_pts = set()
+        self.explored_score_list = SortedSet()
 
+        for pt in cmap.all_node_ids():
+            self._unexplored_pts.add(pt)
+            pt = cmap.get_point_by_id(pt)
+            self.score_pt(pt)
+    
     def explore_point(self, point_id: int):
         pt = self.map.get_point_by_id(point_id)
         nf = NeighborFinder(pt)
@@ -145,36 +150,45 @@ class CrystalExplorer():
                 if nb_pt not in self.map:
                         nid = self.map.add_point(nb_pt)
                         new_ids.append(nid)
-                        self._is_explored[nid] = False
+                        self._unexplored_pts.add(nid)
                         self.score_pt(nb_pt)
                 self.map.add_connection(pt, nb_pt)                    
             else:
-                print("Skipping point outside valid bounds...")
+                pass
+                # print("Skipping point outside valid bounds...")
 
-        self._is_explored[point_id] = True
+        item = (self.scores[point_id], point_id)
+        self._unexplored_pts.remove(point_id)
+        self.unexplored_score_list.remove(item)
+
+        self._explored_pts.add(point_id)
+        self.explored_score_list.add(item)
         return new_ids
     
     def score_pt(self, pt: CrystalNormalForm):
         score = self.get_goodness(pt)
         id = self.map.get_point_id(pt)
         item = (score, id)
-        heappush(self._metric_tracker, item)
+        self.scores[id] = score
+        self.unexplored_score_list.add(item)
+        return score
 
     def get_goodness(self, pt: CrystalNormalForm):
         pdd = min([pdd_for_cnfs(pt, target) for target in self._target_pts])
         return pdd
     
-    def best_current_point(self):
-        return self.map.get_point_by_id(self._metric_tracker[0][1])
-    
+    def unexplored_points(self):
+        return [i[1] for i in self.unexplored_score_list]
+
     def best_current_score(self):
-        return self._metric_tracker[0][0]
+        all_scores = self.unexplored_score_list.union(self.explored_score_list)
+        if len(all_scores) == 0:
+            return None
+        else:
+            return all_scores[0][0]
     
     def score_for_point(self, pt_id: int):
-        return [s for s in self._metric_tracker if s[1] == pt_id][0][0]
-    
-    def sorted_pts(self):
-        return sorted(self._metric_tracker)
+        return self.scores[pt_id]
     
     def should_add_pt(self, pt: CrystalNormalForm):
         # return True
@@ -183,16 +197,11 @@ class CrystalExplorer():
         if not (vol < self.vul and vol > self.vll):
             return False
         # print(pt.to_discretized_motif())
-        overlaps = find_overlapping_atoms(struct, 0.5)
+        overlaps = find_overlapping_atoms(struct, 0.9)
         # print(overlaps)
         if len(overlaps) > 0:
             return False
         return True
-
-    
-    @property
-    def unexplored_points(self) -> list[int]:
-        return [pid for pid, is_explored in self._is_explored.items() if not is_explored]
     
     def is_point_explored(self, point: CrystalNormalForm):
         pid = self.map.get_point_id(point)
@@ -208,8 +217,8 @@ class CrystalExplorer():
             "crystal_map": self.map.as_dict(),
             "vll": self.vll,
             "vul": self.vul,
-            "metrics": self._metric_tracker,
-            "is_explored": [ptid for ptid, explored in self._is_explored.items() if explored],
+            "scores": self.scores,
+            "is_explored": list(self._is_explored),
             "target_pts": [pt.coords for pt in self._target_pts]
         }
         with open(fname, 'w+') as f:
