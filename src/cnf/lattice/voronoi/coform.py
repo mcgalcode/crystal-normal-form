@@ -73,11 +73,10 @@ class Coform():
         perms = UnimodPermMapper.get_perms_for_zero_set(self.zero_indices)
         # perms = [p for p in perms if perm_in_s4(p)]
         return [self.build_perm_matrix(p) for p in perms]
-    
+
     def build_perm_matrix(self, perm):
         return PermutationMatrix(
             perm,
-            self.canonical_matrix_for_perm(perm),
             self.matrices_for_perm(perm)
         )
     
@@ -115,10 +114,8 @@ class Coform():
     def canonical_matrix_for_perm(self, cperm: ConormPermutation):
         # NOTE: ONLY CONSIDER A SINGLE ONE OF THESE MATRICES
         # Choose the one that is closest to the identity
-        i = np.eye(3)
-        def _get_diff(mat: MatrixTuple):
-            return np.linalg.norm(i - mat.matrix)
-        mats = sorted(self.matrices_for_perm(cperm), key=_get_diff)
+        # i = np.eye(3)
+        mats = self.matrices_for_perm(cperm)
         return mats[0]
 
     def zero_conorms(self):
