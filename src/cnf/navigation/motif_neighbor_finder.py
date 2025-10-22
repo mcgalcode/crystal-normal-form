@@ -24,8 +24,9 @@ class MotifNeighborFinder():
 
         neighbor_mnf_tuples = []
 
-        for stabilizer in self.point.lattice_normal_form.vonorms.stabilizer_matrices():
-            current_mnf_tuple = self.point.motif_normal_form.to_discretized_motif().apply_unimodular(stabilizer).to_mnf_list()
+        for stabilizer in self.point.lattice_normal_form.vonorms.stabilizer_matrices(1e-4):
+            current_mnf_tuple = self.point.motif_normal_form.to_discretized_motif().apply_unimodular(stabilizer).to_mnf_list(sort=True)
+            current_mnf_tuple = (0,0,0) + current_mnf_tuple
             for idx in range(len(current_mnf_tuple)):
                 for adj in [-1, +1]:
                     n = list(copy.copy(current_mnf_tuple))
@@ -46,7 +47,7 @@ class MotifNeighborFinder():
 
         for nb_mnf_tup in neighbor_mnf_tuples:
             nb_mnf, affected_idxs, adj = nb_mnf_tup
-            positions = [[0,0,0]] + [list(nb_mnf[start_idx:start_idx + 3])for start_idx in range(0, len(nb_mnf), 3)]
+            positions = [list(nb_mnf[start_idx:start_idx + 3])for start_idx in range(0, len(nb_mnf), 3)]
             motif = DiscretizedMotif.from_elements_and_positions(original_els, positions, self.point.delta)
             nb_pt = cnf_constructor.from_vonorms_and_motif(self.point.lattice_normal_form.vonorms, motif)
             result = MotifStepResult(nb_pt.cnf, affected_idxs, adj)
