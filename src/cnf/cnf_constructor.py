@@ -64,7 +64,6 @@ class CNFConstructor():
         return self.from_vonorms_and_motif(vonorms, motif)
 
     def from_vonorms_and_motif(self, vonorms: VonormList, motif: DiscretizedMotif | FractionalMotif):
-        vonorms = vonorms.round(6)
         lnf_constructor = LatticeNormalFormConstructor(self.xi, self.verbose_logging)
         lnf_result = lnf_constructor.build_lnf_from_vonorms(vonorms)
         if self.verbose_logging:
