@@ -76,6 +76,7 @@ class CNFConstructor():
         
         all_stabilizers = [combine_unimodular_matrices(stack) for stack in product(stabilizer_1, selling, sorting_transforms, stabilizer_2)]
         all_stabilizers = list(set(all_stabilizers))
+        np_stabs = [s.matrix for s in all_stabilizers]
         # Option 1 - use the transforms TO the sorted list as the search set
         # stabilizer_mats = lnf_result.sorting_transforms()
         
@@ -86,8 +87,8 @@ class CNFConstructor():
         if self.verbose_logging:
             print(f"Found {len(all_stabilizers)} stabilizers...")
 
-        mnf_constructor = MNFConstructor(self.delta, all_stabilizers, self.verbose_logging)
-        mnf_construction_res = mnf_constructor.build(motif)
+        mnf_constructor = MNFConstructor(self.delta, np_stabs, self.verbose_logging)
+        mnf_construction_res = mnf_constructor.build_vectorized(motif)
 
         if self.verbose_logging:
             print(f"Found MNF! {mnf_construction_res.mnf}")
