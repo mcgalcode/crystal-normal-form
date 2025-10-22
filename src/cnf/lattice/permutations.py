@@ -57,9 +57,9 @@ class PermutationMatrix():
         mat = MatrixTuple.identity()
         return cls(vperm, mat, [mat])
 
-    def __init__(self, perm: Permutation, matrix: MatrixTuple, all_matrices: list[MatrixTuple]):
+    def __init__(self, perm: Permutation, all_matrices: list[MatrixTuple]):
         self.perm = perm
-        self.matrix = matrix
+        self.matrix = all_matrices[0]
         self.all_matrices = all_matrices
 
     @property
