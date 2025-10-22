@@ -61,8 +61,8 @@ def are_atoms_overlapping(
     # print(distance)
 
     # Get the radii of the elements for the two sites
-    radius1 = site1.specie.metallic_radius
-    radius2 = site2.specie.metallic_radius
+    radius1 = site1.specie.atomic_radius
+    radius2 = site2.specie.atomic_radius
     # print(radius1, radius2)
     
     if radius1 is None or radius2 is None:
