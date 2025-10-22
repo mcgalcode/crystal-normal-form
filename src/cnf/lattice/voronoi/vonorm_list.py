@@ -3,7 +3,7 @@ from functools import cached_property
 from ..swaps.sorting import swap_vonorm_idxs
 from .conorm_list import ConormList
 from ...linalg import MatrixTuple
-from ..permutations import apply_permutation, Permutation, ConormPermutation, VonormPermutation, PermutationMatrix
+from ..permutations import apply_permutation, Permutation, ConormPermutation, VonormPermutation, PermutationMatrix, apply_permutation_np
 
 # This matrix is found on page 48 of David's thesis
 VONORM_TO_DOT_PRODUCTS = np.array([
@@ -21,12 +21,17 @@ class VonormList():
         if not (isinstance(vonorms, tuple) or isinstance(vonorms, list) or isinstance(vonorms, np.ndarray)):
             raise ValueError(f"Tried to intialize VonormList with bad type {type(vonorms)}")
         self.vonorms = vonorms
+        self.vonorms_np = np.array(vonorms)
         self.tuple = tuple(vonorms)
 
     @cached_property
     def conorms(self):
         return ConormList((1 / 2) * VONORM_TO_DOT_PRODUCTS @ self.vonorms[:6])
     
+    @cached_property
+    def permissible_perms(self):
+        return self.conorms.permissible_permutations
+
     def is_obtuse(self, tol=0):
         return all([c <= tol for c in self.conorms])
     
@@ -53,12 +58,11 @@ class VonormList():
         return self.conorms.canonical_matrix_for_perm(perm)
 
     def apply_permutation(self, permutation: tuple):
-        p = apply_permutation(self.vonorms, permutation)
-        t = tuple(p)        
-        return VonormList(t)
+        p = apply_permutation_np(self.vonorms_np, np.array(permutation))
+        return VonormList(p)
 
     def stabilizer_perms(self, tol=1e-8) -> list[PermutationMatrix]:
-        possible_perms = self.conorms.permissible_permutations
+        possible_perms = self.permissible_perms
         stabilizers = []
         for p in possible_perms:
             vonorm_perm = p.vonorm_permutation
@@ -76,7 +80,7 @@ class VonormList():
         result = {}
         for group, perms in grouped.items():
             candidates = [(self.apply_permutation(p.vonorm_permutation), p) for p in perms]
-            candidates = sorted(candidates, key=lambda p: p[0].vonorms)
+            candidates = sorted(candidates, key=lambda p: p[0].tuple)
             maximal_vlist = candidates[0][0]
             equivalent_perms = [c[1] for c in candidates if c[0] == maximal_vlist]
             result[group] = {
@@ -88,10 +92,11 @@ class VonormList():
 
     def stabilizer_matrices(self, tol=1e-8) -> list[MatrixTuple]:
         perm_stab = self.stabilizer_perms(tol)
-        mats = []
+        mats = set()
         for p in perm_stab:
-            mats.extend(p.all_matrices)
-        return list(set(mats))
+            for m in p.all_matrices:
+                mats.add(m)
+        return list(mats)
 
     def to_generators(self, lattice_step_size: float):
         physical_vonorms = np.array(self.vonorms) * lattice_step_size
@@ -152,6 +157,9 @@ class VonormList():
     
     def is_superbasis(self):
         return np.isclose(self.primary_sum(), self.secondary_sum())
+    
+    def is_superbasis_exact(self):
+        return self.primary_sum() == self.secondary_sum()
     
     def __repr__(self):
         numbers = " ".join([str(v) for v in self.vonorms])
