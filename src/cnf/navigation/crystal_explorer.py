@@ -55,6 +55,40 @@ class CrystalExplorer():
         self._set_pt_explored(point_id)
         return new_ids
     
+    def search(self, search_object: SearchObjective):
+
+        tries = 0
+        prev_len = len(self.map)
+        start_time = time.perf_counter()
+        while not search_object.objective_complete(self):
+            if tries % 10 == 0:
+                end_time = time.perf_counter()
+                print("===========================================================")
+                print(f"Starting round {tries} of searching for endpts, map has {len(self.map)} pts")
+                print(f"Current best score: {self.best_current_score()}")
+                curr_len = len(self.map)
+                diff = curr_len - prev_len
+                print(f"Added {diff} points in last 10 rounds")
+                elapsed_time = end_time - start_time
+                print(f"10 tries took {elapsed_time:.6f} seconds")
+                prev_len = curr_len
+                start_time = time.perf_counter()
+
+            total_added = 0
+            
+            for pt_id in self.unexplored_points():
+                # pt = self.map.get_point_by_id(pt_id)
+                # print(f"Exploring pt: {pt.coords} (score: {self.score_for_point(pt_id)})")
+                new_ids = self.explore_point(pt_id)
+                diff = len(new_ids)
+                total_added += diff
+                # print(f"Added {diff} pts!")
+                if diff > 0:
+                    break
+            tries += 1
+            if total_added == 0:
+                print(f"Exhausted map boundaries!")
+    
     def score_pt(self, pt: CrystalNormalForm, explored=False):
         score = self.score_function.score(pt)
         pt_id = self.map.get_point_id(pt)
