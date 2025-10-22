@@ -27,6 +27,13 @@ class AtomicMotif():
     @classmethod
     def from_elements_and_positions(cls, elements, positions):
         return cls(construct_el_pos_map(elements, positions))
+    
+    @classmethod
+    def from_mnf_list(cls, mnf_coord_list, element_list, **kwargs):
+        separated_coord_lists = [mnf_coord_list[start_idx:start_idx+3] for start_idx in range(0, len(mnf_coord_list), 3)]
+        separated_coord_lists = [[0, 0, 0]] + separated_coord_lists
+
+        return cls.from_elements_and_positions(element_list, separated_coord_lists, **kwargs)        
 
     def __init__(self, element_to_positions_map: dict[str, list[np.array]]):
         self.map = element_to_positions_map
@@ -112,12 +119,15 @@ class AtomicMotif():
 
         return sorted_positions
     
-    def to_mnf_list(self, element_order = None):
-        if element_order is None:
+    def to_mnf_list(self, element_order = None, sort = False):
+        if sort:
             element_order = self.sorted_elements
-
-        sorted_positions = self.get_sorted_positions(element_order)
-        return tuple([self._process_mnf_list_coord(el) for coord_list in sorted_positions for el in coord_list])
+            sorted_positions = self.get_sorted_positions(element_order)
+        elif element_order is not None:
+            sorted_positions = self.get_sorted_positions(element_order)
+        else:
+            sorted_positions = self.positions
+        return tuple([self._process_mnf_list_coord(el) for coord_list in sorted_positions[1:] for el in coord_list])
     
     def _process_mnf_list_coord(self, coord):
         return coord
@@ -213,6 +223,19 @@ class AtomicMotif():
                 return False
         return True
     
+    @property
+    def position_tuple_list(self):
+        tups = []
+        for p in self.positions:
+            tup = tuple([self._process_mnf_list_coord(i) for i in p])
+            tups.append(tup)
+        return tups
+    
+    @property
+    def num_origin_atoms(self):
+        return self.element_count(self.sorted_elements[0])
+
+    
 class PeriodicMotif(AtomicMotif):
 
     @classmethod
@@ -279,7 +302,7 @@ class DiscretizedMotif(PeriodicMotif):
 
     @classmethod
     def from_elements_and_positions(cls, elements, positions, delta):
-        return cls(construct_el_pos_map(elements, positions), delta)    
+        return cls(construct_el_pos_map(elements, positions), delta)
 
     def __init__(self, element_to_positions_map: dict[str, list[np.array]], delta = None):
         if not isinstance(delta, int):
@@ -297,14 +320,6 @@ class DiscretizedMotif(PeriodicMotif):
         atoms = self.atoms
         positions = np.array(self.positions) / self.delta
         return FractionalMotif.from_elements_and_positions(atoms, positions)
-
-    @property
-    def position_tuple_list(self):
-        tups = []
-        for p in self.positions:
-            tup = tuple([int(i) for i in p])
-            tups.append(tup)
-        return tups
 
     def _get_kwargs(self):
         return { "delta": self.delta }

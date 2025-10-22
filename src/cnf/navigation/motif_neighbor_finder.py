@@ -18,6 +18,7 @@ class MotifNeighborFinder():
     def __init__(self, point: CrystalNormalForm):
         self.point = point
     
+
     def find_motif_neighbors(self):
 
 
