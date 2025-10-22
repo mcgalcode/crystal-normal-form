@@ -24,15 +24,17 @@ class VonormSorter():
 
     def get_canonicalized_vonorms(self, vonorms: VonormList, coform_tolerance=1e-3):
         conorms = vonorms.conorms
-        conorms = conorms.set_tol(coform_tolerance)
-        self._log(f"Searching through {len(conorms.form.permissible_permutations())} permissible permutations...")
+        perms = conorms.permissible_permutations
+        self._log(f"Searching through {len(perms)} permissible permutations...")
         permuted_vonorm_lists: list[tuple[VonormList, PermutationMatrix]] = []
-        for perm_mat in conorms.form.permissible_permutations():
+        
+        rounded_vonorms = vonorms.round(self.sorting_dec_places)
+        for perm_mat in perms:
             vonorm_permutation = perm_mat.vonorm_permutation
-            permuted_vlist = vonorms.apply_permutation(vonorm_permutation)
+            permuted_vlist = rounded_vonorms.apply_permutation(vonorm_permutation)
             permuted_vonorm_lists.append((permuted_vlist, perm_mat))
 
-        sorted_vlists = sorted(permuted_vonorm_lists, key=lambda group: tuple([round(v, self.sorting_dec_places) for v in group[0].vonorms]), reverse=False)
+        sorted_vlists = sorted(permuted_vonorm_lists, key=lambda group: group[0].tuple, reverse=False)
         canonical_vonorm_list = sorted_vlists[0][0]
         equivalent_transformations = [group[1] for group in sorted_vlists if group[0] == canonical_vonorm_list]
         return canonical_vonorm_list, equivalent_transformations
@@ -119,16 +121,16 @@ class LatticeNormalFormConstructor():
         dvc = DiscretizedVonormComputer(self.lattice_step_size)
         disc = dvc.find_closest_valid_vonorms(undisc.lnf.vonorms)
         return self.build_lnf_from_vonorms(disc)
-    
+
     def build_lnf_from_vonorms(self, vonorms: VonormList, skip_reduction = False):
         canonicalizer = VonormCanonicalizer(reduction_tolerance=1e-8, verbose_logging=self._verbose_logging)
         result = canonicalizer.get_canonicalized_vonorms(vonorms, skip_reduction=skip_reduction)
         lnf = LatticeNormalForm(result.canonical_vonorms, self.lattice_step_size)
         
         self._log(f"Found the canonical vonorms: {result.canonical_vonorms}")
-        self._log(f"With conorms: {result.canonical_vonorms.conorms}")
-        self._log(f"Found stabilizing Vonorm permutations: {[p.vonorm_permutation for p in result.canonical_vonorms.stabilizer_perms()]}")
-        self._log(f"Found stabilizing Conorm permutations: {[p.conorm_permutation for p in result.canonical_vonorms.stabilizer_perms()]}")
+        #self._log(f"With conorms: {result.canonical_vonorms.conorms}")
+        #self._log(f"Found stabilizing Vonorm permutations: {[p.vonorm_permutation for p in result.canonical_vonorms.stabilizer_perms()]}")
+        #self._log(f"Found stabilizing Conorm permutations: {[p.conorm_permutation for p in result.canonical_vonorms.stabilizer_perms()]}")
 
         return LatticeNormalFormConstructionResult(
             lnf,

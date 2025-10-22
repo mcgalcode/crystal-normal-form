@@ -55,15 +55,16 @@ class CNFConstructor():
         undisc_cnf = self.from_vonorms_and_motif(vonorms, motif)
         vonorms = undisc_cnf.lnf_result.lnf.vonorms
 
-        motif = undisc_cnf.mnf_result.sorted_mnf_candidates[0].motif
+        motif = undisc_cnf.mnf_result.canonical_motif
         motif = motif.discretize(self.delta)
 
         dvc = DiscretizedVonormComputer(self.xi, self.verbose_logging)
         vonorms = dvc.find_closest_valid_vonorms(vonorms)
 
         return self.from_vonorms_and_motif(vonorms, motif)
-        
+
     def from_vonorms_and_motif(self, vonorms: VonormList, motif: DiscretizedMotif | FractionalMotif):
+        vonorms = vonorms.round(6)
         lnf_constructor = LatticeNormalFormConstructor(self.xi, self.verbose_logging)
         lnf_result = lnf_constructor.build_lnf_from_vonorms(vonorms)
         if self.verbose_logging:
