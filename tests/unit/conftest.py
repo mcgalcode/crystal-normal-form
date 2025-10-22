@@ -1,3 +1,4 @@
+import helpers
 import pytest
 import os
 
@@ -30,3 +31,12 @@ def zr_fcc_primitive_lattice_vecs():
         [1, 0, 1]
     ]) * zr_lattice_param / 2
     return fcc_primitive_vecs
+
+
+@pytest.fixture
+def zr_hcp():
+    return helpers.load_specific_cif("Zr_HCP.cif")
+
+@pytest.fixture
+def zr_bcc():
+    return helpers.load_specific_cif("Zr_BCC.cif")

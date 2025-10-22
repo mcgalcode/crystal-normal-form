@@ -6,13 +6,6 @@ from itertools import product
 from pymatgen.core.trajectory import Trajectory, Structure
 from cnf.navigation.crystal_explorer import CrystalExplorer, get_endpoints_from_structs
 
-@pytest.fixture
-def zr_hcp():
-    return helpers.load_specific_cif("Zr_HCP.cif")
-
-@pytest.fixture
-def zr_bcc():
-    return helpers.load_specific_cif("Zr_BCC.cif")
 
 def test_can_get_path_from_exploration_result(zr_bcc, zr_hcp):
     dpath = helpers.get_data_file_path("explorations/exploration.json")
