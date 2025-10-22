@@ -171,6 +171,9 @@ def apply_permutation(to_permute, permutation):
         permuted_vals.append(to_permute[p])
     return permuted_vals
 
+def apply_permutation_np(to_permute: np.ndarray, permutation: np.ndarray):
+    return to_permute[permutation]
+
 def is_permutation_set_closed(permutations):
     for p1 in permutations:
         for p2 in permutations:
