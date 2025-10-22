@@ -22,18 +22,6 @@ class MNFCandidate():
         repr += "\n"
         repr += f"Shift: {self.shift}"
         return repr
-    
-def get_all_shifted_motifs(m: DiscretizedMotif) -> list[DiscretizedMotif]:
-    sorted_elements = m.sorted_elements
-    origin_element = sorted_elements[0]
-    origin_element_positions = m.get_element_positions(origin_element)
-    shifted_ms = []
-    shifts = []
-    for pos in origin_element_positions:
-        shift = -pos
-        shifts.append(shift)
-        shifted_ms.append(m.shift_origin(shift))
-    return shifted_ms, shift
 
 class MNFConstructionResult():
 
@@ -65,7 +53,10 @@ class MNFConstructionResult():
     
     @property
     def canonical_motif(self):
-        return self.canonical_candidate.motif
+        if isinstance(self.original_motif, FractionalMotif):
+            return FractionalMotif.from_mnf_list(self.canonical_candidate.mnf_coords, self.original_motif.atoms)
+        elif isinstance(self.original_motif, DiscretizedMotif):
+            return DiscretizedMotif.from_mnf_list(self.canonical_candidate.mnf_coords, self.original_motif.atoms, delta=self.delta)
     
     @property
     def mnf(self):
@@ -84,10 +75,53 @@ def get_all_shifted_motifs(m: FractionalMotif) -> tuple[list[FractionalMotif], l
     shifts = []
     for origin_candidate in origin_element_positions:
         shift = -origin_candidate
-        shifted_motifs.append(m.shift_origin(shift))
+        shifted_origin = m.shift_origin(shift)
+        shifted_motifs.append(shifted_origin)
         shifts.append(shift)
     return shifted_motifs, shifts
 
+def get_stabilized_coord_mats(stabilizers, motif):
+    original_motif_coords = motif.coord_matrix
+    stabilizers_inverted = invert_unimods(stabilizers)
+    new_motifs = stabilizers_inverted @ original_motif_coords
+    return move_coords_into_bounds(new_motifs, motif._mod)
+
+def invert_unimods(matrices):
+    return np.linalg.inv(matrices)
+
+def get_mnf_strs_from_coord_mats(coord_mats: np.ndarray):
+    return [cm.T.reshape(-1)[3:] for cm in coord_mats]
+
+def move_coords_into_bounds(coord_mats, mod):
+    all_motifs = np.array(coord_mats).round(13)
+    all_motifs = np.mod(all_motifs, mod) 
+    return all_motifs
+
+def get_all_shifted_coord_mats(coord_mat, num_origin_atoms, mod):
+    motifs = []
+    shift_vecs = -coord_mat.T[:num_origin_atoms]
+    for v in shift_vecs:
+        shifted_motif = v + coord_mat.T
+        motifs.append(shifted_motif.T)
+    return move_coords_into_bounds(motifs, mod)
+
+def get_atom_labels(motif):
+    atom_labels = []
+    el_num = 0
+    prev_el = motif.atoms[0]
+    for el in motif.atoms:
+        if el != prev_el:
+            el_num += 1
+            prev_el = el
+        atom_labels.append(el_num)
+    atom_labels = np.array(atom_labels)
+    return atom_labels
+    
+def sort_motif_coord_arr(coord_mat, atom_labels):
+    x_col, y_col, z_col = coord_mat
+    sorted_indices = np.lexsort((z_col, y_col, x_col, atom_labels))
+    sorted_coord_mat = coord_mat.T[sorted_indices]    
+    return sorted_coord_mat.T
 
 class MNFConstructor():
     """Implements methods for taking a list of atomic positions
@@ -106,6 +140,41 @@ class MNFConstructor():
         self.stabilizer = stabilizer
         self.verbose_logging = verbose_logging
     
+    def build_vectorized(self, original_motif: FractionalMotif):
+        # compute a list of element labels for help in later
+        # lexicographic sorting
+        np_stabilizer_mats = self.stabilizer
+        atom_labels = get_atom_labels(original_motif)
+        num_origin_atoms = original_motif.num_origin_atoms
+        
+        stabilized_coord_mats = get_stabilized_coord_mats(np_stabilizer_mats, original_motif)
+        shifted_coord_mats = []
+        for scm in stabilized_coord_mats:
+            shifted = get_all_shifted_coord_mats(scm, num_origin_atoms, original_motif._mod)
+            shifted_coord_mats.extend(shifted)
+            
+        sorted_coord_mats = []
+        for scm in shifted_coord_mats:
+            sorted_coord_mat = sort_motif_coord_arr(scm, atom_labels)
+            sorted_coord_mats.append(sorted_coord_mat)
+
+        sorted_mnfs = get_mnf_strs_from_coord_mats(sorted_coord_mats)
+        
+        stacked_mnfs = np.stack(sorted_mnfs)
+        keys = stacked_mnfs.T
+        sorted_indices = np.lexsort(keys[::-1])
+        sorted_list = [stacked_mnfs[i] for i in sorted_indices]
+        best_candidate = sorted_list[0]
+        best_mnf_str = tuple([float(i) for i in best_candidate])
+        candidate = MNFCandidate(best_mnf_str, None, None, None)
+
+        return MNFConstructionResult(
+            original_motif,
+            self.delta,
+            self.stabilizer,
+            [candidate]
+        ) 
+
     def build(self, original_motif: FractionalMotif):
         mnf_candidates: list[MNFCandidate] = []
 
@@ -122,8 +191,8 @@ class MNFConstructor():
             shifted_motifs, shifts = get_all_shifted_motifs(transformed_motif)
 
             for shifted_motif, shift in zip(shifted_motifs, shifts):
-                mnf_list = shifted_motif.to_mnf_list()
-                candidate = MNFCandidate(mnf_list[3:], shifted_motif, mat, shift)
+                mnf_list = shifted_motif.to_mnf_list(sort=True)
+                candidate = MNFCandidate(mnf_list, shifted_motif, mat, shift)
                 mnf_candidates.append(candidate)
 
         if self.verbose_logging:
