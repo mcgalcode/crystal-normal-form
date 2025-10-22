@@ -122,23 +122,31 @@ def get_endpoints_from_structs(struct1, struct2):
 
 class CrystalExplorer():
 
-    def __init__(self, cmap: CrystalMap, vol_lower_lim: float, vol_upper_lim: float, target_pts: list[CrystalNormalForm]):
+    def __init__(self, cmap: CrystalMap, vol_lower_lim: float, vol_upper_lim: float, target_pts: list[CrystalNormalForm], skip_scoring=False, preload_scores: dict = None):
         self.map = cmap
-        self._is_explored = {}
         self._target_pts = target_pts
         self._target_structs = [pt.reconstruct() for pt in target_pts]
         self.vll = vol_lower_lim
         self.vul = vol_upper_lim
-        self.scores = {}
+
+        # Track all points (scored or not) and their exploration state
         self._unexplored_pts = set()
-        self.unexplored_score_list = SortedSet()
         self._explored_pts = set()
+
+        # Track scores (only for points that have been scored)
+        if preload_scores is None:
+            self.scores = {}
+        else:
+            self.scores = preload_scores
+
+        self.unexplored_score_list = SortedSet()
         self.explored_score_list = SortedSet()
 
-        for pt in cmap.all_node_ids():
-            self._unexplored_pts.add(pt)
-            pt = cmap.get_point_by_id(pt)
-            self.score_pt(pt)
+        if not skip_scoring:
+            for pt in cmap.all_node_ids():
+                self._unexplored_pts.add(pt)
+                pt = cmap.get_point_by_id(pt)
+                self.score_pt(pt)
     
     def explore_point(self, point_id: int):
         pt = self.map.get_point_by_id(point_id)
@@ -150,28 +158,62 @@ class CrystalExplorer():
                 if nb_pt not in self.map:
                         nid = self.map.add_point(nb_pt)
                         new_ids.append(nid)
-                        self._unexplored_pts.add(nid)
-                        self.score_pt(nb_pt)
+                        self.score_pt(nb_pt, explored=False)
                 self.map.add_connection(pt, nb_pt)                    
             else:
                 pass
                 # print("Skipping point outside valid bounds...")
 
-        item = (self.scores[point_id], point_id)
-        self._unexplored_pts.remove(point_id)
-        self.unexplored_score_list.remove(item)
-
-        self._explored_pts.add(point_id)
-        self.explored_score_list.add(item)
+        self._set_pt_explored(point_id)
         return new_ids
     
-    def score_pt(self, pt: CrystalNormalForm):
+    def score_pt(self, pt: CrystalNormalForm, explored=False):
         score = self.get_goodness(pt)
-        id = self.map.get_point_id(pt)
-        item = (score, id)
-        self.scores[id] = score
-        self.unexplored_score_list.add(item)
+        pt_id = self.map.get_point_id(pt)
+        self._add_scored_pt(pt_id, score, explored)
         return score
+    
+    def _add_scored_pt(self, pt_id, score, explored):
+        if explored:
+            self._set_pt_explored(pt_id)
+        else:
+            self._set_pt_unexplored(pt_id)
+        self.set_pt_score(pt_id, score)
+    
+    def set_pt_score(self, pt_id, score):
+        if self.is_id_explored(pt_id):
+            if pt_id in self.scores:
+                self.explored_score_list.remove(self._get_score_item(pt_id))
+            self.scores[pt_id] = score
+            self.explored_score_list.add(self._get_score_item(pt_id))
+        else:
+            if pt_id in self.scores:
+                self.unexplored_score_list.remove(self._get_score_item(pt_id))
+            self.scores[pt_id] = score
+            self.unexplored_score_list.add(self._get_score_item(pt_id))
+        
+    def _get_score_item(self, pt_id):
+        return (self.scores[pt_id], pt_id)
+
+    def _set_pt_explored(self, pt_id):
+        if pt_id in self._unexplored_pts:
+            self._unexplored_pts.remove(pt_id)
+            if pt_id in self.scores:
+                self.unexplored_score_list.remove(self._get_score_item(pt_id))
+
+        self._explored_pts.add(pt_id)
+        if pt_id in self.scores:
+            self.explored_score_list.add(self._get_score_item(pt_id))
+    
+    def _set_pt_unexplored(self, pt_id):
+        if pt_id in self._explored_pts:
+            self._explored_pts.remove(pt_id)
+            if pt_id in self.scores:
+                self.explored_score_list.remove(self._get_score_item(pt_id))
+
+        self._unexplored_pts.add(pt_id)
+        if pt_id in self.scores:
+            self.unexplored_score_list.add(self._get_score_item(pt_id))
 
     def get_goodness(self, pt: CrystalNormalForm):
         pdd = min([pdd_for_cnfs(pt, target) for target in self._target_pts])
@@ -210,17 +252,53 @@ class CrystalExplorer():
     def is_id_explored(self, id: int):
         if id not in self.map.all_node_ids():
             raise ValueError(f"Tried to check if nonexistant node id {id} was explored")
-        return self._is_explored[id]
+        return id in self._explored_pts
     
-    def to_json(self, fname: str):
-        d = {
+    @classmethod
+    def from_dict(cls, d):
+        cmap = CrystalMap.from_dict(d["crystal_map"])
+        xi = cmap.xi
+        delta = cmap.delta
+        elements = cmap.element_list
+        target_pts = [CrystalNormalForm.from_tuple(tuple(l), elements, xi, delta) for l in d["target_pts"]]
+        scores = { int(nid): score for nid, score in d["scores"].items() }
+        e = cls(
+            cmap,
+            vol_lower_lim=d["vll"],
+            vol_upper_lim=d["vul"],
+            target_pts=target_pts,
+            skip_scoring=True,
+            preload_scores=scores
+        )
+        for nid in cmap.all_node_ids():
+            e._set_pt_unexplored(nid)
+        print("Finished setting unexplored")
+        for nid in d["explored_ids"]:
+            # print(f"{nid} in is_explored")
+            e._set_pt_explored(nid)
+        print("Finished setting explored")
+
+        return e
+    
+    @classmethod
+    def from_json(cls, fname):
+        with open(fname, 'r+') as f:
+            d = json.load(f)
+            return cls.from_dict(d)
+
+
+    def to_dict(self):
+        return {
             "crystal_map": self.map.as_dict(),
             "vll": self.vll,
             "vul": self.vul,
             "scores": self.scores,
-            "is_explored": list(self._is_explored),
+            "explored_ids": list(self._explored_pts),
             "target_pts": [pt.coords for pt in self._target_pts]
         }
+        
+    def to_json(self, fname: str):
+        d = self.to_dict()
         with open(fname, 'w+') as f:
             json.dump(d, f)
     
