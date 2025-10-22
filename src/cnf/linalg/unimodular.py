@@ -140,7 +140,7 @@ def load_unimodular(fname = "unimodular.json"):
 
 _UNIMODULARS = {}
 
-def get_unimodulars_col_max(col_max):
+def get_unimodulars_col_max(col_max) -> list[MatrixTuple]:
     if col_max not in _UNIMODULARS:
         unis = load_unimodular(f"unimodular_{col_max}_det_1.json")
         _UNIMODULARS[col_max] = unis
