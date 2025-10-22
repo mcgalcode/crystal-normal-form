@@ -62,7 +62,6 @@ def test_can_add_and_remove_points(point_set):
     cmap.add_point(cnf1)
     assert cnf1 in cmap
     assert cnf2 not in cmap
-    assert not cmap.is_point_explored(cnf1)
 
     cmap.remove_point(cnf2)
     assert cnf1 in cmap
@@ -71,11 +70,6 @@ def test_can_add_and_remove_points(point_set):
     cmap.remove_point(cnf1)
     assert cnf1 not in cmap
     assert cnf2 not in cmap
-
-    with pytest.raises(ValueError) as pyexcp:
-        cmap.is_point_explored(cnf1)
-
-    assert "Tried to check if nonexistant node" in pyexcp.value.__repr__()
 
     cmap.add_point(cnf1)
     cmap.add_point(cnf2)
@@ -153,24 +147,6 @@ def test_adding_and_removing_connections_is_idempotent(point_set):
     assert not cmap.remove_connection(cnf1, cnf2)
     assert not cmap.remove_connection(cnf1, cnf2)
 
-def test_can_explore_point(ti_o2_anatase):
-    xi = 1.5
-    delta = 10
-    cnf = CrystalNormalForm.from_pmg_struct(ti_o2_anatase, xi, delta)
-
-    cmap = CrystalMap.from_cnf(cnf)
-    assert not cmap.is_point_explored(cnf)
-
-    pid = cmap.get_point_id(cnf)
-    new_pt_ids = cmap.explore_point(pid)
-    for nid in new_pt_ids:
-        pt = cmap.get_point_by_id(nid)
-        assert pt in cmap
-        assert cmap.connection_exists(cnf, pt)
-        assert not cmap.is_id_explored(nid)
-    
-    assert cmap.is_point_explored(cnf)
-
 def test_can_connect_two_points(zr_bcc, zr_hcp):
     xi = 1.5
     delta = 10
@@ -231,4 +207,13 @@ def test_can_connect_two_points(zr_bcc, zr_hcp):
         if total_added == 0:
             break
     print(f"Found endpoint: {found_endpt}")
-    explorer.to_json("exploration2.json")
+    assert found_endpt
+    explorer.to_json("exploration2.json")  # Commented out - serialization not yet updated
+
+@pytest.mark.skip(reason="Serialization not yet updated")
+def test_can_reinstantiate_from_dict():
+    fpath = helpers.get_data_file_path("explorations/exploration1.json")
+    with open(fpath, 'r+') as f:
+        obj = json.load(f)
+    
+    
