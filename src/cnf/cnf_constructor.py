@@ -12,7 +12,7 @@ from .lattice.permutations import MatrixTuple
 from .lattice.rounding import DiscretizedVonormComputer
 from .motif.mnf_constructor import MNFConstructor, MNFConstructionResult
 from .crystal_normal_form import CrystalNormalForm
-from .linalg.unimodular import combine_unimodular_matrices
+from .linalg.unimodular import combine_unimodular_matrices, combine_unimodular_mats_np
 
 class CNFConstructionResult():
 
@@ -74,7 +74,7 @@ class CNFConstructor():
         sorting_transforms = lnf_result.sorting_transforms()[:1]
         stabilizer_2 = lnf_result.stabilizer(1e-4)
         
-        all_stabilizers = [combine_unimodular_matrices(stack) for stack in product(stabilizer_1, selling, sorting_transforms, stabilizer_2)]
+        all_stabilizers = [MatrixTuple(combine_unimodular_mats_np([s.matrix for s in stack])) for stack in product(stabilizer_1, selling, sorting_transforms, stabilizer_2)]
         all_stabilizers = list(set(all_stabilizers))
         np_stabs = [s.matrix for s in all_stabilizers]
         # Option 1 - use the transforms TO the sorted list as the search set
