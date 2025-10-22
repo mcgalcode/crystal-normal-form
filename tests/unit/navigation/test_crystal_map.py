@@ -5,8 +5,8 @@ from cnf import CrystalNormalForm, UnitCell
 from cnf.navigation.crystal_map import CrystalMap
 from cnf.navigation.neighbor_finder import NeighborFinder
 from cnf.navigation.crystal_explorer import get_endpoints_from_structs, CrystalExplorer
-from tqdm import tqdm
 import time
+
 @pytest.fixture(scope='module')
 def point_set():
     struct = helpers.ALL_MP_STRUCTURES(1)[0]
