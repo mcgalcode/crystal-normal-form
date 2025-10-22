@@ -123,8 +123,9 @@ class LatticeNeighborFinder():
 
     def find_cnf_neighbors(self) -> NeighborSet:
         neighbors = NeighborSet()
-        self._log(f"Considering {len(self.possible_steps())} possible steps...")
-        for step in self.possible_steps():
+        steps = self.possible_steps()
+        self._log(f"Considering {len(steps)} possible steps...")
+        for step in steps:
             self._log("")
             self._log(f"Step: {step.vals}, {step.matrix}")
             results = self.find_cnf_neighbor_results(step)
