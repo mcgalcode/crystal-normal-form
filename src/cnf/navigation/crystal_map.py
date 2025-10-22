@@ -9,6 +9,18 @@ class CrystalMap():
         crys_map = cls(cnf.xi, cnf.delta, cnf.elements)
         crys_map.add_point(cnf)
         return crys_map
+    
+    @classmethod
+    def from_dict(cls, d: dict):
+        cmap = cls(d["xi"], d["delta"], d["elements"])
+        node_ids_and_pts = [(int(nid), cnf) for nid, cnf in d["graph"]["nodes"].items()]
+        node_ids_and_pts = sorted(node_ids_and_pts)
+        for (nid, cnf) in node_ids_and_pts:
+            cmap.add_point(CrystalNormalForm.from_tuple(cnf, d["elements"], d["xi"], d["delta"]))
+        
+        for e in d["graph"]["edges"]:
+            cmap.add_connection_by_ids(e[0], e[1])
+        return cmap
 
     def __init__(self, xi: float, delta: int, element_list: list[str]):
         self.xi = xi
@@ -64,8 +76,6 @@ class CrystalMap():
         self._all_points_set.remove(point)
         del self._id_lookup[point]
         return point_id
-    
-
 
     def add_connection(self, pt1: CrystalNormalForm, pt2: CrystalNormalForm):
         id1, id2 = self.get_point_ids(pt1, pt2)
