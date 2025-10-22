@@ -5,9 +5,11 @@ import rustworkx as rwx
 class CrystalMap():
 
     @classmethod
-    def from_cnf(cls, cnf: CrystalNormalForm):
+    def from_cnfs(cls, cnfs: list[CrystalNormalForm]):
+        cnf = cnfs[0]
         crys_map = cls(cnf.xi, cnf.delta, cnf.elements)
-        crys_map.add_point(cnf)
+        for cnf in cnfs:
+            crys_map.add_point(cnf)
         return crys_map
     
     @classmethod
