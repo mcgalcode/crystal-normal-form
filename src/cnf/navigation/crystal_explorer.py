@@ -1,28 +1,14 @@
 import json
-
+import time
 from ..unit_cell import UnitCell
 from .crystal_map import CrystalMap
 from .neighbor_finder import NeighborFinder
 from ..crystal_normal_form import CrystalNormalForm
 from sortedcontainers import SortedSet
 from .search_filters import SearchFilter
+from .search_objectives import SearchObjective
 from .score_functions import ScoreFunction
 
-
-def get_endpoints_from_structs(struct1, struct2):
-    uc1 = UnitCell.from_pymatgen_structure(struct1)
-    uc2 = UnitCell.from_pymatgen_structure(struct2)
-    
-    if len(uc1) == len(uc2):
-        return [uc1], [uc2]
-    if len(uc1) > len(uc2):
-        multiplier = len(uc1) / len(uc2)
-        other_supercells = uc2.supercells(multiplier)
-        return [uc1], other_supercells
-    if len(uc2) > len(uc1):
-        multiplier = len(uc2) / len(uc1)
-        other_supercells = uc1.supercells(multiplier)
-        return other_supercells, [uc2]
 
 class CrystalExplorer():
 

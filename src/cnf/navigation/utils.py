@@ -1,6 +1,26 @@
 from pymatgen.core.structure import Structure
 from pymatgen.core import Structure
 from typing import List, Tuple
+from cnf import UnitCell
+
+from pymatgen.core.structure import Structure
+
+def get_endpoints_from_pmg_structs(struct1: Structure, struct2: Structure):
+    uc1 = UnitCell.from_pymatgen_structure(struct1)
+    uc2 = UnitCell.from_pymatgen_structure(struct2)
+    return get_endpoints_from_unit_cells(uc1, uc2)
+
+def get_endpoints_from_unit_cells(cell1: UnitCell, cell2: UnitCell):
+    if len(cell1) == len(cell2):
+        return [cell1], [cell2]
+    if len(cell1) > len(cell2):
+        multiplier = len(cell1) / len(cell2)
+        other_supercells = cell2.supercells(multiplier)
+        return [cell1], other_supercells
+    if len(cell2) > len(cell1):
+        multiplier = len(cell2) / len(cell1)
+        other_supercells = cell1.supercells(multiplier)
+        return other_supercells, [cell2]
 
 
 def are_atoms_overlapping(
