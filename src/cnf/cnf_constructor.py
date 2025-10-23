@@ -95,7 +95,7 @@ class CNFConstructor():
             print(f"Achieved by matrix: {mnf_construction_res.sorted_mnf_candidates[0].unimodular}")
             print(f"And shift {mnf_construction_res.sorted_mnf_candidates[0].shift}")
             print(f"Based on motif:")
-            mnf_construction_res.sorted_mnf_candidates[0].motif.print_details()
+            mnf_construction_res.canonical_motif.print_details()
 
         cnf = CrystalNormalForm(lnf_result.lnf, mnf_construction_res.mnf)
         return CNFConstructionResult(cnf, lnf_result, mnf_construction_res)
