@@ -23,8 +23,11 @@ def find_matching_perms(mat_tup, voronoi_search_class):
         clf = Coform(zs)
         perm_matrix_map = UnimodPermMapper.get_perms_for_zero_set(zs)
         for perm in perm_matrix_map:
-            canonical_matrix = clf.canonical_matrix_for_perm(perm)
-            if canonical_matrix == mat_tup:
+            found = False
+            for mat in clf.matrices_for_perm(perm):
+                if mat == mat_tup:
+                    found = True
+            if found:
                 matching_permutations.append(perm)  
     matching_permutations = set(matching_permutations)
 
