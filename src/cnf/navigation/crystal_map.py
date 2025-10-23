@@ -1,6 +1,8 @@
 from ..crystal_normal_form import CrystalNormalForm
 
 import rustworkx as rwx
+from rustworkx import all_shortest_paths
+from itertools import product
 
 class CrystalMap():
 
@@ -106,6 +108,23 @@ class CrystalMap():
     def connection_exists_by_id(self, id1: int, id2: int):
         return self._graph.has_edge(id1, id2)
     
+    def find_path(self, start_cnfs, end_cnfs):
+        start_idxs = [self.get_point_id(pt) for pt in start_cnfs]
+        end_ids = [self.get_point_id(pt) for pt in end_cnfs]
+        end_ids = [i for i in end_ids if i is not None]
+
+        pairs = product(start_idxs, end_ids)
+
+        all_paths = []
+        for p in pairs:
+            print(f"Finding paths for {p}")
+            all_paths.extend(all_shortest_paths(self._graph, p[0], p[1]))
+        
+        all_paths = sorted(all_paths, key=len)
+        best_path = all_paths[0]
+
+        return [self.get_point_by_id(i) for i in best_path]        
+
     def __contains__(self, item):
         if not isinstance(item, CrystalNormalForm):
             raise ValueError(f"Can't check if item {type(item)} is in CrystalMap - must use CrystalNormalForm instance.")

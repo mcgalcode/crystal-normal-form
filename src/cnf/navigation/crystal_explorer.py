@@ -88,6 +88,7 @@ class CrystalExplorer():
             tries += 1
             if total_added == 0:
                 print(f"Exhausted map boundaries!")
+                break
     
     def score_pt(self, pt: CrystalNormalForm, explored=False):
         score = self.score_function.score(pt)

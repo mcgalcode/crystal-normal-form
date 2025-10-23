@@ -9,6 +9,11 @@ class ScoreFunction(ABC):
     def score(self, pt: CrystalNormalForm) -> float:
         pass
 
+class NullScore(ScoreFunction):
+
+    def score(self, _):
+        return 0
+
 class PDDScorer(ScoreFunction):
 
     def __init__(self, target_structs: list[UnitCell]):
