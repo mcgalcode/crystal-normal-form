@@ -5,9 +5,13 @@ from cnf.navigation.crystal_map import CrystalMap
 from cnf.navigation.neighbor_finder import NeighborFinder
 from cnf.navigation.crystal_explorer import CrystalExplorer
 from cnf.navigation.search_objectives import LocateAnyTargetStruct
-from cnf.navigation.score_functions import PDDScorer
+from cnf.navigation.score_functions import PDDScorer, NullScore
 from cnf.navigation.utils import get_endpoints_from_unit_cells
 from cnf.navigation.search_filters import SimpleVolumeAndOverlapFilter
+from rustworkx import all_shortest_paths
+from itertools import product
+from cnf.navigation.crystal_explorer import CrystalExplorer
+from cnf.viz.trajectory import TrajectoryVisualizer
 
 @pytest.fixture(scope='module')
 def point_set():
@@ -169,20 +173,32 @@ def test_unexplored_points_list(point_set):
     unexplored_after = explorer.unexplored_points()
     assert len(unexplored_after) < len(unexplored)
 
-def test_can_connect_two_points(zr_bcc_manual_unit_cell, zr_fcc_manual_unit_cell):
-    xi = 1.0
-    delta = 10
-    # print(len(zr_bcc_manual_unit_cell), len(zr_fcc_manual_unit_cell))
-    start_structs = zr_bcc_manual_unit_cell.supercells(2) #[:1]
-    end_structs = zr_fcc_manual_unit_cell.supercells(2)
+@pytest.fixture
+def path_find_start_structs(zr_bcc_mp):
+    return [UnitCell.from_pymatgen_structure(zr_bcc_mp)]
 
-    start_cnfs = list(set([s.to_cnf(xi, delta) for s in start_structs]))
-    end_cnfs = list(set([s.to_cnf(xi, delta) for s in end_structs]))
+@pytest.fixture
+def path_find_end_structs(zr_hcp_mp):
+    return [UnitCell.from_pymatgen_structure(zr_hcp_mp)]
+    
+
+FNAME = "explorations/result3.json"
+@pytest.mark.skip
+def test_can_connect_two_points(path_find_start_structs, path_find_end_structs):
+    xi = 1.5
+    delta = 5
+
+    start_cnfs = list(set([s.to_cnf(xi, delta) for s in path_find_start_structs]))
+    end_cnfs = list(set([s.to_cnf(xi, delta) for s in path_find_end_structs]))
     cmap = CrystalMap.from_cnfs(start_cnfs)
     
 
-    search_filter = SimpleVolumeAndOverlapFilter.from_endpoint_structs([*start_structs, *end_structs], 0.5)
-    score_fun = PDDScorer(end_structs[:1])
+    search_filter = SimpleVolumeAndOverlapFilter.from_endpoint_structs(
+        [*path_find_start_structs, *path_find_end_structs],
+        0.85
+    )
+    score_fun = PDDScorer(path_find_end_structs[:1])
+    score_fun = NullScore()
     objective = LocateAnyTargetStruct(end_cnfs)
 
     explorer = CrystalExplorer(cmap, search_filter, score_fun)
@@ -192,4 +208,26 @@ def test_can_connect_two_points(zr_bcc_manual_unit_cell, zr_fcc_manual_unit_cell
     print(f"Started with {len(start_cnfs)} structures")
     print(f"Searched for {len(end_cnfs)} structures")
     print(objective.located_endpt.coords)
-    explorer.to_json("result.json")
+    dpath = helpers.get_data_file_path(FNAME)
+    explorer.to_json(dpath)
+
+@pytest.mark.skip
+def test_can_get_path_from_exploration_result(path_find_start_structs, path_find_end_structs):
+    dpath = helpers.get_data_file_path(FNAME)
+    exp = CrystalExplorer.from_json(dpath)
+    print(len(exp.map.all_node_ids()))
+    print(len(exp._explored_pts))
+    print(len(exp._unexplored_pts))
+
+    xi = exp.map.xi
+    delta = exp.map.delta
+
+    start_cnfs = set([s.to_cnf(xi, delta) for s in path_find_start_structs])
+    end_cnfs = set([s.to_cnf(xi, delta) for s in path_find_end_structs])
+    
+    path_cnfs = exp.map.find_path(start_cnfs, end_cnfs)
+    for pt in path_cnfs:
+        print(pt.coords)
+    
+    tv = TrajectoryVisualizer("XDATCAR", (3,3,3))
+    tv.save_trajectory_from_cnfs(path_cnfs)

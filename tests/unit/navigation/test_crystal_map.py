@@ -4,8 +4,6 @@ import json
 from cnf import CrystalNormalForm, UnitCell
 from cnf.navigation.crystal_map import CrystalMap
 from cnf.navigation.neighbor_finder import NeighborFinder
-from cnf.navigation.crystal_explorer import get_endpoints_from_structs, CrystalExplorer
-import time
 
 @pytest.fixture(scope='module')
 def point_set():
@@ -146,74 +144,3 @@ def test_adding_and_removing_connections_is_idempotent(point_set):
     assert cmap.remove_connection(cnf1, cnf2)
     assert not cmap.remove_connection(cnf1, cnf2)
     assert not cmap.remove_connection(cnf1, cnf2)
-
-def test_can_connect_two_points(zr_bcc, zr_hcp):
-    xi = 1.5
-    delta = 10
-
-    start_structs, end_structs = get_endpoints_from_structs(zr_bcc, zr_hcp)
-    start_cnfs = [s.to_cnf(xi, delta) for s in start_structs]
-    end_cnfs = [s.to_cnf(xi, delta) for s in end_structs]
-    cmap = CrystalMap.from_cnf(start_cnfs[0])
-    volumes = [s.volume for s in [*start_structs, *end_structs]]
-    min_vol = min(volumes) * 0.8
-    max_vol = max(volumes) * 1.2
-
-    for cnf in start_cnfs:
-        cmap.add_point(cnf)
-    explorer = CrystalExplorer(cmap, min_vol, max_vol, end_cnfs)
-    
-    any_endpts_found = False
-    tries = 0
-    found_endpt = None
-    prev_len = len(cmap)
-    start_time = time.perf_counter()
-    while not any_endpts_found:
-        if tries % 10 == 0:
-            end_time = time.perf_counter()
-            print("===========================================================")
-            print(f"Starting round {tries} of searching for endpts, map has {len(cmap)} pts")
-            print(f"Current best score: {explorer.best_current_score()}")
-            curr_len = len(cmap)
-            diff = curr_len - prev_len
-            print(f"Added {diff} points in last 10 rounds")
-            elapsed_time = end_time - start_time
-            print(f"10 tries took {elapsed_time:.6f} seconds")
-            prev_len = curr_len
-            start_time = time.perf_counter()
-        total_added = 0
-        
-        diff = 0
-        # print(explorer.sorted_pts())
-        for pt_id in explorer.unexplored_points():
-            pt = cmap.get_point_by_id(pt_id)
-            # print(f"Exploring pt: {pt.coords} (score: {explorer.score_for_point(pt_id)})")
-            pt_id = cmap.get_point_id(pt)
-            before_len = len(cmap)
-            explorer.explore_point(pt_id)
-            after_len = len(cmap)
-            diff = after_len - before_len
-            total_added += diff
-            # print(f"Added {after_len - before_len} pts ({before_len} -> {after_len})")
-            if diff > 0:
-                break
-
-        
-        for cnf in end_cnfs:
-            if cnf in cmap:
-                any_endpts_found = True
-                found_endpt = cnf
-        tries += 1
-        if total_added == 0:
-            break
-    print(f"Found endpoint: {found_endpt}")
-    assert found_endpt
-    explorer.to_json("exploration2.json")  # Commented out - serialization not yet updated
-
-@pytest.mark.skip(reason="Serialization not yet updated")
-def test_can_reinstantiate_from_dict():
-    fpath = helpers.get_data_file_path("explorations/exploration1.json")
-    with open(fpath, 'r+') as f:
-        obj = json.load(f)
-    
-    
