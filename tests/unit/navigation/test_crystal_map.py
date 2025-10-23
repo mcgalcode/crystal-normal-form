@@ -35,7 +35,7 @@ def test_instantiate_crystal_map(point_set):
     xi, delta, cnfs = point_set
     
     cnf = cnfs[0]
-    cmap = CrystalMap.from_cnf(cnf)
+    cmap = CrystalMap.from_cnfs([cnf])
     assert cmap.delta == delta
     assert cmap.xi == xi
 

@@ -40,11 +40,10 @@ def test_explorer_tracks_exploration_state(point_set):
     cmap.add_point(cnf2)
 
     target = cnfs[2]
-    volumes = [cnf.reconstruct().volume for cnf in [cnf1, cnf2, target]]
-    min_vol = min(volumes) * 0.8
-    max_vol = max(volumes) * 1.2
-
-    explorer = CrystalExplorer(cmap, min_vol, max_vol, [target])
+    structs = [cnf.reconstruct() for cnf in [cnf1, cnf2, target]]
+    search_filter = SimpleVolumeAndOverlapFilter.from_endpoint_structs(structs)
+    score_fun = NullScore()
+    explorer = CrystalExplorer(cmap, search_filter, score_fun)
 
     # Points should start as unexplored but scored
     assert not explorer.is_point_explored(cnf1)
@@ -61,11 +60,10 @@ def test_explorer_marks_points_as_explored(point_set):
     cmap.add_point(cnf)
 
     target = cnfs[1]
-    volumes = [cnf.reconstruct().volume, target.reconstruct().volume]
-    min_vol = min(volumes) * 0.8
-    max_vol = max(volumes) * 1.2
-
-    explorer = CrystalExplorer(cmap, min_vol, max_vol, [target])
+    structs = [cnf.reconstruct(), target.reconstruct()]
+    search_filter = SimpleVolumeAndOverlapFilter.from_endpoint_structs(structs)
+    score_fun = NullScore()
+    explorer = CrystalExplorer(cmap, search_filter, score_fun)
 
     assert not explorer.is_point_explored(cnf)
 
@@ -80,12 +78,11 @@ def test_explore_point_adds_neighbors(ti_o2_anatase):
     delta = 10
     cnf = CrystalNormalForm.from_pmg_struct(ti_o2_anatase, xi, delta)
 
-    cmap = CrystalMap.from_cnf(cnf)
+    cmap = CrystalMap.from_cnfs([cnf])
     struct = ti_o2_anatase
-    min_vol = struct.volume * 0.8
-    max_vol = struct.volume * 1.2
-
-    explorer = CrystalExplorer(cmap, min_vol, max_vol, [cnf])
+    search_filter = SimpleVolumeAndOverlapFilter.from_endpoint_structs([struct])
+    score_fun = NullScore()
+    explorer = CrystalExplorer(cmap, search_filter, score_fun)
 
     assert not explorer.is_point_explored(cnf)
 
@@ -109,12 +106,10 @@ def test_explorer_handles_unscored_points(point_set):
     cmap.add_point(cnf1)
 
     target = cnfs[1]
-    volumes = [cnf1.reconstruct().volume, target.reconstruct().volume]
-    min_vol = min(volumes) * 0.8
-    max_vol = max(volumes) * 1.2
-
     # Create explorer with skip_scoring=True
-    explorer = CrystalExplorer(cmap, min_vol, max_vol, [target], skip_scoring=True)
+    search_filter = SimpleVolumeAndOverlapFilter.from_endpoint_structs([cnf1.reconstruct(), target.reconstruct()])
+    score_fun = NullScore()
+    explorer = CrystalExplorer(cmap, search_filter, score_fun, skip_scoring=True)
 
     # Point should exist but not be scored
     pid = cmap.get_point_id(cnf1)
@@ -133,16 +128,17 @@ def test_best_current_score(point_set):
     for cnf in cnfs[:3]:
         cmap.add_point(cnf)
 
-    target = cnfs[3]
-    volumes = [cnf.reconstruct().volume for cnf in cnfs[:4]]
-    min_vol = min(volumes) * 0.8
-    max_vol = max(volumes) * 1.2
-
-    explorer = CrystalExplorer(cmap, min_vol, max_vol, [target])
+    structs = [c.reconstruct() for c in cnfs[:4]]
+    search_filter = SimpleVolumeAndOverlapFilter.from_endpoint_structs(structs)
+    score_fun = NullScore()
+    explorer = CrystalExplorer(cmap, search_filter, score_fun, skip_scoring=True)
 
     best_score = explorer.best_current_score()
-    assert best_score is not None
+    assert best_score is None
 
+    for cnf in cmap.all_points():
+       explorer.score_pt(cnf)
+    best_score = explorer.best_current_score() 
     # Best score should be the minimum of all scores
     all_scores = [explorer.score_for_point(cmap.get_point_id(cnf)) for cnf in cnfs[:3]]
     assert best_score == min(all_scores)
@@ -158,20 +154,19 @@ def test_unexplored_points_list(point_set):
     cmap.add_point(cnf2)
 
     target = cnfs[2]
-    volumes = [cnf.reconstruct().volume for cnf in [cnf1, cnf2, target]]
-    min_vol = min(volumes) * 0.8
-    max_vol = max(volumes) * 1.2
-
-    explorer = CrystalExplorer(cmap, min_vol, max_vol, [target])
+    structs = [cnf.reconstruct() for cnf in [cnf1, cnf2, target]]
+    search_filter = SimpleVolumeAndOverlapFilter.from_endpoint_structs(structs)
+    score_fun = NullScore()
+    explorer = CrystalExplorer(cmap, search_filter, score_fun, skip_scoring=True)
 
     unexplored = explorer.unexplored_points()
     assert len(unexplored) == 2
 
     # Explore one point
-    explorer.explore_point(unexplored[0])
+    new_ids = explorer.explore_point(unexplored[0])
 
     unexplored_after = explorer.unexplored_points()
-    assert len(unexplored_after) < len(unexplored)
+    assert len(unexplored_after) - len(new_ids) < len(unexplored)
 
 @pytest.fixture
 def path_find_start_structs(zr_bcc_mp):
