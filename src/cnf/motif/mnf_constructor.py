@@ -141,6 +141,15 @@ class MNFConstructor():
         self.verbose_logging = verbose_logging
     
     def build_vectorized(self, original_motif: FractionalMotif):
+        if len(original_motif.atoms) == 1:
+            candidate = MNFCandidate(tuple([]), None, None, None)
+            return MNFConstructionResult(
+                original_motif,
+                self.delta,
+                self.stabilizer,
+                [candidate]
+            ) 
+
         # compute a list of element labels for help in later
         # lexicographic sorting
         np_stabilizer_mats = self.stabilizer
