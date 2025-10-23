@@ -52,6 +52,7 @@ class CNFConstructor():
         return self.from_vonorms_and_motif_undiscretized(vonorms, motif)
     
     def from_vonorms_and_motif_undiscretized(self, vonorms: VonormList, motif: FractionalMotif):
+        vonorms = vonorms.set_tol(1e-3)
         undisc_cnf = self.from_vonorms_and_motif(vonorms, motif)
         vonorms = undisc_cnf.lnf_result.lnf.vonorms
 

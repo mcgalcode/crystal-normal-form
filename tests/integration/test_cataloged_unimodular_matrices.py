@@ -164,7 +164,7 @@ def reps_for_struct(uc: UnitCell):
 @helpers.parameterized_by_mp_structs
 def test_uncataloged_matrices_dont_maintain_lattice(idx: int, struct: Structure):
     uc = UnitCell.from_pymatgen_structure(struct).reduce()
-    known_perm_mats = uc.conorms.all_permutation_matrices()
+    known_perm_mats = uc.conorms.set_tol(1e-4).all_permutation_matrices()
     # print(f"Considerng {len(known_perm_mats)} matrices")
     for umat in get_unimodulars_col_max(2):
         assert umat.determinant() == 1

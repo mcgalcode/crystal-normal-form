@@ -23,7 +23,7 @@ class VonormSorter():
             print(msg)
 
     def get_canonicalized_vonorms(self, vonorms: VonormList, coform_tolerance=1e-3):
-        conorms = vonorms.conorms
+        conorms = vonorms.conorms.set_tol(coform_tolerance)
         perms = conorms.permissible_permutations
         self._log(f"Searching through {len(perms)} permissible permutations...")
         permuted_vonorm_lists: list[tuple[VonormList, PermutationMatrix]] = []

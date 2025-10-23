@@ -17,16 +17,20 @@ VONORM_TO_DOT_PRODUCTS = np.array([
 
 class VonormList():
 
-    def __init__(self, vonorms):
+    def __init__(self, vonorms, conorm_tol=1e-5):
         if not (isinstance(vonorms, tuple) or isinstance(vonorms, list) or isinstance(vonorms, np.ndarray)):
             raise ValueError(f"Tried to intialize VonormList with bad type {type(vonorms)}")
         self.vonorms = vonorms
         self.vonorms_np = np.array(vonorms)
         self.tuple = tuple(vonorms)
+        self.conorm_tol = conorm_tol
 
     @cached_property
     def conorms(self):
-        return ConormList((1 / 2) * VONORM_TO_DOT_PRODUCTS @ self.vonorms[:6])
+        return ConormList((1 / 2) * VONORM_TO_DOT_PRODUCTS @ self.vonorms[:6], self.conorm_tol)
+    
+    def set_tol(self, conorm_tol):
+        return VonormList(self.vonorms, conorm_tol)
     
     @cached_property
     def permissible_perms(self):

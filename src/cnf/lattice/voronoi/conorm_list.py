@@ -5,7 +5,7 @@ from ...linalg import MatrixTuple
 
 class ConormList():
 
-    def __init__(self, conorms, tol=1e-3):
+    def __init__(self, conorms, tol=1e-6):
         self.conorms = conorms
         self.form = Coform([idx for idx, conorm in enumerate(self.conorms) if np.abs(conorm) < tol])
         self.permissible_permutations = self.form.permissible_permutations()
