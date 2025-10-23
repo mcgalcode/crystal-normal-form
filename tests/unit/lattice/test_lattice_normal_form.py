@@ -35,5 +35,5 @@ def test_lnf_for_zr_hcp(Zr_HCP_lattice):
     lnf_constructor = LatticeNormalFormConstructor(1.5)
     lnf = lnf_constructor.build_lnf_from_pymatgen_lattice(Zr_HCP_lattice).lnf
     # print("Zr HCP lattice vonorm list: ", lnf.vonorms)
-    assert lnf.vonorms.vonorms == (7,7,17,24,7,24,24) # numbered page 64 of David's thesis
+    assert lnf.vonorms.tuple == (7,7,17,24,7,24,24) # numbered page 64 of David's thesis
 
