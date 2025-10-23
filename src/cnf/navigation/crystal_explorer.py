@@ -30,6 +30,9 @@ class CrystalExplorer():
         self.unexplored_score_list = SortedSet()
         self.explored_score_list = SortedSet()
 
+        for pt in cmap.all_node_ids():
+            self._set_pt_unexplored(pt)
+
         if not skip_scoring:
             for pt in cmap.all_node_ids():
                 self._unexplored_pts.add(pt)
@@ -139,7 +142,7 @@ class CrystalExplorer():
             self.unexplored_score_list.add(self._get_score_item(pt_id))
     
     def unexplored_points(self):
-        return [i[1] for i in self.unexplored_score_list]
+        return list(self._unexplored_pts)
 
     def best_current_score(self):
         all_scores = self.unexplored_score_list.union(self.explored_score_list)
