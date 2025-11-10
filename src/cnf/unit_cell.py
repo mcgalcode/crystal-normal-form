@@ -22,6 +22,10 @@ class UnitCell():
     @classmethod
     def from_cnf(cls, cnf: CrystalNormalForm):
         return cls.from_pymatgen_structure(cnf.reconstruct())
+    
+    @classmethod
+    def from_cif(cls, cif_path: str):
+        return cls.from_pymatgen_structure(Structure.from_file(cif_path))
 
     def __init__(self, superbasis: Superbasis, motif: FractionalMotif):
         self.superbasis = superbasis
