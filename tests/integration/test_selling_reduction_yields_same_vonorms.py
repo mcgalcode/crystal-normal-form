@@ -88,7 +88,7 @@ def test_reduction_sorting_and_discretizing_yields_same_ordered_list(idx, struct
         match, reason = helpers.are_unit_cells_geo_matches(uc, other_cell, tol=1e-6)
         if match:
             reduced_other = r.reduce(other_cell.vonorms).reduced_object
-            reduced_other: VonormList = reduced_other.set_tol(1e-4)
+            reduced_other: VonormList = reduced_other.set_tol(1e-6)
             assert reduced_other.conorms.form.voronoi_class == original_canonicalzed.conorms.form.voronoi_class
             assert original.has_same_members(reduced_other, tol=1e-5)
             other_canonical, other_transforms = sorter.get_canonicalized_vonorms(reduced_other)
