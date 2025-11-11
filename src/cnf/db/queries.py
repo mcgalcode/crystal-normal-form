@@ -26,9 +26,20 @@ CREATE TABLE {constants.EDGE_TABLE_NAME} (
 
 create_metadata_table = f"""
 CREATE TABLE {constants.METADATA_TABLE_NAME} (
-    id INTEGER PRIMARY KEY CHECK (id = 0),
+    id INTEGER PRIMARY KEY CHECK (id = 1),
     delta INTEGER,
     xi REAL,
     element_list TEXT
 )
 """
+
+set_metadata =  f"""
+INSERT INTO {constants.METADATA_TABLE_NAME} 
+    (delta, xi, element_list) 
+VALUES (?, ?, ?)
+"""
+
+def get_metadata():
+    return f"""
+    SELECT delta, xi, element_list FROM {constants.METADATA_TABLE_NAME} WHERE id = 1;
+    """
