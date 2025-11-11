@@ -1,5 +1,5 @@
 import sqlite3
-from . import queries
+from . import queries, constants
 
 
 ### Database design notes:
@@ -16,8 +16,6 @@ from . import queries
 # source_id: int
 # target_id: int
 
-POINT_TABLE_NAME = 'point'
-
 class CNFStore():
 
     @classmethod
@@ -25,6 +23,8 @@ class CNFStore():
         conn = sqlite3.connect(dbfname)
         cur = conn.cursor()
         cur.execute(queries.create_point_table)
+        cur.execute(queries.create_edge_table)
+        cur.execute(queries.create_metadata_table)
         conn.commit()
         return cls(dbfname)
 
@@ -34,7 +34,7 @@ class CNFStore():
         self.conn = sqlite3.connect(self.db_name)
         self.cursor = self.conn.cursor()
 
-        query = queries.table_exists.format(table_name=POINT_TABLE_NAME)
+        query = queries.table_exists.format(table_name=constants.POINT_TABLE_NAME)
         res = self.cursor.execute(query)
         if res.fetchone() is None:
             raise ValueError(f"Tried to instantiate campaign store from uninitialized DB file: {dbfname}")
