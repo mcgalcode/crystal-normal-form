@@ -70,10 +70,10 @@ class CNFConstructor():
         if self.verbose_logging:
             print(f"Successfully constructed LNF! {lnf_result.lnf}")
 
-        stabilizer_1 = vonorms.stabilizer_matrices(1e-4)
+        stabilizer_1 = vonorms.stabilizer_matrices(1e-3)
         selling = [lnf_result.selling_transform_mat()]
         sorting_transforms = lnf_result.sorting_transforms()[:1]
-        stabilizer_2 = lnf_result.stabilizer(1e-4)
+        stabilizer_2 = lnf_result.stabilizer(1e-3)
         
         all_stabilizers = [MatrixTuple(combine_unimodular_mats_np([s.matrix for s in stack])) for stack in product(stabilizer_1, selling, sorting_transforms, stabilizer_2)]
         all_stabilizers = list(set(all_stabilizers))
