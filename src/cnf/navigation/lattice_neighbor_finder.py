@@ -91,6 +91,7 @@ class LatticeNeighborFinder():
                 neighbors.add_neighbor(result)
         return neighbors
     
+   # @profile
     def find_cnf_neighbor_results(self, step: LatticeStep) -> list[LatticeStepResult]:
         results = []
         if not (step.vonorms.is_obtuse() and step.vonorms.is_superbasis()):
@@ -121,6 +122,7 @@ class LatticeNeighborFinder():
 
         return results
 
+    #@profile
     def find_cnf_neighbors(self) -> NeighborSet:
         neighbors = NeighborSet()
         steps = self.possible_steps()
