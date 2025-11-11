@@ -20,6 +20,15 @@ POINT_TABLE_NAME = 'point'
 
 class CampaignStore():
 
+    @classmethod
+    def setup(cls, dbfname: str):
+        conn = sqlite3.connect(dbfname)
+        cur = conn.cursor()
+        cur.execute(queries.create_point_table)
+        conn.commit()
+        return cls(dbfname)
+
+
     def __init__(self, dbfname: str):
         self.db_name = dbfname
         self.conn = sqlite3.connect(self.db_name)
