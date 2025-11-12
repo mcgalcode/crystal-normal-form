@@ -116,7 +116,14 @@ class CNFStore():
         pass
 
     def get_point_by_id(self, id: int):
-        pass
+        res = self.cursor.execute(
+            queries.get_point_by_id,
+            ([id])
+        )
+        row = res.fetchone()
+        if row is None:
+            return None
+        return cnf_pt_from_row(row, self.metadata.delta, self.metadata.xi, self.metadata.element_list)
     
     def remove_point(self, point: CrystalNormalForm):
         cnf_str = cnf_to_str(point)

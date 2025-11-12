@@ -54,7 +54,7 @@ VALUES (?, ?, ?, ?)
 """
 
 get_point_by_id = f"""
-SELECT * FROM {constants.POINT_TABLE_NAME}
+SELECT id, cnf, external_id, value, explored FROM {constants.POINT_TABLE_NAME}
 WHERE id = ?
 """
 

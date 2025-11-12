@@ -58,4 +58,15 @@ def test_can_add_and_remove_row(zr_hcp_cnf, temp_db: CNFStore):
 
     result2 = temp_db.get_point_by_cnf(zr_hcp_cnf)
     assert result2 is None
+
+def test_can_get_pt_by_id(zr_hcp_cnf, temp_db: CNFStore):
+    temp_db.add_point(zr_hcp_cnf)
+    
+    result = temp_db.get_point_by_cnf(zr_hcp_cnf)
+    result = temp_db.get_point_by_id(result.id)
+    assert result.cnf == zr_hcp_cnf
+    assert result.explored == False
+    assert result.value is None
+    assert result.external_id is None
+    assert result.id    
     
