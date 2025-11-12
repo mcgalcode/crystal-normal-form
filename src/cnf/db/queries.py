@@ -80,3 +80,14 @@ delete_point_by_point = f"""
 DELETE FROM {constants.POINT_TABLE_NAME}
 WHERE cnf = ?
 """
+
+create_connection = f"""
+INSERT INTO {constants.EDGE_TABLE_NAME}
+(source_id, target_id)
+VALUES (?, ?)
+"""
+
+get_connection_by_ids = f"""
+SELECT * FROM {constants.EDGE_TABLE_NAME}
+WHERE (source_id = ? AND target_id = ?) OR (target_id = ? AND source_id = ?)
+"""

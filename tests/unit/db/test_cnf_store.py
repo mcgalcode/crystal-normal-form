@@ -11,6 +11,12 @@ def zr_hcp_cnf(zr_hcp_mp):
     delta = 10
     return CrystalNormalForm.from_pmg_struct(zr_hcp_mp, xi, delta)
 
+@pytest.fixture
+def zr_bcc_cnf(zr_bcc_mp):
+    xi = 1.5
+    delta = 10
+    return CrystalNormalForm.from_pmg_struct(zr_bcc_mp, xi, delta)
+
 @pytest.fixture(scope='function')
 def temp_db(zr_hcp_cnf):
     els = zr_hcp_cnf.elements
@@ -85,6 +91,28 @@ def test_can_get_multiple_ids(zr_hcp_cnf, temp_db: CNFStore):
     for cid, cnf in zip(all_ids, cnfs_to_retrieve):
         retrieved = temp_db.get_point_by_id(cid)
         assert retrieved.cnf == cnf
-    
 
+def test_can_getting_multiple_ids_with_bad_id_raises_error(zr_hcp_cnf, temp_db: CNFStore):
+    lnfnf = LatticeNeighborFinder(zr_hcp_cnf)
+    nbs = lnfnf.find_cnf_neighbors()
+    cnfs = [nb.point for nb in nbs.neighbors]
+    for c in cnfs[:5]:
+        temp_db.add_point(c)
     
+    cnfs_to_retrieve = cnfs[:6]
+
+    with pytest.raises(ValueError) as excep:
+        all_ids = temp_db.get_point_ids(cnfs_to_retrieve)
+        assert "No row in CNFStore found for CNF " in excep.value.__repr__()
+
+def test_can_add_connection(zr_hcp_cnf, zr_bcc_cnf, temp_db: CNFStore):
+    temp_db.add_point(zr_hcp_cnf)
+    temp_db.add_point(zr_bcc_cnf)
+
+    assert not temp_db.connection_exists(zr_hcp_cnf, zr_bcc_cnf)
+    assert not temp_db.connection_exists(zr_bcc_cnf, zr_hcp_cnf)
+
+    temp_db.add_connection(zr_hcp_cnf, zr_bcc_cnf)
+
+    assert temp_db.connection_exists(zr_hcp_cnf, zr_bcc_cnf)
+    assert temp_db.connection_exists(zr_bcc_cnf, zr_hcp_cnf)

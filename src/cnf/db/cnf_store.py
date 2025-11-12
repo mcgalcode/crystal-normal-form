@@ -149,19 +149,35 @@ class CNFStore():
         return res
 
     def add_connection(self, pt1: CrystalNormalForm, pt2: CrystalNormalForm):
-        pass
+        ids = self.get_point_ids([pt1, pt2])
+        return self.add_connection_by_ids(*ids)
 
-    def add_connection_by_ids(self, id1, id2):
-        pass
+    def add_connection_by_ids(self, id1: int, id2: int):
+        self.cursor.execute(
+            queries.create_connection,
+            ([id1, id2])
+        )
+        self.cursor.execute(
+            queries.create_connection,
+            ([id2, id1])
+        )
+        self.conn.commit()
+        return True
 
     def remove_connection(self, pt1: CrystalNormalForm, pt2: CrystalNormalForm):
         pass
 
     def connection_exists(self, pt1: CrystalNormalForm, pt2: CrystalNormalForm):
-        pass
-    
+        ids = self.get_point_ids([pt1, pt2])
+        return self.connection_exists_by_id(*ids)
+        
     def connection_exists_by_id(self, id1: int, id2: int):
-        pass
+        res = self.cursor.execute(
+            queries.get_connection_by_ids,
+            ([id1, id2, id1, id2])
+        )
+        rows = res.fetchmany()
+        return len(rows) > 0
 
     def __contains__(self, item):
         pass
