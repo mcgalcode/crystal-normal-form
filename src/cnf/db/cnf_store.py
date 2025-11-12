@@ -108,6 +108,8 @@ class CNFStore():
             ([cnf_str])
         )
         row = res.fetchone()
+        if row is None:
+            return None
         return cnf_pt_from_row(row, self.metadata.delta, self.metadata.xi, self.metadata.element_list)
     
     def get_point_ids(self, *points: list[CrystalNormalForm]):
@@ -117,7 +119,14 @@ class CNFStore():
         pass
     
     def remove_point(self, point: CrystalNormalForm):
-        pass
+        cnf_str = cnf_to_str(point)
+        res = self.cursor.execute(
+            queries.delete_point_by_point,
+            ([cnf_str])
+        )
+        res = res.fetchone()
+        self.conn.commit()
+        return res
 
     def add_connection(self, pt1: CrystalNormalForm, pt2: CrystalNormalForm):
         pass

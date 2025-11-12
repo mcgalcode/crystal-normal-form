@@ -62,3 +62,13 @@ get_point_by_cnf_str = f"""
 SELECT id, cnf, external_id, value, explored FROM {constants.POINT_TABLE_NAME}
 WHERE cnf = ?
 """
+
+delete_point_by_id = f"""
+DELETE FROM {constants.POINT_TABLE_NAME}
+WHERE id = ?
+"""
+
+delete_point_by_point = f"""
+DELETE FROM {constants.POINT_TABLE_NAME}
+WHERE cnf = ?
+"""
