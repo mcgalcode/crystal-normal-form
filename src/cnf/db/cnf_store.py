@@ -112,8 +112,21 @@ class CNFStore():
             return None
         return cnf_pt_from_row(row, self.metadata.delta, self.metadata.xi, self.metadata.element_list)
     
-    def get_point_ids(self, *points: list[CrystalNormalForm]):
-        pass
+    def get_point_ids(self, points: list[CrystalNormalForm]):
+        cnf_strs = [cnf_to_str(p) for p in points]
+        res = self.cursor.execute(
+            queries.get_points_ids(cnf_strs),
+            (cnf_strs)
+        )
+        rows = res.fetchall()
+        ids = []
+        for c in cnf_strs:
+            filtered_rows = [r for r in rows if r[1] == c]
+            if len(filtered_rows) == 0:
+                raise ValueError(f"No row in CNFStore found for CNF {c}")
+            ids.append(filtered_rows[0][0])
+        return ids
+
 
     def get_point_by_id(self, id: int):
         res = self.cursor.execute(

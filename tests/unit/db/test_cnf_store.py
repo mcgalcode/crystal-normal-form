@@ -1,6 +1,7 @@
 import pytest
 from cnf.db.cnf_store import CNFStore
 from cnf import CrystalNormalForm
+from cnf.navigation.neighbor_finder import LatticeNeighborFinder
 import tempfile
 
 
@@ -68,5 +69,22 @@ def test_can_get_pt_by_id(zr_hcp_cnf, temp_db: CNFStore):
     assert result.explored == False
     assert result.value is None
     assert result.external_id is None
-    assert result.id    
+    assert result.id   
+
+def test_can_get_multiple_ids(zr_hcp_cnf, temp_db: CNFStore):
+    lnfnf = LatticeNeighborFinder(zr_hcp_cnf)
+    nbs = lnfnf.find_cnf_neighbors()
+    cnfs = [nb.point for nb in nbs.neighbors]
+    for c in cnfs:
+        temp_db.add_point(c)
+    
+    cnfs_to_retrieve = cnfs[::5]
+
+    all_ids = temp_db.get_point_ids(cnfs_to_retrieve)
+    assert len(all_ids) == len(cnfs_to_retrieve)
+    for cid, cnf in zip(all_ids, cnfs_to_retrieve):
+        retrieved = temp_db.get_point_by_id(cid)
+        assert retrieved.cnf == cnf
+    
+
     

@@ -63,6 +63,14 @@ SELECT id, cnf, external_id, value, explored FROM {constants.POINT_TABLE_NAME}
 WHERE cnf = ?
 """
 
+def get_points_ids(cnf_pts: list[str]):
+    placeholders = ','.join(['?'] * len(cnf_pts))
+    return f"""
+SELECT id, cnf FROM {constants.POINT_TABLE_NAME} WHERE
+cnf IN ({placeholders})
+"""
+
+
 delete_point_by_id = f"""
 DELETE FROM {constants.POINT_TABLE_NAME}
 WHERE id = ?
