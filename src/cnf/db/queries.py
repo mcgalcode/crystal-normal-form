@@ -39,7 +39,26 @@ INSERT INTO {constants.METADATA_TABLE_NAME}
 VALUES (?, ?, ?)
 """
 
-def get_metadata():
-    return f"""
-    SELECT delta, xi, element_list FROM {constants.METADATA_TABLE_NAME} WHERE id = 1;
-    """
+get_metadata = f"""
+SELECT delta, xi, element_list FROM {constants.METADATA_TABLE_NAME} WHERE id = 1;
+"""
+
+get_all_cnfs = f"""
+SELECT cnf FROM {constants.POINT_TABLE_NAME}
+"""
+
+insert_point = f"""
+INSERT INTO {constants.POINT_TABLE_NAME}
+    (cnf, external_id, value, explored)
+VALUES (?, ?, ?, ?)
+"""
+
+get_point_by_id = f"""
+SELECT * FROM {constants.POINT_TABLE_NAME}
+WHERE id = ?
+"""
+
+get_point_by_cnf_str = f"""
+SELECT id, cnf, external_id, value, explored FROM {constants.POINT_TABLE_NAME}
+WHERE cnf = ?
+"""
