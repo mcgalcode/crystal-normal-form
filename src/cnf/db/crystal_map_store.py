@@ -7,6 +7,8 @@ from .base import BaseStore
 from dataclasses import dataclass
 import json
 from ..crystal_normal_form import CrystalNormalForm
+from .utilities import cnf_from_str, cnf_to_str
+
 
 ### Database design notes:
 #
@@ -39,13 +41,9 @@ class CNFPoint():
     value: float
 
 
-def cnf_to_str(cnf: CrystalNormalForm):
-    return json.dumps([str(c) for c in cnf.coords])
 
 def cnf_pt_from_row(row: tuple, delta: int, xi: float, elements: list[str]):
-    cnf_list = json.loads(row[1])
-    cnf_list = [int(float(c)) for c in cnf_list]
-    cnf = CrystalNormalForm.from_tuple(tuple(cnf_list), elements, xi, delta)
+    cnf = cnf_from_str(row[1], xi, delta, elements)
     return CNFPoint(
         id=row[0],
         cnf=cnf,
