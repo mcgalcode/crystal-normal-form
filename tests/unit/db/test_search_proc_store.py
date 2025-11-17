@@ -32,21 +32,28 @@ def store_file(zr_hcp_cnfs):
         yield tf.name
 
 @pytest.fixture
-def crystal_map_store(store_file):
-    return CrystalMapStore.from_file(store_file)
-
-@pytest.fixture
-def search_store(store_file):
-    return SearchProcessStore.from_file(store_file)
-
-def test_can_add_search_proc(crystal_map_store, search_store, zr_bcc_cnfs, zr_hcp_cnfs):
-
+def crystal_map_store(store_file, zr_bcc_cnfs, zr_hcp_cnfs):
+    store = CrystalMapStore.from_file(store_file)
     for cnf in zr_bcc_cnfs:
-        crystal_map_store.add_point(cnf)
+        store.add_point(cnf)
     
     for cnf in zr_hcp_cnfs:
-        crystal_map_store.add_point(cnf)
+        store.add_point(cnf)
+    return store
 
+
+@pytest.fixture
+def search_store(store_file, zr_bcc_cnfs, zr_hcp_cnfs):
+    store = CrystalMapStore.from_file(store_file)
+    for cnf in zr_bcc_cnfs:
+        store.add_point(cnf)
+    
+    for cnf in zr_hcp_cnfs:
+        store.add_point(cnf)    
+    return SearchProcessStore.from_file(store_file)
+
+def test_can_add_search_proc(search_store, zr_bcc_cnfs, zr_hcp_cnfs):
+    
     sp_id = search_store.create_search_process(
         "test process",
         zr_bcc_cnfs,
@@ -60,3 +67,25 @@ def test_can_add_search_proc(crystal_map_store, search_store, zr_bcc_cnfs, zr_hc
     startpts = search_store.get_search_startpoints(sp_id)
     assert len(startpts) == len(zr_hcp_cnfs)
     assert set(zr_bcc_cnfs) == set([pt.cnf for pt in startpts])
+
+def test_can_add_and_rm_pt_from_frontier(search_store, zr_bcc_cnfs, zr_hcp_cnfs):
+    sp_id = search_store.create_search_process(
+        "test process",
+        zr_bcc_cnfs,
+        zr_hcp_cnfs
+    )
+
+    empty_frontier = search_store.get_frontier_points_in_search(sp_id)
+    assert len(empty_frontier) == 0
+
+    search_store.add_to_search_frontier(sp_id, zr_bcc_cnfs[0])
+    single_pt_frontier = search_store.get_frontier_points_in_search(sp_id)
+    assert len(single_pt_frontier) == 1
+    assert single_pt_frontier[0].cnf == zr_bcc_cnfs[0]
+
+    search_store.remove_from_search_frontier(sp_id, zr_bcc_cnfs[0])
+    empty_frontier = search_store.get_frontier_points_in_search(sp_id)
+    assert len(empty_frontier) == 0
+
+
+
