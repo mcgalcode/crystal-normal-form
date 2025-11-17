@@ -59,6 +59,10 @@ class CNFStore():
         cur.execute(queries.create_point_table)
         cur.execute(queries.create_edge_table)
         cur.execute(queries.create_metadata_table)
+        cur.execute(queries.create_lock_table)
+        cur.execute(queries.create_search_process_table)
+        cur.execute(queries.create_search_frontier_member_table)
+        cur.execute(queries.create_searched_point_table)
 
         el_str = json.dumps(element_list)
         cur.execute(
