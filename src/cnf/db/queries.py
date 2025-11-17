@@ -91,3 +91,8 @@ get_connection_by_ids = f"""
 SELECT * FROM {constants.EDGE_TABLE_NAME}
 WHERE (source_id = ? AND target_id = ?) OR (target_id = ? AND source_id = ?)
 """
+
+delete_connection_by_ids = f"""
+DELETE FROM {constants.EDGE_TABLE_NAME}
+WHERE (source_id = ? AND target_id = ?) OR (target_id = ? AND source_id = ?)
+"""

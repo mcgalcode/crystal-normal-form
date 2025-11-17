@@ -165,7 +165,16 @@ class CNFStore():
         return True
 
     def remove_connection(self, pt1: CrystalNormalForm, pt2: CrystalNormalForm):
-        pass
+        ids = self.get_point_ids([pt1, pt2])
+        return self.remove_connection_by_ids(ids[0], ids[1])
+
+    def remove_connection_by_ids(self, id1: int, id2: int):
+        res = self.cursor.execute(
+            queries.delete_connection_by_ids,
+            ([id1, id2, id1, id2])
+        )
+        self.conn.commit()
+        return True
 
     def connection_exists(self, pt1: CrystalNormalForm, pt2: CrystalNormalForm):
         ids = self.get_point_ids([pt1, pt2])

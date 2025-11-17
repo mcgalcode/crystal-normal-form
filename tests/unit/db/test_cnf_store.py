@@ -116,3 +116,10 @@ def test_can_add_connection(zr_hcp_cnf, zr_bcc_cnf, temp_db: CNFStore):
 
     assert temp_db.connection_exists(zr_hcp_cnf, zr_bcc_cnf)
     assert temp_db.connection_exists(zr_bcc_cnf, zr_hcp_cnf)
+
+    temp_db.remove_connection(zr_hcp_cnf, zr_bcc_cnf)
+
+    assert not temp_db.connection_exists(zr_hcp_cnf, zr_bcc_cnf)
+    assert not temp_db.connection_exists(zr_bcc_cnf, zr_hcp_cnf)
+
+
