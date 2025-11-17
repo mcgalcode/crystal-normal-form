@@ -7,7 +7,7 @@ from .base import BaseStore
 from dataclasses import dataclass
 import json
 from ..crystal_normal_form import CrystalNormalForm
-from .utilities import cnf_from_str, cnf_to_str
+from .utilities import cnf_from_str, cnf_to_str, cnf_pt_from_row, CNFPoint
 
 
 ### Database design notes:
@@ -31,26 +31,6 @@ class CNFMetadata():
     xi: float
     element_list: list[str]
 
-@dataclass
-class CNFPoint():
-
-    id: int
-    cnf: CrystalNormalForm
-    explored: bool
-    external_id: str
-    value: float
-
-
-
-def cnf_pt_from_row(row: tuple, delta: int, xi: float, elements: list[str]):
-    cnf = cnf_from_str(row[1], xi, delta, elements)
-    return CNFPoint(
-        id=row[0],
-        cnf=cnf,
-        explored=row[4],
-        external_id=row[2],
-        value=row[3]
-    )
 
 class CrystalMapStore(BaseStore):
 
