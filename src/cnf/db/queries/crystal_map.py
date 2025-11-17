@@ -1,12 +1,5 @@
 from . import constants
 
-table_exists = """
-SELECT name
-FROM sqlite_master
-WHERE type='table'
-AND name='{table_name}'
-"""
-
 create_point_table = f"""
 CREATE TABLE {constants.POINT_TABLE_NAME} (
     id INTEGER PRIMARY KEY,
@@ -35,28 +28,6 @@ CREATE TABLE {constants.METADATA_TABLE_NAME} (
 
 create_lock_table = f"""
 CREATE TABLE {constants.LOCK_TABLE_NAME} (
-    point_id INTEGER
-)
-"""
-
-create_search_process_table = f"""
-CREATE TABLE {constants.SEARCH_PROCESS_TABLE_NAME} (
-    id INTEGER PRIMARY KEY,
-    start_cnf TEXT,
-    end_cnf TEXT
-)
-"""
-
-create_search_frontier_member_table = f"""
-CREATE TABLE {constants.SEARCH_FRONTIER_MEMBER_TABLE_NAME} (
-    search_id INTEGER,
-    point_id INTEGER
-)
-"""
-
-create_searched_point_table = f"""
-CREATE TABLE {constants.SEARCHED_POINT_TABLE_NAME} (
-    search_id INTEGER
     point_id INTEGER
 )
 """

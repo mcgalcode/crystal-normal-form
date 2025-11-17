@@ -1,5 +1,7 @@
 import sqlite3
-from . import queries, constants
+from .queries import constants
+from .queries import crystal_map as queries
+from .queries import general as general_queries
 from dataclasses import dataclass
 import json
 from ..crystal_normal_form import CrystalNormalForm
@@ -50,27 +52,7 @@ def cnf_pt_from_row(row: tuple, delta: int, xi: float, elements: list[str]):
         value=row[3]
     )
 
-class CNFStore():
-
-    @classmethod
-    def setup(cls, dbfname: str, xi: float, delta: int, element_list: list[str]):
-        conn = sqlite3.connect(dbfname)
-        cur = conn.cursor()
-        cur.execute(queries.create_point_table)
-        cur.execute(queries.create_edge_table)
-        cur.execute(queries.create_metadata_table)
-        cur.execute(queries.create_lock_table)
-        cur.execute(queries.create_search_process_table)
-        cur.execute(queries.create_search_frontier_member_table)
-        cur.execute(queries.create_searched_point_table)
-
-        el_str = json.dumps(element_list)
-        cur.execute(
-            queries.set_metadata,
-            (delta, xi, el_str)
-        )
-        conn.commit()
-        return cls(dbfname)
+class CrystalMapStore():
 
 
     def __init__(self, dbfname: str):
@@ -78,10 +60,10 @@ class CNFStore():
         self.conn = sqlite3.connect(self.db_filename)
         self.cursor = self.conn.cursor()
 
-        query = queries.table_exists.format(table_name=constants.POINT_TABLE_NAME)
+        query = general_queries.table_exists.format(table_name=constants.POINT_TABLE_NAME)
         res = self.cursor.execute(query)
         if res.fetchone() is None:
-            raise ValueError(f"Tried to instantiate campaign store from uninitialized DB file: {dbfname}")
+            raise ValueError(f"Tried to instantiate CrystalMapStore from uninitialized DB file: {dbfname}")
     
         self.metadata = self.get_metadata()
     
@@ -98,13 +80,7 @@ class CNFStore():
         )
         self.conn.commit()
         return res.fetchall()
-    
-    def all_points(self):
-        pass
-    
-    def all_node_ids(self):
-        pass
-    
+        
     def get_point_by_cnf(self, point: CrystalNormalForm):
         cnf_str = cnf_to_str(point)
         res = self.cursor.execute(
