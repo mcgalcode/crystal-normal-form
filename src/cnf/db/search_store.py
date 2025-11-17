@@ -74,7 +74,7 @@ class SearchProcessStore(BaseStore):
 
     def mark_point_searched_by_id(self, search_id: int, point_id: int):
         self.cursor.execute(
-            sp_queries.mark_point_searched
+            sp_queries.mark_point_searched,
             ([search_id, point_id])
         )
         self.conn.commit()

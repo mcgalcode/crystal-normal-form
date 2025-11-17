@@ -87,5 +87,27 @@ def test_can_add_and_rm_pt_from_frontier(search_store, zr_bcc_cnfs, zr_hcp_cnfs)
     empty_frontier = search_store.get_frontier_points_in_search(sp_id)
     assert len(empty_frontier) == 0
 
+def test_can_mark_point_as_searched(search_store, zr_bcc_cnfs, zr_hcp_cnfs):
+    sp_id = search_store.create_search_process(
+        "test process",
+        zr_bcc_cnfs,
+        zr_hcp_cnfs
+    )
+
+    searched_pts = search_store.get_searched_points_in_search(sp_id)
+    assert len(searched_pts) == 0
+
+    search_store.mark_point_searched(sp_id, zr_bcc_cnfs[0])
+    searched_pts = search_store.get_searched_points_in_search(sp_id)
+    assert len(searched_pts) == 1
+    assert searched_pts[0].cnf == zr_bcc_cnfs[0]
+
+    search_store.mark_point_searched(sp_id, zr_bcc_cnfs[1])
+    searched_pts = search_store.get_searched_points_in_search(sp_id)
+    searched_cnfs = [pt.cnf for pt in searched_pts]
+    assert len(searched_cnfs) == 2
+    assert set(searched_cnfs) == set(zr_bcc_cnfs[:2])
+
+    
 
 

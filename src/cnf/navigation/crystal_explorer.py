@@ -38,6 +38,10 @@ class CrystalExplorer():
                 self._unexplored_pts.add(pt)
                 pt = cmap.get_point_by_id(pt)
                 self.score_pt(pt)
+
+    def explore_point_by_cnf(self, cnf: CrystalNormalForm):
+        pt_id = self.map.get_point_id(cnf)
+        return self.explore_point(pt_id)
     
     def explore_point(self, point_id: int):
         pt = self.map.get_point_by_id(point_id)
