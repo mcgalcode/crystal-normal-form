@@ -11,7 +11,10 @@ def setup_cnf_db(dbfname: str, xi: float, delta: int, element_list: list[str]):
     cur.execute(crystal_map_queries.create_edge_table)
     cur.execute(crystal_map_queries.create_metadata_table)
     cur.execute(crystal_map_queries.create_lock_table)
+    
     cur.execute(search_process_queries.create_search_process_table)
+    cur.execute(search_process_queries.create_search_start_point_table)
+    cur.execute(search_process_queries.create_search_end_point_table)
     cur.execute(search_process_queries.create_search_frontier_member_table)
     cur.execute(search_process_queries.create_searched_point_table)
 

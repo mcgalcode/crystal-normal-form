@@ -3,8 +3,21 @@ from . import constants
 create_search_process_table = f"""
 CREATE TABLE {constants.SEARCH_PROCESS_TABLE_NAME} (
     id INTEGER PRIMARY KEY,
-    start_cnf TEXT,
-    end_cnf TEXT
+    description TEXT
+)
+"""
+
+create_search_start_point_table = f"""
+CREATE TABLE {constants.SEARCH_START_POINT_TABLE_NAME} (
+    search_id INTEGER,
+    start_point_id INTEGER
+)
+"""
+
+create_search_end_point_table = f"""
+CREATE TABLE {constants.SEARCH_END_POINT_TABLE_NAME} (
+    search_id INTEGER,
+    end_point_id INTEGER
 )
 """
 

@@ -4,17 +4,18 @@ from .queries import constants
 from .queries import general as general_queries
 from .queries import search_process as sp_queries
 from .db_adapter import DBAdapter
+from .base import BaseStore
 from dataclasses import dataclass
 import json
 from ..crystal_normal_form import CrystalNormalForm
 
-class SearchProcessStore():
+class SearchProcessStore(BaseStore):
 
     def __init__(self, adapter: DBAdapter):
-        self.adapter = adapter
+        super().__init__(adapter)
 
         query = general_queries.table_exists.format(table_name=constants.POINT_TABLE_NAME)
-        res = self.adapter.cursor.execute(query)
+        res = self.cursor.execute(query)
         if res.fetchone() is None:
             raise ValueError(f"Tried to instantiate CrystalMapStore from uninitialized DB file: {adapter.db_filename}")
     
