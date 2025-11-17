@@ -1,3 +1,4 @@
 POINT_TABLE_NAME = 'point'
 EDGE_TABLE_NAME = 'edge'
 METADATA_TABLE_NAME = 'metadata'
+LOCK_TABLE_NAME = 'lock'

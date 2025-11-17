@@ -33,6 +33,12 @@ CREATE TABLE {constants.METADATA_TABLE_NAME} (
 )
 """
 
+create_lock_table = f"""
+CREATE TABLE {constants.LOCK_TABLE_NAME} (
+    point_id INTEGER
+)
+"""
+
 set_metadata =  f"""
 INSERT INTO {constants.METADATA_TABLE_NAME} 
     (delta, xi, element_list) 
