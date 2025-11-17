@@ -2,6 +2,8 @@ import sqlite3
 from .queries import constants
 from .queries import crystal_map as queries
 from .queries import general as general_queries
+from .db_adapter import DBAdapter
+from .base import BaseStore
 from dataclasses import dataclass
 import json
 from ..crystal_normal_form import CrystalNormalForm
@@ -52,18 +54,14 @@ def cnf_pt_from_row(row: tuple, delta: int, xi: float, elements: list[str]):
         value=row[3]
     )
 
-class CrystalMapStore():
+class CrystalMapStore(BaseStore):
 
-
-    def __init__(self, dbfname: str):
-        self.db_filename = dbfname
-        self.conn = sqlite3.connect(self.db_filename)
-        self.cursor = self.conn.cursor()
-
+    def __init__(self, adapter: DBAdapter):
+        super().__init__(adapter)
         query = general_queries.table_exists.format(table_name=constants.POINT_TABLE_NAME)
         res = self.cursor.execute(query)
         if res.fetchone() is None:
-            raise ValueError(f"Tried to instantiate CrystalMapStore from uninitialized DB file: {dbfname}")
+            raise ValueError(f"Tried to instantiate CrystalMapStore from uninitialized DB file: {self.adapter.db_filename}")
     
         self.metadata = self.get_metadata()
     

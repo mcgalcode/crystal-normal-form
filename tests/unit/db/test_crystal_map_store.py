@@ -23,18 +23,18 @@ def temp_db(zr_hcp_cnf):
     els = zr_hcp_cnf.elements
     with tempfile.NamedTemporaryFile('w') as tf:
         cs = setup_cnf_db(tf.name, zr_hcp_cnf.xi, zr_hcp_cnf.delta, els)
-        yield CrystalMapStore(cs)
+        yield CrystalMapStore.from_file(cs)
 
 def test_cannot_instantiate_with_bad_db():
     with tempfile.NamedTemporaryFile('w') as tf:
         fname = tf.name
         with pytest.raises(ValueError) as captured_excep:
-            CrystalMapStore(fname)
+            CrystalMapStore.from_file(fname)
         
         assert "Tried to instantiate CrystalMapStore from uninitialized DB file:" in captured_excep.value.__repr__()
 
 def test_can_instantiate_after_setup(temp_db, zr_hcp_cnf):
-    cs2 = CrystalMapStore(temp_db.db_filename)
+    cs2 = CrystalMapStore.from_file(temp_db.db_filename)
     assert cs2 is not None
 
     metadata = cs2.get_metadata()
