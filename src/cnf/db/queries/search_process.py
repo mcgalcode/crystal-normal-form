@@ -145,3 +145,12 @@ WHERE pt1.id = ? AND
       searched_pt.point_id IS NULL AND
       frontier_pt.point_id IS NULL
 """
+
+select_endpt_ids_in_frontier = f"""
+SELECT ft.point_id
+FROM {constants.SEARCH_FRONTIER_MEMBER_TABLE_NAME} as ft
+WHERE ft.search_id = ?
+INTERSECT
+SELECT sep.end_point_id FROM {constants.SEARCH_END_POINT_TABLE_NAME} AS sep
+WHERE sep.search_id = ?
+"""

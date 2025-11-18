@@ -136,3 +136,11 @@ class SearchProcessStore(BaseStore):
         cnfs = [cnf_pt_from_row(r, self.metadata.delta, self.metadata.xi, self.metadata.element_list) for r in rows]
         lock_info = {row[0]: row[-1] for row in rows}
         return cnfs, lock_info
+
+    def get_endpoint_ids_in_frontier(self, search_id: int):
+        res = self.cursor.execute(
+            sp_queries.select_endpt_ids_in_frontier,
+            ([search_id, search_id])
+        )
+        rows = res.fetchall()
+        return [r[0] for r in rows]

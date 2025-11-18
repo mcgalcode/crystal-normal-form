@@ -183,6 +183,32 @@ def test_candidate_neighbors_have_lock_info(search_store, crystal_map_store, zr_
     assert len(retrieved_unlocked_ids) == len(unlocked_nb_ids)
     assert set(retrieved_unlocked_ids) == set(unlocked_nb_ids)
 
-    
+def test_can_get_endpoint_ids_in_frontier(search_store, crystal_map_store, zr_bcc_cnfs, zr_hcp_cnfs):
+    sp_id = search_store.create_search_process(
+        "test process",
+        zr_bcc_cnfs,
+        zr_hcp_cnfs
+    )
 
+    endpt_ids = search_store.get_endpoint_ids_in_frontier(sp_id)
+    assert len(endpt_ids) == 0
 
+    search_store.add_to_search_frontier(sp_id, zr_hcp_cnfs[0])
+    endpt_id1 = crystal_map_store.get_point_ids([zr_hcp_cnfs[0]])[0]
+
+    endpt_ids = search_store.get_endpoint_ids_in_frontier(sp_id)
+    assert len(endpt_ids) == 1
+    assert endpt_ids[0] == endpt_id1
+
+    search_store.add_to_search_frontier(sp_id, zr_hcp_cnfs[1])
+    endpt_id2 = crystal_map_store.get_point_ids([zr_hcp_cnfs[1]])[0]
+
+    endpt_ids = search_store.get_endpoint_ids_in_frontier(sp_id)
+    assert len(endpt_ids) == 2
+    assert set(endpt_ids) == set([endpt_id1, endpt_id2])
+
+    search_store.remove_from_search_frontier_by_id(sp_id, endpt_id1)
+
+    endpt_ids = search_store.get_endpoint_ids_in_frontier(sp_id)
+    assert len(endpt_ids) == 1
+    assert endpt_ids[0] == endpt_id2
