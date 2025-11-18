@@ -151,5 +151,7 @@ def test_can_mark_point_explored(zr_hcp_cnf, temp_db):
 
     temp_db.mark_point_explored(pt_id)
     assert temp_db.get_point_by_id(pt_id).explored == True
-    
+
+    temp_db.mark_point_unexplored(pt_id)
+    assert temp_db.get_point_by_id(pt_id).explored == False
 

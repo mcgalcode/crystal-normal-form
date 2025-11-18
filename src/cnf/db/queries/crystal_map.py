@@ -113,3 +113,9 @@ UPDATE {constants.POINT_TABLE_NAME} AS pt
 SET explored = 1
 WHERE pt.id = ?
 """
+
+mark_point_unexplored = f"""
+UPDATE {constants.POINT_TABLE_NAME} AS pt
+SET explored = 0
+WHERE pt.id = ?
+"""

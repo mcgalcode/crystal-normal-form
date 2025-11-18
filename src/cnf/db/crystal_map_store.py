@@ -153,8 +153,16 @@ class CrystalMapStore(BaseStore):
         return [cnf_pt_from_row(r, self.metadata.delta, self.metadata.xi, self.metadata.element_list) for r in rows]
     
     def mark_point_explored(self, pt_id: int):
-        res = self.cursor.execute(
+        self.cursor.execute(
             queries.mark_point_explored,
+            ([pt_id])
+        )
+        self.conn.commit()
+        return pt_id
+
+    def mark_point_unexplored(self, pt_id: int):
+        self.cursor.execute(
+            queries.mark_point_unexplored,
             ([pt_id])
         )
         self.conn.commit()
