@@ -123,4 +123,24 @@ def test_can_add_connection(zr_hcp_cnf, zr_bcc_cnf, temp_db: CrystalMapStore):
     assert not temp_db.connection_exists(zr_hcp_cnf, zr_bcc_cnf)
     assert not temp_db.connection_exists(zr_bcc_cnf, zr_hcp_cnf)
 
+def test_can_get_all_neighbors_of_point(zr_hcp_cnf, temp_db: CrystalMapStore):
+    temp_db.add_point(zr_hcp_cnf)
+    nbs = LatticeNeighborFinder(zr_hcp_cnf).find_cnf_neighbors()
+    nbs = [nb.point for nb in nbs.neighbors]
+    for nb in nbs:
+        temp_db.add_point(nb)
+        temp_db.add_connection(zr_hcp_cnf, nb)
+
+    other_nbs = LatticeNeighborFinder(nbs[-1]).find_cnf_neighbors()
+    other_nbs = [nb.point for nb in other_nbs.neighbors]
+    for onb in other_nbs:
+        existing = temp_db.get_point_by_cnf(onb)
+        if existing is None:
+            temp_db.add_point(onb)
+            
+        temp_db.add_connection(nbs[-1], onb)
+    
+    retrieved_nbs = temp_db.get_neighbors(temp_db.get_point_ids([zr_hcp_cnf])[0])
+    assert len(retrieved_nbs) == len(nbs)
+    assert set([nb.cnf for nb in retrieved_nbs]) == set(nbs)
 

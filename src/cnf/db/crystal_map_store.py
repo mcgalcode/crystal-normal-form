@@ -143,6 +143,14 @@ class CrystalMapStore(BaseStore):
         )
         rows = res.fetchmany()
         return len(rows) > 0
+    
+    def get_neighbors(self, pt_id: int):
+        res = self.cursor.execute(
+            queries.select_neighbors,
+            ([pt_id, pt_id])
+        )
+        rows = res.fetchall()
+        return [cnf_pt_from_row(r, self.metadata.delta, self.metadata.xi, self.metadata.element_list) for r in rows]
 
     def __contains__(self, item):
         pass
