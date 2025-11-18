@@ -167,6 +167,28 @@ class CrystalMapStore(BaseStore):
         )
         self.conn.commit()
         return pt_id
+    
+    def lock_point(self, pt_id: int):
+        self.cursor.execute(
+            queries.add_lock_for_point,
+            ([pt_id])
+        )
+        self.conn.commit()
+    
+    def unlock_point(self, pt_id: int):
+        self.cursor.execute(
+            queries.rm_lock_for_point,
+            ([pt_id])
+        )
+        self.conn.commit()
+    
+    def is_point_locked(self, pt_id: int):
+        res = self.cursor.execute(
+            queries.get_lock_for_point,
+            ([pt_id])
+        )
+        rows = res.fetchall()
+        return len(rows) > 0
 
     def __contains__(self, item):
         pass

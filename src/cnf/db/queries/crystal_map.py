@@ -119,3 +119,18 @@ UPDATE {constants.POINT_TABLE_NAME} AS pt
 SET explored = 0
 WHERE pt.id = ?
 """
+
+add_lock_for_point = f"""
+INSERT INTO {constants.LOCK_TABLE_NAME} (point_id)
+VALUES (?)
+"""
+
+rm_lock_for_point = f"""
+DELETE FROM {constants.LOCK_TABLE_NAME}
+WHERE point_id = ?
+"""
+
+get_lock_for_point = f"""
+SELECT * FROM {constants.LOCK_TABLE_NAME}
+WHERE point_id = ?
+"""
