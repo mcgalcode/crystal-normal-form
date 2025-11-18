@@ -129,23 +129,59 @@ def test_candidate_neighbors_are_not_searched(search_store, crystal_map_store, z
     assert len(retrieved_nb_ids) == len(unsearched_nb_ids)
     assert set(retrieved_nb_ids) == set(unsearched_nb_ids)
 
-
-
-
-def test_candidate_neighbors_are_not_in_frontier(search_store, zr_bcc_cnfs, zr_hcp_cnfs):
+def test_candidate_neighbors_are_not_in_frontier(search_store, crystal_map_store, zr_bcc_cnfs, zr_hcp_cnfs):
     sp_id = search_store.create_search_process(
         "test process",
         zr_bcc_cnfs,
         zr_hcp_cnfs
     )
 
-def test_candidate_neighbors_have_lock_info(search_store, zr_bcc_cnfs, zr_hcp_cnfs):
+    start_pt = zr_bcc_cnfs[0]
+    start_pt_id = crystal_map_store.get_point_by_cnf(start_pt).id
+    all_nb_ids = explore_pt(crystal_map_store, start_pt_id)
+    # label some of these as searched
+    frontier_nb_ids = all_nb_ids[:10]
+    non_frontier_nb_ids = all_nb_ids[10:]
+    assert len(non_frontier_nb_ids) > 10
+    for sid in frontier_nb_ids:
+        search_store.add_to_search_frontier_by_id(sp_id, sid)
+    
+    simple_nbs = crystal_map_store.get_neighbors(start_pt_id)
+    simple_nb_ids = [snb.id for snb in simple_nbs]
+    assert len(simple_nb_ids) == len(all_nb_ids)
+    assert set(simple_nb_ids) == set(all_nb_ids)
+
+    nbs, _ = search_store.get_unsearched_neighbors_with_lock_info(sp_id, start_pt_id)
+    retrieved_nb_ids = [nb.id for nb in nbs]
+    assert len(retrieved_nb_ids) == len(non_frontier_nb_ids)
+    assert set(retrieved_nb_ids) == set(non_frontier_nb_ids)
+
+def test_candidate_neighbors_have_lock_info(search_store, crystal_map_store, zr_bcc_cnfs, zr_hcp_cnfs):
     sp_id = search_store.create_search_process(
         "test process",
         zr_bcc_cnfs,
         zr_hcp_cnfs
     )
 
+    start_pt = zr_bcc_cnfs[0]
+    start_pt_id = crystal_map_store.get_point_by_cnf(start_pt).id
+    all_nb_ids = explore_pt(crystal_map_store, start_pt_id)
+    # label some of these as searched
+    locked_nb_ids = all_nb_ids[:10]
+    unlocked_nb_ids = all_nb_ids[10:]
+    assert len(unlocked_nb_ids) > 10
+    for sid in locked_nb_ids:
+        crystal_map_store.lock_point(sid)
+
+    _, lock_info = search_store.get_unsearched_neighbors_with_lock_info(sp_id, start_pt_id)
+    retrieved_locked_ids = [k for k, v in lock_info.items() if v == True]
+    retrieved_unlocked_ids = [k for k, v in lock_info.items() if v == False]
+
+    assert len(retrieved_locked_ids) == len(locked_nb_ids)
+    assert set(retrieved_locked_ids) == set(locked_nb_ids)
+
+    assert len(retrieved_unlocked_ids) == len(unlocked_nb_ids)
+    assert set(retrieved_unlocked_ids) == set(unlocked_nb_ids)
 
     
 
