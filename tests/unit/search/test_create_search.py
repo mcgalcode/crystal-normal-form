@@ -1,11 +1,12 @@
 import pytest
 import tempfile
 
-from cnf.search import instantiate_search
+from cnf.search import instantiate_search, explore_pt
 from cnf.db.setup import setup_cnf_db
 from cnf.db.search_store import SearchProcessStore
 from cnf.db.crystal_map_store import CrystalMapStore
 from cnf import UnitCell, CrystalNormalForm
+from cnf.navigation.neighbor_finder import NeighborFinder
 
 
 XI = 1.5
@@ -22,7 +23,7 @@ def zr_hcp_cnfs(zr_hcp_mp):
     scs = uc.supercells(2)
     return list(set([sc.to_cnf(XI, DELTA) for sc in scs]))
 
-@pytest.fixture
+@pytest.fixture(scope='function')
 def cnf_db_file(zr_bcc_cnfs):
     with tempfile.NamedTemporaryFile() as tf:
         setup_cnf_db(tf.name, XI, DELTA, zr_bcc_cnfs[0].elements)
@@ -48,3 +49,17 @@ def test_can_instantiate_search(cnf_db_file, zr_bcc_cnfs, zr_hcp_cnfs):
 
     frontier_ids = search_store.get_frontier_point_ids(sp_id)
     assert sorted(frontier_ids) == sorted(cmap_store.get_point_ids(zr_bcc_cnfs))
+
+def test_can_explore_point(cnf_db_file, zr_bcc_cnfs):
+    cmap = CrystalMapStore.from_file(cnf_db_file)
+    pt_id = cmap.add_point(zr_bcc_cnfs[0])
+
+    nf = NeighborFinder(zr_bcc_cnfs[0])
+    nbs = nf.find_neighbors()
+
+    explore_pt(cmap, pt_id)
+
+    for nb in nbs:
+        nb_id = cmap.get_point_ids([nb])[0]
+        assert cmap.connection_exists_by_id(nb_id, pt_id)
+        assert cmap.connection_exists_by_id(pt_id, nb_id)
