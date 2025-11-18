@@ -107,3 +107,9 @@ INNER JOIN {constants.EDGE_TABLE_NAME} AS edge ON pt1.id = edge.target_id
 INNER JOIN {constants.POINT_TABLE_NAME} AS pt2 ON edge.source_id = pt2.id
 WHERE pt1.id = ?
 """
+
+mark_point_explored = f"""
+UPDATE {constants.POINT_TABLE_NAME} AS pt
+SET explored = 1
+WHERE pt.id = ?
+"""

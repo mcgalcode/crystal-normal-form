@@ -137,10 +137,19 @@ def test_can_get_all_neighbors_of_point(zr_hcp_cnf, temp_db: CrystalMapStore):
         existing = temp_db.get_point_by_cnf(onb)
         if existing is None:
             temp_db.add_point(onb)
-            
+
         temp_db.add_connection(nbs[-1], onb)
     
     retrieved_nbs = temp_db.get_neighbors(temp_db.get_point_ids([zr_hcp_cnf])[0])
     assert len(retrieved_nbs) == len(nbs)
     assert set([nb.cnf for nb in retrieved_nbs]) == set(nbs)
+
+def test_can_mark_point_explored(zr_hcp_cnf, temp_db):
+    pt_id = temp_db.add_point(zr_hcp_cnf)
+    
+    assert temp_db.get_point_by_id(pt_id).explored == False
+
+    temp_db.mark_point_explored(pt_id)
+    assert temp_db.get_point_by_id(pt_id).explored == True
+    
 

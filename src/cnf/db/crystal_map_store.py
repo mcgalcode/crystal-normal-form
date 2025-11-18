@@ -55,7 +55,7 @@ class CrystalMapStore(BaseStore):
             (cnf_str, None, None, False)
         )
         self.conn.commit()
-        return res.fetchall()
+        return self.cursor.lastrowid
         
     def get_point_by_cnf(self, point: CrystalNormalForm):
         cnf_str = cnf_to_str(point)
@@ -151,6 +151,14 @@ class CrystalMapStore(BaseStore):
         )
         rows = res.fetchall()
         return [cnf_pt_from_row(r, self.metadata.delta, self.metadata.xi, self.metadata.element_list) for r in rows]
+    
+    def mark_point_explored(self, pt_id: int):
+        res = self.cursor.execute(
+            queries.mark_point_explored,
+            ([pt_id])
+        )
+        self.conn.commit()
+        return pt_id
 
     def __contains__(self, item):
         pass
