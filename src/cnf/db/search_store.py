@@ -22,36 +22,30 @@ class SearchProcessStore(BaseStore):
         self._map_store = CrystalMapStore(self.adapter)
         self.metadata = self._map_store.metadata
     
-    def create_search_process(self,
-                              description: str,
-                              start_points: list[CrystalNormalForm],
-                              end_points: list[CrystalNormalForm]):
-        start_ids = self._map_store.get_point_ids(start_points)
-        end_ids = self._map_store.get_point_ids(end_points)
-        
-        # Begin transaction for adding process and endpoints
-        self.cursor.execute("BEGIN")
+    def create_search_process(self, description: str):
         self.cursor.execute(
             sp_queries.insert_search_process,
             ([description])
         )
-
-        new_search_proc_id = self.cursor.lastrowid
-
-        for sid in start_ids:
-            self.cursor.execute(
-                sp_queries.insert_search_start_point,
-                ([new_search_proc_id, sid])
-            )
-        
-        for eid in end_ids:
-            self.cursor.execute(
-                sp_queries.insert_search_end_point,
-                ([new_search_proc_id, eid])
-            )
         self.conn.commit()
-        return new_search_proc_id
-
+        return self.cursor.lastrowid
+    
+    def add_search_start_point(self, search_id: int, start_point_id: int):
+        self.cursor.execute(
+            sp_queries.insert_search_start_point,
+            ([search_id, start_point_id])
+        )
+        self.conn.commit()
+        return self.cursor.lastrowid
+    
+    def add_search_end_point(self, search_id: int, end_point_id: int):
+        self.cursor.execute(
+            sp_queries.insert_search_end_point,
+            ([search_id, end_point_id])
+        )
+        self.conn.commit()
+        return self.cursor.lastrowid
+            
     def get_search_endpoints(self, search_id: int):
         res = self.cursor.execute(
             sp_queries.select_search_end_points,
@@ -125,7 +119,7 @@ class SearchProcessStore(BaseStore):
             ([search_id])
         )
         rows = res.fetchall()
-        return rows
+        return [r[0] for r in rows]
     
     def get_unsearched_neighbors_with_lock_info(self, search_id: int, pt_id: int) -> tuple[list[CNFPoint], dict[int, bool]]:
         res = self.cursor.execute(

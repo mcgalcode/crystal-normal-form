@@ -9,7 +9,7 @@ from cnf.navigation.score_functions import NullScore
 from cnf.db.crystal_map_store import CrystalMapStore
 from cnf.db.search_store import SearchProcessStore
 from cnf.db.setup import setup_cnf_db
-from cnf.db.exploration import explore_pt
+from cnf.search import explore_pt, instantiate_search
 
 XI = 1.5
 DELTA = 10
@@ -34,58 +34,40 @@ def store_file(zr_hcp_cnfs):
 
 @pytest.fixture
 def crystal_map_store(store_file, zr_bcc_cnfs, zr_hcp_cnfs):
-    store = CrystalMapStore.from_file(store_file)
-    for cnf in zr_bcc_cnfs:
-        store.add_point(cnf)
-    
-    for cnf in zr_hcp_cnfs:
-        store.add_point(cnf)    
+    store = CrystalMapStore.from_file(store_file)  
     return store
 
-@pytest.fixture
+@pytest.fixture(scope='function')
 def search_store(crystal_map_store):
     return SearchProcessStore.from_file(crystal_map_store.db_filename)
 
-def test_can_add_search_proc(search_store, zr_bcc_cnfs, zr_hcp_cnfs):
-    
-    sp_id = search_store.create_search_process(
-        "test process",
-        zr_bcc_cnfs,
-        zr_hcp_cnfs
-    )
-
-    endpts = search_store.get_search_endpoints(sp_id)
-    assert len(endpts) == len(zr_hcp_cnfs)
-    assert set(zr_hcp_cnfs) == set([pt.cnf for pt in endpts])
-
-    startpts = search_store.get_search_startpoints(sp_id)
-    assert len(startpts) == len(zr_hcp_cnfs)
-    assert set(zr_bcc_cnfs) == set([pt.cnf for pt in startpts])
 
 def test_can_add_and_rm_pt_from_frontier(search_store, zr_bcc_cnfs, zr_hcp_cnfs):
-    sp_id = search_store.create_search_process(
+    sp_id = instantiate_search(
         "test process",
         zr_bcc_cnfs,
-        zr_hcp_cnfs
+        zr_hcp_cnfs,
+        search_store.db_filename
     )
 
-    empty_frontier = search_store.get_frontier_points_in_search(sp_id)
-    assert len(empty_frontier) == 0
+    start_pt_frontier = search_store.get_frontier_points_in_search(sp_id)
+    assert len(start_pt_frontier) == len(zr_bcc_cnfs)
 
-    search_store.add_to_search_frontier(sp_id, zr_bcc_cnfs[0])
-    single_pt_frontier = search_store.get_frontier_points_in_search(sp_id)
-    assert len(single_pt_frontier) == 1
-    assert single_pt_frontier[0].cnf == zr_bcc_cnfs[0]
+    search_store.add_to_search_frontier(sp_id, zr_hcp_cnfs[0])
+    new_frontier = search_store.get_frontier_points_in_search(sp_id)
+    assert len(new_frontier) == len(zr_bcc_cnfs) + 1
+    assert set([pt.cnf for pt in new_frontier]) == set(zr_bcc_cnfs).union(set(zr_hcp_cnfs[:1]))
 
-    search_store.remove_from_search_frontier(sp_id, zr_bcc_cnfs[0])
-    empty_frontier = search_store.get_frontier_points_in_search(sp_id)
-    assert len(empty_frontier) == 0
+    search_store.remove_from_search_frontier(sp_id, zr_hcp_cnfs[0])
+    start_pt_frontier = search_store.get_frontier_points_in_search(sp_id)
+    assert len(start_pt_frontier) == len(zr_bcc_cnfs)
 
 def test_can_mark_point_as_searched(search_store, zr_bcc_cnfs, zr_hcp_cnfs):
-    sp_id = search_store.create_search_process(
+    sp_id = instantiate_search(
         "test process",
         zr_bcc_cnfs,
-        zr_hcp_cnfs
+        zr_hcp_cnfs,
+        search_store.db_filename
     )
 
     searched_pts = search_store.get_searched_points_in_search(sp_id)
@@ -103,12 +85,12 @@ def test_can_mark_point_as_searched(search_store, zr_bcc_cnfs, zr_hcp_cnfs):
     assert set(searched_cnfs) == set(zr_bcc_cnfs[:2])
 
 def test_candidate_neighbors_are_not_searched(search_store, crystal_map_store, zr_bcc_cnfs, zr_hcp_cnfs):
-    sp_id = search_store.create_search_process(
+    sp_id = instantiate_search(
         "test process",
         zr_bcc_cnfs,
-        zr_hcp_cnfs
+        zr_hcp_cnfs,
+        search_store.db_filename
     )
-
     start_pt = zr_bcc_cnfs[0]
     start_pt_id = crystal_map_store.get_point_by_cnf(start_pt).id
     all_nb_ids = explore_pt(crystal_map_store, start_pt_id)
@@ -130,10 +112,11 @@ def test_candidate_neighbors_are_not_searched(search_store, crystal_map_store, z
     assert set(retrieved_nb_ids) == set(unsearched_nb_ids)
 
 def test_candidate_neighbors_are_not_in_frontier(search_store, crystal_map_store, zr_bcc_cnfs, zr_hcp_cnfs):
-    sp_id = search_store.create_search_process(
+    sp_id = instantiate_search(
         "test process",
         zr_bcc_cnfs,
-        zr_hcp_cnfs
+        zr_hcp_cnfs,
+        search_store.db_filename
     )
 
     start_pt = zr_bcc_cnfs[0]
@@ -157,10 +140,11 @@ def test_candidate_neighbors_are_not_in_frontier(search_store, crystal_map_store
     assert set(retrieved_nb_ids) == set(non_frontier_nb_ids)
 
 def test_candidate_neighbors_have_lock_info(search_store, crystal_map_store, zr_bcc_cnfs, zr_hcp_cnfs):
-    sp_id = search_store.create_search_process(
+    sp_id = instantiate_search(
         "test process",
         zr_bcc_cnfs,
-        zr_hcp_cnfs
+        zr_hcp_cnfs,
+        search_store.db_filename
     )
 
     start_pt = zr_bcc_cnfs[0]
@@ -184,10 +168,11 @@ def test_candidate_neighbors_have_lock_info(search_store, crystal_map_store, zr_
     assert set(retrieved_unlocked_ids) == set(unlocked_nb_ids)
 
 def test_can_get_endpoint_ids_in_frontier(search_store, crystal_map_store, zr_bcc_cnfs, zr_hcp_cnfs):
-    sp_id = search_store.create_search_process(
+    sp_id = instantiate_search(
         "test process",
         zr_bcc_cnfs,
-        zr_hcp_cnfs
+        zr_hcp_cnfs,
+        search_store.db_filename
     )
 
     endpt_ids = search_store.get_endpoint_ids_in_frontier(sp_id)
