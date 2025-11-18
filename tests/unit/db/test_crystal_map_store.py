@@ -167,3 +167,16 @@ def test_can_lock_point(zr_hcp_cnf, temp_db):
     temp_db.unlock_point(pt_id)
     assert temp_db.is_point_locked(pt_id) == False
 
+def test_can_set_point_value(zr_hcp_cnf, temp_db):
+    pt_id = temp_db.add_point(zr_hcp_cnf)
+
+    pt_val = temp_db.get_point_value(pt_id)
+    assert pt_val is None
+
+    v = 2
+    temp_db.set_point_value(pt_id, v)
+    assert temp_db.get_point_value(pt_id) == v
+
+    v = 2.5
+    temp_db.set_point_value(pt_id, v)
+    assert temp_db.get_point_value(pt_id) == v

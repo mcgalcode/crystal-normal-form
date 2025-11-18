@@ -134,3 +134,15 @@ get_lock_for_point = f"""
 SELECT * FROM {constants.LOCK_TABLE_NAME}
 WHERE point_id = ?
 """
+
+set_value_for_point = f"""
+UPDATE {constants.POINT_TABLE_NAME} AS pt
+SET value = ?
+WHERE pt.id = ?
+"""
+
+get_point_value = f"""
+SELECT pt.value
+FROM {constants.POINT_TABLE_NAME} AS pt
+WHERE pt.id = ?
+"""

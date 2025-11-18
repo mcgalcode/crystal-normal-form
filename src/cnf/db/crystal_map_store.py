@@ -189,6 +189,22 @@ class CrystalMapStore(BaseStore):
         )
         rows = res.fetchall()
         return len(rows) > 0
+    
+    def set_point_value(self, pt_id: int, value: float):
+        self.cursor.execute(
+            queries.set_value_for_point,
+            ([value, pt_id])
+        )
+        self.conn.commit()
+        return pt_id
+    
+    def get_point_value(self, pt_id: int):
+        res = self.cursor.execute(
+            queries.get_point_value,
+            ([pt_id])
+        )
+        rows = res.fetchall()
+        return rows[0][0]
 
     def __contains__(self, item):
         pass

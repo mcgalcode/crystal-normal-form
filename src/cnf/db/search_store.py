@@ -7,7 +7,7 @@ from .db_adapter import DBAdapter
 from .base import BaseStore
 from ..crystal_normal_form import CrystalNormalForm
 from .crystal_map_store import CrystalMapStore
-from .utilities import cnf_pt_from_row
+from .utilities import cnf_pt_from_row, CNFPoint
 
 class SearchProcessStore(BaseStore):
 
@@ -127,7 +127,7 @@ class SearchProcessStore(BaseStore):
         rows = res.fetchall()
         return rows
     
-    def get_unsearched_neighbors_with_lock_info(self, search_id: int, pt_id: int):
+    def get_unsearched_neighbors_with_lock_info(self, search_id: int, pt_id: int) -> tuple[list[CNFPoint], dict[int, bool]]:
         res = self.cursor.execute(
             sp_queries.select_unsearched_neighbors_w_lock,
             ([pt_id, search_id, search_id, pt_id, search_id, search_id])
