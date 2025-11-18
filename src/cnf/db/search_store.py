@@ -126,3 +126,13 @@ class SearchProcessStore(BaseStore):
         )
         rows = res.fetchall()
         return rows
+    
+    def get_unsearched_neighbors_with_lock_info(self, search_id: int, pt_id: int):
+        res = self.cursor.execute(
+            sp_queries.select_unsearched_neighbors_w_lock,
+            ([pt_id, search_id, search_id, pt_id, search_id, search_id])
+        )
+        rows = res.fetchall()
+        cnfs = [cnf_pt_from_row(r, self.metadata.delta, self.metadata.xi, self.metadata.element_list) for r in rows]
+        lock_info = {row[0]: row[-1] for row in rows}
+        return cnfs, lock_info

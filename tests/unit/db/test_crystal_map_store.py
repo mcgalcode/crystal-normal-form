@@ -1,6 +1,7 @@
 import pytest
 from cnf.db.crystal_map_store import CrystalMapStore
 from cnf.db.setup import setup_cnf_db
+from cnf.db.exploration import explore_pt
 from cnf import CrystalNormalForm
 from cnf.navigation.neighbor_finder import LatticeNeighborFinder
 import tempfile
@@ -154,4 +155,15 @@ def test_can_mark_point_explored(zr_hcp_cnf, temp_db):
 
     temp_db.mark_point_unexplored(pt_id)
     assert temp_db.get_point_by_id(pt_id).explored == False
+
+def test_can_lock_point(zr_hcp_cnf, temp_db):
+    pt_id = temp_db.add_point(zr_hcp_cnf)
+    
+    assert temp_db.is_point_locked(pt_id) == False
+
+    temp_db.lock_point(pt_id)
+    assert temp_db.is_point_locked(pt_id) == True
+
+    temp_db.unlock_point(pt_id)
+    assert temp_db.is_point_locked(pt_id) == False
 

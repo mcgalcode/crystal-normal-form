@@ -9,6 +9,7 @@ from cnf.navigation.score_functions import NullScore
 from cnf.db.crystal_map_store import CrystalMapStore
 from cnf.db.search_store import SearchProcessStore
 from cnf.db.setup import setup_cnf_db
+from cnf.db.exploration import explore_pt
 
 XI = 1.5
 DELTA = 10
@@ -38,19 +39,12 @@ def crystal_map_store(store_file, zr_bcc_cnfs, zr_hcp_cnfs):
         store.add_point(cnf)
     
     for cnf in zr_hcp_cnfs:
-        store.add_point(cnf)
+        store.add_point(cnf)    
     return store
 
-
 @pytest.fixture
-def search_store(store_file, zr_bcc_cnfs, zr_hcp_cnfs):
-    store = CrystalMapStore.from_file(store_file)
-    for cnf in zr_bcc_cnfs:
-        store.add_point(cnf)
-    
-    for cnf in zr_hcp_cnfs:
-        store.add_point(cnf)    
-    return SearchProcessStore.from_file(store_file)
+def search_store(crystal_map_store):
+    return SearchProcessStore.from_file(crystal_map_store.db_filename)
 
 def test_can_add_search_proc(search_store, zr_bcc_cnfs, zr_hcp_cnfs):
     
@@ -107,6 +101,51 @@ def test_can_mark_point_as_searched(search_store, zr_bcc_cnfs, zr_hcp_cnfs):
     searched_cnfs = [pt.cnf for pt in searched_pts]
     assert len(searched_cnfs) == 2
     assert set(searched_cnfs) == set(zr_bcc_cnfs[:2])
+
+def test_candidate_neighbors_are_not_searched(search_store, crystal_map_store, zr_bcc_cnfs, zr_hcp_cnfs):
+    sp_id = search_store.create_search_process(
+        "test process",
+        zr_bcc_cnfs,
+        zr_hcp_cnfs
+    )
+
+    start_pt = zr_bcc_cnfs[0]
+    start_pt_id = crystal_map_store.get_point_by_cnf(start_pt).id
+    all_nb_ids = explore_pt(crystal_map_store, start_pt_id)
+    # label some of these as searched
+    searched_nb_ids = all_nb_ids[:10]
+    unsearched_nb_ids = all_nb_ids[10:]
+    assert len(unsearched_nb_ids) > 10
+    for sid in searched_nb_ids:
+        search_store.mark_point_searched_by_id(sp_id, sid)
+    
+    simple_nbs = crystal_map_store.get_neighbors(start_pt_id)
+    simple_nb_ids = [snb.id for snb in simple_nbs]
+    assert len(simple_nb_ids) == len(all_nb_ids)
+    assert set(simple_nb_ids) == set(all_nb_ids)
+
+    nbs, _ = search_store.get_unsearched_neighbors_with_lock_info(sp_id, start_pt_id)
+    retrieved_nb_ids = [nb.id for nb in nbs]
+    assert len(retrieved_nb_ids) == len(unsearched_nb_ids)
+    assert set(retrieved_nb_ids) == set(unsearched_nb_ids)
+
+
+
+
+def test_candidate_neighbors_are_not_in_frontier(search_store, zr_bcc_cnfs, zr_hcp_cnfs):
+    sp_id = search_store.create_search_process(
+        "test process",
+        zr_bcc_cnfs,
+        zr_hcp_cnfs
+    )
+
+def test_candidate_neighbors_have_lock_info(search_store, zr_bcc_cnfs, zr_hcp_cnfs):
+    sp_id = search_store.create_search_process(
+        "test process",
+        zr_bcc_cnfs,
+        zr_hcp_cnfs
+    )
+
 
     
 
