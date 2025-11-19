@@ -31,7 +31,8 @@ CREATE TABLE {constants.SEARCH_FRONTIER_MEMBER_TABLE_NAME} (
 create_searched_point_table = f"""
 CREATE TABLE {constants.SEARCHED_POINT_TABLE_NAME} (
     search_id INTEGER,
-    point_id INTEGER
+    point_id INTEGER,
+    UNIQUE(search_id, point_id)
 )
 """
 
@@ -68,7 +69,7 @@ WHERE ssp.search_id = ?
 """
 
 mark_point_searched = f"""
-INSERT INTO {constants.SEARCHED_POINT_TABLE_NAME} (search_id, point_id)
+INSERT OR IGNORE INTO {constants.SEARCHED_POINT_TABLE_NAME} (search_id, point_id)
 VALUES (?, ?)
 """
 
