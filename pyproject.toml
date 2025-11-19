@@ -8,13 +8,16 @@ authors = [
 ]
 requires-python = ">=3.11"
 dependencies = [
+    "ase>=3.26.0",
     "line-profiler>=5.0.0",
     "mp-api>=0.45.8",
-    "numpy>=2.3.2",
+    "numpy<2",
     "pymatgen>=2025.6.14",
     "pytest-xdist>=3.8.0",
     "rustworkx>=0.17.1",
     "sortedcontainers>=2.4.0",
+    "tensorflow>=2.14.0",
+    "tensorpotential>=0.4.5",
 ]
 
 [project.scripts]
