@@ -53,7 +53,7 @@ def test_can_find_path(zr_hcp_mp):
         
         search_id = instantiate_search("dummy search", [start_pt], [endpt], tf.name)
 
-        continue_search(search_id, tf.name, DummyCalc(), 100)
+        continue_search(search_id, tf.name, DummyCalc(), max_iters=100)
 
         search_store = SearchProcessStore.from_file(tf.name)
         endpts = search_store.get_endpoint_ids_in_frontier(search_id)

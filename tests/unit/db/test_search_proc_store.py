@@ -1,10 +1,7 @@
 import pytest
 import tempfile
 
-from cnf import CrystalNormalForm, UnitCell
-from cnf.navigation.crystal_explorer import CrystalExplorer, CrystalMap
-from cnf.navigation.search_filters import SimpleVolumeAndOverlapFilter
-from cnf.navigation.score_functions import NullScore
+from cnf import UnitCell
 
 from cnf.db.crystal_map_store import CrystalMapStore
 from cnf.db.search_store import SearchProcessStore
