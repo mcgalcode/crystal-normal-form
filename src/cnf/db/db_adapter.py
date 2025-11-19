@@ -4,5 +4,5 @@ class DBAdapter():
 
     def __init__(self, dbfname: str):
         self.db_filename = dbfname
-        self.conn = sqlite3.connect(self.db_filename)
+        self.conn = sqlite3.connect(self.db_filename, timeout=30)
         self.cursor = self.conn.cursor()
