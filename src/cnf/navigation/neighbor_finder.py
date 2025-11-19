@@ -8,7 +8,7 @@ class NeighborFinder():
         self.point = point
 
     # @profile
-    def find_neighbors(self):
+    def find_neighbors(self) -> list[CrystalNormalForm]:
         lnf_neighbor_finder = LatticeNeighborFinder(self.point)
         mnf_neighbor_finder = MotifNeighborFinder(self.point)
 
