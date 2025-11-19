@@ -3,6 +3,7 @@ from ..db.crystal_map_store import CrystalMapStore
 from ..db.search_store import SearchProcessStore
 from ..db.setup import setup_cnf_db
 from ..navigation.neighbor_finder import NeighborFinder
+from ..navigation.search_filters import VolumeLimitFilter, SearchFilter
 from ..calculation.base_calculator import BaseCalculator
 import time
 import math
@@ -44,11 +45,17 @@ def instantiate_search(search_description: str,
         search_store.add_search_end_point(search_id, eid)
     return search_id
 
-def explore_pt(store: CrystalMapStore, pt_id: int):
+def explore_pt(store: CrystalMapStore, pt_id: int, filters: list[SearchFilter] = None):
+    if filters is None:
+        filters = []
+
     pt = store.get_point_by_id(pt_id)
     nbs = NeighborFinder(pt.cnf).find_neighbors()
     nb_ids = []
     for nb in nbs:
+        struct = nb.reconstruct()
+        if not all([f.should_add_pt(nb, struct) for f in filters]):
+            continue
         try:
             nb_id = store.add_point(nb)
         except sqlite3.IntegrityError as e:
@@ -64,7 +71,21 @@ def explore_pt(store: CrystalMapStore, pt_id: int):
 def continue_search(search_id,
                     cnf_store_file: str,
                     energy_calc: BaseCalculator,
-                    max_iters: int = None):
+                    search_filters: list[SearchFilter] = None,
+                    max_iters: int = None,
+                    frontier_limit: int = 100):
+    """Continue a water-filling search process.
+
+    Args:
+        search_id: ID of the search process
+        cnf_store_file: Path to the database file
+        energy_calc: Calculator to compute point energies
+        search_filters: Optional filters to apply to candidate points
+        max_iters: Maximum iterations before stopping (default: infinite)
+        frontier_limit: Max frontier points to consider per iteration (default: 100)
+                       Lower = faster queries but may wait more if neighbors locked
+                       Higher = more options but slower queries
+    """
     search_store = SearchProcessStore.from_file(cnf_store_file)
     crystal_map_store = CrystalMapStore.from_file(cnf_store_file)
 
@@ -79,15 +100,15 @@ def continue_search(search_id,
             break
         print(f"Endpoint is not yet in the frontier, continuing search...")
 
-        frontier_points = search_store.get_frontier_points_in_search(search_id)
-        print(f"Found {len(frontier_points)} frontier points to consider...")
+        frontier_points = search_store.get_frontier_points_in_search(search_id, limit=frontier_limit)
+        print(f"Found {len(frontier_points)} frontier points to consider (limited to {frontier_limit})...")
         # print([fp.id for fp in frontier_points])
         selected_point = None
         for frontier_point in frontier_points: # (lowest energy first)
             print(f"Considering frontier pt ID: {frontier_point.id}, CNF: {frontier_point.cnf.coords}")
             if not frontier_point.explored:
                 print(f"Point has not been explored... computing neighbors and adding to the map...")
-                ids = explore_pt(crystal_map_store, frontier_point.id)
+                ids = explore_pt(crystal_map_store, frontier_point.id, filters=search_filters)
                 print(f"Added {len(ids)} neighbors to the map!")
 
             unsearched_neighbors, locks = search_store.get_unsearched_neighbors_with_lock_info(search_id, frontier_point.id)
