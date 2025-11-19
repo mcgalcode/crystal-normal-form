@@ -49,11 +49,13 @@ def explore_pt(store: CrystalMapStore, pt_id: int):
     nbs = NeighborFinder(pt.cnf).find_neighbors()
     nb_ids = []
     for nb in nbs:
-        existing = store.get_point_by_cnf(nb)
-        if existing is None:
+        try:
             nb_id = store.add_point(nb)
-        else:
-            nb_id = existing.id
+        except sqlite3.IntegrityError as e:
+            if "UNIQUE constraint failed" not in e.__repr__():
+                raise e
+            else:
+                nb_id = store.get_point_by_cnf(nb).id
         store.add_connection_by_ids(pt_id, nb_id)
         nb_ids.append(nb_id)
     store.mark_point_explored(pt_id)
