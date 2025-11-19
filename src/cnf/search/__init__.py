@@ -1,0 +1,112 @@
+from ..crystal_normal_form import CrystalNormalForm
+from ..db.crystal_map_store import CrystalMapStore
+from ..db.search_store import SearchProcessStore
+from ..db.setup import setup_cnf_db
+from ..navigation.neighbor_finder import NeighborFinder
+from ..calculation.base_calculator import BaseCalculator
+import time
+import math
+
+def instantiate_search(search_description: str,
+                       start_cnfs: list[CrystalNormalForm],
+                       end_cnfs: list[CrystalNormalForm],
+                       store_file: str):
+    all_cnfs = start_cnfs + end_cnfs
+    xis = [cnf.xi for cnf in all_cnfs]
+    if len(set(xis)) > 1:
+        raise ValueError("Tried to instantiate search with CNFs having different xi values!")
+    
+    deltas = [cnf.delta for cnf in all_cnfs]
+    if len(set(deltas)) > 1:
+        raise ValueError("Tried to instantiate search with CNFs having different delta values!")
+
+    element_list = start_cnfs[0].elements
+    for cnf in all_cnfs:
+        if cnf.elements != element_list:
+            raise ValueError("Tried to instantiate search with CNFs having different element lists!")
+
+    crystal_map_store = CrystalMapStore.from_file(store_file)
+    for cnf in all_cnfs:
+        crystal_map_store.add_point(cnf)
+
+    search_store = SearchProcessStore.from_file(store_file)
+    search_id = search_store.create_search_process(search_description)
+
+    start_point_ids = crystal_map_store.get_point_ids(start_cnfs)
+    end_point_ids = crystal_map_store.get_point_ids(end_cnfs)
+
+    for sid in start_point_ids:
+        search_store.add_search_start_point(search_id, sid)
+        search_store.add_to_search_frontier_by_id(search_id, sid)
+    
+    for eid in end_point_ids:
+        search_store.add_search_end_point(search_id, eid)
+    return search_id
+
+def explore_pt(store: CrystalMapStore, pt_id: int):
+    pt = store.get_point_by_id(pt_id)
+    nbs = NeighborFinder(pt.cnf).find_neighbors()
+    nb_ids = []
+    for nb in nbs:
+        existing = store.get_point_by_cnf(nb)
+        if existing is None:
+            nb_id = store.add_point(nb)
+        else:
+            nb_id = existing.id
+        store.add_connection_by_ids(pt_id, nb_id)
+        nb_ids.append(nb_id)
+    store.mark_point_explored(pt_id)
+    return nb_ids
+
+def continue_search(search_id,
+                    cnf_store_file: str,
+                    energy_calc: BaseCalculator,
+                    max_iters: int = None):
+    search_store = SearchProcessStore.from_file(cnf_store_file)
+    crystal_map_store = CrystalMapStore.from_file(cnf_store_file)
+
+    if max_iters is None:
+        max_iters = math.inf
+
+    num_iters = 0
+    while len(search_store.get_endpoint_ids_in_frontier(search_id)) == 0:
+        if num_iters > max_iters:
+            print(f"Reached {num_iters} iterations, quitting...")
+            break
+        # print(f"Endpoint is not yet in the frontier, continuing search...")
+
+        frontier_points = search_store.get_frontier_points_in_search(search_id)
+        # print(f"Found {len(frontier_points)} frontier points to consider...")
+        # print([fp.id for fp in frontier_points])
+        selected_point = None
+        for frontier_point in frontier_points: # (lowest energy first)
+            # print(f"Considering frontier pt {frontier_point.cnf.coords}")
+            if not frontier_point.explored:
+                # print(f"Point has not been explored... computing neighbors and adding to the map...")
+                explore_pt(crystal_map_store, frontier_point.id)
+
+            unsearched_neighbors, locks = search_store.get_unsearched_neighbors_with_lock_info(search_id, frontier_point.id)
+
+            if len(unsearched_neighbors) == 0:
+                # print(f"Found 0 unsearched neighbors - this point is exhausted, marking as searched and removing from frontier.")
+                search_store.mark_point_searched_by_id(search_id, frontier_point.id)
+                search_store.remove_from_search_frontier_by_id(search_id, frontier_point.id)
+            
+            unlocked_neighbors = [n for n in unsearched_neighbors if not locks[n.id]]
+            if len(unlocked_neighbors) > 0:
+                # print(f"Found several unlocked points...")
+                selected_point = unlocked_neighbors[0]
+                assert selected_point.id not in [fp.id for fp in frontier_points]
+                crystal_map_store.lock_point(selected_point.id)
+                break
+
+        if selected_point is None:
+            time.sleep(5)
+            continue
+        
+        energy = energy_calc.calculate_energy(selected_point.cnf)
+        crystal_map_store.set_point_value(selected_point.id, energy)
+        search_store.add_to_search_frontier_by_id(search_id, selected_point.id)
+        crystal_map_store.unlock_point(selected_point.id)
+        num_iters += 1
+    
