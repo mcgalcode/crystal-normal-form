@@ -95,6 +95,7 @@ LEFT JOIN {constants.POINT_TABLE_NAME} AS pt
 ON pt.id = frontier_pts.point_id
 WHERE frontier_pts.search_id = ?
 ORDER BY pt.value ASC
+LIMIT ?
 """
 
 select_frontier_point_ids = f"""

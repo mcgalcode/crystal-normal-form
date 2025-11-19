@@ -105,10 +105,18 @@ class SearchProcessStore(BaseStore):
         rows = res.fetchall()
         return [cnf_pt_from_row(r, self.metadata.delta, self.metadata.xi, self.metadata.element_list) for r in rows]
 
-    def get_frontier_points_in_search(self, search_id: int):
+    def get_frontier_points_in_search(self, search_id: int, limit: int = 100):
+        """Get frontier points for a search, ordered by energy (lowest first).
+
+        Args:
+            search_id: The search process ID
+            limit: Maximum number of frontier points to return (default: 100)
+                   This limits how many points we check, trading off optimality
+                   for query speed. Lower = faster but may wait more often.
+        """
         res = self.cursor.execute(
             sp_queries.select_frontier_points,
-            ([search_id])
+            ([search_id, limit])
         )
         rows = res.fetchall()
         return [cnf_pt_from_row(r, self.metadata.delta, self.metadata.xi, self.metadata.element_list) for r in rows]
