@@ -154,3 +154,24 @@ INTERSECT
 SELECT sep.end_point_id FROM {constants.SEARCH_END_POINT_TABLE_NAME} AS sep
 WHERE sep.search_id = ?
 """
+
+# Index creation queries for performance optimization
+create_index_frontier_search_point = f"""
+CREATE INDEX IF NOT EXISTS idx_frontier_search_point
+ON {constants.SEARCH_FRONTIER_MEMBER_TABLE_NAME} (search_id, point_id)
+"""
+
+create_index_searched_search_point = f"""
+CREATE INDEX IF NOT EXISTS idx_searched_search_point
+ON {constants.SEARCHED_POINT_TABLE_NAME} (search_id, point_id)
+"""
+
+create_index_start_point_search = f"""
+CREATE INDEX IF NOT EXISTS idx_start_point_search
+ON {constants.SEARCH_START_POINT_TABLE_NAME} (search_id)
+"""
+
+create_index_end_point_search = f"""
+CREATE INDEX IF NOT EXISTS idx_end_point_search
+ON {constants.SEARCH_END_POINT_TABLE_NAME} (search_id)
+"""

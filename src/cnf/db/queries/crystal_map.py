@@ -146,3 +146,24 @@ SELECT pt.value
 FROM {constants.POINT_TABLE_NAME} AS pt
 WHERE pt.id = ?
 """
+
+# Index creation queries for performance optimization
+create_index_edge_source = f"""
+CREATE INDEX IF NOT EXISTS idx_edge_source
+ON {constants.EDGE_TABLE_NAME} (source_id)
+"""
+
+create_index_edge_target = f"""
+CREATE INDEX IF NOT EXISTS idx_edge_target
+ON {constants.EDGE_TABLE_NAME} (target_id)
+"""
+
+create_index_point_value = f"""
+CREATE INDEX IF NOT EXISTS idx_point_value
+ON {constants.POINT_TABLE_NAME} (value)
+"""
+
+create_index_point_cnf = f"""
+CREATE INDEX IF NOT EXISTS idx_point_cnf
+ON {constants.POINT_TABLE_NAME} (cnf)
+"""

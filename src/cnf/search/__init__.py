@@ -110,6 +110,7 @@ def continue_search(search_id,
                     continue  # Continue to next frontier point
                 print(f"Lock acquired successfully!")
                 break
+            print(f"All neighbors were locked, moving on...")
 
         if selected_point is None:
             print("Found no unlocked points to compute, sleeping for 5!")
