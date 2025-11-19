@@ -28,7 +28,7 @@ CREATE TABLE {constants.METADATA_TABLE_NAME} (
 
 create_lock_table = f"""
 CREATE TABLE {constants.LOCK_TABLE_NAME} (
-    point_id INTEGER
+    point_id INTEGER UNIQUE
 )
 """
 
@@ -121,7 +121,7 @@ WHERE pt.id = ?
 """
 
 add_lock_for_point = f"""
-INSERT INTO {constants.LOCK_TABLE_NAME} (point_id)
+INSERT OR IGNORE INTO {constants.LOCK_TABLE_NAME} (point_id)
 VALUES (?)
 """
 
