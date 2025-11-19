@@ -79,7 +79,7 @@ class SearchProcessStore(BaseStore):
         return self.add_to_search_frontier_by_id(search_id, pt_id)
 
     def add_to_search_frontier_by_id(self, search_id: int, point_id: int):
-        res = self.cursor.execute(
+        self.cursor.execute(
             sp_queries.add_point_to_frontier,
             ([search_id, point_id])
         )
@@ -124,7 +124,7 @@ class SearchProcessStore(BaseStore):
     def get_unsearched_neighbors_with_lock_info(self, search_id: int, pt_id: int) -> tuple[list[CNFPoint], dict[int, bool]]:
         res = self.cursor.execute(
             sp_queries.select_unsearched_neighbors_w_lock,
-            ([pt_id, search_id, search_id, pt_id, search_id, search_id])
+            ([search_id, search_id, pt_id, search_id, search_id, pt_id])
         )
         rows = res.fetchall()
         cnfs = [cnf_pt_from_row(r, self.metadata.delta, self.metadata.xi, self.metadata.element_list) for r in rows]

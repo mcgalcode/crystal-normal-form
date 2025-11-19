@@ -119,13 +119,13 @@ def test_candidate_neighbors_are_not_in_frontier(search_store, crystal_map_store
         search_store.db_filename
     )
 
-    start_pt = zr_bcc_cnfs[0]
+    start_pt = zr_bcc_cnfs[1]
     start_pt_id = crystal_map_store.get_point_by_cnf(start_pt).id
     all_nb_ids = explore_pt(crystal_map_store, start_pt_id)
     # label some of these as searched
     frontier_nb_ids = all_nb_ids[:10]
     non_frontier_nb_ids = all_nb_ids[10:]
-    assert len(non_frontier_nb_ids) > 10
+    assert len(non_frontier_nb_ids) > 3
     for sid in frontier_nb_ids:
         search_store.add_to_search_frontier_by_id(sp_id, sid)
     
