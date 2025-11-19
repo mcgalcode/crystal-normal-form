@@ -1,0 +1,359 @@
+#!/usr/bin/env python3
+"""
+CLI tool to interrogate CNF database state.
+
+Usage:
+    python scripts/db_status.py <db_file>                    # Show stats once
+    python scripts/db_status.py <db_file> --watch            # Live updating dashboard
+    python scripts/db_status.py <db_file> --search <id>      # Show search process info
+"""
+
+import argparse
+import sqlite3
+import time
+import sys
+import os
+from datetime import datetime
+
+
+def clear_screen():
+    """Clear the terminal screen."""
+    os.system('clear' if os.name != 'nt' else 'cls')
+
+
+def get_db_stats(db_file, search_id=None):
+    """Get statistics about the database."""
+    conn = sqlite3.connect(db_file)
+    cur = conn.cursor()
+
+    stats = {}
+
+    # Total points
+    result = cur.execute("SELECT COUNT(*) FROM point").fetchone()
+    stats['total_points'] = result[0]
+
+    # Points with values (energy calculated)
+    result = cur.execute("SELECT COUNT(*) FROM point WHERE value IS NOT NULL").fetchone()
+    stats['points_with_energy'] = result[0]
+
+    # Total edges
+    result = cur.execute("SELECT COUNT(*) FROM edge").fetchone()
+    stats['total_edges'] = result[0]
+
+    # Explored points (neighbors found, globally)
+    result = cur.execute("SELECT COUNT(*) FROM point WHERE explored = 1").fetchone()
+    stats['explored_points'] = result[0]
+
+    # Global energy range (all points with calculated energy)
+    result = cur.execute("SELECT MIN(value), MAX(value) FROM point WHERE value IS NOT NULL").fetchone()
+    stats['global_min_energy'] = result[0]
+    stats['global_max_energy'] = result[1]
+
+    # Currently locked points
+    result = cur.execute("SELECT COUNT(*) FROM lock").fetchone()
+    stats['locked_points'] = result[0]
+
+    if search_id is not None:
+        # Frontier size for specific search
+        result = cur.execute(
+            "SELECT COUNT(*) FROM search_frontier_member WHERE search_id = ?",
+            (search_id,)
+        ).fetchone()
+        stats['frontier_size'] = result[0]
+
+        # Searched points for specific search
+        result = cur.execute(
+            "SELECT COUNT(*) FROM searched_point WHERE search_id = ?",
+            (search_id,)
+        ).fetchone()
+        stats['searched_points'] = result[0]
+
+        # Energy range of searched points
+        result = cur.execute(
+            """SELECT MIN(pt.value), MAX(pt.value)
+               FROM searched_point AS sp
+               JOIN point AS pt ON pt.id = sp.point_id
+               WHERE sp.search_id = ? AND pt.value IS NOT NULL""",
+            (search_id,)
+        ).fetchone()
+        stats['searched_min_energy'] = result[0]
+        stats['searched_max_energy'] = result[1]
+
+        # Energy range of frontier points
+        result = cur.execute(
+            """SELECT MIN(pt.value), MAX(pt.value)
+               FROM search_frontier_member AS fm
+               JOIN point AS pt ON pt.id = fm.point_id
+               WHERE fm.search_id = ? AND pt.value IS NOT NULL""",
+            (search_id,)
+        ).fetchone()
+        stats['frontier_min_energy'] = result[0]
+        stats['frontier_max_energy'] = result[1]
+
+    conn.close()
+    return stats
+
+
+def get_search_info(db_file, search_id):
+    """Get information about a specific search process."""
+    conn = sqlite3.connect(db_file)
+    cur = conn.cursor()
+
+    # Search description
+    result = cur.execute(
+        "SELECT description FROM search_process WHERE id = ?",
+        (search_id,)
+    ).fetchone()
+
+    if result is None:
+        conn.close()
+        return None
+
+    description = result[0]
+
+    # Start points
+    start_points = cur.execute(
+        """SELECT pt.id, pt.cnf, pt.value
+           FROM search_start_point AS ssp
+           JOIN point AS pt ON pt.id = ssp.start_point_id
+           WHERE ssp.search_id = ?""",
+        (search_id,)
+    ).fetchall()
+
+    # End points
+    end_points = cur.execute(
+        """SELECT pt.id, pt.cnf, pt.value
+           FROM search_end_point AS sep
+           JOIN point AS pt ON pt.id = sep.end_point_id
+           WHERE sep.search_id = ?""",
+        (search_id,)
+    ).fetchall()
+
+    # Check if any endpoints are in frontier
+    endpoints_in_frontier = cur.execute(
+        """SELECT COUNT(*)
+           FROM search_frontier_member AS fm
+           JOIN search_end_point AS sep ON sep.end_point_id = fm.point_id
+           WHERE fm.search_id = ? AND sep.search_id = ?""",
+        (search_id, search_id)
+    ).fetchone()[0]
+
+    conn.close()
+
+    return {
+        'description': description,
+        'start_points': start_points,
+        'end_points': end_points,
+        'endpoints_in_frontier': endpoints_in_frontier
+    }
+
+
+def format_value(value, decimals=6):
+    """Format a numeric value, handling None."""
+    if value is None:
+        return "N/A"
+    return f"{value:.{decimals}f}"
+
+
+def display_stats(stats, search_id=None):
+    """Display statistics in a nice format."""
+    print("=" * 70)
+    print(f"  CNF Database Status - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print("=" * 70)
+    print()
+
+    print("GLOBAL STATISTICS:")
+    print(f"  Total Points:              {stats['total_points']:,}")
+    print(f"  Points with Energy:        {stats['points_with_energy']:,}")
+    print(f"  Neighbors Found (explored):{stats['explored_points']:,}")
+    print(f"  Total Edges:               {stats['total_edges']:,}")
+    print(f"  Currently Locked:          {stats['locked_points']:,}")
+    print()
+
+    print("GLOBAL ENERGY RANGE (all points ever discovered):")
+    print(f"  Low Tide (min):            {format_value(stats['global_min_energy'])}")
+    print(f"  High Tide (max):           {format_value(stats['global_max_energy'])}")
+    energy_range = stats['global_max_energy'] - stats['global_min_energy'] if stats['global_max_energy'] and stats['global_min_energy'] else None
+    print(f"  Total Range:               {format_value(energy_range)}")
+    print()
+
+    if search_id is not None:
+        print(f"SEARCH PROCESS #{search_id}:")
+        print(f"  Frontier Size:             {stats['frontier_size']:,}")
+        print(f"  Searched Points:           {stats['searched_points']:,}")
+        print()
+
+        print(f"SEARCHED REGION (below water surface):")
+        print(f"  Energy Range:              {format_value(stats['searched_min_energy'])} to {format_value(stats['searched_max_energy'])}")
+        searched_range = stats['searched_max_energy'] - stats['searched_min_energy'] if stats['searched_max_energy'] and stats['searched_min_energy'] else None
+        print(f"  Range Width:               {format_value(searched_range)}")
+        print()
+
+        print(f"FRONTIER (water surface - being explored):")
+        print(f"  Energy Range:              {format_value(stats['frontier_min_energy'])} to {format_value(stats['frontier_max_energy'])}")
+        frontier_range = stats['frontier_max_energy'] - stats['frontier_min_energy'] if stats['frontier_max_energy'] and stats['frontier_min_energy'] else None
+        print(f"  Range Width:               {format_value(frontier_range)}")
+        print()
+
+
+def display_search_info(db_file, search_id):
+    """Display information about a search process."""
+    info = get_search_info(db_file, search_id)
+
+    if info is None:
+        print(f"Error: Search process #{search_id} not found")
+        return
+
+    print("=" * 60)
+    print(f"  Search Process #{search_id}")
+    print("=" * 60)
+    print()
+
+    print(f"Description: {info['description']}")
+    print()
+
+    print(f"Status: {'COMPLETE - Endpoint reached!' if info['endpoints_in_frontier'] > 0 else 'In progress...'}")
+    print()
+
+    print(f"START POINTS ({len(info['start_points'])}):")
+    for point_id, cnf, value in info['start_points']:
+        print(f"  Point #{point_id}:")
+        print(f"    Energy: {format_value(value)}")
+        print(f"    CNF:    {cnf}")
+    print()
+
+    print(f"END POINTS ({len(info['end_points'])}):")
+    for point_id, cnf, value in info['end_points']:
+        in_frontier = "✓ IN FRONTIER!" if info['endpoints_in_frontier'] > 0 else ""
+        print(f"  Point #{point_id}: {in_frontier}")
+        print(f"    Energy: {format_value(value)}")
+        print(f"    CNF:    {cnf}")
+    print()
+
+
+def watch_mode(db_file, search_id=None, interval=1.0):
+    """Continuously update and display stats."""
+    try:
+        iteration = 0
+        while True:
+            # Query FIRST (so screen isn't blank while waiting)
+            start_time = time.time()
+            stats = get_db_stats(db_file, search_id)
+            query_time = time.time() - start_time
+
+            # THEN clear and display
+            clear_screen()
+            display_stats(stats, search_id)
+
+            # Show refresh info with query timing
+            iteration += 1
+            print(f"Refreshing every {interval}s... (query took {query_time:.2f}s, iteration #{iteration})")
+            print("Press Ctrl+C to stop")
+
+            # If queries are slow, warn user
+            if query_time > interval * 0.8:
+                print(f"\n⚠️  Warning: Queries taking {query_time:.2f}s (longer than refresh interval)")
+                print(f"   Consider using --interval {max(2.0, query_time * 1.5):.1f} for smoother updates")
+
+            time.sleep(interval)
+    except KeyboardInterrupt:
+        print("\n\nStopped watching.")
+        sys.exit(0)
+
+
+def unlock_all_points(db_file, force=False):
+    """Unlock all points in the database."""
+    conn = sqlite3.connect(db_file)
+    cur = conn.cursor()
+
+    # Check how many locks exist
+    result = cur.execute("SELECT COUNT(*) FROM lock").fetchone()
+    lock_count = result[0]
+
+    if lock_count == 0:
+        print("No locks found in database.")
+        conn.close()
+        return
+
+    print(f"Found {lock_count} locked points.")
+
+    if not force:
+        print("\n⚠️  WARNING: Unlocking points while workers are running can cause issues!")
+        print("   Only use this command when all workers have been stopped.")
+        response = input("\nAre you sure you want to unlock all points? (yes/no): ")
+        if response.lower() not in ['yes', 'y']:
+            print("Cancelled.")
+            conn.close()
+            return
+
+    # Try to acquire exclusive lock to ensure no other connections
+    try:
+        cur.execute("BEGIN EXCLUSIVE")
+    except sqlite3.OperationalError:
+        print("\n❌ Error: Database is locked by another process!")
+        print("   Stop all workers before running this command.")
+        conn.close()
+        return
+
+    # Delete all locks
+    cur.execute("DELETE FROM lock")
+    conn.commit()
+
+    print(f"✅ Successfully unlocked {lock_count} points!")
+    conn.close()
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Interrogate CNF database state",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  %(prog)s test_search_db                      # Show stats once
+  %(prog)s test_search_db --watch              # Live updating dashboard
+  %(prog)s test_search_db --watch --search 1   # Watch search #1
+  %(prog)s test_search_db --search 1           # Show search #1 info
+  %(prog)s test_search_db --unlock-all         # Unlock all points (after stopping workers)
+        """
+    )
+
+    parser.add_argument('db_file', help='Path to the CNF database file')
+    parser.add_argument('--watch', '-w', action='store_true',
+                       help='Continuously update stats (like watch command)')
+    parser.add_argument('--search', '-s', type=int, metavar='ID',
+                       help='Show/monitor specific search process')
+    parser.add_argument('--interval', '-i', type=float, default=1.0,
+                       help='Update interval in seconds for watch mode (default: 1.0)')
+    parser.add_argument('--unlock-all', '-u', action='store_true',
+                       help='Unlock all locked points (USE ONLY WHEN WORKERS ARE STOPPED)')
+    parser.add_argument('--force', '-f', action='store_true',
+                       help='Skip confirmation prompt for --unlock-all')
+
+    args = parser.parse_args()
+
+    # Check if database exists
+    if not os.path.exists(args.db_file):
+        print(f"Error: Database file '{args.db_file}' not found")
+        sys.exit(1)
+
+    if args.unlock_all:
+        # Unlock all points
+        unlock_all_points(args.db_file, args.force)
+    elif args.watch:
+        # Watch mode
+        watch_mode(args.db_file, args.search, args.interval)
+    elif args.search is not None:
+        # Display search info
+        display_search_info(args.db_file, args.search)
+        print()
+        # Also show stats for this search
+        stats = get_db_stats(args.db_file, args.search)
+        display_stats(stats, args.search)
+    else:
+        # One-time stats display
+        stats = get_db_stats(args.db_file)
+        display_stats(stats)
+
+
+if __name__ == '__main__':
+    main()
