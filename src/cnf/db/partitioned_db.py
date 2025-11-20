@@ -1,0 +1,34 @@
+import pathlib
+from .search_store import SearchProcessStore
+from .crystal_map_store import CrystalMapStore
+
+from ..crystal_normal_form import CrystalNormalForm
+
+        
+DB_PREFIX = "graph_partition"
+
+class PartitionedDB():
+
+    def __init__(self, db_dir: str):
+        self._db_dir = db_dir
+        directory = pathlib.Path(self._db_dir)
+
+        db_files = sorted(list(directory.glob(f"{DB_PREFIX}*")))
+        self.num_partitions = len(db_files)
+
+        self.partition_map = {}
+        for i, f in enumerate(db_files):
+            self.partition_map[i] = {
+                "search_store": SearchProcessStore.from_file(f),
+                "map_store": CrystalMapStore.from_file(f)
+            }
+        
+    def get_partition_idx(self, cnf: CrystalNormalForm):
+        return hash(cnf) % self.num_partitions
+    
+    def get_search_store(self, cnf: CrystalMapStore):
+        return self.partition_map[self.get_partition_idx(cnf)]["search_store"]
+
+    def get_map_store(self, cnf: CrystalMapStore):
+        return self.partition_map[self.get_partition_idx(cnf)]["map_store"]
+        

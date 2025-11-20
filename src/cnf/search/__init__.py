@@ -8,6 +8,7 @@ from ..calculation.base_calculator import BaseCalculator
 import time
 import math
 import sqlite3
+import pathlib
 
 def instantiate_search(search_description: str,
                        start_cnfs: list[CrystalNormalForm],
