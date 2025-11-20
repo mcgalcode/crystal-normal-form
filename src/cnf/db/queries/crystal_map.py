@@ -47,6 +47,11 @@ get_all_cnfs = f"""
 SELECT cnf FROM {constants.POINT_TABLE_NAME}
 """
 
+get_all_unexplored_pts = f"""
+SELECT id, cnf, external_id, value, explored FROM {constants.POINT_TABLE_NAME}
+WHERE explored = 0
+"""
+
 insert_point = f"""
 INSERT OR IGNORE INTO {constants.POINT_TABLE_NAME}
     (cnf, external_id, value, explored)
