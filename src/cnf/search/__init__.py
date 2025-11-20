@@ -152,3 +152,67 @@ def continue_search(search_id,
         print(f"Added point to search frontier and removed lock!")
         num_iters += 1
     
+def continue_search_flood_fill(search_id,
+                                cnf_store_file: str,
+                                search_filters: list[SearchFilter] = None,
+                                max_iters: int = None,
+                                frontier_limit: int = 100):
+    """Continue a flood-fill search process. There is no energy involved inthis
+    search process. Instead, points on the frontier are exhausted if
+    they have been explored.
+
+    Args:
+        search_id: ID of the search process
+        cnf_store_file: Path to the database file
+        energy_calc: Calculator to compute point energies
+        search_filters: Optional filters to apply to candidate points
+        max_iters: Maximum iterations before stopping (default: infinite)
+        frontier_limit: Max frontier points to consider per iteration (default: 100)
+                       Lower = faster queries but may wait more if neighbors locked
+                       Higher = more options but slower queries
+    """
+    search_store = SearchProcessStore.from_file(cnf_store_file)
+    crystal_map_store = CrystalMapStore.from_file(cnf_store_file)
+
+    if max_iters is None:
+        max_iters = math.inf
+
+    num_iters = 0
+    while len(search_store.get_endpoint_ids_in_frontier(search_id)) == 0:
+        print(f"================ BEGINNING STEP {num_iters} ================")
+        if num_iters > max_iters:
+            print(f"Reached {num_iters} iterations, quitting...")
+            break
+        print(f"Endpoint is not yet in the frontier, continuing search...")
+
+        frontier_points = search_store.get_frontier_points_in_search(search_id, limit=frontier_limit)
+        print(f"Found {len(frontier_points)} frontier points to consider (limited to {frontier_limit})...")
+
+        selected_point = None
+        for frontier_point in frontier_points:
+            print(f"Attempting lock on frontier pt ID: {frontier_point.id}, CNF: {frontier_point.cnf.coords}")
+            lock_acquired = crystal_map_store.lock_point(frontier_point.id)
+            if not lock_acquired:
+                print(f"Failed to acquire lock (another worker got it first), trying next point...")
+                continue  # Continue to next frontier point
+            print(f"Lock acquired successfully!")
+            selected_point = frontier_point
+            
+            if not selected_point.explored:
+                print(f"Point has not been explored... computing neighbors and adding to the map...")
+                _, new_nb_ids = explore_pt(crystal_map_store, selected_point.id, filters=search_filters)
+                for nb_id in new_nb_ids:
+                    search_store.add_to_search_frontier_by_id(search_id, nb_id)
+                print(f"Added {len(new_nb_ids)} neighbors to the map!")
+            else:
+                print(f"Point ID {selected_point.id} has already been explored, marking as searched.")
+
+            search_store.mark_point_searched_by_id(search_id, selected_point.id)
+            search_store.remove_from_search_frontier_by_id(search_id, selected_point.id)
+            break
+        
+        
+        crystal_map_store.unlock_point(selected_point.id)
+        print(f"Removed lock!")
+        num_iters += 1
+    
