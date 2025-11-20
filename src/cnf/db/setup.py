@@ -8,6 +8,9 @@ def setup_cnf_db(dbfname: str, xi: float, delta: int, element_list: list[str]):
     conn = sqlite3.connect(dbfname)
     cur = conn.cursor()
 
+    # Enable WAL mode for better concurrent write performance
+    cur.execute("PRAGMA journal_mode=WAL")
+
     # Create tables
     cur.execute(crystal_map_queries.create_point_table)
     cur.execute(crystal_map_queries.create_edge_table)
