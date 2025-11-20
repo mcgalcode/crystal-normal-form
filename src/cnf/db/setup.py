@@ -26,6 +26,7 @@ def setup_cnf_db(dbfname: str, xi: float, delta: int, element_list: list[str]):
     # Create indexes for performance
     cur.execute(crystal_map_queries.create_index_edge_source)
     cur.execute(crystal_map_queries.create_index_edge_target)
+    cur.execute(crystal_map_queries.create_index_edge_target_cnf)
     cur.execute(crystal_map_queries.create_index_point_value)
     cur.execute(crystal_map_queries.create_index_point_cnf)
 

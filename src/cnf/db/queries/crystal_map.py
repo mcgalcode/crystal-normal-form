@@ -13,7 +13,8 @@ CREATE TABLE {constants.POINT_TABLE_NAME} (
 create_edge_table = f"""
 CREATE TABLE {constants.EDGE_TABLE_NAME} (
     source_id INTEGER,
-    target_id INTEGER
+    target_id INTEGER,
+    target_cnf TEXT
 )
 """
 
@@ -83,6 +84,12 @@ WHERE cnf = ?
 create_connection = f"""
 INSERT INTO {constants.EDGE_TABLE_NAME}
 (source_id, target_id)
+VALUES (?, ?)
+"""
+
+create_connection_to_target_cnf = f"""
+INSERT INTO {constants.EDGE_TABLE_NAME}
+(source_id, target_cnf)
 VALUES (?, ?)
 """
 
@@ -156,6 +163,11 @@ ON {constants.EDGE_TABLE_NAME} (source_id)
 create_index_edge_target = f"""
 CREATE INDEX IF NOT EXISTS idx_edge_target
 ON {constants.EDGE_TABLE_NAME} (target_id)
+"""
+
+create_index_edge_target_cnf = f"""
+CREATE INDEX IF NOT EXISTS idx_edge_target_cnf
+ON {constants.EDGE_TABLE_NAME} (target_cnf)
 """
 
 create_index_point_value = f"""

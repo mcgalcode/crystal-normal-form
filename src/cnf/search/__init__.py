@@ -53,7 +53,10 @@ def explore_pt(store: CrystalMapStore, pt_id: int, filters: list[SearchFilter] =
     nbs = NeighborFinder(pt.cnf).find_neighbors()
     all_nb_ids = []
     new_nb_ids = []
+    existing_nb_ids = []
     filtered_ct = 0
+    edges_added = 0
+
     for nb in nbs:
         struct = nb.reconstruct()
         if not all([f.should_add_pt(nb, struct) for f in filters]):
@@ -67,9 +70,16 @@ def explore_pt(store: CrystalMapStore, pt_id: int, filters: list[SearchFilter] =
                 raise e
             else:
                 nb_id = store.get_point_by_cnf(nb).id
-        store.add_connection_by_ids(pt_id, nb_id)
+                existing_nb_ids.append(nb_id)
+
+        # Track if edge was actually added
+        edge_added = store.add_connection_by_ids(pt_id, nb_id)
+        if edge_added:
+            edges_added += 1
+
         all_nb_ids.append(nb_id)
-    print(f"Skipped {filtered_ct} due to search filter constraints...")
+
+    print(f"Exploration: {len(new_nb_ids)} new neighbors, {len(existing_nb_ids)} existing, {edges_added} edges added, {filtered_ct} filtered")
     store.mark_point_explored(pt_id)
     return all_nb_ids, new_nb_ids
 
