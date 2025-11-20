@@ -129,7 +129,7 @@ class CrystalMapStore(BaseStore):
             ([source_id, cnf_to_str(target_cnf)])
         )
         self.conn.commit()
-        return res.lastrowid is not None
+        return self.cursor.rowcount > 0
     
     def add_connection_by_ids(self, id1: int, id2: int):
         res1 = self.cursor.execute(
@@ -141,7 +141,7 @@ class CrystalMapStore(BaseStore):
             ([id2, id1])
         )
         self.conn.commit()
-        return (res1.lastrowid is not None or res2.lastrowid is not None)
+        return self.cursor.rowcount > 0
 
     def remove_connection(self, pt1: CrystalNormalForm, pt2: CrystalNormalForm):
         ids = self.get_point_ids([pt1, pt2])
