@@ -47,7 +47,7 @@ SELECT cnf FROM {constants.POINT_TABLE_NAME}
 """
 
 insert_point = f"""
-INSERT INTO {constants.POINT_TABLE_NAME}
+INSERT OR IGNORE INTO {constants.POINT_TABLE_NAME}
     (cnf, external_id, value, explored)
 VALUES (?, ?, ?, ?)
 """
