@@ -18,6 +18,7 @@ Usage:
 
 import argparse
 import sys
+import os
 from pathlib import Path
 
 from cnf import UnitCell, CrystalNormalForm
@@ -49,7 +50,7 @@ def load_and_validate_supercells(cif_path: str, supercell_index: int,
     return unique_cnfs
 
 
-def setup_search_database(start_cif: str, end_cif: str, db_file: str,
+def setup_search_database(start_cif: str, end_cif: str, partitions_dir: str, num_partitions: int,
                           supercell_index: int, xi: float = DEFAULT_XI,
                           delta: int = DEFAULT_DELTA) -> int:
     """Create database and populate with start/end points.
@@ -81,21 +82,24 @@ def setup_search_database(start_cif: str, end_cif: str, db_file: str,
         print(f"  ⚠️  Warning: Found {len(unique_dists)} different start-end distances")
         print(f"     Range: {min(unique_dists):.6f} to {max(unique_dists):.6f}")
 
-    # Create database
-    print(f"\nCreating database: {db_file}")
     element_list = start_cnfs[0].elements
-    setup_cnf_db(db_file, xi, delta, element_list)
-
-    # Create search process
     description = f"Search: {Path(start_cif).stem} → {Path(end_cif).stem}"
-    search_id = instantiate_search(description, start_cnfs, end_cnfs, db_file)
 
-    print(f"\n✓ Search database initialized!")
-    print(f"  Database:     {db_file}")
+    # Create database
+    print(f"\nCreating database partitions in: {partitions_dir}")
+    os.makedirs(partitions_dir, exist_ok=True)
+    for i in range(num_partitions):
+        store_file = f"{partitions_dir}/graph_partition_{i}.db" 
+        setup_cnf_db(store_file, xi, delta, element_list)
+
+        # Create search process
+        search_id = instantiate_search(description, start_cnfs, end_cnfs, store_file)
+
+    print(f"\n✓ Search database partitions initialized!")
+    print(f"  Partitions Dir:     {partitions_dir}")
     print(f"  Search ID:    {search_id}")
     print(f"  Start points: {len(start_cnfs)}")
     print(f"  End points:   {len(end_cnfs)}")
-    print(f"  Distance:     {list(unique_dists)[0]:.6f}")
     print()
 
     return search_id
@@ -120,7 +124,9 @@ Examples:
 
     parser.add_argument('--start-cif', help='Path to starting structure CIF file')
     parser.add_argument('--end-cif', help='Path to ending structure CIF file')
-    parser.add_argument('--db-file', help='Path for the database file to create')
+    parser.add_argument('--partitions-dir', help='Path for the database partition files to create')
+    parser.add_argument('--num-partitions', type=int, help='Path for the database partition files to create')
+
     parser.add_argument('--supercell-index', type=int, help='Supercell index (e.g., 2 for 2x2x2)')
     parser.add_argument('--xi', type=float, default=DEFAULT_XI,
                        help=f'Xi parameter for CNF (default: {DEFAULT_XI})')
@@ -168,30 +174,32 @@ Examples:
         supercell_index = int(input("Enter supercell index (e.g., 2 for 2x2x2): "))
 
     # Get database filename (from args or prompt)
-    db_file = args.db_file
-    if not db_file:
+    partitions_dir = args.partitions_dir
+    num_partitions = args.num_partitions
+    if not partitions_dir:
         print("\nDatabase setup")
         print("-" * 70)
-        db_file = input("Enter database filename (e.g., search.db): ")
+        partitions_dir = input("Enter database filename (e.g., search.db): ")
 
     # Check if database exists
-    if Path(db_file).exists():
+    if Path(partitions_dir).exists():
         if args.force:
-            print(f"Overwriting existing database: {db_file}")
-            Path(db_file).unlink()
+            print(f"Overwriting existing database: {partitions_dir}")
+            Path(partitions_dir).unlink()
         else:
-            response = input(f"Database '{db_file}' already exists. Overwrite? (yes/no): ")
+            response = input(f"Database '{partitions_dir}' already exists. Overwrite? (yes/no): ")
             if response.lower() not in ['yes', 'y']:
                 print("Cancelled.")
                 sys.exit(0)
-            Path(db_file).unlink()
+            Path(partitions_dir).unlink()
 
     # Create database and search process
     try:
         search_id = setup_search_database(
             start_cif=start_cif,
             end_cif=end_cif,
-            db_file=db_file,
+            partitions_dir=partitions_dir,
+            num_partitions=num_partitions,
             supercell_index=supercell_index,
             xi=args.xi,
             delta=args.delta

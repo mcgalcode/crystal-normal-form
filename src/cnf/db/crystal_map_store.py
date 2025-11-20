@@ -55,7 +55,8 @@ class CrystalMapStore(BaseStore):
             (cnf_str, None, None, False)
         )
         self.conn.commit()
-        return self.cursor.lastrowid
+        if self.cursor.rowcount > 0:
+            return self.cursor.lastrowid
         
     def get_point_by_cnf(self, point: CrystalNormalForm):
         cnf_str = cnf_to_str(point)
