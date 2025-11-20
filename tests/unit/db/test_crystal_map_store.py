@@ -167,6 +167,10 @@ def test_can_get_unexplored_points(temp_db, zr_hcp_cnf):
     assert len(unexplored_ids) == len(all_nb_ids[10:])
     assert set(unexplored_ids) == set(all_nb_ids[10:])
 
+    all_unexplored_pts = temp_db.get_all_explored_points()
+    explored_ids = [pt.id for pt in all_unexplored_pts]
+    assert len(explored_ids) == len(all_nb_ids[:10])
+    assert set(explored_ids) == set(all_nb_ids[:10])
 
 def test_can_lock_point(zr_hcp_cnf, temp_db):
     pt_id = temp_db.add_point(zr_hcp_cnf)
