@@ -7,7 +7,7 @@ from cnf.navigation.crystal_explorer import CrystalExplorer
 from cnf.navigation.search_objectives import LocateAnyTargetStruct
 from cnf.navigation.score_functions import PDDScorer, NullScore
 from cnf.navigation.utils import get_endpoints_from_unit_cells
-from cnf.navigation.search_filters import SimpleVolumeAndOverlapFilter
+from cnf.navigation.search_filters import VolumeLimitFilter, AtomOverlapFilter
 from rustworkx import all_shortest_paths
 from itertools import product
 from cnf.navigation.crystal_explorer import CrystalExplorer
@@ -41,9 +41,9 @@ def test_explorer_tracks_exploration_state(point_set):
 
     target = cnfs[2]
     structs = [cnf.reconstruct() for cnf in [cnf1, cnf2, target]]
-    search_filter = SimpleVolumeAndOverlapFilter.from_endpoint_structs(structs)
+    search_filter = VolumeLimitFilter.from_endpoint_structs(structs)
     score_fun = NullScore()
-    explorer = CrystalExplorer(cmap, search_filter, score_fun)
+    explorer = CrystalExplorer(cmap, [search_filter], score_fun)
 
     # Points should start as unexplored but scored
     assert not explorer.is_point_explored(cnf1)
@@ -61,9 +61,9 @@ def test_explorer_marks_points_as_explored(point_set):
 
     target = cnfs[1]
     structs = [cnf.reconstruct(), target.reconstruct()]
-    search_filter = SimpleVolumeAndOverlapFilter.from_endpoint_structs(structs)
+    search_filter = VolumeLimitFilter.from_endpoint_structs(structs)
     score_fun = NullScore()
-    explorer = CrystalExplorer(cmap, search_filter, score_fun)
+    explorer = CrystalExplorer(cmap, [search_filter], score_fun)
 
     assert not explorer.is_point_explored(cnf)
 
@@ -80,9 +80,9 @@ def test_explore_point_adds_neighbors(ti_o2_anatase):
 
     cmap = CrystalMap.from_cnfs([cnf])
     struct = ti_o2_anatase
-    search_filter = SimpleVolumeAndOverlapFilter.from_endpoint_structs([struct])
+    search_filter = VolumeLimitFilter.from_endpoint_structs([struct])
     score_fun = NullScore()
-    explorer = CrystalExplorer(cmap, search_filter, score_fun)
+    explorer = CrystalExplorer(cmap, [search_filter], score_fun)
 
     assert not explorer.is_point_explored(cnf)
 
@@ -107,9 +107,9 @@ def test_explorer_handles_unscored_points(point_set):
 
     target = cnfs[1]
     # Create explorer with skip_scoring=True
-    search_filter = SimpleVolumeAndOverlapFilter.from_endpoint_structs([cnf1.reconstruct(), target.reconstruct()])
+    search_filter = VolumeLimitFilter.from_endpoint_structs([cnf1.reconstruct(), target.reconstruct()])
     score_fun = NullScore()
-    explorer = CrystalExplorer(cmap, search_filter, score_fun, skip_scoring=True)
+    explorer = CrystalExplorer(cmap, [search_filter], score_fun, skip_scoring=True)
 
     # Point should exist but not be scored
     pid = cmap.get_point_id(cnf1)
@@ -129,9 +129,9 @@ def test_best_current_score(point_set):
         cmap.add_point(cnf)
 
     structs = [c.reconstruct() for c in cnfs[:4]]
-    search_filter = SimpleVolumeAndOverlapFilter.from_endpoint_structs(structs)
+    search_filter = VolumeLimitFilter.from_endpoint_structs(structs)
     score_fun = NullScore()
-    explorer = CrystalExplorer(cmap, search_filter, score_fun, skip_scoring=True)
+    explorer = CrystalExplorer(cmap, [search_filter], score_fun, skip_scoring=True)
 
     best_score = explorer.best_current_score()
     assert best_score is None
@@ -155,9 +155,9 @@ def test_unexplored_points_list(point_set):
 
     target = cnfs[2]
     structs = [cnf.reconstruct() for cnf in [cnf1, cnf2, target]]
-    search_filter = SimpleVolumeAndOverlapFilter.from_endpoint_structs(structs)
+    search_filter = VolumeLimitFilter.from_endpoint_structs(structs)
     score_fun = NullScore()
-    explorer = CrystalExplorer(cmap, search_filter, score_fun, skip_scoring=True)
+    explorer = CrystalExplorer(cmap, [search_filter], score_fun, skip_scoring=True)
 
     unexplored = explorer.unexplored_points()
     assert len(unexplored) == 2
@@ -177,8 +177,7 @@ def path_find_end_structs(zr_hcp_mp):
     return [UnitCell.from_pymatgen_structure(zr_hcp_mp)]
     
 
-FNAME = "explorations/result3.json"
-@pytest.mark.skip
+# @pytest.mark.skip
 def test_can_connect_two_points(path_find_start_structs, path_find_end_structs):
     xi = 1.5
     delta = 5
@@ -188,15 +187,17 @@ def test_can_connect_two_points(path_find_start_structs, path_find_end_structs):
     cmap = CrystalMap.from_cnfs(start_cnfs)
     
 
-    search_filter = SimpleVolumeAndOverlapFilter.from_endpoint_structs(
-        [*path_find_start_structs, *path_find_end_structs],
-        0.85
-    )
+    search_filters = [
+        VolumeLimitFilter.from_endpoint_structs(
+            [*path_find_start_structs, *path_find_end_structs],
+        ),
+        AtomOverlapFilter(0.85)
+    ]
     score_fun = PDDScorer(path_find_end_structs[:1])
-    score_fun = NullScore()
+    # score_fun = NullScore()
     objective = LocateAnyTargetStruct(end_cnfs)
 
-    explorer = CrystalExplorer(cmap, search_filter, score_fun)
+    explorer = CrystalExplorer(cmap, search_filters, score_fun)
     
     explorer.search(objective)
     assert objective.objective_complete(explorer)

@@ -155,17 +155,22 @@ def format_value(value, decimals=6):
     return f"{value:.{decimals}f}"
 
 
-def display_stats(stats, search_id=None):
+def display_stats(stats, search_id=None, rates=None):
     """Display statistics in a nice format."""
+    if rates is None:
+        rates = {}
+
     print("=" * 70)
     print(f"  CNF Database Status - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 70)
     print()
 
     print("GLOBAL STATISTICS:")
-    print(f"  Total Points:              {stats['total_points']:,}")
+    total_points_rate = f" ({rates.get('total_points', 0):+.1f} pts/s)" if 'total_points' in rates else ""
+    explored_rate = f" ({rates.get('explored_points', 0):+.1f} pts/s)" if 'explored_points' in rates else ""
+    print(f"  Total Points:              {stats['total_points']:,}{total_points_rate}")
     print(f"  Points with Energy:        {stats['points_with_energy']:,}")
-    print(f"  Neighbors Found (explored):{stats['explored_points']:,}")
+    print(f"  Neighbors Found (explored):{stats['explored_points']:,}{explored_rate}")
     print(f"  Total Edges:               {stats['total_edges']:,}")
     print(f"  Currently Locked:          {stats['locked_points']:,}")
     print()
@@ -178,9 +183,11 @@ def display_stats(stats, search_id=None):
     print()
 
     if search_id is not None:
+        frontier_rate = f" ({rates.get('frontier_size', 0):+.1f} pts/s)" if 'frontier_size' in rates else ""
+        searched_rate = f" ({rates.get('searched_points', 0):+.1f} pts/s)" if 'searched_points' in rates else ""
         print(f"SEARCH PROCESS #{search_id}:")
-        print(f"  Frontier Size:             {stats['frontier_size']:,}")
-        print(f"  Searched Points:           {stats['searched_points']:,}")
+        print(f"  Frontier Size:             {stats['frontier_size']:,}{frontier_rate}")
+        print(f"  Searched Points:           {stats['searched_points']:,}{searched_rate}")
         print()
 
         print(f"SEARCHED REGION (below water surface):")
@@ -235,15 +242,30 @@ def watch_mode(db_file, search_id=None, interval=1.0):
     """Continuously update and display stats."""
     try:
         iteration = 0
+        prev_stats = None
+        prev_time = None
+
         while True:
             # Query FIRST (so screen isn't blank while waiting)
             start_time = time.time()
             stats = get_db_stats(db_file, search_id)
             query_time = time.time() - start_time
+            current_time = time.time()
+
+            # Calculate rates if we have previous data
+            rates = {}
+            if prev_stats is not None and prev_time is not None:
+                time_delta = current_time - prev_time
+                if time_delta > 0:
+                    rates['total_points'] = (stats['total_points'] - prev_stats['total_points']) / time_delta
+                    rates['explored_points'] = (stats['explored_points'] - prev_stats['explored_points']) / time_delta
+                    if search_id is not None:
+                        rates['frontier_size'] = (stats['frontier_size'] - prev_stats['frontier_size']) / time_delta
+                        rates['searched_points'] = (stats['searched_points'] - prev_stats['searched_points']) / time_delta
 
             # THEN clear and display
             clear_screen()
-            display_stats(stats, search_id)
+            display_stats(stats, search_id, rates=rates)
 
             # Show refresh info with query timing
             iteration += 1
@@ -254,6 +276,10 @@ def watch_mode(db_file, search_id=None, interval=1.0):
             if query_time > interval * 0.8:
                 print(f"\n⚠️  Warning: Queries taking {query_time:.2f}s (longer than refresh interval)")
                 print(f"   Consider using --interval {max(2.0, query_time * 1.5):.1f} for smoother updates")
+
+            # Save current stats for next iteration
+            prev_stats = stats.copy()
+            prev_time = current_time
 
             time.sleep(interval)
     except KeyboardInterrupt:
