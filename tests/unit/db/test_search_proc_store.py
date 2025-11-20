@@ -90,7 +90,7 @@ def test_candidate_neighbors_are_not_searched(search_store, crystal_map_store, z
     )
     start_pt = zr_bcc_cnfs[0]
     start_pt_id = crystal_map_store.get_point_by_cnf(start_pt).id
-    all_nb_ids = explore_pt(crystal_map_store, start_pt_id)
+    all_nb_ids, new_nb_ids = explore_pt(crystal_map_store, start_pt_id)
     # label some of these as searched
     searched_nb_ids = all_nb_ids[:10]
     unsearched_nb_ids = all_nb_ids[10:]
@@ -118,7 +118,7 @@ def test_candidate_neighbors_are_not_in_frontier(search_store, crystal_map_store
 
     start_pt = zr_bcc_cnfs[1]
     start_pt_id = crystal_map_store.get_point_by_cnf(start_pt).id
-    all_nb_ids = explore_pt(crystal_map_store, start_pt_id)
+    all_nb_ids, new_nb_ids = explore_pt(crystal_map_store, start_pt_id)
     # label some of these as searched
     frontier_nb_ids = all_nb_ids[:10]
     non_frontier_nb_ids = all_nb_ids[10:]
@@ -146,7 +146,7 @@ def test_candidate_neighbors_have_lock_info(search_store, crystal_map_store, zr_
 
     start_pt = zr_bcc_cnfs[0]
     start_pt_id = crystal_map_store.get_point_by_cnf(start_pt).id
-    all_nb_ids = explore_pt(crystal_map_store, start_pt_id)
+    all_nb_ids, new_nb_ids = explore_pt(crystal_map_store, start_pt_id)
     # label some of these as searched
     locked_nb_ids = all_nb_ids[:10]
     unlocked_nb_ids = all_nb_ids[10:]
