@@ -168,10 +168,11 @@ def display_stats(stats, search_id=None, rates=None):
     print("GLOBAL STATISTICS:")
     total_points_rate = f" ({rates.get('total_points', 0):+.1f} pts/s)" if 'total_points' in rates else ""
     explored_rate = f" ({rates.get('explored_points', 0):+.1f} pts/s)" if 'explored_points' in rates else ""
+    edges_rate = f" ({rates.get('total_edges', 0):+.1f} edges/s)" if 'total_edges' in rates else ""
     print(f"  Total Points:              {stats['total_points']:,}{total_points_rate}")
     print(f"  Points with Energy:        {stats['points_with_energy']:,}")
     print(f"  Neighbors Found (explored):{stats['explored_points']:,}{explored_rate}")
-    print(f"  Total Edges:               {stats['total_edges']:,}")
+    print(f"  Total Edges:               {stats['total_edges']:,}{edges_rate}")
     print(f"  Currently Locked:          {stats['locked_points']:,}")
     print()
 
@@ -259,6 +260,7 @@ def watch_mode(db_file, search_id=None, interval=1.0):
                 if time_delta > 0:
                     rates['total_points'] = (stats['total_points'] - prev_stats['total_points']) / time_delta
                     rates['explored_points'] = (stats['explored_points'] - prev_stats['explored_points']) / time_delta
+                    rates['total_edges'] = (stats['total_edges'] - prev_stats['total_edges']) / time_delta
                     if search_id is not None:
                         rates['frontier_size'] = (stats['frontier_size'] - prev_stats['frontier_size']) / time_delta
                         rates['searched_points'] = (stats['searched_points'] - prev_stats['searched_points']) / time_delta
