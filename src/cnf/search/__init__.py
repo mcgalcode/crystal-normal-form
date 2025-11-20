@@ -51,22 +51,27 @@ def explore_pt(store: CrystalMapStore, pt_id: int, filters: list[SearchFilter] =
 
     pt = store.get_point_by_id(pt_id)
     nbs = NeighborFinder(pt.cnf).find_neighbors()
-    nb_ids = []
+    all_nb_ids = []
+    new_nb_ids = []
+    filtered_ct = 0
     for nb in nbs:
         struct = nb.reconstruct()
         if not all([f.should_add_pt(nb, struct) for f in filters]):
+            filtered_ct += 1
             continue
         try:
             nb_id = store.add_point(nb)
+            new_nb_ids.append(nb_id)
         except sqlite3.IntegrityError as e:
             if "UNIQUE constraint failed" not in e.__repr__():
                 raise e
             else:
                 nb_id = store.get_point_by_cnf(nb).id
         store.add_connection_by_ids(pt_id, nb_id)
-        nb_ids.append(nb_id)
+        all_nb_ids.append(nb_id)
+    print(f"Skipped {filtered_ct} due to search filter constraints...")
     store.mark_point_explored(pt_id)
-    return nb_ids
+    return all_nb_ids, new_nb_ids
 
 def continue_search(search_id,
                     cnf_store_file: str,
@@ -108,8 +113,8 @@ def continue_search(search_id,
             print(f"Considering frontier pt ID: {frontier_point.id}, CNF: {frontier_point.cnf.coords}")
             if not frontier_point.explored:
                 print(f"Point has not been explored... computing neighbors and adding to the map...")
-                ids = explore_pt(crystal_map_store, frontier_point.id, filters=search_filters)
-                print(f"Added {len(ids)} neighbors to the map!")
+                _, new_nb_ids = explore_pt(crystal_map_store, frontier_point.id, filters=search_filters)
+                print(f"Added {len(new_nb_ids)} neighbors to the map!")
 
             unsearched_neighbors, locks = search_store.get_unsearched_neighbors_with_lock_info(search_id, frontier_point.id)
 

@@ -12,10 +12,10 @@ from .score_functions import ScoreFunction
 
 class CrystalExplorer():
 
-    def __init__(self, cmap: CrystalMap, search_filter: SearchFilter, score_fn: ScoreFunction, skip_scoring=False, preload_scores: dict = None):
+    def __init__(self, cmap: CrystalMap, search_filters: list[SearchFilter], score_fn: ScoreFunction, skip_scoring=False, preload_scores: dict = None):
         self.map = cmap
         self.score_function = score_fn
-        self.search_filter = search_filter
+        self.search_filters = search_filters
 
         # Track all points (scored or not) and their exploration state
         self._unexplored_pts = set()
@@ -38,6 +38,10 @@ class CrystalExplorer():
                 self._unexplored_pts.add(pt)
                 pt = cmap.get_point_by_id(pt)
                 self.score_pt(pt)
+    
+    def _should_add_point(self, pt: CrystalNormalForm):
+        struct = pt.reconstruct()
+        return all([f.should_add_pt(pt, struct) for f in self.search_filters])
 
     def explore_point_by_cnf(self, cnf: CrystalNormalForm):
         pt_id = self.map.get_point_id(cnf)
@@ -49,7 +53,7 @@ class CrystalExplorer():
         nb_pts = nf.find_neighbors()
         new_ids = []
         for nb_pt in nb_pts:
-            if self.search_filter.should_add_pt(nb_pt):
+            if self._should_add_point(nb_pt):
                 if nb_pt not in self.map:
                         nid = self.map.add_point(nb_pt)
                         new_ids.append(nid)
