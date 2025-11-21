@@ -3,7 +3,7 @@
 #SBATCH --qos=debug
 #SBATCH --time=00:30:00
 #SBATCH --nodes=1
-#SBATCH --ntasks=1
+#SBATCH --ntasks=8
 #SBATCH --cpus-per-task=1
 #SBATCH --constraint=cpu
 #SBATCH --output=logs/waterfill_%j.out
@@ -16,8 +16,9 @@
 # BEFORE RUNNING:
 # 1. Edit PARTITION_DB_DIR to point to your partition database directory
 # 2. Edit CONDA_ENV if using a different environment name
-# 3. Adjust resources above if needed (nodes, tasks, time)
-# 4. Create logs directory: mkdir -p $SCRATCH/cnf_project/logs
+# 3. Adjust --ntasks above for number of parallel workers (currently 8)
+# 4. Adjust time limit if needed (debug QOS max: 30 minutes)
+# 5. Create logs directory: mkdir -p $SCRATCH/cnf_project/logs
 #
 # TO SUBMIT:
 #   sbatch run_waterfill_debug.sh
@@ -43,7 +44,8 @@ echo "========================================"
 echo "CNF Water-Filling Search - Debug Job"
 echo "========================================"
 echo "Job ID:       $SLURM_JOB_ID"
-echo "Node:         $SLURMD_NODENAME"
+echo "Node(s):      $SLURMD_NODENAME"
+echo "Num workers:  $SLURM_NTASKS"
 echo "Start time:   $(date)"
 echo "Partition DB: $PARTITION_DB_DIR"
 echo "========================================"
@@ -69,12 +71,17 @@ NUM_PARTITIONS=$(ls -1 "$PARTITION_DB_DIR"/graph_partition_*.db 2>/dev/null | wc
 echo "Found $NUM_PARTITIONS partition databases"
 echo
 
-# Run the water-filling search
-echo "Starting water-filling search..."
-echo "Command: cnf-pathfind-waterfill $PARTITION_DB_DIR --max-iters $MAX_ITERS --log-lvl $LOG_LEVEL"
+# Run the water-filling search with parallel workers
+# srun launches $SLURM_NTASKS workers in parallel
+# Each worker independently:
+#   - Picks random partitions to read from
+#   - Locks points before computing energy
+#   - Works until max-iters reached or search completes
+echo "Starting water-filling search with $SLURM_NTASKS parallel workers..."
+echo "Command: srun cnf-pathfind-waterfill $PARTITION_DB_DIR --max-iters $MAX_ITERS --log-lvl $LOG_LEVEL"
 echo
 
-cnf-pathfind-waterfill "$PARTITION_DB_DIR" \
+srun cnf-pathfind-waterfill "$PARTITION_DB_DIR" \
     --max-iters $MAX_ITERS \
     --log-lvl $LOG_LEVEL
 
