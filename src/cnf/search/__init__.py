@@ -556,7 +556,7 @@ def continue_search_waterfill(search_id,
         selected_partition = None
 
         for frontier_point in frontier_points:
-            _log(f"Considering frontier pt ID: {frontier_point.id}, CNF: {frontier_point.cnf.coords}")
+            _log(f"Considering frontier pt ID: {frontier_point.id}, VALUE: {frontier_point.value}, CNF: {frontier_point.cnf.coords}")
 
             # If frontier point not explored yet, explore it first
             if not frontier_point.explored:
@@ -589,6 +589,7 @@ def continue_search_waterfill(search_id,
                     selected_point = candidate
                     selected_partition = candidate_partition
                     break
+
 
             selected_point = candidate
             selected_partition = candidate_partition
