@@ -10,6 +10,9 @@ import time
 import math
 import sqlite3
 import pathlib
+import json
+import os
+from datetime import datetime
 
 def instantiate_search(search_description: str,
                        start_cnfs: list[CrystalNormalForm],
@@ -53,12 +56,25 @@ def explore_pt(partition_db: PartitionedDB, point_cnf: CrystalNormalForm, filter
     if filters is None:
         filters = []
 
+    # Timing instrumentation for explore_pt internals
+    timings = {
+        'find_neighbors': 0.0,
+        'filter_checks': 0.0,
+        'add_points': 0.0,
+        'get_existing_points': 0.0,
+        'add_edges': 0.0,
+        'mark_explored': 0.0
+    }
+
     point_partition = partition_db.get_partition_idx(point_cnf)
-
     point_map_store = partition_db.get_map_store(point_cnf)
-
     pt = point_map_store.get_point_by_cnf(point_cnf)
+
+    # Time: Find neighbors (the actual computation)
+    t_start = time.time()
     nbs = NeighborFinder(pt.cnf).find_neighbors()
+    timings['find_neighbors'] += time.time() - t_start
+
     all_nb_ids = []
     new_nb_ids = []
     existing_nb_ids = []
@@ -69,26 +85,38 @@ def explore_pt(partition_db: PartitionedDB, point_cnf: CrystalNormalForm, filter
         nb_partition = partition_db.get_partition_idx(nb)
         nb_map_store = partition_db.get_map_store_by_idx(nb_partition)
 
-        if filters:  # Only reconstruct if needed
+        # Time: Filter checks
+        if filters:
+            t_start = time.time()
             struct = nb.reconstruct()
             if not all([f.should_add_pt(nb, struct) for f in filters]):
                 filtered_ct += 1
+                timings['filter_checks'] += time.time() - t_start
                 continue
-        
+            timings['filter_checks'] += time.time() - t_start
+
+        # Time: Add point to database
+        t_start = time.time()
         nb_id = nb_map_store.add_point(nb)
+        timings['add_points'] += time.time() - t_start
+
         if nb_id is not None:
             new_nb_ids.append((nb_partition, nb_id))
         else:
+            # Time: Get existing point ID
+            t_start = time.time()
             nb_id = nb_map_store.get_point_by_cnf(nb).id
+            timings['get_existing_points'] += time.time() - t_start
             existing_nb_ids.append((nb_partition, nb_id))
 
-        
-        # If the neighbor is in the same partition as the point, add local edge
+        # Time: Add edges
+        t_start = time.time()
         if point_partition == nb_partition:
             edge_added = nb_map_store.add_connection_by_ids(pt.id, nb_id)
         else:
             point_map_store.add_connection_to_target_cnf(pt.id, nb)
             edge_added = nb_map_store.add_connection_to_target_cnf(nb_id, point_cnf)
+        timings['add_edges'] += time.time() - t_start
 
         if edge_added:
             edges_added += 1
@@ -96,8 +124,13 @@ def explore_pt(partition_db: PartitionedDB, point_cnf: CrystalNormalForm, filter
         all_nb_ids.append((nb_partition, nb_id))
 
     _log(f"Exploration: {len(new_nb_ids)} new neighbors, {len(existing_nb_ids)} existing, {edges_added} edges added, {filtered_ct} filtered")
+
+    # Time: Mark explored
+    t_start = time.time()
     point_map_store.mark_point_explored(pt.id)
-    return all_nb_ids, new_nb_ids
+    timings['mark_explored'] += time.time() - t_start
+
+    return all_nb_ids, new_nb_ids, timings
 
 def continue_search(search_id,
                     cnf_store_file: str,
@@ -183,7 +216,8 @@ def continue_search_flood_fill(search_id,
                                search_filters: list[SearchFilter] = None,
                                max_iters: int = None,
                                frontier_limit: int = 100,
-                               log_lvl=0):
+                               log_lvl=3,
+                               timing_reports_dir="timing_reports"):
     """Continue a flood-fill search process. There is no energy involved inthis
     search process. Instead, points on the frontier are exhausted if
     they have been explored.
@@ -204,6 +238,24 @@ def continue_search_flood_fill(search_id,
         max_iters = math.inf
 
     num_iters = 0
+
+    # Timing instrumentation
+    timing_stats = {
+        'get_frontier': 0.0,
+        'lock_attempts': 0.0,
+        'exploration': 0.0,
+        'add_to_frontier': 0.0,
+        'mark_searched': 0.0,
+        # Detailed breakdown of exploration
+        'explore_find_neighbors': 0.0,
+        'explore_filter_checks': 0.0,
+        'explore_add_points': 0.0,
+        'explore_get_existing_points': 0.0,
+        'explore_add_edges': 0.0,
+        'explore_mark_explored': 0.0,
+        'total_iters': 0
+    }
+
     def _log(msg, lvl = 1):
         if lvl > log_lvl:
             print(msg)
@@ -215,44 +267,184 @@ def continue_search_flood_fill(search_id,
             break
         _log(f"Endpoint is not yet in the frontier, continuing search...")
 
+        # Time: Get frontier points
+        t_start = time.time()
         random_read_store_idx = db.get_random_partition_idx()
         random_read_search_store = db.get_search_store_by_idx(random_read_store_idx)
         random_read_map_store = db.get_map_store_by_idx(random_read_store_idx)
         frontier_points = random_read_search_store.get_frontier_points_in_search(search_id, limit=frontier_limit)
+        timing_stats['get_frontier'] += time.time() - t_start
         _log(f"Found {len(frontier_points)} frontier points to consider (limited to {frontier_limit})...")
 
         selected_point = None
         for frontier_point in frontier_points:
             _log(f"Attempting lock on frontier pt ID: {frontier_point.id}, CNF: {frontier_point.cnf.coords}")
+
+            # Time: Lock attempt
+            t_start = time.time()
             lock_acquired = random_read_map_store.lock_point(frontier_point.id)
+            timing_stats['lock_attempts'] += time.time() - t_start
+
             if not lock_acquired:
                 _log(f"Failed to acquire lock (another worker got it first), trying next point...")
                 continue  # Continue to next frontier point
             _log(f"Lock acquired successfully!")
             selected_point = frontier_point
-            
+
             if not selected_point.explored:
                 _log(f"Point has not been explored... computing neighbors and adding to the map...")
-                _, new_nbs = explore_pt(db, selected_point.cnf, filters=search_filters, log_lvl=log_lvl)
+
+                # Time: Exploration (find neighbors)
+                t_start = time.time()
+                _, new_nbs, explore_timings = explore_pt(db, selected_point.cnf, filters=search_filters, log_lvl=log_lvl)
+                timing_stats['exploration'] += time.time() - t_start
+
+                # Accumulate detailed exploration timings
+                timing_stats['explore_find_neighbors'] += explore_timings['find_neighbors']
+                timing_stats['explore_filter_checks'] += explore_timings['filter_checks']
+                timing_stats['explore_add_points'] += explore_timings['add_points']
+                timing_stats['explore_get_existing_points'] += explore_timings['get_existing_points']
+                timing_stats['explore_add_edges'] += explore_timings['add_edges']
+                timing_stats['explore_mark_explored'] += explore_timings['mark_explored']
+
+                # Time: Add to frontiers
+                t_start = time.time()
                 for nb in new_nbs:
                     partition, nb_id = nb
                     nb_store = db.get_search_store_by_idx(partition)
                     nb_store.add_to_search_frontier_by_id(search_id, nb_id)
+                timing_stats['add_to_frontier'] += time.time() - t_start
+
                 _log(f"Added {len(new_nbs)} neighbors to the map!")
             else:
                 _log(f"Point ID {selected_point.id} has already been explored, marking as searched.")
 
+            # Time: Mark as searched
+            t_start = time.time()
             random_read_search_store.mark_point_searched_by_id(search_id, selected_point.id)
             random_read_search_store.remove_from_search_frontier_by_id(search_id, selected_point.id)
+            timing_stats['mark_searched'] += time.time() - t_start
+
             break
 
         num_iters += 1
-        
+        timing_stats['total_iters'] = num_iters
+
+        # Print timing stats every 100 iterations
+        if num_iters % 100 == 0:
+            # Calculate total from high-level categories only (exploration breakdown is already included in exploration)
+            total_time = sum(timing_stats[k] for k in ['get_frontier', 'lock_attempts', 'exploration', 'add_to_frontier', 'mark_searched'])
+            print(f"\n{'='*60}")
+            print(f"TIMING STATS (after {num_iters} iterations)")
+            print(f"{'='*60}")
+
+            # High-level categories
+            for key in ['get_frontier', 'lock_attempts', 'exploration', 'add_to_frontier', 'mark_searched']:
+                pct = (timing_stats[key] / total_time * 100) if total_time > 0 else 0
+                print(f"  {key:20s}: {timing_stats[key]:8.2f}s ({pct:5.1f}%)")
+
+            print(f"\n  Exploration breakdown:")
+            # Detailed exploration breakdown
+            explore_keys = [
+                ('find_neighbors', 'explore_find_neighbors'),
+                ('filter_checks', 'explore_filter_checks'),
+                ('add_points', 'explore_add_points'),
+                ('get_existing', 'explore_get_existing_points'),
+                ('add_edges', 'explore_add_edges'),
+                ('mark_explored', 'explore_mark_explored')
+            ]
+            for label, key in explore_keys:
+                pct = (timing_stats[key] / total_time * 100) if total_time > 0 else 0
+                print(f"    {label:18s}: {timing_stats[key]:8.2f}s ({pct:5.1f}%)")
+
+            print(f"\n  {'TOTAL':20s}: {total_time:8.2f}s")
+            print(f"{'='*60}\n")
+
         if selected_point is None:
             _log(f"All tested frontier points locked, sleeping...")
             time.sleep(5)
             continue
-        
+
         random_read_map_store.unlock_point(selected_point.id)
         _log(f"Removed lock!")
-    
+
+    # Write timing report to disk
+    # Calculate total from high-level categories only (exploration breakdown is already included in exploration)
+    total_time = sum(timing_stats[k] for k in ['get_frontier', 'lock_attempts', 'exploration', 'add_to_frontier', 'mark_searched'])
+
+    # Build report
+    report = {
+        'metadata': {
+            'partitions_dir': partitions_dir,
+            'num_partitions': db.num_partitions,
+            'search_id': search_id,
+            'max_iters': max_iters if max_iters != math.inf else None,
+            'actual_iters': timing_stats['total_iters'],
+            'frontier_limit': frontier_limit,
+            'timestamp': datetime.now().isoformat(),
+            'worker_pid': os.getpid(),
+        },
+        'timings': {
+            'total_time': total_time,
+            'high_level': {
+                'get_frontier': {
+                    'seconds': timing_stats['get_frontier'],
+                    'percent': (timing_stats['get_frontier'] / total_time * 100) if total_time > 0 else 0
+                },
+                'lock_attempts': {
+                    'seconds': timing_stats['lock_attempts'],
+                    'percent': (timing_stats['lock_attempts'] / total_time * 100) if total_time > 0 else 0
+                },
+                'exploration': {
+                    'seconds': timing_stats['exploration'],
+                    'percent': (timing_stats['exploration'] / total_time * 100) if total_time > 0 else 0
+                },
+                'add_to_frontier': {
+                    'seconds': timing_stats['add_to_frontier'],
+                    'percent': (timing_stats['add_to_frontier'] / total_time * 100) if total_time > 0 else 0
+                },
+                'mark_searched': {
+                    'seconds': timing_stats['mark_searched'],
+                    'percent': (timing_stats['mark_searched'] / total_time * 100) if total_time > 0 else 0
+                }
+            },
+            'exploration_breakdown': {
+                'find_neighbors': {
+                    'seconds': timing_stats['explore_find_neighbors'],
+                    'percent': (timing_stats['explore_find_neighbors'] / total_time * 100) if total_time > 0 else 0
+                },
+                'filter_checks': {
+                    'seconds': timing_stats['explore_filter_checks'],
+                    'percent': (timing_stats['explore_filter_checks'] / total_time * 100) if total_time > 0 else 0
+                },
+                'add_points': {
+                    'seconds': timing_stats['explore_add_points'],
+                    'percent': (timing_stats['explore_add_points'] / total_time * 100) if total_time > 0 else 0
+                },
+                'get_existing_points': {
+                    'seconds': timing_stats['explore_get_existing_points'],
+                    'percent': (timing_stats['explore_get_existing_points'] / total_time * 100) if total_time > 0 else 0
+                },
+                'add_edges': {
+                    'seconds': timing_stats['explore_add_edges'],
+                    'percent': (timing_stats['explore_add_edges'] / total_time * 100) if total_time > 0 else 0
+                },
+                'mark_explored': {
+                    'seconds': timing_stats['explore_mark_explored'],
+                    'percent': (timing_stats['explore_mark_explored'] / total_time * 100) if total_time > 0 else 0
+                }
+            }
+        }
+    }
+
+    # Create timing_reports directory if it doesn't exist
+    os.makedirs('timing_reports', exist_ok=True)
+
+    # Generate filename with timestamp and PID
+    timestamp_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = f"timing_reports/timing_report_{timestamp_str}_pid{os.getpid()}.json"
+
+    with open(filename, 'w') as f:
+        json.dump(report, f, indent=2)
+
+    print(f"\nTiming report written to: {filename}")

@@ -20,6 +20,7 @@ import argparse
 import sys
 import os
 from pathlib import Path
+import shutil
 
 from cnf import UnitCell, CrystalNormalForm
 from cnf.db.setup import setup_cnf_db
@@ -185,13 +186,13 @@ Examples:
     if Path(partitions_dir).exists():
         if args.force:
             print(f"Overwriting existing database: {partitions_dir}")
-            Path(partitions_dir).unlink()
+            shutil.rmtree(partitions_dir)
         else:
             response = input(f"Database '{partitions_dir}' already exists. Overwrite? (yes/no): ")
             if response.lower() not in ['yes', 'y']:
                 print("Cancelled.")
                 sys.exit(0)
-            Path(partitions_dir).unlink()
+            shutil.rmtree(partitions_dir)
 
     # Create database and search process
     try:

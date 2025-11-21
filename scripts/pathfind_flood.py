@@ -7,6 +7,10 @@ import sys
 if __name__ == "__main__":
     
     partition_dir = sys.argv[1]
+    max_iters = sys.argv[2]
+    if max_iters is not None:
+        max_iters = int(max_iters)
+
     search_proc_id = 1
     print(f"Using partition directory file {partition_dir}...")
     # search_store = SearchProcessStore.from_file(partition_dir)
@@ -28,4 +32,4 @@ if __name__ == "__main__":
         # atomic_overlap_filter
     ]
 
-    continue_search_flood_fill(1, partition_dir, filters, log_lvl=2)
+    continue_search_flood_fill(1, partition_dir, filters, log_lvl=2, max_iters=max_iters)
