@@ -9,6 +9,7 @@ Usage:
     python scripts/db_status_partitioned.py <partition_dir> --partitions-only   # Show only partition breakdown
     python scripts/db_status_partitioned.py <partition_dir> --search 2          # Monitor search process #2
     python scripts/db_status_partitioned.py <partition_dir> --num-partitions 50 # Sample 50 random partitions
+    python scripts/db_status_partitioned.py <partition_dir> --summary           # Show summary statistics (avg/median/mode)
 """
 
 import argparse
@@ -17,6 +18,7 @@ import time
 import sys
 import os
 import glob
+import statistics
 from datetime import datetime
 
 
@@ -213,7 +215,7 @@ def format_value(value, decimals=8):
     return f"{value:.{decimals}f}"
 
 
-def display_stats(stats, rates=None, show_global=True, show_partitions=True):
+def display_stats(stats, rates=None, show_global=True, show_partitions=True, show_summary=False):
     """Display statistics in same format as original db_status.py."""
     if rates is None:
         rates = {}
@@ -228,6 +230,7 @@ def display_stats(stats, rates=None, show_global=True, show_partitions=True):
         print("=" * 60)
 
         total_points_rate = f" ({rates.get('total_points', 0):+.1f} pts/s)" if 'total_points' in rates else ""
+        energy_rate = f" ({rates.get('points_with_energy', 0):+.1f} pts/s)" if 'points_with_energy' in rates else ""
         explored_rate = f" ({rates.get('explored_points', 0):+.1f} pts/s)" if 'explored_points' in rates else ""
         edges_rate = f" ({rates.get('total_edges', 0):+.1f} edges/s)" if 'total_edges' in rates else ""
         frontier_rate = f" ({rates.get('total_frontier_points', 0):+.1f} pts/s)" if 'total_frontier_points' in rates else ""
@@ -235,7 +238,7 @@ def display_stats(stats, rates=None, show_global=True, show_partitions=True):
 
         print(f"  Total Points:              {stats['total_points']:,}{total_points_rate}")
         print(f"  Neighbors Found (explored):{stats['explored_points']:,}{explored_rate}")
-        print(f"  Points with Energy:        {stats['points_with_energy']:,}")
+        print(f"  Points with Energy:        {stats['points_with_energy']:,}{energy_rate}")
         print(f"  Total Edges:               {stats['total_edges']:,}{edges_rate}")
         print(f"  Locked Points:             {stats['locked_points']:,}")
         print(f"  Frontier Points:           {stats['total_frontier_points']:,}{frontier_rate}")
@@ -260,8 +263,64 @@ def display_stats(stats, rates=None, show_global=True, show_partitions=True):
 
         print("=" * 60)
 
+    # Summary statistics helper function
+    def print_summary_stats():
+        if 'per_partition' in stats and len(stats['per_partition']) > 0:
+            print()
+            print("SUMMARY STATISTICS (across sampled partitions):")
+            print("-" * 105)
+
+            # Extract values for each column
+            columns = {
+                'Points': [p['total_points'] for p in stats['per_partition']],
+                'W/Energy': [p['points_with_energy'] for p in stats['per_partition']],
+                'Explored': [p['explored_points'] for p in stats['per_partition']],
+                'Searched': [p['searched_points'] for p in stats['per_partition']],
+                'Frontier': [p['frontier_points'] for p in stats['per_partition']],
+                'Edges': [p['total_edges'] for p in stats['per_partition']]
+            }
+
+            # Calculate and display statistics
+            print(f"{'Statistic':<30} {'Points':>10} {'W/Energy':>10} {'Explored':>10} {'Searched':>10} {'Frontier':>10} {'Edges':>10}")
+            print("-" * 105)
+
+            # Average
+            averages = {name: statistics.mean(values) for name, values in columns.items()}
+            print(f"{'Average':<30} {averages['Points']:>10.1f} {averages['W/Energy']:>10.1f} {averages['Explored']:>10.1f} {averages['Searched']:>10.1f} {averages['Frontier']:>10.1f} {averages['Edges']:>10.1f}")
+
+            # Median
+            medians = {name: statistics.median(values) for name, values in columns.items()}
+            print(f"{'Median':<30} {medians['Points']:>10.0f} {medians['W/Energy']:>10.0f} {medians['Explored']:>10.0f} {medians['Searched']:>10.0f} {medians['Frontier']:>10.0f} {medians['Edges']:>10.0f}")
+
+            # Mode (with error handling for no unique mode)
+            modes = {}
+            for name, values in columns.items():
+                try:
+                    modes[name] = statistics.mode(values)
+                except statistics.StatisticsError:
+                    # No unique mode
+                    modes[name] = None
+
+            mode_str = f"{'Mode':<30}"
+            for col_name in ['Points', 'W/Energy', 'Explored', 'Searched', 'Frontier', 'Edges']:
+                if modes[col_name] is not None:
+                    mode_str += f" {modes[col_name]:>10.0f}"
+                else:
+                    mode_str += f" {'N/A':>10}"
+            print(mode_str)
+
+            print("=" * 105)
+
+    # Show summary in global-only mode (below global stats)
+    if show_summary and show_global and not show_partitions:
+        print_summary_stats()
+
     # Per-partition breakdown
     if show_partitions and 'per_partition' in stats and stats['per_partition']:
+        # Show summary above partition table if requested
+        if show_summary:
+            print_summary_stats()
+
         print()
         print("PER-PARTITION BREAKDOWN:")
         print("=" * 105)
@@ -272,7 +331,7 @@ def display_stats(stats, rates=None, show_global=True, show_partitions=True):
         print("=" * 105)
 
 
-def watch_mode(partition_dir, interval=1.0, search_id=1, show_global=True, show_partitions=True, sample_partitions=None):
+def watch_mode(partition_dir, interval=1.0, search_id=1, show_global=True, show_partitions=True, sample_partitions=None, show_summary=False):
     """Live updating dashboard mode."""
     try:
         # Sample partition files once before entering loop (for consistency across refreshes)
@@ -308,6 +367,7 @@ def watch_mode(partition_dir, interval=1.0, search_id=1, show_global=True, show_
                 time_delta = current_time - prev_time
                 if time_delta > 0:
                     rates['total_points'] = (stats['total_points'] - prev_stats['total_points']) / time_delta
+                    rates['points_with_energy'] = (stats['points_with_energy'] - prev_stats['points_with_energy']) / time_delta
                     rates['explored_points'] = (stats['explored_points'] - prev_stats['explored_points']) / time_delta
                     rates['total_edges'] = (stats['total_edges'] - prev_stats['total_edges']) / time_delta
                     rates['total_frontier_points'] = (stats['total_frontier_points'] - prev_stats['total_frontier_points']) / time_delta
@@ -320,7 +380,7 @@ def watch_mode(partition_dir, interval=1.0, search_id=1, show_global=True, show_
             print(f"Update #{iteration} (refreshing every {interval}s, Ctrl+C to exit)")
             print()
 
-            display_stats(stats, rates=rates, show_global=show_global, show_partitions=show_partitions)
+            display_stats(stats, rates=rates, show_global=show_global, show_partitions=show_partitions, show_summary=show_summary)
 
             print()
             print(f"Refreshing every {interval}s... (query took {query_time:.2f}s, iteration #{iteration})")
@@ -363,6 +423,8 @@ def main():
                         help='Show only global statistics (hide partition breakdown)')
     parser.add_argument('--partitions-only', action='store_true',
                         help='Show only partition breakdown (hide global statistics)')
+    parser.add_argument('--summary', action='store_true',
+                        help='Show summary statistics (avg, median, mode) for partition columns')
 
     args = parser.parse_args()
 
@@ -377,11 +439,11 @@ def main():
     if args.watch:
         watch_mode(args.partition_dir, interval=args.interval, search_id=args.search,
                    show_global=show_global, show_partitions=show_partitions,
-                   sample_partitions=args.num_partitions)
+                   sample_partitions=args.num_partitions, show_summary=args.summary)
     else:
         stats = get_partitioned_stats(args.partition_dir, search_id=args.search,
                                      sample_partitions=args.num_partitions)
-        display_stats(stats, show_global=show_global, show_partitions=show_partitions)
+        display_stats(stats, show_global=show_global, show_partitions=show_partitions, show_summary=args.summary)
 
 
 if __name__ == '__main__':
