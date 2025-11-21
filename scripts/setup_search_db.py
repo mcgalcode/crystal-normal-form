@@ -21,6 +21,7 @@ import sys
 import os
 from pathlib import Path
 import shutil
+import tqdm
 
 from cnf import UnitCell, CrystalNormalForm
 from cnf.db.setup import setup_cnf_db
@@ -127,9 +128,9 @@ def setup_search_database(start_cif: str, end_cif: str, partitions_dir: str, num
     description = f"Search: {Path(start_cif).stem} → {Path(end_cif).stem}"
 
     # Create database
-    print(f"\nCreating database partitions in: {partitions_dir}")
+    print(f"\n")
     os.makedirs(partitions_dir, exist_ok=True)
-    for i in range(num_partitions):
+    for i in tqdm.tqdm(range(num_partitions), total=num_partitions, desc=f"Creating database partitions in: {partitions_dir}"):
         store_file = f"{partitions_dir}/graph_partition_{i}.db" 
         setup_cnf_db(store_file, xi, delta, element_list)
 

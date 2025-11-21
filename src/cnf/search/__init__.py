@@ -44,7 +44,6 @@ def instantiate_search(search_description: str,
     end_point_ids = crystal_map_store.get_point_ids(end_cnfs)
 
     for sid in start_point_ids:
-        print(f"Adding pt {sid} to search start and frontier")
         search_store.add_search_start_point(search_id, sid)
         search_store.add_to_search_frontier_by_id(search_id, sid)
     
