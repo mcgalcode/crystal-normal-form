@@ -3,7 +3,7 @@ from functools import cached_property
 from ..swaps.sorting import swap_vonorm_idxs
 from .conorm_list import ConormList
 from ...linalg import MatrixTuple
-from ..permutations import apply_permutation, Permutation, ConormPermutation, VonormPermutation, PermutationMatrix, apply_permutation_np
+from ..permutations import apply_permutation, Permutation, ConormPermutation, VonormPermutation, PermutationMatrix, apply_permutation_np, ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS
 
 # This matrix is found on page 48 of David's thesis
 VONORM_TO_DOT_PRODUCTS = np.array([
@@ -24,6 +24,11 @@ class VonormList():
         self.vonorms_np = np.array(vonorms)
         self.tuple = tuple(vonorms)
         self.conorm_tol = conorm_tol
+
+    def has_valid_conorms(self):
+        conorms = (1 / 2) * VONORM_TO_DOT_PRODUCTS @ self.vonorms[:6]
+        zero_idxs = tuple([idx for idx, cn in enumerate(conorms) if np.abs(cn) < self.conorm_tol])
+        return zero_idxs in ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS
 
     @cached_property
     def conorms(self):

@@ -60,7 +60,11 @@ class LatticeNeighborFinder():
         new_vonorms = VonormList(tuple([int(v) for v in old_vonorms + np.array(step.vals)]))
         self._log(f"Computed neighbor vonorms before canonicalization: {new_vonorms}")
 
-        if new_vonorms.is_obtuse() and new_vonorms.is_superbasis():
+        if not new_vonorms.has_valid_conorms():
+            self._log("Neighbor had invalid conorms")
+            return None
+
+        if new_vonorms.is_superbasis() and new_vonorms.is_obtuse():
             return new_vonorms
         else:
             if self.verbose_logging:
@@ -94,6 +98,11 @@ class LatticeNeighborFinder():
    # @profile
     def find_cnf_neighbor_results(self, step: LatticeStep) -> list[LatticeStepResult]:
         results = []
+
+        if not step.vonorms.has_valid_conorms():
+            self._log("Neighbor had invalid conorms")
+            return results
+
         if not (step.vonorms.is_obtuse() and step.vonorms.is_superbasis()):
             if self.verbose_logging:
                 if not step.vonorms.is_obtuse():
