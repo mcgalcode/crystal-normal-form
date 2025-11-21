@@ -203,15 +203,15 @@ class CrystalMapStore(BaseStore):
             ([pt_id])
         )
         rows = res.fetchall()
-        return [self._cnf_pt_from_row(row) for row in rows]
+        return [cnf_from_str(row[0], self.metadata.xi, self.metadata.delta, self.metadata.element_list) for row in rows]
     
     def get_nonlocal_neighbor_cnfs(self, pt_id: int):
         res = self.cursor.execute(
             queries.select_nonlocal_cnf_neighbors,
             ([pt_id])
         )
-        rows = rows.fetchall()
-        return [self._cnf_pt_from_row(row) for row in rows]
+        rows = res.fetchall()
+        return [cnf_from_str(row[0], self.metadata.xi, self.metadata.delta, self.metadata.element_list) for row in rows]
 
     def mark_point_explored(self, pt_id: int):
         self.cursor.execute(
