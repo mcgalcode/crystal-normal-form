@@ -18,7 +18,11 @@
 # 2. Edit CONDA_ENV if using a different environment name
 # 3. Adjust --ntasks above for number of parallel workers (currently 8)
 # 4. Adjust time limit if needed (debug QOS max: 30 minutes)
-# 5. Create logs directory: mkdir -p $SCRATCH/cnf_project/logs
+#
+# NOTES:
+# - By default, job runs in the directory where you submit it (sbatch run_waterfill_debug.sh)
+# - Log files are written to logs/ relative to that directory
+# - To change working directory, add: #SBATCH --chdir=/path/to/directory
 #
 # TO SUBMIT:
 #   sbatch run_waterfill_debug.sh
@@ -46,10 +50,14 @@ echo "========================================"
 echo "Job ID:       $SLURM_JOB_ID"
 echo "Node(s):      $SLURMD_NODENAME"
 echo "Num workers:  $SLURM_NTASKS"
+echo "Working dir:  $(pwd)"
 echo "Start time:   $(date)"
 echo "Partition DB: $PARTITION_DB_DIR"
 echo "========================================"
 echo
+
+# Create logs directory if it doesn't exist
+mkdir -p logs
 
 # Load conda (NERSC-specific)
 module load python
