@@ -23,7 +23,13 @@ class PartitionedDB():
                 "search_store": SearchProcessStore.from_file(f),
                 "map_store": CrystalMapStore.from_file(f)
             }
-        
+
+    def add_point(self, pt: CrystalNormalForm):
+        return self.get_map_store(pt).add_point(pt)
+    
+    def get_point_by_cnf(self, pt: CrystalNormalForm):
+        return self.get_map_store(pt).get_point_by_cnf(pt)
+
     def get_partition_idx(self, cnf: CrystalNormalForm):
         return hash(cnf) % self.num_partitions
     

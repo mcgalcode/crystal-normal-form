@@ -121,14 +121,25 @@ WHERE (source_id = ? AND target_id = ?) OR (target_id = ? AND source_id = ?)
 
 select_neighbors = f"""
 SELECT pt2.* FROM {constants.POINT_TABLE_NAME} AS pt1
-INNER JOIN {constants.EDGE_TABLE_NAME} AS edge ON pt1.id = edge.source_id 
+INNER JOIN {constants.EDGE_TABLE_NAME} AS edge ON pt1.id = edge.source_id
 INNER JOIN {constants.POINT_TABLE_NAME} AS pt2 ON edge.target_id = pt2.id
 WHERE pt1.id = ?
 UNION
 SELECT pt2.* FROM {constants.POINT_TABLE_NAME} AS pt1
-INNER JOIN {constants.EDGE_TABLE_NAME} AS edge ON pt1.id = edge.target_id 
+INNER JOIN {constants.EDGE_TABLE_NAME} AS edge ON pt1.id = edge.target_id
 INNER JOIN {constants.POINT_TABLE_NAME} AS pt2 ON edge.source_id = pt2.id
 WHERE pt1.id = ?
+"""
+
+select_neighbor_cnfs = f"""
+SELECT
+    CASE
+        WHEN edge.target_id IS NOT NULL THEN pt2.cnf
+        WHEN edge.target_cnf IS NOT NULL THEN edge.target_cnf
+    END as neighbor_cnf
+FROM {constants.EDGE_TABLE_NAME} AS edge
+LEFT JOIN {constants.POINT_TABLE_NAME} AS pt2 ON edge.target_id = pt2.id
+WHERE edge.source_id = ?
 """
 
 mark_point_explored = f"""

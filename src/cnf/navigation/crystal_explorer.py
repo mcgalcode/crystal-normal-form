@@ -88,8 +88,8 @@ class CrystalExplorer():
             total_added = 0
             
             for pt_id in self.unexplored_points():
-                # pt = self.map.get_point_by_id(pt_id)
-                # print(f"Exploring pt: {pt.coords} (score: {self.score_for_point(pt_id)})")
+                pt = self.map.get_point_by_id(pt_id)
+                print(f"Exploring pt: {pt.coords} (score: {self.score_for_point(pt_id)})")
                 new_ids = self.explore_point(pt_id)
                 diff = len(new_ids)
                 total_added += diff

@@ -113,7 +113,12 @@ def explore_pt_partition(partition_db: PartitionedDB, point_cnf: CrystalNormalFo
 
     # Time: Find neighbors (the actual computation)
     t_start = time.time()
-    nbs = NeighborFinder(pt.cnf).find_neighbors()
+    try:
+        nbs = NeighborFinder(pt.cnf).find_neighbors()
+    except Exception as e:
+        print(f"Ran into a problem with point {pt.id}, {point_cnf}")
+        return [], [], {}
+
     timings['find_neighbors'] += time.time() - t_start
 
     all_nb_ids = []
@@ -339,10 +344,10 @@ def continue_search_flood_fill(search_id,
 
             if not selected_point.explored:
                 _log(f"Point has not been explored... computing neighbors and adding to the map...")
-
+                print(selected_point.cnf.coords)
                 # Time: Exploration (find neighbors)
                 t_start = time.time()
-                _, new_nbs, explore_timings = explore_pt(db, selected_point.cnf, filters=search_filters, log_lvl=log_lvl)
+                _, new_nbs, explore_timings = explore_pt_partition(db, selected_point.cnf, filters=search_filters, log_lvl=log_lvl)
                 timing_stats['exploration'] += time.time() - t_start
 
                 # Accumulate detailed exploration timings

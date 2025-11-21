@@ -198,7 +198,22 @@ class CrystalMapStore(BaseStore):
         )
         rows = res.fetchall()
         return [cnf_pt_from_row(r, self.metadata.delta, self.metadata.xi, self.metadata.element_list) for r in rows]
-    
+
+    def get_neighbor_cnfs(self, pt_id: int):
+        """Get all neighbor CNFs for a point.
+
+        This handles both same-partition neighbors (stored with target_id)
+        and cross-partition neighbors (stored with target_cnf string).
+
+        Returns a list of CrystalNormalForm objects.
+        """
+        res = self.cursor.execute(
+            queries.select_neighbor_cnfs,
+            ([pt_id])
+        )
+        rows = res.fetchall()
+        return [cnf_from_str(row[0], self.metadata.delta, self.metadata.xi, self.metadata.element_list) for row in rows]
+
     def mark_point_explored(self, pt_id: int):
         self.cursor.execute(
             queries.mark_point_explored,
