@@ -1,4 +1,5 @@
 import pathlib
+import random
 from .search_store import SearchProcessStore
 from .crystal_map_store import CrystalMapStore
 
@@ -13,7 +14,7 @@ class PartitionedDB():
         self._db_dir = db_dir
         directory = pathlib.Path(self._db_dir)
 
-        db_files = sorted(list(directory.glob(f"{DB_PREFIX}*")))
+        db_files = sorted(list(directory.glob(f"{DB_PREFIX}*.db")))
         self.num_partitions = len(db_files)
 
         self.partition_map = {}
@@ -26,9 +27,18 @@ class PartitionedDB():
     def get_partition_idx(self, cnf: CrystalNormalForm):
         return hash(cnf) % self.num_partitions
     
-    def get_search_store(self, cnf: CrystalMapStore):
+    def get_search_store(self, cnf: CrystalNormalForm) -> SearchProcessStore:
         return self.partition_map[self.get_partition_idx(cnf)]["search_store"]
 
-    def get_map_store(self, cnf: CrystalMapStore):
+    def get_map_store(self, cnf: CrystalNormalForm) -> CrystalMapStore:
         return self.partition_map[self.get_partition_idx(cnf)]["map_store"]
+    
+    def get_search_store_by_idx(self, idx) -> SearchProcessStore:
+        return self.partition_map[idx]["search_store"]
+    
+    def get_map_store_by_idx(self, idx) -> CrystalMapStore:
+        return self.partition_map[idx]["map_store"]
+    
+    def get_random_partition_idx(self):
+        return random.randint(0, self.num_partitions - 1)
         
