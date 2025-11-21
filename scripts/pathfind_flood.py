@@ -7,9 +7,11 @@ import sys
 if __name__ == "__main__":
     
     partition_dir = sys.argv[1]
-    max_iters = sys.argv[2]
-    if max_iters is not None:
-        max_iters = int(max_iters)
+    if len(sys.argv) > 2:
+        max_iters = int(sys.argv[2])
+    else:
+        max_iters = None
+        
 
     search_proc_id = 1
     print(f"Using partition directory file {partition_dir}...")
