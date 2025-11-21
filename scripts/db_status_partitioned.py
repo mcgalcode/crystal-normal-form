@@ -95,7 +95,9 @@ def get_partitioned_stats(partition_dir, search_id=1, sample_partitions=None, db
             'explored_points': 0,
             'total_edges': 0,
             'locked_points': 0,
-            'frontier_points': 0
+            'frontier_points': 0,
+            'searched_points': 0,
+            'points_with_energy': 0
         }
 
         # Total points
@@ -105,6 +107,7 @@ def get_partitioned_stats(partition_dir, search_id=1, sample_partitions=None, db
 
         # Points with energy
         result = cur.execute("SELECT COUNT(*) FROM point WHERE value IS NOT NULL").fetchone()
+        partition_stats['points_with_energy'] = result[0]
         stats['points_with_energy'] += result[0]
 
         # Total edges
@@ -143,6 +146,7 @@ def get_partitioned_stats(partition_dir, search_id=1, sample_partitions=None, db
         # Searched points count
         try:
             result = cur.execute("SELECT COUNT(*) FROM searched_point WHERE search_id = ?", (search_id,)).fetchone()
+            partition_stats['searched_points'] = result[0]
             stats['searched_points'] += result[0]
         except sqlite3.OperationalError:
             pass
@@ -260,12 +264,12 @@ def display_stats(stats, rates=None, show_global=True, show_partitions=True):
     if show_partitions and 'per_partition' in stats and stats['per_partition']:
         print()
         print("PER-PARTITION BREAKDOWN:")
-        print("=" * 75)
-        print(f"{'Partition':<30} {'Points':>10} {'Explored':>10} {'Frontier':>10} {'Edges':>10}")
-        print("-" * 75)
+        print("=" * 105)
+        print(f"{'Partition':<30} {'Points':>10} {'W/Energy':>10} {'Explored':>10} {'Searched':>10} {'Frontier':>10} {'Edges':>10}")
+        print("-" * 105)
         for p in stats['per_partition']:
-            print(f"{p['name']:<30} {p['total_points']:>10,} {p['explored_points']:>10,} {p['frontier_points']:>10,} {p['total_edges']:>10,}")
-        print("=" * 75)
+            print(f"{p['name']:<30} {p['total_points']:>10,} {p['points_with_energy']:>10,} {p['explored_points']:>10,} {p['searched_points']:>10,} {p['frontier_points']:>10,} {p['total_edges']:>10,}")
+        print("=" * 105)
 
 
 def watch_mode(partition_dir, interval=1.0, search_id=1, show_global=True, show_partitions=True, sample_partitions=None):
