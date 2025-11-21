@@ -4,7 +4,7 @@ from ase import Atoms
 from .base_calculator import BaseCalculator
 
 
-ASE_CALC = grace_fm(GRACEModels.GRACE_1L_OAM_2Feb25) # for better code completion
+ASE_CALC = grace_fm(GRACEModels.GRACE_1L_OAM) # for better code completion
 
 class GraceCalculator(BaseCalculator):
 
