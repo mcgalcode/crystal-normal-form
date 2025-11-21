@@ -8,6 +8,7 @@ Usage:
     python scripts/db_status_partitioned.py <partition_dir> --global-only       # Show only global stats
     python scripts/db_status_partitioned.py <partition_dir> --partitions-only   # Show only partition breakdown
     python scripts/db_status_partitioned.py <partition_dir> --search 2          # Monitor search process #2
+    python scripts/db_status_partitioned.py <partition_dir> --num-partitions 50 # Sample 50 random partitions
 """
 
 import argparse
@@ -24,14 +25,43 @@ def clear_screen():
     os.system('clear' if os.name != 'nt' else 'cls')
 
 
-def get_partitioned_stats(partition_dir, search_id=1):
-    """Get aggregated statistics across all partition databases."""
-    # Find all partition files
-    pattern = os.path.join(partition_dir, "graph_partition_*.db")
-    db_files = sorted(glob.glob(pattern))
+def get_partitioned_stats(partition_dir, search_id=1, sample_partitions=None, db_files_list=None):
+    """Get aggregated statistics across all or sampled partition databases.
 
-    if not db_files:
-        raise ValueError(f"No partition files found in {partition_dir}")
+    Args:
+        partition_dir: Directory containing partition databases
+        search_id: Search process ID to query
+        sample_partitions: Number of partitions to randomly sample (None = all)
+        db_files_list: Pre-selected list of db files to use (overrides sampling)
+    """
+    # Use provided db_files_list if available, otherwise find and sample
+    if db_files_list is not None:
+        db_files = db_files_list
+        # Find total partitions for scaling calculation
+        pattern = os.path.join(partition_dir, "graph_partition_*.db")
+        all_files = sorted(glob.glob(pattern))
+        total_partitions = len(all_files)
+        is_sampled = len(db_files) < total_partitions
+        scaling_factor = total_partitions / len(db_files) if is_sampled else 1.0
+    else:
+        # Find all partition files
+        pattern = os.path.join(partition_dir, "graph_partition_*.db")
+        db_files = sorted(glob.glob(pattern))
+
+        if not db_files:
+            raise ValueError(f"No partition files found in {partition_dir}")
+
+        # Sample partitions if requested
+        total_partitions = len(db_files)
+        if sample_partitions is not None and sample_partitions < total_partitions:
+            import random
+            db_files = random.sample(db_files, sample_partitions)
+            db_files = sorted(db_files)  # Sort sampled files for consistent display
+            is_sampled = True
+            scaling_factor = total_partitions / len(db_files)
+        else:
+            is_sampled = False
+            scaling_factor = 1.0
 
     stats = {
         'total_points': 0,
@@ -48,6 +78,9 @@ def get_partitioned_stats(partition_dir, search_id=1):
         'frontier_min_energy': None,
         'frontier_max_energy': None,
         'num_partitions': len(db_files),
+        'total_partitions': total_partitions,
+        'is_sampled': is_sampled,
+        'scaling_factor': scaling_factor,
         'per_partition': []
     }
 
@@ -155,6 +188,17 @@ def get_partitioned_stats(partition_dir, search_id=1):
         stats['per_partition'].append(partition_stats)
         conn.close()
 
+    # If sampling, scale up count statistics to estimate totals
+    if is_sampled:
+        stats['total_points'] = int(stats['total_points'] * scaling_factor)
+        stats['points_with_energy'] = int(stats['points_with_energy'] * scaling_factor)
+        stats['total_edges'] = int(stats['total_edges'] * scaling_factor)
+        stats['explored_points'] = int(stats['explored_points'] * scaling_factor)
+        stats['locked_points'] = int(stats['locked_points'] * scaling_factor)
+        stats['total_frontier_points'] = int(stats['total_frontier_points'] * scaling_factor)
+        stats['searched_points'] = int(stats['searched_points'] * scaling_factor)
+        # Note: Energy min/max values are NOT scaled as they represent actual energy values
+
     return stats
 
 
@@ -172,7 +216,11 @@ def display_stats(stats, rates=None, show_global=True, show_partitions=True):
 
     if show_global:
         print("=" * 60)
-        print(f"GLOBAL STATISTICS (aggregated across {stats['num_partitions']} partitions):")
+        if stats['is_sampled']:
+            print(f"GLOBAL STATISTICS (sampled from {stats['num_partitions']} of {stats['total_partitions']} partitions):")
+            print(f"⚠️  Estimated totals (scaled by {stats['scaling_factor']:.1f}x)")
+        else:
+            print(f"GLOBAL STATISTICS (aggregated across {stats['num_partitions']} partitions):")
         print("=" * 60)
 
         total_points_rate = f" ({rates.get('total_points', 0):+.1f} pts/s)" if 'total_points' in rates else ""
@@ -220,16 +268,34 @@ def display_stats(stats, rates=None, show_global=True, show_partitions=True):
         print("=" * 75)
 
 
-def watch_mode(partition_dir, interval=1.0, search_id=1, show_global=True, show_partitions=True):
+def watch_mode(partition_dir, interval=1.0, search_id=1, show_global=True, show_partitions=True, sample_partitions=None):
     """Live updating dashboard mode."""
     try:
+        # Sample partition files once before entering loop (for consistency across refreshes)
+        sampled_db_files = None
+        if sample_partitions is not None:
+            import random
+            pattern = os.path.join(partition_dir, "graph_partition_*.db")
+            all_db_files = sorted(glob.glob(pattern))
+
+            if not all_db_files:
+                raise ValueError(f"No partition files found in {partition_dir}")
+
+            if sample_partitions < len(all_db_files):
+                sampled_db_files = random.sample(all_db_files, sample_partitions)
+                sampled_db_files = sorted(sampled_db_files)  # Sort for consistent display
+
         iteration = 0
         prev_stats = None
         prev_time = None
 
         while True:
-
-            stats = get_partitioned_stats(partition_dir, search_id=search_id)
+            # Query FIRST (so screen isn't blank while waiting)
+            start_time = time.time()
+            stats = get_partitioned_stats(partition_dir, search_id=search_id,
+                                         sample_partitions=sample_partitions,
+                                         db_files_list=sampled_db_files)
+            query_time = time.time() - start_time
             current_time = time.time()
 
             # Calculate rates
@@ -243,7 +309,7 @@ def watch_mode(partition_dir, interval=1.0, search_id=1, show_global=True, show_
                     rates['total_frontier_points'] = (stats['total_frontier_points'] - prev_stats['total_frontier_points']) / time_delta
                     rates['searched_points'] = (stats['searched_points'] - prev_stats['searched_points']) / time_delta
 
-            # Display header
+            # THEN clear and display
             clear_screen()
             print(f"CNF Partitioned Database Monitor - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
             print(f"Partition Directory: {partition_dir}")
@@ -253,7 +319,13 @@ def watch_mode(partition_dir, interval=1.0, search_id=1, show_global=True, show_
             display_stats(stats, rates=rates, show_global=show_global, show_partitions=show_partitions)
 
             print()
-            print(f"Last update: {datetime.now().strftime('%H:%M:%S')}")
+            print(f"Refreshing every {interval}s... (query took {query_time:.2f}s, iteration #{iteration})")
+            print("Press Ctrl+C to stop")
+
+            # If queries are slow, warn user
+            if query_time > interval * 0.8:
+                print(f"\n⚠️  Warning: Queries taking {query_time:.2f}s (longer than refresh interval)")
+                print(f"   Consider using --interval {max(2.0, query_time * 1.5):.1f} for smoother updates")
 
             prev_stats = stats.copy()
             prev_time = current_time
@@ -281,6 +353,8 @@ def main():
                         help='Update interval in seconds for watch mode (default: 1.0)')
     parser.add_argument('--search', '-s', type=int, default=1, metavar='ID',
                         help='Search process ID to monitor (default: 1)')
+    parser.add_argument('--num-partitions', '-n', type=int, default=None, metavar='N',
+                        help='Number of partitions to randomly sample (default: all)')
     parser.add_argument('--global-only', action='store_true',
                         help='Show only global statistics (hide partition breakdown)')
     parser.add_argument('--partitions-only', action='store_true',
@@ -298,9 +372,11 @@ def main():
 
     if args.watch:
         watch_mode(args.partition_dir, interval=args.interval, search_id=args.search,
-                   show_global=show_global, show_partitions=show_partitions)
+                   show_global=show_global, show_partitions=show_partitions,
+                   sample_partitions=args.num_partitions)
     else:
-        stats = get_partitioned_stats(args.partition_dir, search_id=args.search)
+        stats = get_partitioned_stats(args.partition_dir, search_id=args.search,
+                                     sample_partitions=args.num_partitions)
         display_stats(stats, show_global=show_global, show_partitions=show_partitions)
 
 
