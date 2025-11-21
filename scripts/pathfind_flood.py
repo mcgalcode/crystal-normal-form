@@ -6,26 +6,26 @@ import sys
 
 if __name__ == "__main__":
     
-    DB_FNAME = sys.argv[1]
+    partition_dir = sys.argv[1]
     search_proc_id = 1
-    print(f"Using DB file {DB_FNAME}...")
-    search_store = SearchProcessStore.from_file(DB_FNAME)
-    endpts = search_store.get_search_endpoints(search_proc_id)
-    end_cnfs = [pt.cnf for pt in endpts]
-    start_pts = search_store.get_search_startpoints(search_proc_id)
-    start_cnfs = [pt.cnf for pt in start_pts]
+    print(f"Using partition directory file {partition_dir}...")
+    # search_store = SearchProcessStore.from_file(partition_dir)
+    # endpts = search_store.get_search_endpoints(search_proc_id)
+    # end_cnfs = [pt.cnf for pt in endpts]
+    # start_pts = search_store.get_search_startpoints(search_proc_id)
+    # start_cnfs = [pt.cnf for pt in start_pts]
 
-    vol_filter = VolumeLimitFilter.from_endpoint_structs(
-        [cnf.reconstruct() for cnf in start_cnfs + end_cnfs],
-        0.7,
-        1.3
-    )
+    # vol_filter = VolumeLimitFilter.from_endpoint_structs(
+    #     [cnf.reconstruct() for cnf in start_cnfs + end_cnfs],
+    #     0.7,
+    #     1.3
+    # )
 
-    atomic_overlap_filter = AtomOverlapFilter(0.8)
+    # atomic_overlap_filter = AtomOverlapFilter(0.8)
 
     filters = [
-        vol_filter,
+        # vol_filter,
         # atomic_overlap_filter
     ]
 
-    continue_search_flood_fill(1, DB_FNAME, filters)
+    continue_search_flood_fill(1, partition_dir, filters, log_lvl=2)
