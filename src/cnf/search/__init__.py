@@ -43,13 +43,54 @@ def instantiate_search(search_description: str,
     end_point_ids = crystal_map_store.get_point_ids(end_cnfs)
 
     for sid in start_point_ids:
+        print(f"Adding pt {sid} to search start and frontier")
         search_store.add_search_start_point(search_id, sid)
         search_store.add_to_search_frontier_by_id(search_id, sid)
     
     for eid in end_point_ids:
         search_store.add_search_end_point(search_id, eid)
+    return search_id
 
-def explore_pt(partition_db: PartitionedDB, point_cnf: CrystalNormalForm, filters: list[SearchFilter] = None, log_lvl=1):
+
+def explore_pt(map_store: CrystalMapStore, pt_id: int, filters: list[SearchFilter] = None, log_lvl=1):
+    if filters is None:
+        filters = []
+
+    pt = map_store.get_point_by_id(pt_id)
+
+    nbs = NeighborFinder(pt.cnf).find_neighbors()
+    
+    all_nb_ids = []
+    new_nb_ids = []
+    
+    edges_to_add_to_point_store = []
+    
+    for nb in nbs:
+    
+        if len(filters) > 0:
+            struct = nb.reconstruct()
+            if not all([f.should_add_pt(nb, struct) for f in filters]):
+                continue
+
+        nb_id = map_store.add_point(nb)
+
+        if nb_id is not None:
+            new_nb_ids.append(nb_id)
+        else:
+            nb_id = map_store.get_point_by_cnf(nb).id
+
+        edges_to_add_to_point_store.append((pt.id, nb_id, None))
+
+        all_nb_ids.append(nb_id)
+    
+    map_store.bulk_add_edges(edges_to_add_to_point_store)
+
+    map_store.mark_point_explored(pt.id)
+
+    return all_nb_ids, new_nb_ids
+
+
+def explore_pt_partition(partition_db: PartitionedDB, point_cnf: CrystalNormalForm, filters: list[SearchFilter] = None, log_lvl=1):
     def _log(msg, lvl = 1):
         if lvl > log_lvl:
             print(msg)
