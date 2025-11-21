@@ -5,8 +5,7 @@ from cnf.navigation.search_filters import VolumeLimitFilter, AtomOverlapFilter
 from cnf.calculation.grace import GraceCalculator
 import sys
 
-if __name__ == "__main__":
-    
+def main():    
     partition_dir = sys.argv[1]
     if len(sys.argv) > 2:
         max_iters = int(sys.argv[2])
@@ -37,3 +36,6 @@ if __name__ == "__main__":
     ]
 
     continue_search_waterfill(1, partition_dir, GraceCalculator(), filters, log_lvl=2, max_iters=max_iters)
+
+if __name__ == "__main__":
+    main()
