@@ -103,6 +103,12 @@ INSERT INTO {constants.EDGE_TABLE_NAME}
 VALUES (?, ?)
 """
 
+bulk_insert_edges = f"""
+INSERT OR IGNORE INTO {constants.EDGE_TABLE_NAME}
+(source_id, target_id, target_cnf)
+VALUES (?, ?, ?)
+"""
+
 get_connection_by_ids = f"""
 SELECT * FROM {constants.EDGE_TABLE_NAME}
 WHERE (source_id = ? AND target_id = ?) OR (target_id = ? AND source_id = ?)

@@ -57,6 +57,15 @@ class CrystalMapStore(BaseStore):
         self.conn.commit()
         if self.cursor.rowcount > 0:
             return self.cursor.lastrowid
+    
+    def bulk_insert_points(self, points: list[CrystalNormalForm]):
+        rows = [(cnf_to_str(p), None, None, False) for p in points]
+        res = self.cursor.executemany(
+            queries.insert_point,
+            rows
+        )
+        self.conn.commit()
+        return res.rowcount        
         
     def get_point_by_cnf(self, point: CrystalNormalForm):
         cnf_str = cnf_to_str(point)
@@ -122,6 +131,21 @@ class CrystalMapStore(BaseStore):
     def add_connection(self, pt1: CrystalNormalForm, pt2: CrystalNormalForm):
         ids = self.get_point_ids([pt1, pt2])
         return self.add_connection_by_ids(*ids)
+    
+
+    def bulk_add_edges(self, edge_list: list[tuple[int, int, CrystalNormalForm]]):
+        formatted_edge_lists = []
+        for edge in edge_list:
+            if edge[2] is not None:
+                formatted_edge_lists.append((edge[0], edge[1], cnf_to_str(edge[2])))
+            else:
+                formatted_edge_lists.append(edge)
+        res = self.cursor.executemany(
+            queries.bulk_insert_edges,
+            formatted_edge_lists
+        )
+        self.conn.commit()
+        return res.rowcount
     
     def add_connection_to_target_cnf(self, source_id: int, target_cnf: CrystalNormalForm):
         res = self.cursor.execute(

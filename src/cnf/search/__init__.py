@@ -80,6 +80,10 @@ def explore_pt(partition_db: PartitionedDB, point_cnf: CrystalNormalForm, filter
     existing_nb_ids = []
     filtered_ct = 0
     edges_added = 0
+    
+    edges_to_add_to_point_store = []
+    edges_to_add_to_nb_stores: dict[int, list[tuple]] = {}
+    
 
     for nb in nbs:
         nb_partition = partition_db.get_partition_idx(nb)
@@ -109,19 +113,20 @@ def explore_pt(partition_db: PartitionedDB, point_cnf: CrystalNormalForm, filter
             timings['get_existing_points'] += time.time() - t_start
             existing_nb_ids.append((nb_partition, nb_id))
 
-        # Time: Add edges
-        t_start = time.time()
-        if point_partition == nb_partition:
-            edge_added = nb_map_store.add_connection_by_ids(pt.id, nb_id)
-        else:
-            point_map_store.add_connection_to_target_cnf(pt.id, nb)
-            edge_added = nb_map_store.add_connection_to_target_cnf(nb_id, point_cnf)
-        timings['add_edges'] += time.time() - t_start
 
-        if edge_added:
-            edges_added += 1
+        if point_partition == nb_partition:
+            edges_to_add_to_point_store.append((pt.id, nb_id, None))
+        else:
+            edges_to_add_to_point_store.append((pt.id, None, nb))
+
 
         all_nb_ids.append((nb_partition, nb_id))
+    
+    # Time: Add edges
+    t_start = time.time()
+    point_map_store.bulk_add_edges(edges_to_add_to_point_store)
+    timings['add_edges'] += time.time() - t_start
+
 
     _log(f"Exploration: {len(new_nb_ids)} new neighbors, {len(existing_nb_ids)} existing, {edges_added} edges added, {filtered_ct} filtered")
 
@@ -344,7 +349,8 @@ def continue_search_flood_fill(search_id,
                 print(f"  {key:20s}: {timing_stats[key]:8.2f}s ({pct:5.1f}%)")
 
             print(f"\n  Exploration breakdown:")
-            # Detailed exploration breakdown
+            # Detailed exploration breakdown (percentages relative to exploration time)
+            exploration_time = timing_stats['exploration']
             explore_keys = [
                 ('find_neighbors', 'explore_find_neighbors'),
                 ('filter_checks', 'explore_filter_checks'),
@@ -354,7 +360,7 @@ def continue_search_flood_fill(search_id,
                 ('mark_explored', 'explore_mark_explored')
             ]
             for label, key in explore_keys:
-                pct = (timing_stats[key] / total_time * 100) if total_time > 0 else 0
+                pct = (timing_stats[key] / exploration_time * 100) if exploration_time > 0 else 0
                 print(f"    {label:18s}: {timing_stats[key]:8.2f}s ({pct:5.1f}%)")
 
             print(f"\n  {'TOTAL':20s}: {total_time:8.2f}s")
