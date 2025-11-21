@@ -18,6 +18,7 @@ class CNFPoint():
     explored: bool
     external_id: str
     value: float
+    partition: int = None
 
 
 def cnf_pt_from_row(row: tuple, delta: int, xi: float, elements: list[str]):

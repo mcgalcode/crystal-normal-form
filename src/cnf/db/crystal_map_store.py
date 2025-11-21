@@ -9,21 +9,6 @@ import json
 from ..crystal_normal_form import CrystalNormalForm
 from .utilities import cnf_from_str, cnf_to_str, cnf_pt_from_row, CNFPoint
 
-
-### Database design notes:
-#
-# Table 1: point
-# id: int, primary key
-# cnf_str: JSON list (the actual CNF coordinate string)
-# value: float (the energy value for pathfinding, or e.g. a distance metric)
-# external_id: nullable, str (a field used to point to e.g. fireworks db entry for the calculation)
-# explored: bool
-
-#
-# Table 2: edge
-# source_id: int
-# target_id: int
-
 @dataclass
 class CNFMetadata():
 
@@ -65,7 +50,10 @@ class CrystalMapStore(BaseStore):
             rows
         )
         self.conn.commit()
-        return res.rowcount        
+        return res.rowcount
+    
+    def _cnf_pt_from_row(self, row):
+        return cnf_pt_from_row(row, self.metadata.delta, self.metadata.xi, self.metadata.element_list)
         
     def get_point_by_cnf(self, point: CrystalNormalForm):
         cnf_str = cnf_to_str(point)
@@ -76,37 +64,39 @@ class CrystalMapStore(BaseStore):
         row = res.fetchone()
         if row is None:
             return None
-        return cnf_pt_from_row(row, self.metadata.delta, self.metadata.xi, self.metadata.element_list)
+        return self._cnf_pt_from_row(row)
     
     def get_all_unexplored_points(self):
         res = self.cursor.execute(
             queries.get_all_unexplored_pts
         )
         rows = res.fetchall()
-        return [cnf_pt_from_row(r, self.metadata.delta, self.metadata.xi, self.metadata.element_list) for r in rows]
+        return [self._cnf_pt_from_row(r) for r in rows]
     
     def get_all_explored_points(self):
         res = self.cursor.execute(
             queries.get_all_explored_pts
         )
         rows = res.fetchall()
-        return [cnf_pt_from_row(r, self.metadata.delta, self.metadata.xi, self.metadata.element_list) for r in rows]
+        return [self._cnf_pt_from_row(r) for r in rows]
     
     def get_point_ids(self, points: list[CrystalNormalForm]):
-        cnf_strs = [cnf_to_str(p) for p in points]
+        pts = self.get_points_by_cnfs(points)
+        return [pt.id for pt in pts]
+    
+    def get_points_by_cnfs(self, cnfs: list[CrystalNormalForm]):
+        cnf_strs = [cnf_to_str(p) for p in cnfs]
         res = self.cursor.execute(
             queries.get_points_ids(cnf_strs),
             (cnf_strs)
         )
         rows = res.fetchall()
-        ids = []
-        for c in cnf_strs:
-            filtered_rows = [r for r in rows if r[1] == c]
-            if len(filtered_rows) == 0:
-                raise ValueError(f"No row in CNFStore found for CNF {c}")
-            ids.append(filtered_rows[0][0])
-        return ids
-
+        pts = [self._cnf_pt_from_row(r) for r in rows]
+        pt_lookup = {pt.cnf: pt for pt in pts}
+        try:
+            return [pt_lookup[c] for c in cnfs]
+        except KeyError:
+            raise ValueError(f"No row in CNFStore found for CNF!")
 
     def get_point_by_id(self, id: int):
         res = self.cursor.execute(
@@ -117,6 +107,7 @@ class CrystalMapStore(BaseStore):
         if row is None:
             return None
         return cnf_pt_from_row(row, self.metadata.delta, self.metadata.xi, self.metadata.element_list)
+
     
     def remove_point(self, point: CrystalNormalForm):
         cnf_str = cnf_to_str(point)
@@ -191,15 +182,15 @@ class CrystalMapStore(BaseStore):
         rows = res.fetchmany()
         return len(rows) > 0
     
-    def get_neighbors(self, pt_id: int):
+    def get_neighbors(self, pt_id: int) -> list[CNFPoint]:
         res = self.cursor.execute(
             queries.select_neighbors,
             ([pt_id, pt_id])
         )
         rows = res.fetchall()
-        return [cnf_pt_from_row(r, self.metadata.delta, self.metadata.xi, self.metadata.element_list) for r in rows]
+        return [self._cnf_pt_from_row(r) for r in rows]
 
-    def get_neighbor_cnfs(self, pt_id: int):
+    def get_neighbor_cnfs(self, pt_id: int) -> list[CrystalNormalForm]:
         """Get all neighbor CNFs for a point.
 
         This handles both same-partition neighbors (stored with target_id)
@@ -212,7 +203,15 @@ class CrystalMapStore(BaseStore):
             ([pt_id])
         )
         rows = res.fetchall()
-        return [cnf_from_str(row[0], self.metadata.delta, self.metadata.xi, self.metadata.element_list) for row in rows]
+        return [self._cnf_pt_from_row(row) for row in rows]
+    
+    def get_nonlocal_neighbor_cnfs(self, pt_id: int):
+        res = self.cursor.execute(
+            queries.select_nonlocal_cnf_neighbors,
+            ([pt_id])
+        )
+        rows = rows.fetchall()
+        return [self._cnf_pt_from_row(row) for row in rows]
 
     def mark_point_explored(self, pt_id: int):
         self.cursor.execute(

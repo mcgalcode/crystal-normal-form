@@ -4,7 +4,7 @@ from .search_store import SearchProcessStore
 from .crystal_map_store import CrystalMapStore
 
 from ..crystal_normal_form import CrystalNormalForm
-
+from .utilities import CNFPoint
         
 DB_PREFIX = "graph_partition"
 
