@@ -2,18 +2,18 @@
 """
 Setup a CNF search database from CIF files.
 
-This script creates a database and search process from start/end CIF files,
-generating supercells and initializing the search.
+This script creates a partitioned database and search process from start/end CIF files.
+It automatically calculates supercell indices to match atom counts, or you can specify them manually.
 
 Usage:
-    # Interactive mode (prompts for all inputs)
-    python scripts/setup_search_db.py
+    # Auto-calculate supercell indices (scales smaller structure to match larger)
+    python scripts/setup_search_db.py --start-cif bcc.cif --end-cif hcp.cif --partitions-dir search_db --num-partitions 8
 
-    # Command-line mode
-    python scripts/setup_search_db.py --start-cif bcc.cif --end-cif hcp.cif --db-file search.db --supercell-index 2
+    # Manually specify same index for both
+    python scripts/setup_search_db.py --start-cif bcc.cif --end-cif hcp.cif --partitions-dir search_db --num-partitions 8 --supercell-index 2
 
-    # Partial (prompts for missing inputs)
-    python scripts/setup_search_db.py --start-cif bcc.cif --end-cif hcp.cif
+    # Manually specify different indices
+    python scripts/setup_search_db.py --start-cif bcc.cif --end-cif hcp.cif --partitions-dir search_db --num-partitions 8 --start-supercell-index 2 --end-supercell-index 1
 """
 
 import argparse
@@ -40,7 +40,13 @@ def load_and_validate_supercells(cif_path: str, supercell_index: int,
     print(f"  Loading: {cif_path}")
 
     unit_cell = UnitCell.from_cif(cif_path)
-    print(f"  Generating supercells with index {supercell_index}...")
+    num_atoms = len(unit_cell)
+
+    if supercell_index == 1:
+        print(f"  Using primitive cell ({num_atoms} atoms)")
+    else:
+        print(f"  Generating supercells with index {supercell_index}...")
+        print(f"  Primitive cell: {num_atoms} atoms → Supercell: {num_atoms * supercell_index} atoms")
 
     supercells = unit_cell.supercells(supercell_index)
     cnfs = [uc.to_cnf(xi, delta) for uc in supercells]
@@ -51,9 +57,43 @@ def load_and_validate_supercells(cif_path: str, supercell_index: int,
     return unique_cnfs
 
 
+def calculate_supercell_indices(start_atoms: int, end_atoms: int):
+    """Calculate supercell indices needed to match atom counts.
+
+    Returns:
+        (start_index, end_index): Supercell indices for start and end structures
+    """
+    if start_atoms == end_atoms:
+        return 1, 1
+
+    # Determine which needs scaling
+    if start_atoms < end_atoms:
+        ratio = end_atoms / start_atoms
+        if ratio == int(ratio):
+            return int(ratio), 1
+        else:
+            raise ValueError(
+                f"Cannot automatically determine supercell index: "
+                f"end structure has {end_atoms} atoms, start has {start_atoms} atoms. "
+                f"Ratio {ratio:.2f} is not an integer. "
+                f"Please specify supercell indices manually."
+            )
+    else:  # end_atoms < start_atoms
+        ratio = start_atoms / end_atoms
+        if ratio == int(ratio):
+            return 1, int(ratio)
+        else:
+            raise ValueError(
+                f"Cannot automatically determine supercell index: "
+                f"start structure has {start_atoms} atoms, end has {end_atoms} atoms. "
+                f"Ratio {ratio:.2f} is not an integer. "
+                f"Please specify supercell indices manually."
+            )
+
+
 def setup_search_database(start_cif: str, end_cif: str, partitions_dir: str, num_partitions: int,
-                          supercell_index: int, xi: float = DEFAULT_XI,
-                          delta: int = DEFAULT_DELTA) -> int:
+                          start_supercell_index: int, end_supercell_index: int,
+                          xi: float = DEFAULT_XI, delta: int = DEFAULT_DELTA) -> int:
     """Create database and populate with start/end points.
 
     Returns:
@@ -65,8 +105,8 @@ def setup_search_database(start_cif: str, end_cif: str, partitions_dir: str, num
     print("=" * 70)
 
     # Load and validate structures
-    start_cnfs = load_and_validate_supercells(start_cif, supercell_index, xi, delta, "START STRUCTURE")
-    end_cnfs = load_and_validate_supercells(end_cif, supercell_index, xi, delta, "END STRUCTURE")
+    start_cnfs = load_and_validate_supercells(start_cif, start_supercell_index, xi, delta, "START STRUCTURE")
+    end_cnfs = load_and_validate_supercells(end_cif, end_supercell_index, xi, delta, "END STRUCTURE")
 
     # Validate start-end distances are consistent
     print("\nValidating start-end distances...")
@@ -112,23 +152,32 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Interactive mode (prompts for inputs)
-  %(prog)s
+  # Auto-calculate supercell indices to match atom counts
+  %(prog)s --start-cif bcc.cif --end-cif hcp.cif --partitions-dir search_db --num-partitions 8
 
-  # Command-line mode
-  %(prog)s --start-cif bcc.cif --end-cif hcp.cif --db-file search.db --supercell-index 2
+  # Use same supercell index for both structures
+  %(prog)s --start-cif bcc.cif --end-cif hcp.cif --partitions-dir search_db --num-partitions 8 --supercell-index 2
+
+  # Specify different supercell indices for each structure
+  %(prog)s --start-cif bcc.cif --end-cif hcp.cif --partitions-dir search_db --num-partitions 8 --start-supercell-index 2 --end-supercell-index 1
 
   # Custom CNF parameters
-  %(prog)s --start-cif bcc.cif --end-cif hcp.cif --xi 2.0 --delta 15
+  %(prog)s --start-cif bcc.cif --end-cif hcp.cif --partitions-dir search_db --num-partitions 8 --xi 2.0 --delta 15
         """
     )
 
     parser.add_argument('--start-cif', help='Path to starting structure CIF file')
     parser.add_argument('--end-cif', help='Path to ending structure CIF file')
-    parser.add_argument('--partitions-dir', help='Path for the database partition files to create')
-    parser.add_argument('--num-partitions', type=int, help='Path for the database partition files to create')
+    parser.add_argument('--partitions-dir', help='Directory for database partition files')
+    parser.add_argument('--num-partitions', type=int, help='Number of database partitions to create')
 
-    parser.add_argument('--supercell-index', type=int, help='Supercell index (e.g., 2 for 2x2x2)')
+    parser.add_argument('--supercell-index', type=int,
+                       help='Supercell index for BOTH structures (e.g., 2 means 2x atoms)')
+    parser.add_argument('--start-supercell-index', type=int,
+                       help='Supercell index for start structure only (overrides --supercell-index)')
+    parser.add_argument('--end-supercell-index', type=int,
+                       help='Supercell index for end structure only (overrides --supercell-index)')
+
     parser.add_argument('--xi', type=float, default=DEFAULT_XI,
                        help=f'Xi parameter for CNF (default: {DEFAULT_XI})')
     parser.add_argument('--delta', type=int, default=DEFAULT_DELTA,
@@ -164,15 +213,38 @@ Examples:
     start_atoms = len(start_unit_cell)
     end_atoms = len(end_unit_cell)
 
-    # Get supercell index (from args or prompt)
-    supercell_index = args.supercell_index
-    if supercell_index is None:
-        print("\nSupercell generation")
-        print("-" * 70)
-        print(f"Start structure: {start_atoms} atoms per unit cell")
-        print(f"End structure:   {end_atoms} atoms per unit cell")
-        print()
-        supercell_index = int(input("Enter supercell index (e.g., 2 for 2x2x2): "))
+    print(f"Start structure: {start_atoms} atoms per unit cell")
+    print(f"End structure:   {end_atoms} atoms per unit cell")
+
+    # Determine supercell indices with precedence:
+    # 1. Individual indices (--start/end-supercell-index) override everything
+    # 2. Common index (--supercell-index) applies to both
+    # 3. Auto-calculate to match atom counts
+
+    if args.start_supercell_index is not None or args.end_supercell_index is not None:
+        # Individual indices specified
+        start_supercell_index = args.start_supercell_index if args.start_supercell_index is not None else args.supercell_index if args.supercell_index is not None else 1
+        end_supercell_index = args.end_supercell_index if args.end_supercell_index is not None else args.supercell_index if args.supercell_index is not None else 1
+        print(f"\nUsing specified supercell indices:")
+        print(f"  Start: index {start_supercell_index} → {start_atoms * start_supercell_index} atoms")
+        print(f"  End:   index {end_supercell_index} → {end_atoms * end_supercell_index} atoms")
+    elif args.supercell_index is not None:
+        # Common index for both
+        start_supercell_index = args.supercell_index
+        end_supercell_index = args.supercell_index
+        print(f"\nUsing supercell index {args.supercell_index} for both structures:")
+        print(f"  Start: {start_atoms * start_supercell_index} atoms")
+        print(f"  End:   {end_atoms * end_supercell_index} atoms")
+    else:
+        # Auto-calculate
+        try:
+            start_supercell_index, end_supercell_index = calculate_supercell_indices(start_atoms, end_atoms)
+            print(f"\nAuto-calculated supercell indices:")
+            print(f"  Start: index {start_supercell_index} → {start_atoms * start_supercell_index} atoms")
+            print(f"  End:   index {end_supercell_index} → {end_atoms * end_supercell_index} atoms")
+        except ValueError as e:
+            print(f"\n❌ {e}")
+            sys.exit(1)
 
     # Get database filename (from args or prompt)
     partitions_dir = args.partitions_dir
@@ -201,7 +273,8 @@ Examples:
             end_cif=end_cif,
             partitions_dir=partitions_dir,
             num_partitions=num_partitions,
-            supercell_index=supercell_index,
+            start_supercell_index=start_supercell_index,
+            end_supercell_index=end_supercell_index,
             xi=args.xi,
             delta=args.delta
         )
