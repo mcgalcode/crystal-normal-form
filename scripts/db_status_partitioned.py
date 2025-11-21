@@ -38,6 +38,7 @@ def get_partitioned_stats(partition_dir):
         'global_min_energy': None,
         'global_max_energy': None,
         'locked_points': 0,
+        'total_frontier_points': 0,
         'num_partitions': len(db_files),
         'per_partition': []
     }
@@ -93,6 +94,7 @@ def get_partitioned_stats(partition_dir):
         try:
             result = cur.execute("SELECT COUNT(*) FROM search_frontier_member").fetchone()
             partition_stats['frontier_points'] = result[0]
+            stats['total_frontier_points'] += result[0]
         except sqlite3.OperationalError:
             # Table doesn't exist in this partition
             partition_stats['frontier_points'] = 0
@@ -115,12 +117,14 @@ def display_stats(stats, rates=None):
     total_points_rate = f" ({rates.get('total_points', 0):+.1f} pts/s)" if 'total_points' in rates else ""
     explored_rate = f" ({rates.get('explored_points', 0):+.1f} pts/s)" if 'explored_points' in rates else ""
     edges_rate = f" ({rates.get('total_edges', 0):+.1f} edges/s)" if 'total_edges' in rates else ""
+    frontier_rate = f" ({rates.get('total_frontier_points', 0):+.1f} pts/s)" if 'total_frontier_points' in rates else ""
 
     print(f"  Total Points:              {stats['total_points']:,}{total_points_rate}")
     print(f"  Neighbors Found (explored):{stats['explored_points']:,}{explored_rate}")
     print(f"  Points with Energy:        {stats['points_with_energy']:,}")
     print(f"  Total Edges:               {stats['total_edges']:,}{edges_rate}")
     print(f"  Locked Points:             {stats['locked_points']:,}")
+    print(f"  Frontier Points:           {stats['total_frontier_points']:,}{frontier_rate}")
 
     if stats['global_min_energy'] is not None:
         print(f"  Global Energy Range:       [{stats['global_min_energy']:.4f}, {stats['global_max_energy']:.4f}]")
@@ -151,7 +155,6 @@ def watch_mode(partition_dir, interval=1.0):
         while True:
 
             stats = get_partitioned_stats(partition_dir)
-            clear_screen()
             current_time = time.time()
 
             # Calculate rates
@@ -162,8 +165,10 @@ def watch_mode(partition_dir, interval=1.0):
                     rates['total_points'] = (stats['total_points'] - prev_stats['total_points']) / time_delta
                     rates['explored_points'] = (stats['explored_points'] - prev_stats['explored_points']) / time_delta
                     rates['total_edges'] = (stats['total_edges'] - prev_stats['total_edges']) / time_delta
+                    rates['total_frontier_points'] = (stats['total_frontier_points'] - prev_stats['total_frontier_points']) / time_delta
 
             # Display header
+            clear_screen()
             print(f"CNF Partitioned Database Monitor - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
             print(f"Partition Directory: {partition_dir}")
             print(f"Update #{iteration} (refreshing every {interval}s, Ctrl+C to exit)")
