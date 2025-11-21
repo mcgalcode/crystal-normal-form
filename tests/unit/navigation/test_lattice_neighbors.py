@@ -3,7 +3,9 @@ import numpy as np
 import helpers
 
 from cnf.cnf_constructor import CNFConstructor
+from cnf import CrystalNormalForm
 from cnf.navigation.lattice_neighbor_finder import LatticeStep, LatticeNeighborFinder
+from cnf.navigation.neighbor_finder import NeighborFinder
 
 @pytest.fixture()
 def cnf_constructor():
@@ -32,6 +34,15 @@ def test_lattice_neighbor_lnfs_make_sense(cnf_constructor):
         diff = np.array(sorted(lnf.coords)) - np.array(sorted(original_cnf.lattice_normal_form.coords))
         assert np.sum(np.abs(diff)) == 2
         assert np.max(np.abs(diff)) == 1
+
+def test_tricky_neighbor():
+    xi = 1.5
+    delta = 5
+    element_list = ['Zr', 'Zr']
+    cnf = CrystalNormalForm.from_tuple((1, 7, 21, 25, 7, 22, 25, 1, 3, 3), element_list, xi, delta)
+    nbs = NeighborFinder(cnf).find_neighbors()
+
+    
 
 @helpers.skip_if_fast
 @helpers.parameterized_by_mp_struct_idxs(range(0,1000,100))
