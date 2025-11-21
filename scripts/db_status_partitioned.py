@@ -83,7 +83,9 @@ def get_partitioned_stats(partition_dir, search_id=1, sample_partitions=None, db
         'total_partitions': total_partitions,
         'is_sampled': is_sampled,
         'scaling_factor': scaling_factor,
-        'per_partition': []
+        'per_partition': [],
+        'start_points': [],
+        'current_water_level': None
     }
 
     for db_file in db_files:
@@ -191,8 +193,30 @@ def get_partitioned_stats(partition_dir, search_id=1, sample_partitions=None, db
         except sqlite3.OperationalError:
             pass
 
+        # Get start points with their energies
+        try:
+            result = cur.execute(
+                """SELECT pt.id, pt.value, pt.cnf
+                   FROM search_start_point AS sp
+                   JOIN point AS pt ON pt.id = sp.point_id
+                   WHERE sp.search_id = ?""",
+                (search_id,)
+            ).fetchall()
+            for row in result:
+                stats['start_points'].append({
+                    'id': row[0],
+                    'energy': row[1],
+                    'cnf': row[2],
+                    'partition': os.path.basename(db_file)
+                })
+        except sqlite3.OperationalError:
+            pass
+
         stats['per_partition'].append(partition_stats)
         conn.close()
+
+    # Current water level is the minimum frontier energy
+    stats['current_water_level'] = stats['frontier_min_energy']
 
     # If sampling, scale up count statistics to estimate totals
     if is_sampled:
@@ -248,6 +272,22 @@ def display_stats(stats, rates=None, show_global=True, show_partitions=True, sho
             print(f"  Global Energy Range:       [{stats['global_min_energy']:.8f}, {stats['global_max_energy']:.8f}]")
         else:
             print(f"  Global Energy Range:       No energies calculated")
+
+        print()
+        print("START POINTS (where water began):")
+        if stats['start_points']:
+            for i, sp in enumerate(stats['start_points'], 1):
+                energy_str = format_value(sp['energy']) if sp['energy'] is not None else "Not calculated"
+                print(f"  Start Point {i}:            {energy_str}")
+        else:
+            print("  No start points found")
+
+        print()
+        print("CURRENT WATER LEVEL:")
+        if stats['current_water_level'] is not None:
+            print(f"  Lowest Frontier Energy:    {format_value(stats['current_water_level'])}")
+        else:
+            print(f"  No frontier points with energy")
 
         print()
         print("SEARCHED REGION (below water surface):")

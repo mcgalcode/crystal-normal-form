@@ -548,6 +548,15 @@ def continue_search_waterfill(search_id,
         for frontier_point in frontier_points:
             logger.debug(f"Considering frontier pt ID: {frontier_point.id}, VALUE: {frontier_point.value}, CNF: {frontier_point.cnf.coords}")
 
+            # If frontier point has no energy, calculate it (happens for start points)
+            if frontier_point.value is None:
+                logger.debug(f"Frontier point has no energy, calculating...")
+                energy = energy_calc.calculate_energy(frontier_point.cnf)
+                logger.info(f"Energy: {energy} CNF={frontier_point.cnf.coords} (frontier point)")
+                # Update in the partition where we read this point from
+                random_read_map_store.set_point_value(frontier_point.id, energy)
+                frontier_point.value = energy  # Update local copy
+
             # If frontier point not explored yet, explore it first
             if not frontier_point.explored:
                 logger.debug(f"Frontier point not explored yet, exploring...")
