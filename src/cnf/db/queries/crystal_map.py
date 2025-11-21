@@ -76,7 +76,7 @@ WHERE cnf = ?
 def get_points_ids(cnf_pts: list[str]):
     placeholders = ','.join(['?'] * len(cnf_pts))
     return f"""
-SELECT id, cnf FROM {constants.POINT_TABLE_NAME} WHERE
+SELECT id, cnf, external_id, value, explored FROM {constants.POINT_TABLE_NAME} WHERE
 cnf IN ({placeholders})
 """
 
@@ -140,6 +140,11 @@ SELECT
 FROM {constants.EDGE_TABLE_NAME} AS edge
 LEFT JOIN {constants.POINT_TABLE_NAME} AS pt2 ON edge.target_id = pt2.id
 WHERE edge.source_id = ?
+"""
+
+select_nonlocal_cnf_neighbors = f"""
+SELECT edge.target_cnf FROM {constants.EDGE_TABLE_NAME} AS edge
+WHERE edge.source_id = ? AND edge.target_cnf IS NOT NULL
 """
 
 mark_point_explored = f"""

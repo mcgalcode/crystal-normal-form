@@ -7,7 +7,7 @@ from .db_adapter import DBAdapter
 from .base import BaseStore
 from ..crystal_normal_form import CrystalNormalForm
 from .crystal_map_store import CrystalMapStore
-from .utilities import cnf_pt_from_row, CNFPoint
+from .utilities import cnf_pt_from_row, CNFPoint, cnf_to_str
 
 class SearchProcessStore(BaseStore):
 
@@ -133,6 +133,17 @@ class SearchProcessStore(BaseStore):
         res = self.cursor.execute(
             sp_queries.select_unsearched_neighbors_w_lock,
             ([search_id, search_id, pt_id, search_id, search_id, pt_id])
+        )
+        rows = res.fetchall()
+        cnfs = [cnf_pt_from_row(r, self.metadata.delta, self.metadata.xi, self.metadata.element_list) for r in rows]
+        lock_info = {row[0]: row[-1] for row in rows}
+        return cnfs, lock_info
+    
+    def get_unsearched_points_by_cnfs_with_lock_info(self, search_id: int, cnfs: list[CrystalNormalForm]) -> tuple[list[CNFPoint], dict[int, bool]]:
+        cnf_strs = [cnf_to_str(c) for c in cnfs]
+        res = self.cursor.execute(
+            sp_queries.select_unsearched_points_by_cnf_with_lock_info(cnfs),
+            ([search_id, search_id, *cnf_strs])
         )
         rows = res.fetchall()
         cnfs = [cnf_pt_from_row(r, self.metadata.delta, self.metadata.xi, self.metadata.element_list) for r in rows]
