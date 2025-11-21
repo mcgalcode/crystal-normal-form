@@ -127,9 +127,7 @@ def explore_pt_partition(partition_db: PartitionedDB, point_cnf: CrystalNormalFo
     filtered_ct = 0
     edges_added = 0
     
-    edges_to_add_to_point_store = []
-    edges_to_add_to_nb_stores: dict[int, list[tuple]] = {}
-    
+    edges_to_add_to_point_store = []   
 
     for nb in nbs:
         nb_partition = partition_db.get_partition_idx(nb)
@@ -500,3 +498,120 @@ def continue_search_flood_fill(search_id,
         json.dump(report, f, indent=2)
 
     print(f"\nTiming report written to: {filename}")
+
+
+def continue_search_waterfill(search_id,
+                               partitions_dir: str,
+                               energy_calc: BaseCalculator,
+                               search_filters: list[SearchFilter] = None,
+                               max_iters: int = None,
+                               frontier_limit: int = 100,
+                               log_lvl: int = 0):
+    """Continue a water-filling search process with partitioned database.
+
+    Water-filling algorithm:
+    1. Get frontier points (sorted by energy, lowest first)
+    2. For each frontier point:
+       - Get all its neighbors (across all partitions)
+       - Find unsearched, unlocked neighbors
+       - Select one, lock it, calculate energy, add to frontier
+       - If no unsearched neighbors left, mark frontier point as searched
+
+    Args:
+        search_id: ID of the search process
+        partitions_dir: Path to the partitions directory
+        energy_calc: Calculator to compute point energies
+        search_filters: Optional filters to apply to candidate points
+        max_iters: Maximum iterations before stopping (default: infinite)
+        frontier_limit: Max frontier points to consider per iteration (default: 100)
+        log_lvl: Logging verbosity level
+    """
+    db = PartitionedDB(partitions_dir)
+    log_lvl = 0
+    def _log(msg, lvl=1):
+        if lvl > log_lvl:
+            print(msg)
+
+    if max_iters is None:
+        max_iters = math.inf
+
+    num_iters = 0
+    while True:
+        _log(f"================ BEGINNING STEP {num_iters} ================")
+        if num_iters > max_iters:
+            _log(f"Reached {num_iters} iterations, quitting...")
+            break
+        _log(f"Continuing water-filling search...")
+
+        # Get frontier points from a random partition
+        # (In water-filling, frontier points have the lowest energy values)
+        random_read_store_idx = db.get_random_partition_idx()
+        random_read_search_store = db.get_search_store_by_idx(random_read_store_idx)
+        random_read_map_store = db.get_map_store_by_idx(random_read_store_idx)
+
+        frontier_points = random_read_search_store.get_frontier_points_in_search(search_id, limit=frontier_limit)
+        _log(f"Found {len(frontier_points)} frontier points to consider (limited to {frontier_limit})...")
+
+        selected_point = None
+        selected_partition = None
+
+        for frontier_point in frontier_points:
+            _log(f"Considering frontier pt ID: {frontier_point.id}, CNF: {frontier_point.cnf.coords}")
+
+            # If frontier point not explored yet, explore it first
+            if not frontier_point.explored:
+                _log(f"Frontier point not explored yet, exploring...")
+                _, new_nb_ids, _ = explore_pt_partition(db, frontier_point.cnf, filters=search_filters, log_lvl=log_lvl)
+                _log(f"Added {len(new_nb_ids)} neighbors to the map!")
+
+            # Get all neighbors across all partitions with their metadata
+            # NOTE: Don't pass frontier_point.id! It's only valid in the partition we read from,
+            # not the partition the point belongs to (determined by CNF hash).
+            # Pass None to look up the correct point ID in its actual partition.
+            unsearched_neighbors, partition_locks = db.get_unsearched_neighbors_and_locks(frontier_point.cnf, search_id)
+            _log(f"Found {len(unsearched_neighbors)} unsearched neighbors")
+
+            if len(unsearched_neighbors) == 0:
+                _log(f"No unsearched neighbors - frontier point exhausted, marking as searched")
+                random_read_search_store.mark_point_searched_by_id(search_id, frontier_point.id)
+                random_read_search_store.remove_from_search_frontier_by_id(search_id, frontier_point.id)
+                continue
+
+            for candidate in unsearched_neighbors:
+                candidate_partition = candidate.partition
+                candidate_map_store = db.get_map_store_by_idx(candidate_partition)
+                lock_acquired = candidate_map_store.lock_point(candidate.id)
+                if not lock_acquired:
+                    _log(f"Failed to acquire lock (another worker got it first), trying next candidate point...")
+                    continue
+                else:
+                    _log(f"Lock acquired successfully!")
+                    selected_point = candidate
+                    selected_partition = candidate_partition
+                    break
+
+            selected_point = candidate
+            selected_partition = candidate_partition
+            break
+
+        if selected_point is None:
+            _log(f"Found no unlocked points to compute, sleeping for 5 seconds...")
+            # time.sleep(5)
+            continue
+
+        # Calculate energy for selected point
+        _log(f"Calculating energy for point {selected_point.cnf.coords} (ID {selected_point.id} in partition {selected_partition})")
+        energy = energy_calc.calculate_energy(selected_point.cnf)
+        _log(f"Energy: {energy}")
+
+        # Set the energy value in the correct partition
+        selected_map_store = db.get_map_store_by_idx(selected_partition)
+        selected_search_store = db.get_search_store_by_idx(selected_partition)
+
+        selected_map_store.set_point_value(selected_point.id, energy)
+        selected_search_store.add_to_search_frontier_by_id(search_id, selected_point.id)
+        selected_map_store.unlock_point(selected_point.id)
+
+        _log(f"Added point to search frontier and removed lock!")
+
+        num_iters += 1
