@@ -298,6 +298,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "ase" },
+    { name = "average-minimum-distance" },
     { name = "line-profiler" },
     { name = "mp-api" },
     { name = "numpy" },
@@ -318,6 +319,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "ase", specifier = ">=3.26.0" },
+    { name = "average-minimum-distance", specifier = ">=1.6.0" },
     { name = "line-profiler", specifier = ">=5.0.0" },
     { name = "mp-api", specifier = ">=0.45.8" },
     { name = "numpy", specifier = "<2" },

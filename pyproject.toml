@@ -9,6 +9,7 @@ authors = [
 requires-python = ">=3.11"
 dependencies = [
     "ase>=3.26.0",
+    "average-minimum-distance>=1.6.0",
     "line-profiler>=5.0.0",
     "mp-api>=0.45.8",
     "numpy<2",
@@ -21,11 +22,18 @@ dependencies = [
 ]
 
 [project.scripts]
-cnf = "cnf:main"
+cnf-setup-search = "scripts.setup_search_db:main"
+cnf-pathfind-waterfill = "scripts.pathfind_waterfill:main"
+cnf-db-status = "scripts.db_status_partitioned:main"
+cnf-check-completion = "scripts.check_search_completion:main"
 
 [build-system]
-requires = ["uv_build>=0.8.4,<0.9.0"]
-build-backend = "uv_build"
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src", "."]
+include = ["cnf*", "scripts*"]
 
 [dependency-groups]
 dev = [
