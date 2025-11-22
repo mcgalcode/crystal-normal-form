@@ -15,6 +15,8 @@ import json
 import os
 from datetime import datetime
 
+FRONTIER_WIDTH = 0.002 # eV
+
 def instantiate_search(search_description: str,
                        start_cnfs: list[CrystalNormalForm],
                        end_cnfs: list[CrystalNormalForm],
@@ -528,7 +530,7 @@ def continue_search_waterfill(search_id,
 
     # Water level tracking
     water_level = None
-    tolerance = 0.001  # 1 meV absolute tolerance (very high precision)
+    tolerance = FRONTIER_WIDTH
 
     num_iters = 0
     while True:

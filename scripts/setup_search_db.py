@@ -24,6 +24,7 @@ import shutil
 import tqdm
 
 from cnf import UnitCell, CrystalNormalForm
+from cnf.calculation.grace import GraceCalculator
 from cnf.db.setup import setup_cnf_db
 from cnf.search import instantiate_search
 from cnf.utils.pdd import pdd_for_cnfs
@@ -104,25 +105,23 @@ def setup_search_database(start_cif: str, end_cif: str, partitions_dir: str, num
     print("=" * 70)
     print("SETTING UP CNF SEARCH DATABASE")
     print("=" * 70)
-
+    gcalc = GraceCalculator()
     # Load and validate structures
-    start_cnfs = load_and_validate_supercells(start_cif, start_supercell_index, xi, delta, "START STRUCTURE")
-    end_cnfs = load_and_validate_supercells(end_cif, end_supercell_index, xi, delta, "END STRUCTURE")
+    unrelaxed_start_cnfs = load_and_validate_supercells(start_cif, start_supercell_index, xi, delta, "START STRUCTURE")
+    
+    start_cnfs = []
+    for c in tqdm.tqdm(unrelaxed_start_cnfs, desc="Relaxing starting CNFs"):
+        print(f"Relaxing CNF {c}")
+        relaxed, e, iters = gcalc.relax(c)
+        start_cnfs.append(relaxed)
 
-    # Validate start-end distances are consistent
-    print("\nValidating start-end distances...")
-    start_end_dists = []
-    for s in start_cnfs:
-        for e in end_cnfs:
-            dist = pdd_for_cnfs(s, e, k=100)
-            start_end_dists.append(round(dist, 10))
+    unrelaxed_end_cnfs = load_and_validate_supercells(end_cif, end_supercell_index, xi, delta, "END STRUCTURE")
 
-    unique_dists = set(start_end_dists)
-    if len(unique_dists) == 1:
-        print(f"  ✓ All start-end distances equal: {list(unique_dists)[0]:.6f}")
-    else:
-        print(f"  ⚠️  Warning: Found {len(unique_dists)} different start-end distances")
-        print(f"     Range: {min(unique_dists):.6f} to {max(unique_dists):.6f}")
+    end_cnfs = []
+    for c in tqdm.tqdm(unrelaxed_end_cnfs, desc="Relaxing ending CNFs"):
+        print(f"Relaxing CNF {c}")
+        relaxed, e, iters = gcalc.relax(c)
+        end_cnfs.append(relaxed)
 
     element_list = start_cnfs[0].elements
     description = f"Search: {Path(start_cif).stem} → {Path(end_cif).stem}"

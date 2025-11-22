@@ -20,6 +20,7 @@ import os
 import glob
 import statistics
 from datetime import datetime
+from cnf.search import FRONTIER_WIDTH
 
 
 def clear_screen():
@@ -297,7 +298,7 @@ def display_stats(stats, rates=None, show_global=True, show_partitions=True, sho
         print()
         print("CURRENT WATER LEVEL:")
         if stats['current_water_level'] is not None:
-            tolerance = 0.001  # Same as in the algorithm (1 meV)
+            tolerance = FRONTIER_WIDTH  # Same as in the algorithm (1 meV)
             max_threshold = stats['current_water_level'] + tolerance
             print(f"  Lowest Frontier Energy:    {format_value(stats['current_water_level'])}")
             print(f"  Max Threshold (+1meV):     {format_value(max_threshold)}")

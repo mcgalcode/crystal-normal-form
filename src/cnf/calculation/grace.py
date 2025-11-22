@@ -24,7 +24,7 @@ class GraceCalculator(BaseCalculator):
         while True:
             print(f"Energy: {min_e}")
             nbs = NeighborFinder(min_cnf).find_neighbors()
-            nb_es = sorted([(self.calculate_energy(n), n) for n in nbs])
+            nb_es = sorted([(self.calculate_energy(n), n) for n in nbs], key=lambda x: x[0])
             min_nb_e, min_nb = nb_es[0]
             if min_nb_e < min_e:
                 min_e = min_nb_e
