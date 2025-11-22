@@ -66,8 +66,8 @@ Examples:
     atomic_overlap_filter = AtomOverlapFilter(0.8)
 
     filters = [
-        vol_filter,
-        atomic_overlap_filter
+        # vol_filter,
+        # atomic_overlap_filter
     ]
 
     continue_search_waterfill(

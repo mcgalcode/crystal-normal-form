@@ -184,14 +184,21 @@ def test_can_connect_two_points(path_find_start_structs, path_find_end_structs):
 
     start_cnfs = list(set([s.to_cnf(xi, delta) for s in path_find_start_structs]))
     end_cnfs = list(set([s.to_cnf(xi, delta) for s in path_find_end_structs]))
+    print("Start CNFs")
+    for s in start_cnfs:
+        print(s.coords)
+
+    print("End CNFs")
+    for e in end_cnfs:
+        print(e.coords)
     cmap = CrystalMap.from_cnfs(start_cnfs)
     
 
     search_filters = [
-        VolumeLimitFilter.from_endpoint_structs(
-            [*path_find_start_structs, *path_find_end_structs],
-        ),
-        AtomOverlapFilter(0.85)
+        # VolumeLimitFilter.from_endpoint_structs(
+        #     [*path_find_start_structs, *path_find_end_structs],
+        # ),
+        # AtomOverlapFilter(0.85)
     ]
     score_fun = PDDScorer(path_find_end_structs[:1])
     # score_fun = NullScore()
