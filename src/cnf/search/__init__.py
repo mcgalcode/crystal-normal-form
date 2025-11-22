@@ -503,13 +503,14 @@ def continue_search_waterfill(search_id,
                                log_lvl: int = 0):
     """Continue a water-filling search process with partitioned database.
 
-    Water-filling algorithm:
-    1. Get frontier points (sorted by energy, lowest first)
-    2. For each frontier point:
-       - Get all its neighbors (across all partitions)
-       - Find unsearched, unlocked neighbors
-       - Select one, lock it, calculate energy, add to frontier
-       - If no unsearched neighbors left, mark frontier point as searched
+    True water-filling algorithm with global water level tracking:
+    1. Track water_level = minimum frontier energy across all partitions
+    2. Only explore frontier points at or near the water level
+    3. When exploring a point:
+       - Calculate energy for ALL new neighbors
+       - Add all neighbors to frontier
+       - Mark point as searched
+    4. Water rises naturally as low-energy regions are exhausted
 
     Args:
         search_id: ID of the search process
@@ -525,25 +526,42 @@ def continue_search_waterfill(search_id,
     if max_iters is None:
         max_iters = math.inf
 
+    # Water level tracking
+    water_level = None
+    tolerance = 0.001  # 1 meV absolute tolerance (very high precision)
+
     num_iters = 0
     while True:
         logger.debug(f"================ BEGINNING STEP {num_iters} ================")
         if num_iters > max_iters:
             logger.info(f"Reached {num_iters} iterations, quitting...")
             break
-        logger.debug(f"Continuing water-filling search...")
 
-        # Get frontier points from a random partition
-        # (In water-filling, frontier points have the lowest energy values)
+        # Initialize or update water level if needed
+        if water_level is None:
+            logger.debug("Initializing water level...")
+            water_level = db.get_current_water_level(search_id)
+            logger.info(f"Initial water level: {water_level}")
+
+        logger.debug(f"Current water level: {water_level}")
+
+        # Get frontier points from a random partition, filtered by water level
         random_read_store_idx = db.get_random_partition_idx()
         random_read_search_store = db.get_search_store_by_idx(random_read_store_idx)
         random_read_map_store = db.get_map_store_by_idx(random_read_store_idx)
 
-        frontier_points = random_read_search_store.get_frontier_points_in_search(search_id, limit=frontier_limit)
-        logger.debug(f"Found {len(frontier_points)} frontier points to consider (limited to {frontier_limit})...")
+        max_energy = (water_level + tolerance) if water_level is not None else None
+        frontier_points = random_read_search_store.get_frontier_points_in_search(
+            search_id, limit=frontier_limit, max_energy=max_energy
+        )
+        logger.debug(f"Found {len(frontier_points)} frontier points at/near water level (limit={frontier_limit}, max_energy={max_energy})...")
 
-        selected_point = None
-        selected_partition = None
+        # If no frontier points at current level, update water level
+        if len(frontier_points) == 0:
+            logger.debug("No frontier points at current water level, updating...")
+            water_level = db.get_current_water_level(search_id)
+            logger.info(f"Updated water level: {water_level}")
+            continue
 
         for frontier_point in frontier_points:
             logger.debug(f"Considering frontier pt ID: {frontier_point.id}, VALUE: {frontier_point.value}, CNF: {frontier_point.cnf.coords}")
@@ -561,57 +579,30 @@ def continue_search_waterfill(search_id,
             if not frontier_point.explored:
                 logger.debug(f"Frontier point not explored yet, exploring...")
                 _, new_nb_ids, _ = explore_pt_partition(db, frontier_point.cnf, filters=search_filters, log_lvl=log_lvl)
-                logger.debug(f"Added {len(new_nb_ids)} neighbors to the map!")
+                logger.debug(f"Explored point, found {len(new_nb_ids)} new neighbors")
 
-            # Get all neighbors across all partitions with their metadata
-            # NOTE: Don't pass frontier_point.id! It's only valid in the partition we read from,
-            # not the partition the point belongs to (determined by CNF hash).
-            # Pass None to look up the correct point ID in its actual partition.
-            unsearched_neighbors, partition_locks = db.get_unsearched_neighbors_and_locks(frontier_point.cnf, search_id)
-            logger.debug(f"Found {len(unsearched_neighbors)} unsearched neighbors")
+                # Calculate energy for ALL new neighbors and add them to frontier
+                for nb_partition, nb_id in new_nb_ids:
+                    nb_map_store = db.get_map_store_by_idx(nb_partition)
+                    nb_search_store = db.get_search_store_by_idx(nb_partition)
+                    nb_point = nb_map_store.get_point_by_id(nb_id)
 
-            if len(unsearched_neighbors) == 0:
-                logger.debug(f"No unsearched neighbors - frontier point exhausted, marking as searched")
-                random_read_search_store.mark_point_searched_by_id(search_id, frontier_point.id)
-                random_read_search_store.remove_from_search_frontier_by_id(search_id, frontier_point.id)
-                continue
+                    # Calculate energy for this neighbor
+                    nb_energy = energy_calc.calculate_energy(nb_point.cnf)
+                    logger.info(f"Energy: {nb_energy} CNF={nb_point.cnf.coords} (neighbor, ID {nb_id} in partition {nb_partition})")
+                    nb_map_store.set_point_value(nb_id, nb_energy)
 
-            for candidate in unsearched_neighbors:
-                candidate_partition = candidate.partition
-                candidate_map_store = db.get_map_store_by_idx(candidate_partition)
-                lock_acquired = candidate_map_store.lock_point(candidate.id)
-                if not lock_acquired:
-                    logger.debug(f"Failed to acquire lock (another worker got it first), trying next candidate point...")
-                    continue
-                else:
-                    logger.debug(f"Lock acquired successfully!")
-                    selected_point = candidate
-                    selected_partition = candidate_partition
-                    break
+                    # Add to frontier (regardless of energy - water level will filter later)
+                    nb_search_store.add_to_search_frontier_by_id(search_id, nb_id)
 
+                logger.debug(f"Calculated energy for {len(new_nb_ids)} neighbors and added to frontier")
 
-            selected_point = candidate
-            selected_partition = candidate_partition
+            # Mark this frontier point as searched (we're done with it)
+            random_read_search_store.mark_point_searched_by_id(search_id, frontier_point.id)
+            random_read_search_store.remove_from_search_frontier_by_id(search_id, frontier_point.id)
+            logger.debug(f"Marked frontier point as searched and removed from frontier")
+
+            # Process one frontier point per iteration
             break
-
-        if selected_point is None:
-            logger.debug(f"Found no unlocked points to compute, sleeping for 5 seconds...")
-            # time.sleep(5)
-            continue
-
-        # Calculate energy for selected point
-        logger.debug(f"Calculating energy for point {selected_point.cnf.coords} (ID {selected_point.id} in partition {selected_partition})")
-        energy = energy_calc.calculate_energy(selected_point.cnf)
-        logger.info(f"Energy: {energy} CNF={selected_point.cnf.coords} (ID {selected_point.id} in partition {selected_partition})")
-
-        # Set the energy value in the correct partition
-        selected_map_store = db.get_map_store_by_idx(selected_partition)
-        selected_search_store = db.get_search_store_by_idx(selected_partition)
-
-        selected_map_store.set_point_value(selected_point.id, energy)
-        selected_search_store.add_to_search_frontier_by_id(search_id, selected_point.id)
-        selected_map_store.unlock_point(selected_point.id)
-
-        logger.debug(f"Added point to search frontier and removed lock!")
 
         num_iters += 1

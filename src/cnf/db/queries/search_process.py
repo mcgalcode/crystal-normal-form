@@ -100,6 +100,22 @@ ORDER BY pt.value ASC
 LIMIT ?
 """
 
+select_min_frontier_energy = f"""
+SELECT MIN(pt.value) FROM {constants.SEARCH_FRONTIER_MEMBER_TABLE_NAME} AS frontier_pts
+LEFT JOIN {constants.POINT_TABLE_NAME} AS pt
+ON pt.id = frontier_pts.point_id
+WHERE frontier_pts.search_id = ? AND pt.value IS NOT NULL
+"""
+
+select_frontier_points_with_max_energy = f"""
+SELECT pt.* FROM {constants.SEARCH_FRONTIER_MEMBER_TABLE_NAME} AS frontier_pts
+LEFT JOIN {constants.POINT_TABLE_NAME} AS pt
+ON pt.id = frontier_pts.point_id
+WHERE frontier_pts.search_id = ? AND pt.value IS NOT NULL AND pt.value <= ?
+ORDER BY pt.value ASC
+LIMIT ?
+"""
+
 select_frontier_point_ids = f"""
 SELECT point_id FROM {constants.SEARCH_FRONTIER_MEMBER_TABLE_NAME}
 WHERE search_id = ?

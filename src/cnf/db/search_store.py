@@ -105,7 +105,23 @@ class SearchProcessStore(BaseStore):
         rows = res.fetchall()
         return [cnf_pt_from_row(r, self.metadata.delta, self.metadata.xi, self.metadata.element_list) for r in rows]
 
-    def get_frontier_points_in_search(self, search_id: int, limit: int = 100):
+    def get_min_frontier_energy(self, search_id: int):
+        """Get the minimum energy value among frontier points.
+
+        Args:
+            search_id: The search process ID
+
+        Returns:
+            Minimum energy value, or None if no frontier points have energy
+        """
+        res = self.cursor.execute(
+            sp_queries.select_min_frontier_energy,
+            ([search_id])
+        )
+        result = res.fetchone()
+        return result[0] if result and result[0] is not None else None
+
+    def get_frontier_points_in_search(self, search_id: int, limit: int = 100, max_energy=None):
         """Get frontier points for a search, ordered by energy (lowest first).
 
         Args:
@@ -113,11 +129,19 @@ class SearchProcessStore(BaseStore):
             limit: Maximum number of frontier points to return (default: 100)
                    This limits how many points we check, trading off optimality
                    for query speed. Lower = faster but may wait more often.
+            max_energy: Optional maximum energy threshold. Only returns points
+                       with energy <= max_energy (for water-filling algorithm)
         """
-        res = self.cursor.execute(
-            sp_queries.select_frontier_points,
-            ([search_id, limit])
-        )
+        if max_energy is not None:
+            res = self.cursor.execute(
+                sp_queries.select_frontier_points_with_max_energy,
+                ([search_id, max_energy, limit])
+            )
+        else:
+            res = self.cursor.execute(
+                sp_queries.select_frontier_points,
+                ([search_id, limit])
+            )
         rows = res.fetchall()
         return [cnf_pt_from_row(r, self.metadata.delta, self.metadata.xi, self.metadata.element_list) for r in rows]
     

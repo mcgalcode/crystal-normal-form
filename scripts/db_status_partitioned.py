@@ -198,7 +198,7 @@ def get_partitioned_stats(partition_dir, search_id=1, sample_partitions=None, db
             result = cur.execute(
                 """SELECT pt.id, pt.value, pt.cnf
                    FROM search_start_point AS sp
-                   JOIN point AS pt ON pt.id = sp.point_id
+                   JOIN point AS pt ON pt.id = sp.start_point_id
                    WHERE sp.search_id = ?""",
                 (search_id,)
             ).fetchall()
@@ -209,7 +209,8 @@ def get_partitioned_stats(partition_dir, search_id=1, sample_partitions=None, db
                     'cnf': row[2],
                     'partition': os.path.basename(db_file)
                 })
-        except sqlite3.OperationalError:
+        except sqlite3.OperationalError as e:
+            # Silently skip if table doesn't exist
             pass
 
         stats['per_partition'].append(partition_stats)
@@ -285,7 +286,11 @@ def display_stats(stats, rates=None, show_global=True, show_partitions=True, sho
         print()
         print("CURRENT WATER LEVEL:")
         if stats['current_water_level'] is not None:
+            tolerance = 0.001  # Same as in the algorithm (1 meV)
+            max_threshold = stats['current_water_level'] + tolerance
             print(f"  Lowest Frontier Energy:    {format_value(stats['current_water_level'])}")
+            print(f"  Max Threshold (+1meV):     {format_value(max_threshold)}")
+            print(f"  (Algorithm explores points with energy <= {format_value(max_threshold)})")
         else:
             print(f"  No frontier points with energy")
 

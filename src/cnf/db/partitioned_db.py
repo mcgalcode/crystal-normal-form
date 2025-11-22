@@ -84,4 +84,27 @@ class PartitionedDB():
     
     def get_random_partition_idx(self):
         return random.randint(0, self.num_partitions - 1)
-        
+
+    def get_current_water_level(self, search_id: int):
+        """Get current water level across ALL partitions.
+
+        Queries all partitions for their minimum frontier energy and returns
+        the global minimum. This ensures we have the true lowest energy point
+        on the frontier for proper water-filling behavior.
+
+        Args:
+            search_id: Search process ID
+
+        Returns:
+            Minimum frontier energy across all partitions, or None if no frontier points
+        """
+        min_energy = None
+
+        for idx in range(self.num_partitions):
+            search_store = self.get_search_store_by_idx(idx)
+            partition_min = search_store.get_min_frontier_energy(search_id)
+            if partition_min is not None:
+                min_energy = min(min_energy, partition_min) if min_energy is not None else partition_min
+
+        return min_energy
+
