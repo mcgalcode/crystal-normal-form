@@ -219,6 +219,17 @@ def get_partitioned_stats(partition_dir, search_id=1, sample_partitions=None, db
     # Current water level is the minimum frontier energy
     stats['current_water_level'] = stats['frontier_min_energy']
 
+    # Deduplicate start points by CNF (same start point may be in multiple partitions)
+    unique_start_points = {}
+    for sp in stats['start_points']:
+        cnf_key = sp['cnf']
+        # Keep the one with energy if available, otherwise keep first encountered
+        if cnf_key not in unique_start_points:
+            unique_start_points[cnf_key] = sp
+        elif sp['energy'] is not None and unique_start_points[cnf_key]['energy'] is None:
+            unique_start_points[cnf_key] = sp
+    stats['start_points'] = list(unique_start_points.values())
+
     # If sampling, scale up count statistics to estimate totals
     if is_sampled:
         stats['total_points'] = int(stats['total_points'] * scaling_factor)
