@@ -101,6 +101,54 @@ class CNFConstructor():
 
         cnf = CrystalNormalForm(lnf_result.lnf, mnf_construction_res.mnf)
         return CNFConstructionResult(cnf, lnf_result, mnf_construction_res)
+
+    @profile
+    def from_vonorms_and_motif_fast(self, vonorms: VonormList, motif: DiscretizedMotif | FractionalMotif):
+        """
+        Fast path for CNF construction when vonorms are already discretized.
+
+        Uses optimized LNF construction that avoids object creation overhead
+        and uses exact arithmetic instead of tolerance-based comparisons.
+
+        Args:
+            vonorms: VonormList with already-discretized values
+            motif: DiscretizedMotif or FractionalMotif
+
+        Returns:
+            CNFConstructionResult
+        """
+        lnf_constructor = LatticeNormalFormConstructor(self.xi, self.verbose_logging)
+        canonical_vonorms, lnf, selling_transform, sorting_matrices = lnf_constructor.build_lnf_from_discretized_vonorms_fast(vonorms)
+
+        if self.verbose_logging:
+            print(f"Successfully constructed LNF (fast path)! {lnf}")
+
+        # Compute stabilizers directly without the wrapper objects
+        stabilizer_1 = vonorms.stabilizer_matrices()
+        selling = [selling_transform] if selling_transform else [MatrixTuple.identity()]
+        sorting_transforms = sorting_matrices[:1] if sorting_matrices else [MatrixTuple.identity()]
+        stabilizer_2 = canonical_vonorms.stabilizer_matrices()
+
+        all_stabilizers = [MatrixTuple(combine_unimodular_mats_np([s.matrix for s in stack]))
+                          for stack in product(stabilizer_1, selling, sorting_transforms, stabilizer_2)]
+        all_stabilizers = list(set(all_stabilizers))
+        np_stabs = [s.matrix for s in all_stabilizers]
+
+        if self.verbose_logging:
+            print(f"Found {len(all_stabilizers)} stabilizers...")
+
+        mnf_constructor = MNFConstructor(self.delta, np_stabs, self.verbose_logging)
+        mnf_construction_res = mnf_constructor.build_vectorized(motif)
+
+        if self.verbose_logging:
+            print(f"Found MNF! {mnf_construction_res.mnf}")
+
+        cnf = CrystalNormalForm(lnf, mnf_construction_res.mnf)
+
+        # Create minimal result objects for compatibility
+        # (these are only used if caller needs them, but CNF is what matters)
+        lnf_result = None  # We don't need the full result object
+        return CNFConstructionResult(cnf, lnf_result, mnf_construction_res)
     
     def from_motif_and_basis_vecs(self, motif: FractionalMotif, basis_vecs: np.array):
         superbasis = Superbasis.from_generating_vecs(basis_vecs)

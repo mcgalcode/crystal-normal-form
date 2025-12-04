@@ -95,15 +95,17 @@ class LatticeNeighborFinder():
                 neighbors.add_neighbor(result)
         return neighbors
     
-   # @profile
+    # @profile
     def find_cnf_neighbor_results(self, step: LatticeStep) -> list[LatticeStepResult]:
         results = []
 
-        if not step.vonorms.has_valid_conorms():
+        if not step.vonorms.has_valid_conorms_exact():
             self._log("Neighbor had invalid conorms")
             return results
 
-        if not (step.vonorms.is_obtuse() and step.vonorms.is_superbasis()):
+        is_obtuse = step.vonorms.is_obtuse()
+        is_sb = step.vonorms.is_superbasis_exact()
+        if not (is_obtuse and is_sb):
             if self.verbose_logging:
                 if not step.vonorms.is_obtuse():
                     self._log(f"Neighbor was not obtuse.")
@@ -118,7 +120,7 @@ class LatticeNeighborFinder():
             verbose_logging=False,
         )
 
-        cnf_result = cnf_constructor.from_vonorms_and_motif(step.vonorms, step.transformed_motif)
+        cnf_result = cnf_constructor.from_vonorms_and_motif_fast(step.vonorms, step.transformed_motif)
 
         if cnf_result.cnf != self.point:
             results.append(LatticeStepResult(

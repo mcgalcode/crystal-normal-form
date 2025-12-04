@@ -49,7 +49,7 @@ class MotifNeighborFinder():
             nb_mnf, affected_idxs, adj = nb_mnf_tup
             positions = [list(nb_mnf[start_idx:start_idx + 3])for start_idx in range(0, len(nb_mnf), 3)]
             motif = DiscretizedMotif.from_elements_and_positions(original_els, positions, self.point.delta)
-            nb_pt = cnf_constructor.from_vonorms_and_motif(self.point.lattice_normal_form.vonorms, motif)
+            nb_pt = cnf_constructor.from_vonorms_and_motif_fast(self.point.lattice_normal_form.vonorms, motif)
             result = MotifStepResult(nb_pt.cnf, affected_idxs, adj)
             nbs.add_neighbor(result)
         return nbs

@@ -11,6 +11,84 @@ from .superbasis import Superbasis
 from .lattice_normal_form import LatticeNormalForm
 from ..linalg import MatrixTuple
 
+def build_lnf_raw(vonorms_tuple, xi):
+    """
+    Fast LNF construction for discretized vonorms.
+
+    Assumes vonorms are already:
+    - Discretized (exact integer multiples of xi)
+    - In valid form (correct conorms)
+
+    Works directly with tuples/arrays to avoid object creation overhead.
+    Uses exact equality instead of tolerance-based comparisons.
+
+    Args:
+        vonorms_tuple: tuple or array of 7 vonorm values (already discretized)
+        xi: lattice step size
+
+    Returns:
+        tuple: (canonical_vonorms_tuple, selling_transform_matrix, sorting_perm_matrices)
+    """
+    from .voronoi.vonorm_list import VONORM_TO_DOT_PRODUCTS
+    from .permutations import ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS
+
+    # Convert to numpy array if needed
+    if isinstance(vonorms_tuple, tuple):
+        vonorms = np.array(vonorms_tuple)
+    else:
+        vonorms = np.array(vonorms_tuple)
+
+    # Step 1: Selling reduction (still use existing reducer for now)
+    reducer = VonormListSellingReducer(tol=0, verbose_logging=False)
+    vonorm_list_obj = VonormList(vonorms)
+    reduction_result = reducer.reduce(vonorm_list_obj)
+    vonorms_reduced = np.array(reduction_result.reduced_object.vonorms)
+    selling_transform = reduction_result.transform_matrix
+
+    # Step 2: Compute conorms directly using exact arithmetic
+    raw_conorms = (0.5 * VONORM_TO_DOT_PRODUCTS @ vonorms_reduced[:6])
+
+    # Step 3: Find zero conorms using EXACT equality (no tolerance)
+    zero_idxs = tuple([idx for idx, cn in enumerate(raw_conorms) if cn == 0])
+
+    # Step 4: Get permissible permutations for this zero set
+    if zero_idxs not in ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS:
+        raise ValueError(f"Invalid zero conorm set: {zero_idxs}")
+
+    perm_to_mats = ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS[zero_idxs]
+
+    # Step 5: Apply all permissible permutations and find lexicographically smallest
+    # Work directly with arrays, no object creation
+    permuted_vonorms_list = []
+    perm_matrices_list = []
+
+    for conorm_perm, mat_list in perm_to_mats.items():
+        # Convert conorm permutation to vonorm permutation
+        # This mapping is deterministic based on the permutation structure
+        from .permutations import ConormPermutation
+        cp = ConormPermutation(conorm_perm)
+        vonorm_perm = cp.to_vonorm_permutation().perm
+
+        # Apply permutation directly on array
+        permuted = vonorms_reduced[np.array(vonorm_perm)]
+        permuted_vonorms_list.append(tuple(permuted))
+        perm_matrices_list.append((tuple(permuted), mat_list))
+
+    # Step 6: Sort to find canonical (lexicographically smallest)
+    permuted_vonorms_list.sort()
+    canonical_vonorms = permuted_vonorms_list[0]
+
+    # Find all equivalent transformations (those that give the canonical form)
+    equivalent_matrices = [mat_list for perm_tuple, mat_list in perm_matrices_list
+                          if perm_tuple == canonical_vonorms]
+
+    # Flatten the list of matrix lists
+    all_equivalent_mats = []
+    for mat_list in equivalent_matrices:
+        all_equivalent_mats.extend(mat_list)
+
+    return canonical_vonorms, selling_transform, all_equivalent_mats
+
 
 class VonormSorter():
 
@@ -136,6 +214,33 @@ class LatticeNormalFormConstructor():
             lnf,
             result
         )
+
+    def build_lnf_from_discretized_vonorms_fast(self, vonorms: VonormList):
+        """
+        Fast path for building LNF from already-discretized vonorms.
+
+        Uses exact arithmetic and avoids object creation overhead.
+        Assumes vonorms are already discretized and valid.
+
+        Args:
+            vonorms: VonormList with discretized values
+
+        Returns:
+            tuple: (canonical_vonorms, lnf, selling_transform, sorting_matrices)
+        """
+        # Call the fast raw function
+        canonical_vonorms_tuple, selling_transform, sorting_matrices = build_lnf_raw(
+            vonorms.vonorms,
+            self.lattice_step_size
+        )
+
+        # Wrap only what's needed
+        canonical_vonorms = VonormList(canonical_vonorms_tuple)
+        lnf = LatticeNormalForm(canonical_vonorms, self.lattice_step_size)
+
+        self._log(f"Found the canonical vonorms (fast path): {canonical_vonorms}")
+
+        return canonical_vonorms, lnf, selling_transform, sorting_matrices
 
 class LatticeNormalFormConstructionResult():
 
