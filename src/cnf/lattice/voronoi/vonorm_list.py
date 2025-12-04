@@ -26,13 +26,23 @@ class VonormList():
         self.conorm_tol = conorm_tol
 
     def has_valid_conorms(self):
-        conorms = (1 / 2) * VONORM_TO_DOT_PRODUCTS @ self.vonorms[:6]
+        conorms = self.raw_conorms
         zero_idxs = tuple([idx for idx, cn in enumerate(conorms) if np.abs(cn) < self.conorm_tol])
+        return zero_idxs in ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS
+    
+    def has_valid_conorms_exact(self):
+        conorms = self.raw_conorms
+        zero_idxs = [idx for idx, cn in enumerate(conorms) if cn == 0]
+        zero_idxs = tuple(zero_idxs)
         return zero_idxs in ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS
 
     @cached_property
     def conorms(self):
-        return ConormList((1 / 2) * VONORM_TO_DOT_PRODUCTS @ self.vonorms[:6], self.conorm_tol)
+        return ConormList(self.raw_conorms, self.conorm_tol)
+    
+    @cached_property
+    def raw_conorms(self):
+        return (1 / 2) * VONORM_TO_DOT_PRODUCTS @ self.vonorms[:6]
     
     def set_tol(self, conorm_tol):
         return VonormList(self.vonorms, conorm_tol)
@@ -42,7 +52,7 @@ class VonormList():
         return self.conorms.permissible_permutations
 
     def is_obtuse(self, tol=0):
-        return all([c <= tol for c in self.conorms])
+        return all([c <= tol for c in self.raw_conorms])
     
     def __getitem__(self, key):
         return self.vonorms[key]
