@@ -60,12 +60,12 @@ class MNFConstructionResult():
     
     @property
     def mnf(self):
-        element_list, _ = self.canonical_motif.to_elements_and_positions()
+        # element_list, _ = self.canonical_motif.to_elements_and_positions()
         canonical_mnf_coords = self.canonical_candidate.mnf_coords
         if isinstance(self.original_motif, DiscretizedMotif):
             canonical_mnf_coords = tuple([int(c) for c in canonical_mnf_coords])
 
-        return MotifNormalForm(canonical_mnf_coords, element_list, self.delta)
+        return MotifNormalForm(canonical_mnf_coords, self.original_motif.atoms, self.delta)
 
 def get_all_shifted_motifs(m: FractionalMotif) -> tuple[list[FractionalMotif], list[np.ndarray]]:
     sorted_elements = m.sorted_elements
