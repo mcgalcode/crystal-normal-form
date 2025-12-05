@@ -41,25 +41,49 @@ class CNFConstructor():
         self.verbose_logging = verbose_logging
 
 
-    def _build_lnf_and_get_transforms(self, vonorms: VonormList, use_float: bool = False):
+    def _build_lnf_and_get_transforms(self, vonorms: VonormList, use_float: bool = False, use_rust: bool = False, float_tol: float = None):
         """Build LNF and extract transformation matrices."""
-        lnf_constructor = LatticeNormalFormConstructor(self.xi, self.verbose_logging)
 
-        if use_float:
-            lnf_result = lnf_constructor.build_lnf_from_vonorms(vonorms)
-            lnf = lnf_result.lnf
-            canonical_vonorms = lnf_result.lnf.vonorms
-            selling_transform = lnf_result.selling_transform_mat()
-            sorting_transforms = lnf_result.sorting_transforms()
-        else:
-            canonical_vonorms, lnf, selling_transform, sorting_matrices = lnf_constructor.build_lnf_from_discretized_vonorms_fast(vonorms)
-            sorting_transforms = sorting_matrices
+        if use_rust:
+            # Use Rust for LNF construction
+            import rust_cnf
+            vonorms_arr = np.ascontiguousarray(vonorms.vonorms_np, dtype=np.float64)
+
+            if use_float:
+                canonical_arr, _, selling_flat, sorting_mats_flat = rust_cnf.build_lnf_raw_float_rust(vonorms_arr, float_tol)
+            else:
+                canonical_arr, _, selling_flat, sorting_mats_flat = rust_cnf.build_lnf_raw_rust(vonorms_arr)
+
+            canonical_vonorms = VonormList(canonical_arr)
+            lnf = LatticeNormalForm(canonical_vonorms, self.xi)
             lnf_result = None
 
-        # Compute middle transformation matrix
-        selling_mat = selling_transform.matrix if selling_transform else np.eye(3)
-        sorting_mat = sorting_transforms[0].matrix
-        middle = selling_mat @ sorting_mat
+            # Extract transformation matrices
+            if selling_flat is not None:
+                selling_mat = np.array(selling_flat, dtype=np.int32).reshape(3, 3)
+            else:
+                selling_mat = np.eye(3, dtype=np.int32)
+            sorting_mat = np.array(sorting_mats_flat[0], dtype=np.int32).reshape(3, 3)
+            middle = (selling_mat @ sorting_mat).astype(np.int32)
+        else:
+            # Use Python LNF construction
+            lnf_constructor = LatticeNormalFormConstructor(self.xi, self.verbose_logging)
+
+            if use_float:
+                lnf_result = lnf_constructor.build_lnf_from_vonorms(vonorms)
+                lnf = lnf_result.lnf
+                canonical_vonorms = lnf_result.lnf.vonorms
+                selling_transform = lnf_result.selling_transform_mat()
+                sorting_transforms = lnf_result.sorting_transforms()
+            else:
+                canonical_vonorms, lnf, selling_transform, sorting_matrices = lnf_constructor.build_lnf_from_discretized_vonorms_fast(vonorms)
+                sorting_transforms = sorting_matrices
+                lnf_result = None
+
+            # Compute middle transformation matrix
+            selling_mat = selling_transform.matrix if selling_transform else np.eye(3)
+            sorting_mat = sorting_transforms[0].matrix
+            middle = selling_mat @ sorting_mat
 
         return lnf, lnf_result, canonical_vonorms, middle
 
@@ -120,104 +144,50 @@ class CNFConstructor():
         return self.from_vonorms_and_motif_undiscretized(vonorms, motif)
     
     def from_vonorms_and_motif_undiscretized(self, vonorms: VonormList, motif: FractionalMotif):
-        if USE_RUST:
-            return self.from_vonorms_and_motif_undiscretized_rust(vonorms, motif)
-        else:
-            return self.from_vonorms_and_motif_undiscretized_py(vonorms, motif)
+        return self._from_vonorms_and_motif_undiscretized_impl(vonorms, motif, use_rust=USE_RUST)
     
     def from_vonorms_and_motif(self, vonorms: VonormList, motif: FractionalMotif):
-        if USE_RUST:
-            return self._from_vonorms_and_motif_rust(vonorms, motif)
-        else:
-            return self.from_vonorms_and_motif_py(vonorms, motif)
+        return self._from_vonorms_and_motif_impl(vonorms, motif, use_rust=USE_RUST)
     
-    def from_vonorms_and_motif_undiscretized_py(self, vonorms: VonormList, motif: FractionalMotif):
-        undisc_cnf = self.from_vonorms_and_motif_py(vonorms, motif, float_tol=1e-4)
+    def _from_vonorms_and_motif_undiscretized_impl(self, vonorms: VonormList, motif: FractionalMotif, use_rust: bool):
+        # First pass: float version with tolerance to find approximate canonical form
+        undisc_cnf = self._from_vonorms_and_motif_impl(vonorms, motif, float_tol=1e-4, use_rust=use_rust)
         vonorms = undisc_cnf.cnf.lattice_normal_form.vonorms
 
         motif = undisc_cnf.mnf_result.canonical_motif
         motif = motif.discretize(self.delta)
 
+        # Second pass: discretized version with exact arithmetic
         dvc = DiscretizedVonormComputer(self.xi, self.verbose_logging)
         vonorms = dvc.find_closest_valid_vonorms(vonorms)
 
-        return self.from_vonorms_and_motif_py(vonorms, motif)
-    
-    def from_vonorms_and_motif_undiscretized_rust(self, vonorms: VonormList, motif: FractionalMotif):
-        # First pass: use Rust float version (tolerance-based)
-        undisc_cnf = self._from_vonorms_and_motif_rust(vonorms, motif, float_tol=1e-4)
-        vonorms = undisc_cnf.cnf.lattice_normal_form.vonorms
+        return self._from_vonorms_and_motif_impl(vonorms, motif, use_rust=use_rust)
 
-        motif = undisc_cnf.mnf_result.canonical_motif
-        motif = motif.discretize(self.delta)
-
-        # Second pass: use Rust discretized version (exact)
-        dvc = DiscretizedVonormComputer(self.xi, self.verbose_logging)
-        vonorms = dvc.find_closest_valid_vonorms(vonorms)
-
-        return self._from_vonorms_and_motif_rust(vonorms, motif)
-    
     @maybe_profile
-    def from_vonorms_and_motif_py(self, vonorms: VonormList, motif: DiscretizedMotif | FractionalMotif, float_tol = None):
+    def _from_vonorms_and_motif_impl(self, vonorms: VonormList, motif: DiscretizedMotif | FractionalMotif, float_tol=None, use_rust=False):
+        """Unified CNF construction implementation for both Python and Rust paths."""
         use_float = float_tol is not None
-        if use_float:
+        if use_float and not use_rust:
             vonorms = vonorms.set_tol(float_tol)
 
         # Build LNF and get transformation matrices
-        lnf, lnf_result, canonical_vonorms, middle = self._build_lnf_and_get_transforms(vonorms, use_float)
+        lnf, lnf_result, canonical_vonorms, middle = self._build_lnf_and_get_transforms(
+            vonorms, use_float=use_float, use_rust=use_rust, float_tol=float_tol
+        )
 
         # Find and combine stabilizers
-        np_stabs = self._combine_stabilizers(vonorms, canonical_vonorms, middle, use_float, use_rust=False)
+        np_stabs = self._combine_stabilizers(vonorms, canonical_vonorms, middle, use_float, use_rust=use_rust)
 
         # Build MNF
         mnf_constructor = MNFConstructor(self.delta, np_stabs, self.verbose_logging)
-        mnf_construction_res = mnf_constructor.build_vectorized(motif)
+        mnf_construction_res = mnf_constructor.build_vectorized(motif, use_rust=use_rust)
 
         if self.verbose_logging:
-            print(f"Found MNF! {mnf_construction_res.mnf}")
+            mode = "Rust" if use_rust else "Python"
+            print(f"Found MNF ({mode})! {mnf_construction_res.mnf}")
 
         cnf = CrystalNormalForm(lnf, mnf_construction_res.mnf)
         return CNFConstructionResult(cnf, lnf_result, mnf_construction_res)
-    
-    def _from_vonorms_and_motif_rust(self, vonorms: VonormList, motif: DiscretizedMotif | FractionalMotif, float_tol=None):
-        """
-        Rust-accelerated CNF construction.
-
-        Uses Rust for LNF construction, stabilizer finding, and combination.
-        """
-        import rust_cnf
-        use_float = float_tol is not None
-        vonorms_arr = np.ascontiguousarray(vonorms.vonorms_np, dtype=np.float64)
-
-        # Use Rust for LNF construction
-        if use_float:
-            canonical_arr, _, selling_flat, sorting_mats_flat = rust_cnf.build_lnf_raw_float_rust(vonorms_arr, float_tol)
-        else:
-            canonical_arr, _, selling_flat, sorting_mats_flat = rust_cnf.build_lnf_raw_rust(vonorms_arr)
-
-        canonical_vonorms = VonormList(canonical_arr)
-        lnf = LatticeNormalForm(canonical_vonorms, self.xi)
-
-        # Compute middle matrix
-        if selling_flat is not None:
-            selling_mat = np.array(selling_flat, dtype=np.int32).reshape(3, 3)
-        else:
-            selling_mat = np.eye(3, dtype=np.int32)
-        sorting_mat = np.array(sorting_mats_flat[0], dtype=np.int32).reshape(3, 3)
-        middle = (selling_mat @ sorting_mat).astype(np.int32)
-
-        # Find and combine stabilizers using Rust
-        np_stabs = self._combine_stabilizers(vonorms, canonical_vonorms, middle, use_float, use_rust=True)
-
-        # Build MNF
-        mnf_constructor = MNFConstructor(self.delta, np_stabs, self.verbose_logging)
-        mnf_construction_res = mnf_constructor.build_vectorized(motif, use_rust=True)
-
-        if self.verbose_logging:
-            print(f"Found MNF (Rust)! {mnf_construction_res.mnf}")
-
-        cnf = CrystalNormalForm(lnf, mnf_construction_res.mnf)
-        return CNFConstructionResult(cnf, None, mnf_construction_res)
 
     def from_motif_and_basis_vecs(self, motif: FractionalMotif, basis_vecs: np.array):
         superbasis = Superbasis.from_generating_vecs(basis_vecs)
@@ -227,3 +197,49 @@ class CNFConstructor():
         motif = FractionalMotif.from_pymatgen_structure(struct)
         superbasis = Superbasis.from_pymatgen_structure(struct)
         return self.from_motif_and_superbasis(motif, superbasis)
+
+    def from_uncanonical_cnf_list(self, cnf_list: list[int], atomic_numbers: list[int]):
+        """
+        Fast path for CNF construction from flat uncanonical CNF list.
+
+        Bypasses DiscretizedMotif construction entirely for maximum performance.
+
+        Args:
+            cnf_list: Flat list [v1, v2, ..., v7, x1, y1, z1, x2, y2, z2, ...]
+                     First 7 values are vonorms (integers), rest are motif coordinates (integers)
+            atomic_numbers: Sorted list of atomic numbers corresponding to atoms
+                          (e.g., [22, 22, 22, 22, 8, 8, 8, 8, 8, 8, 8, 8] for TiO2)
+
+        Returns:
+            CNFConstructionResult with canonical CNF
+        """
+        from pymatgen.core.periodic_table import Element
+
+        # Split into vonorms and motif coordinates
+        vonorms_vals = tuple(cnf_list[:7])
+        motif_coords = cnf_list[7:]
+        vonorms = VonormList(vonorms_vals)
+
+        # Build LNF and get transformation matrices
+        lnf, _, canonical_vonorms, middle = self._build_lnf_and_get_transforms(vonorms, use_float=False)
+
+        # Find and combine stabilizers
+        use_rust = USE_RUST
+        np_stabs = self._combine_stabilizers(vonorms, canonical_vonorms, middle, use_float=False, use_rust=use_rust)
+
+        # Build MNF using raw coordinates (bypassing DiscretizedMotif)
+        mnf_constructor = MNFConstructor(self.delta, np_stabs, self.verbose_logging)
+        mnf_coords = mnf_constructor.build_from_raw_coords(
+            motif_coords,
+            atomic_numbers,
+            use_rust=use_rust
+        )
+
+        # Convert atomic numbers to element symbols only for final CNF
+        elements = [Element.from_Z(z).symbol for z in atomic_numbers]
+
+        # Create MotifNormalForm and CNF
+        mnf = MotifNormalForm(mnf_coords, elements, self.delta)
+        cnf = CrystalNormalForm(lnf, mnf)
+
+        return CNFConstructionResult(cnf, None, None)
