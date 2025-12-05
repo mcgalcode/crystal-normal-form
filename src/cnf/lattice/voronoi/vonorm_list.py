@@ -117,6 +117,36 @@ class VonormList():
                 mats.add(m)
         return list(mats)
 
+    # @profile
+    def stabilizer_matrices_fast(self):
+        """
+        Fast stabilizer computation for discretized vonorms.
+
+        Uses exact equality on tuples and avoids creating VonormList objects
+        during the equality check. Much faster than stabilizer_matrices() for
+        discretized vonorms where exact arithmetic can be used.
+
+        Returns:
+            list[MatrixTuple]: List of stabilizer matrices
+        """
+        vonorms_tuple = self.tuple
+        vonorms_arr = self.vonorms_np
+        possible_perms = self.permissible_perms
+        stabilizers = []
+
+        # Cache vonorm permutations and their numpy arrays to avoid repeated property access
+        for p in possible_perms:
+            vonorm_perm_tuple = p.vonorm_permutation  # Cache property access
+            # Apply permutation directly without creating intermediate arrays
+            permuted = tuple(vonorms_arr[list(vonorm_perm_tuple)])
+
+            # Exact tuple equality instead of VonormList comparison
+            if permuted == vonorms_tuple:
+                # Collect all matrices for this permutation
+                stabilizers.extend(p.all_matrices)
+
+        return stabilizers
+
     def to_generators(self, lattice_step_size: float):
         physical_vonorms = np.array(self.vonorms) * lattice_step_size
         physical_conorms = np.array(self.conorms.conorms) * lattice_step_size
