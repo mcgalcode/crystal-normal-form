@@ -1,9 +1,10 @@
 from cnf import CrystalNormalForm
-from cnf.cnf_constructor import CNFConstructor
+from cnf.cnf_constructor import should_use_rust
 from cnf.motif import MotifNormalForm
 from cnf.motif.atomic_motif import DiscretizedMotif
 from .neighbor import Neighbor
 from .neighbor_set import NeighborSet
+from pymatgen.core.periodic_table import Element
 import copy
 
 class MotifStepResult():
@@ -43,13 +44,31 @@ class MotifNeighborFinder():
         
         original_els = self.point.motif_normal_form.elements
         nbs = NeighborSet()
-        cnf_constructor = CNFConstructor(self.point.xi, self.point.delta)
 
-        for nb_mnf_tup in neighbor_mnf_tuples:
-            nb_mnf, affected_idxs, adj = nb_mnf_tup
-            positions = [list(nb_mnf[start_idx:start_idx + 3])for start_idx in range(0, len(nb_mnf), 3)]
-            motif = DiscretizedMotif.from_elements_and_positions(original_els, positions, self.point.delta)
-            nb_pt = cnf_constructor.from_vonorms_and_motif(self.point.lattice_normal_form.vonorms, motif)
-            result = MotifStepResult(nb_pt.cnf, affected_idxs, adj)
+        # Pre-compute values that don't change across neighbors
+        vonorms = self.point.lattice_normal_form.vonorms
+        atomic_numbers = [Element(el).Z for el in original_els]
+        stabilizers = [s.matrix for s in vonorms.stabilizer_matrices_fast()]
+
+        # Extract just the coordinate tuples for batch processing
+        coords_list = [list(nb_mnf) for nb_mnf, _, _ in neighbor_mnf_tuples]
+
+        # Batch build MNFs
+        from cnf.motif.mnf_constructor import MNFConstructor
+        from cnf.lattice.lattice_normal_form import LatticeNormalForm
+        from cnf import CrystalNormalForm
+        from cnf.motif.motif_normal_form import MotifNormalForm
+        USE_RUST = should_use_rust()
+
+        mnf_constructor = MNFConstructor(self.point.delta, stabilizers)
+        mnf_coords_list = mnf_constructor.build_many_from_raw_coords(coords_list, atomic_numbers, use_rust=USE_RUST)
+
+        # Build CNFs from MNFs
+        lnf = LatticeNormalForm(vonorms, self.point.xi)
+        for (nb_mnf, affected_idxs, adj), mnf_coords in zip(neighbor_mnf_tuples, mnf_coords_list):
+            # Create CNF directly
+            mnf = MotifNormalForm(mnf_coords, original_els, self.point.delta)
+            cnf = CrystalNormalForm(lnf, mnf)
+            result = MotifStepResult(cnf, affected_idxs, adj)
             nbs.add_neighbor(result)
         return nbs
