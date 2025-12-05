@@ -8,6 +8,7 @@ from .lattice_step import LatticeStep, LatticeStepResult
 from .neighbor_set import NeighborSet
 from ..utils.pdd import pdd_for_cnfs
 from ..linalg.unimodular import combine_unimodular_matrices
+from ..utils.prof import maybe_profile
 
 class LatticeNeighborFinder():
 
@@ -95,6 +96,7 @@ class LatticeNeighborFinder():
                 neighbors.add_neighbor(result)
         return neighbors
     
+    @maybe_profile
     def find_cnf_neighbor_results(self, step: LatticeStep) -> list[LatticeStepResult]:
         results = []
 
@@ -132,7 +134,6 @@ class LatticeNeighborFinder():
 
         return results
 
-    #@profile
     def find_cnf_neighbors(self) -> NeighborSet:
         neighbors = NeighborSet()
         steps = self.possible_steps()

@@ -3,6 +3,7 @@ import numpy as np
 from .atomic_motif import FractionalMotif, DiscretizedMotif
 from ..linalg import MatrixTuple
 from .motif_normal_form import MotifNormalForm
+from ..utils.prof import maybe_profile
     
 class MNFCandidate():
 
@@ -82,7 +83,7 @@ def get_all_shifted_motifs(m: FractionalMotif) -> tuple[list[FractionalMotif], l
         shifts.append(shift)
     return shifted_motifs, shifts
 
-@profile
+@maybe_profile
 def get_stabilized_coord_mats(stabilizers, motif):
     original_motif_coords = motif.coord_matrix
     stabilizers_inverted = invert_unimods(stabilizers)
@@ -100,7 +101,7 @@ def move_coords_into_bounds(coord_mats, mod):
     all_motifs = np.mod(all_motifs, mod) 
     return all_motifs
 
-@profile
+@maybe_profile
 def get_all_shifted_coord_mats(coord_mat, num_origin_atoms, mod):
     motifs = []
     shift_vecs = -coord_mat.T[:num_origin_atoms]
@@ -121,7 +122,7 @@ def get_atom_labels(motif):
     atom_labels = np.array(atom_labels)
     return atom_labels
     
-@profile
+@maybe_profile
 def sort_motif_coord_arr(coord_mat, atom_labels):
     x_col, y_col, z_col = coord_mat
     sorted_indices = np.lexsort((z_col, y_col, x_col, atom_labels))

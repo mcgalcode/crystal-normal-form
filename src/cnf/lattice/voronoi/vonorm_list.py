@@ -4,6 +4,7 @@ from ..swaps.sorting import swap_vonorm_idxs
 from .conorm_list import ConormList
 from ...linalg import MatrixTuple
 from ..permutations import apply_permutation, Permutation, ConormPermutation, VonormPermutation, PermutationMatrix, apply_permutation_np, ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS
+from ...utils.prof import maybe_profile
 
 # This matrix is found on page 48 of David's thesis
 VONORM_TO_DOT_PRODUCTS = np.array([
@@ -117,7 +118,7 @@ class VonormList():
                 mats.add(m)
         return list(mats)
 
-    @profile
+    @maybe_profile
     def stabilizer_matrices_fast(self):
         """
         Fast stabilizer computation for discretized vonorms.

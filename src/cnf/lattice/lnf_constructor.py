@@ -12,8 +12,9 @@ from .lattice_normal_form import LatticeNormalForm
 from ..linalg import MatrixTuple
 from .voronoi.vonorm_list import VONORM_TO_DOT_PRODUCTS
 from .permutations import ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS, CONORM_PERMUTATION_TO_VONORM_PERMUTATION, CONORM_PERMUTATION_TO_VONORM_PERMUTATION_ARRAY
+from ..utils.prof import maybe_profile
 
-@profile
+@maybe_profile
 def build_lnf_raw(vonorms_tuple, xi):
     """
     Fast LNF construction for discretized vonorms.
@@ -221,7 +222,7 @@ class LatticeNormalFormConstructor():
             result
         )
 
-    @profile
+    #@maybe_profile
     def build_lnf_from_discretized_vonorms_fast(self, vonorms: VonormList):
         """
         Fast path for building LNF from already-discretized vonorms.

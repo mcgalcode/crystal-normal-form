@@ -13,6 +13,7 @@ from .lattice.rounding import DiscretizedVonormComputer
 from .motif.mnf_constructor import MNFConstructor, MNFConstructionResult
 from .crystal_normal_form import CrystalNormalForm
 from .linalg.unimodular import combine_unimodular_matrices, combine_unimodular_mats_np
+from .utils.prof import maybe_profile
 
 class CNFConstructionResult():
 
