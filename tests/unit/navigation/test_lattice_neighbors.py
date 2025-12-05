@@ -42,7 +42,6 @@ def test_tricky_neighbor():
     cnf = CrystalNormalForm.from_tuple((1, 7, 21, 25, 7, 22, 25, 1, 3, 3), element_list, xi, delta)
     nbs = NeighborFinder(cnf).find_neighbors()
 
-    
 
 @helpers.skip_if_fast
 @helpers.parameterized_by_mp_struct_idxs(range(0,1000,100))

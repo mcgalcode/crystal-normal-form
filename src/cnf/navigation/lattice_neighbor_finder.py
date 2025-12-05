@@ -35,21 +35,74 @@ class LatticeNeighborFinder():
 
     def possible_steps(self):
         vonorms = self._lnf().vonorms
-        steps: list[LatticeStep] = []
+        # Use tuples for deduplication, defer LatticeStep creation
+        step_tuples = []
         current_stabilizer = self.point.lattice_normal_form.vonorms.stabilizer_matrices()
-        for s4_idxs, data in vonorms.maximally_ascending_equivalence_class_members().items():           
+
+        for s4_idxs, data in vonorms.maximally_ascending_equivalence_class_members().items():
             permuted_vonorms = data['maximal_permuted_list']
             transform_mats = data['transition_mats']
 
-            mat_sequences = itertools.product(current_stabilizer, transform_mats, permuted_vonorms.stabilizer_matrices())
-            unimodular_mats = set([combine_unimodular_matrices(mat_seq) for mat_seq in mat_sequences])
+            # Batch compute all matrix products using einsum
+            # Convert to numpy arrays
+            s1_mats = np.array([s.matrix for s in current_stabilizer])  # (N1, 3, 3)
+            t_mats = np.array([t.matrix for t in transform_mats])  # (N2, 3, 3)
+            s2_mats = np.array([s.matrix for s in permuted_vonorms.stabilizer_matrices()])  # (N3, 3, 3)
+
+            # Compute all s1 @ t @ s2 combinations using einsum
+            # Result shape: (N1, N2, N3, 3, 3)
+            all_products = np.einsum('nij,mjk,okl->nmoil', s1_mats, t_mats, s2_mats)
+
+            # Reshape to (N1*N2*N3, 3, 3)
+            all_products_flat = all_products.reshape(-1, 3, 3)
+
+            # Deduplicate using numpy.unique (much faster than dict+tuple)
+            # Flatten to (N, 9) for unique operation
+            all_products_rounded = np.round(all_products_flat).astype(int)
+            all_products_2d = all_products_rounded.reshape(-1, 9)
+
+            # Find unique rows
+            unique_flat = np.unique(all_products_2d, axis=0)
+
+            # Reshape back to (M, 3, 3) where M is number of unique matrices
+            unimodular_mats = unique_flat.reshape(-1, 3, 3)
+
+            # Get step vectors once
+            step_vecs = LatticeStep.all_step_vecs()
+            permuted_vonorms_arr = np.array(permuted_vonorms.vonorms)
+
             for mat in unimodular_mats:
-                transformed_motif = self.discretized_motif.apply_unimodular(mat)
-                for step_vec in LatticeStep.all_step_vecs():
-                    old_vonorms = np.array(permuted_vonorms.vonorms)                    
-                    new_vonorms = VonormList(tuple([int(v) for v in old_vonorms + np.array(step_vec)]))                    
-                    steps.append(LatticeStep(step_vec, new_vonorms, transformed_motif, mat))
-        steps = list(set(steps))
+                from ..linalg import MatrixTuple
+                mat_tuple = MatrixTuple(mat)
+                # Compute transformed_motif once per matrix
+                transformed_motif = self.discretized_motif.apply_unimodular(mat_tuple)
+                transformed_motif_mnf = transformed_motif.to_mnf_list()
+
+                # Pre-compute matrix tuple
+                mat_tuple_tuple = mat_tuple.tuple
+
+                for step_vec in step_vecs:
+                    step_vec_tuple = tuple(step_vec)
+                    # Compute new vonorms tuple using numpy (faster)
+                    new_vonorms_arr = permuted_vonorms_arr + np.array(step_vec)
+                    new_vonorms_tuple = tuple(new_vonorms_arr.astype(int))
+
+                    # Store as tuple for fast deduplication
+                    step_tuples.append((step_vec_tuple, new_vonorms_tuple, transformed_motif_mnf, mat_tuple_tuple, mat_tuple, transformed_motif))
+
+        # Deduplicate using set on tuples (first 4 elements define uniqueness)
+        unique_step_data = {}
+        for step_vec_tuple, new_vonorms_tuple, transformed_motif_mnf, mat_tuple_tuple, mat_tuple, transformed_motif in step_tuples:
+            key = (step_vec_tuple, new_vonorms_tuple, transformed_motif_mnf, mat_tuple_tuple)
+            if key not in unique_step_data:
+                unique_step_data[key] = (mat_tuple, transformed_motif)
+
+        # Now create LatticeStep objects only for unique steps
+        steps = []
+        for (step_vec_tuple, new_vonorms_tuple, transformed_motif_mnf, mat_tuple_tuple), (mat_tuple, transformed_motif) in unique_step_data.items():
+            new_vonorms = VonormList(new_vonorms_tuple)
+            steps.append(LatticeStep(list(step_vec_tuple), new_vonorms, transformed_motif, mat_tuple))
+
         return steps
 
 
@@ -133,6 +186,218 @@ class LatticeNeighborFinder():
             ))
 
         return results
+
+    def find_cnf_neighbors_fast(self) -> list:
+        """Fast neighbor finding that avoids intermediate object creation."""
+        import os
+
+        # When using Rust, use the complete Rust pipeline
+        use_rust = os.getenv("USE_RUST") is not None
+        if use_rust:
+            return self._find_cnf_neighbors_fast_rust()
+
+        # Python fallback
+        return self._find_cnf_neighbors_fast_python()
+
+    def _find_cnf_neighbors_fast_rust(self) -> list:
+        """Rust implementation of CNF neighbor finding."""
+        import rust_cnf
+
+        # Get validated step data from Rust
+        step_data = self._compute_step_data_raw_rust()
+
+        # Build CNFs from step data in Rust
+        input_vonorms = np.array(self.point.lattice_normal_form.vonorms.vonorms_np, dtype=np.float64)
+        input_coords = np.ascontiguousarray(self.discretized_motif.coord_matrix.flatten(), dtype=np.float64)
+
+        # Convert atoms to list of Python strings (in case they're numpy strings)
+        atoms = [str(atom) for atom in self.discretized_motif.atoms]
+
+        # Ensure xi and delta are Python scalars, not numpy types
+        xi = float(self.point.xi)
+        delta = int(self.point.delta)
+
+        neighbor_tuples = rust_cnf.build_cnfs_from_step_data_rust(
+            step_data,
+            input_vonorms,
+            input_coords,
+            atoms,
+            xi,
+            delta
+        )
+
+        # Convert Rust results back to Python CNF objects
+        from ..cnf_constructor import CNFConstructor
+        cnf_constructor = CNFConstructor(self.point.xi, self.point.delta, verbose_logging=False)
+
+        results = []
+        for vonorms_list, coords_list, _ in neighbor_tuples:
+            # Data from Rust is not canonical - CNF constructor will canonicalize
+            vonorms = VonormList(tuple([int(v) for v in vonorms_list]))
+
+            from ..motif.atomic_motif import DiscretizedMotif
+
+            # coords_list is flattened coords for all atoms
+            motif = DiscretizedMotif.from_elements_and_positions(
+                atoms,
+                np.array(coords_list).reshape(-1, 3),
+                delta=self.point.delta
+            )
+
+            cnf_result = cnf_constructor.from_vonorms_and_motif(vonorms, motif)
+
+            # Only include if different from input CNF
+            if cnf_result.cnf != self.point:
+                results.append(cnf_result.cnf)
+
+        return results
+
+    def _find_cnf_neighbors_fast_python(self) -> list:
+        """Python implementation of CNF neighbor finding."""
+        # Get raw step data without creating LatticeStep objects
+        step_data = self._compute_step_data_raw_python()
+
+        # Filter valid steps and construct CNFs in batch
+        valid_cnfs = []
+        valid_step_data = []
+
+        for step_vec, vonorms_tuple, motif_coords, matrix in step_data:
+            # Create VonormList
+            vonorms = VonormList(vonorms_tuple)
+
+            # Validate
+            if not vonorms.has_valid_conorms_exact():
+                continue
+            if not (vonorms.is_obtuse() and vonorms.is_superbasis_exact()):
+                continue
+
+            valid_step_data.append((vonorms, motif_coords, matrix))
+
+        # Batch construct CNFs
+        from ..cnf_constructor import CNFConstructor
+        cnf_constructor = CNFConstructor(self.point.xi, self.point.delta, verbose_logging=False)
+
+        for vonorms, motif_coords, matrix in valid_step_data:
+            # Create DiscretizedMotif only when needed for CNF construction
+            from ..motif.atomic_motif import DiscretizedMotif
+            motif = DiscretizedMotif.from_elements_and_positions(
+                self.discretized_motif.atoms,
+                motif_coords.reshape(-1, 3),
+                delta=self.point.delta
+            )
+
+            cnf_result = cnf_constructor.from_vonorms_and_motif(vonorms, motif)
+
+            if cnf_result.cnf != self.point:
+                valid_cnfs.append(cnf_result.cnf)
+
+        return valid_cnfs
+
+    def _compute_step_data_raw_python(self):
+        """Python implementation of step data computation."""
+        vonorms = self._lnf().vonorms
+        step_data = []
+        current_stabilizer = self.point.lattice_normal_form.vonorms.stabilizer_matrices()
+
+        # Get motif data once
+        motif_coord_matrix = self.discretized_motif.coord_matrix
+        motif_atoms = self.discretized_motif.atoms
+        motif_delta = self.discretized_motif._mod
+
+        for s4_idxs, data in vonorms.maximally_ascending_equivalence_class_members().items():
+            permuted_vonorms = data['maximal_permuted_list']
+            transform_mats = data['transition_mats']
+
+            # Batch compute all matrix products using einsum
+            s1_mats = np.array([s.matrix for s in current_stabilizer])
+            t_mats = np.array([t.matrix for t in transform_mats[:1]])
+            s2_mats = np.array([s.matrix for s in permuted_vonorms.stabilizer_matrices()])
+
+            all_products = np.einsum('nij,mjk,okl->nmoil', s1_mats, t_mats, s2_mats)
+            all_products_flat = all_products.reshape(-1, 3, 3)
+
+            # Deduplicate
+            all_products_rounded = np.round(all_products_flat).astype(int)
+            all_products_2d = all_products_rounded.reshape(-1, 9)
+            unique_flat = np.unique(all_products_2d, axis=0)
+            unimodular_mats = unique_flat.reshape(-1, 3, 3)
+
+            step_vecs = LatticeStep.all_step_vecs()
+            permuted_vonorms_arr = np.array(permuted_vonorms.vonorms)
+
+            for mat in unimodular_mats:
+                # Transform motif coordinates directly
+                mat_inv = np.linalg.inv(mat).astype(int)
+                transformed_coords = mat_inv @ motif_coord_matrix
+                transformed_coords = np.mod(transformed_coords, motif_delta).T  # (N, 3)
+
+                for step_vec in step_vecs:
+                    # Compute new vonorms
+                    new_vonorms_arr = permuted_vonorms_arr + np.array(step_vec)
+                    new_vonorms_tuple = tuple(new_vonorms_arr.astype(int))
+
+                    # Store raw data
+                    step_data.append((step_vec, new_vonorms_tuple, transformed_coords, mat))
+
+        # Deduplicate by vonorms and transformed coords
+        unique_steps = {}
+        for step_vec, vonorms_tuple, coords, mat in step_data:
+            # Use vonorms and flattened coords as key
+            coords_tuple = tuple(coords.flatten())
+            key = (vonorms_tuple, coords_tuple)
+            if key not in unique_steps:
+                unique_steps[key] = (step_vec, vonorms_tuple, coords, mat)
+
+        return list(unique_steps.values())
+
+    def _compute_step_data_raw_rust(self):
+        """Rust implementation of step data computation."""
+        import rust_cnf
+
+        vonorms = self._lnf().vonorms
+        current_stabilizer = self.point.lattice_normal_form.vonorms.stabilizer_matrices()
+
+        # Get motif data
+        motif_coord_matrix = self.discretized_motif.coord_matrix
+        n_atoms = len(self.discretized_motif.atoms)
+        motif_delta = self.discretized_motif._mod
+
+        # Prepare current stabilizers as flat array
+        current_stabilizers_flat = np.array([s.matrix for s in current_stabilizer]).astype(np.int32).flatten()
+
+        # Prepare permuted vonorms data
+        permuted_vonorms_data = []
+        for s4_idxs, data in vonorms.maximally_ascending_equivalence_class_members().items():
+            permuted_vonorms = data['maximal_permuted_list']
+            transform_mats = data['transition_mats']
+
+            # Convert to lists/arrays for Rust
+            vonorms_list = list(permuted_vonorms.vonorms)
+            transform_mats_list = [[int(x) for x in mat.matrix.flatten()] for mat in transform_mats[:1]]
+            stabilizer_mats_list = [[int(x) for x in s.matrix.flatten()] for s in permuted_vonorms.stabilizer_matrices()]
+
+            permuted_vonorms_data.append((vonorms_list, transform_mats_list, stabilizer_mats_list))
+
+        # Call Rust function
+        motif_coords_flat = np.ascontiguousarray(motif_coord_matrix.flatten(), dtype=np.float64)
+        result = rust_cnf.compute_step_data_raw_rust(
+            current_stabilizers_flat,
+            permuted_vonorms_data,
+            motif_coords_flat,
+            n_atoms,
+            motif_delta
+        )
+
+        # Convert result back to Python format
+        # Result is list of (step_vec, vonorms_tuple, coords, matrix_flat)
+        python_result = []
+        for step_vec, vonorms_list, coords_flat, mat_flat in result:
+            vonorms_tuple = tuple([int(v) for v in vonorms_list])
+            coords = np.array(coords_flat).reshape(n_atoms, 3)
+            matrix = np.array(mat_flat, dtype=np.int32).reshape(3, 3)
+            python_result.append((step_vec, vonorms_tuple, coords, matrix))
+
+        return python_result
 
     def find_cnf_neighbors(self) -> NeighborSet:
         neighbors = NeighborSet()
