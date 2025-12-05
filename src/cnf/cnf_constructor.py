@@ -129,14 +129,21 @@ class CNFConstructor():
         sorting_mat = sorting_matrices[0].matrix if sorting_matrices else np.eye(3)
         stabilizer_2 = canonical_vonorms.stabilizer_matrices_fast()
 
-        # Pre-extract matrices and compute products more efficiently
-        # Since selling and sorting are single matrices, we can avoid product() overhead
-        all_stabilizers = []
-        for s1 in stabilizer_1:
-            for s2 in stabilizer_2:
-                # Combine all 4 matrices: s1 @ selling @ sorting @ s2
-                combined = np.linalg.multi_dot([s1.matrix, selling_mat, sorting_mat, s2.matrix])
-                all_stabilizers.append(MatrixTuple(combined))
+        # Vectorized matrix multiplication using einsum
+        # Pre-compute middle product
+        middle = selling_mat @ sorting_mat
+
+        # Stack all s1 and s2 matrices into 3D arrays
+        s1_stack = np.array([s.matrix for s in stabilizer_1])  # shape (N1, 3, 3)
+        s2_stack = np.array([s.matrix for s in stabilizer_2])  # shape (N2, 3, 3)
+
+        # Compute all combinations: s1[i] @ middle @ s2[j] for all i, j
+        # Result shape: (N1, N2, 3, 3)
+        result = np.einsum('nij,jk,mkl->nmil', s1_stack, middle, s2_stack)
+
+        # Flatten and convert to MatrixTuple
+        result_flat = result.reshape(-1, 3, 3)
+        all_stabilizers = [MatrixTuple(mat) for mat in result_flat]
 
         # Deduplicate
         all_stabilizers = list(set(all_stabilizers))
