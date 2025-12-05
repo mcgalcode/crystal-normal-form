@@ -365,24 +365,14 @@ class LatticeNeighborFinder():
         # Prepare current stabilizers as flat array
         current_stabilizers_flat = np.array([s.matrix for s in current_stabilizer]).astype(np.int32).flatten()
 
-        # Prepare permuted vonorms data
-        permuted_vonorms_data = []
-        for s4_idxs, data in vonorms.maximally_ascending_equivalence_class_members().items():
-            permuted_vonorms = data['maximal_permuted_list']
-            transform_mats = data['transition_mats']
+        # Prepare input vonorms - Rust will compute S4 groups internally using precomputed data
+        input_vonorms = np.array(vonorms.vonorms, dtype=np.float64)
 
-            # Convert to lists/arrays for Rust
-            # Rust will compute stabilizers, so we don't send them
-            vonorms_list = list(permuted_vonorms.vonorms)
-            transform_mats_list = [[int(x) for x in mat.matrix.flatten()] for mat in transform_mats[:1]]
-
-            permuted_vonorms_data.append((vonorms_list, transform_mats_list))
-
-        # Call Rust function
+        # Call Rust function - Rust now handles the S4 grouping internally!
         motif_coords_flat = np.ascontiguousarray(motif_coord_matrix.flatten(), dtype=np.float64)
         result = rust_cnf.compute_step_data_raw_rust(
             current_stabilizers_flat,
-            permuted_vonorms_data,
+            input_vonorms,
             motif_coords_flat,
             n_atoms,
             motif_delta

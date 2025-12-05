@@ -10,12 +10,25 @@ struct PermutationEntry {
     permutations: Vec<Vec<usize>>,
 }
 
+/// Data for one S4 equivalence class group
+#[derive(Clone)]
+pub struct S4Group {
+    /// Vonorm permutations in this group
+    pub vonorm_perms: Vec<Vec<usize>>,
+    /// Conorm permutations corresponding to each vonorm perm
+    pub conorm_perms: Vec<Vec<usize>>,
+    /// Transition matrices for each permutation
+    pub transition_mats: Vec<Vec<Vec<Vec<i32>>>>,
+}
+
 /// Pre-loaded permutation mappings
 pub struct PermutationMaps {
     /// Maps (zero_indices, conorm_perm) -> list of unimodular matrices
     pub zero_to_perm_to_mats: HashMap<Vec<usize>, HashMap<Vec<usize>, Vec<Vec<Vec<i32>>>>>,
     /// Maps conorm_perm -> vonorm_perm (pre-computed)
     pub conorm_to_vonorm_perm: HashMap<Vec<usize>, Vec<usize>>,
+    /// Maps zero_indices -> S4 groups (precomputed equivalence classes)
+    pub zero_to_s4_groups: HashMap<Vec<usize>, HashMap<Vec<usize>, S4Group>>,
 }
 
 lazy_static! {
@@ -77,9 +90,43 @@ fn load_permutations() -> PermutationMaps {
         conorm_to_vonorm_perm.insert(conorm_perm, vonorm_perm);
     }
 
+    // Precompute S4 groupings for each zero pattern
+    let mut zero_to_s4_groups: HashMap<Vec<usize>, HashMap<Vec<usize>, S4Group>> = HashMap::new();
+
+    for (zero_idxs, perm_to_mats) in &zero_to_perm_to_mats {
+        let mut s4_groups: HashMap<Vec<usize>, S4Group> = HashMap::new();
+
+        // Group conorm permutations by their corresponding vonorm perm's S4 indices
+        for (conorm_perm, matrices) in perm_to_mats {
+            // Get the corresponding vonorm permutation
+            if let Some(vonorm_perm) = conorm_to_vonorm_perm.get(conorm_perm) {
+                // Extract S4 indices (first 4 elements, sorted)
+                let s4_key: Vec<usize> = {
+                    let mut s4 = vonorm_perm[0..4].to_vec();
+                    s4.sort();
+                    s4
+                };
+
+                // Add to the appropriate S4 group
+                let group = s4_groups.entry(s4_key).or_insert_with(|| S4Group {
+                    vonorm_perms: Vec::new(),
+                    conorm_perms: Vec::new(),
+                    transition_mats: Vec::new(),
+                });
+
+                group.vonorm_perms.push(vonorm_perm.clone());
+                group.conorm_perms.push(conorm_perm.clone());
+                group.transition_mats.push(matrices.clone());
+            }
+        }
+
+        zero_to_s4_groups.insert(zero_idxs.clone(), s4_groups);
+    }
+
     PermutationMaps {
         zero_to_perm_to_mats,
         conorm_to_vonorm_perm,
+        zero_to_s4_groups,
     }
 }
 
@@ -101,6 +148,55 @@ pub fn find_zero_indices_exact(conorms: &[f64; 6]) -> Vec<usize> {
         .enumerate()
         .filter_map(|(idx, &cn)| if cn == 0.0 { Some(idx) } else { None })
         .collect()
+}
+
+/// Apply a vonorm permutation to get permuted vonorms
+fn apply_vonorm_permutation(vonorms: &[f64; 7], perm: &[usize]) -> [f64; 7] {
+    [
+        vonorms[perm[0]],
+        vonorms[perm[1]],
+        vonorms[perm[2]],
+        vonorms[perm[3]],
+        vonorms[perm[4]],
+        vonorms[perm[5]],
+        vonorms[perm[6]],
+    ]
+}
+
+/// Result for one S4 equivalence class representative
+pub struct S4Representative {
+    pub s4_key: Vec<usize>,
+    pub permuted_vonorms: [f64; 7],
+    pub transition_mats: Vec<Vec<Vec<i32>>>,
+}
+
+/// Get one representative from each S4 equivalence class
+///
+/// Takes the first permutation from each S4 group (no need to find maximal)
+pub fn get_s4_representatives(
+    vonorms: &[f64; 7],
+    zero_indices: &[usize],
+) -> Vec<S4Representative> {
+    let mut results = Vec::new();
+
+    // Get the S4 groups for this zero pattern
+    if let Some(s4_groups) = PERMUTATIONS.zero_to_s4_groups.get(zero_indices) {
+        for (s4_key, group) in s4_groups {
+            // Just take the first permutation from the group
+            if let Some(first_perm) = group.vonorm_perms.first() {
+                let permuted = apply_vonorm_permutation(vonorms, first_perm);
+                let mats = group.transition_mats[0].clone();
+
+                results.push(S4Representative {
+                    s4_key: s4_key.clone(),
+                    permuted_vonorms: permuted,
+                    transition_mats: mats,
+                });
+            }
+        }
+    }
+
+    results
 }
 
 /// Find zero conorm indices with tolerance (for float vonorms)

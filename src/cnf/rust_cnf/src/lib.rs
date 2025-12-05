@@ -419,16 +419,31 @@ fn validate_vonorm_step(vonorms: &[f64; 7]) -> bool {
 fn compute_step_data_raw_rust<'py>(
     py: Python<'py>,
     current_stabilizers_flat: PyReadonlyArray1<i32>,  // Flat (N1*9) array
-    permuted_vonorms_data: Vec<(Vec<f64>, Vec<Vec<i32>>)>,  // (vonorms, transform_mats) - we compute stabilizers in Rust
+    input_vonorms: PyReadonlyArray1<f64>,  // Input vonorms (7 elements)
     motif_coord_matrix: PyReadonlyArray1<f64>,  // Flat (3*N) array
     n_atoms: usize,
     motif_delta: i32,
 ) -> PyResult<Py<pyo3::PyAny>> {
     use std::collections::HashMap;
     use numpy::PyArray2;
+    use crate::permutations::{compute_conorms, find_zero_indices_exact, get_s4_representatives};
 
     let s1_flat = current_stabilizers_flat.as_array();
     let coord_mat = motif_coord_matrix.as_array();
+    let input_vn = input_vonorms.as_array();
+
+    // Convert input vonorms to array
+    let vonorms_arr: [f64; 7] = [
+        input_vn[0], input_vn[1], input_vn[2], input_vn[3],
+        input_vn[4], input_vn[5], input_vn[6]
+    ];
+
+    // Compute conorms and zero indices
+    let conorms = compute_conorms(&vonorms_arr);
+    let zero_indices = find_zero_indices_exact(&conorms);
+
+    // Get S4 representatives using precomputed data
+    let s4_reps = get_s4_representatives(&vonorms_arr, &zero_indices);
 
     // Parse current stabilizers into 3x3 matrices
     let n_s1 = s1_flat.len() / 9;
@@ -449,8 +464,10 @@ fn compute_step_data_raw_rust<'py>(
 
     let mut all_step_data: Vec<(Vec<i32>, Vec<f64>, Vec<f64>, Vec<i32>)> = Vec::new();
 
-    // Process each permuted vonorm
-    for (permuted_vonorms, transform_mats) in permuted_vonorms_data {
+    // Process each S4 representative
+    for s4_rep in s4_reps {
+        let permuted_vonorms = s4_rep.permuted_vonorms.to_vec();
+        let transform_mats = s4_rep.transition_mats;
         // Convert permuted vonorms to array for stabilizer computation
         let permuted_vn_arr: [f64; 7] = [
             permuted_vonorms[0], permuted_vonorms[1], permuted_vonorms[2], permuted_vonorms[3],
@@ -465,11 +482,12 @@ fn compute_step_data_raw_rust<'py>(
         let n_s2 = s2_flat.len() / 9;
 
         let mut t_matrices: Vec<[[i32; 3]; 3]> = Vec::with_capacity(n_t);
-        for mat_flat in &transform_mats {
+        for mat_vec in &transform_mats {
+            // mat_vec is Vec<Vec<i32>> (3x3 matrix)
             let mut mat = [[0i32; 3]; 3];
             for row in 0..3 {
                 for col in 0..3 {
-                    mat[row][col] = mat_flat[row * 3 + col];
+                    mat[row][col] = mat_vec[row][col];
                 }
             }
             t_matrices.push(mat);
