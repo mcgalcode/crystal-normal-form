@@ -11,6 +11,7 @@ dependencies = [
     "ase>=3.26.0",
     "average-minimum-distance>=1.6.0",
     "line-profiler>=5.0.0",
+    "maturin>=1.10.2",
     "mp-api>=0.45.8",
     "numpy<2",
     "pymatgen>=2025.6.14",
