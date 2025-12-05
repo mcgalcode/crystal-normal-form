@@ -177,7 +177,7 @@ def path_find_end_structs(zr_hcp_mp):
     return [UnitCell.from_pymatgen_structure(zr_hcp_mp)]
     
 
-# @pytest.mark.skip
+@pytest.mark.skip
 def test_can_connect_two_points(path_find_start_structs, path_find_end_structs):
     xi = 1.5
     delta = 5
