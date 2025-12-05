@@ -146,8 +146,11 @@ class MNFConstructor():
         self.stabilizer = stabilizer
         self.verbose_logging = verbose_logging
     
-    @profile
-    def build_vectorized(self, original_motif: FractionalMotif):
+    @maybe_profile
+    def build_vectorized(self, original_motif: FractionalMotif, use_rust=False):
+        if use_rust:
+            return self._build_vectorized_rust(original_motif)
+
         if len(original_motif.atoms) == 1:
             candidate = MNFCandidate(tuple([]), None, None, None)
             return MNFConstructionResult(
@@ -155,33 +158,77 @@ class MNFConstructor():
                 self.delta,
                 self.stabilizer,
                 [candidate]
-            ) 
+            )
 
         # compute a list of element labels for help in later
         # lexicographic sorting
         np_stabilizer_mats = self.stabilizer
         atom_labels = get_atom_labels(original_motif)
         num_origin_atoms = original_motif.num_origin_atoms
-        
+
         stabilized_coord_mats = get_stabilized_coord_mats(np_stabilizer_mats, original_motif)
         shifted_coord_mats = []
         for scm in stabilized_coord_mats:
             shifted = get_all_shifted_coord_mats(scm, num_origin_atoms, original_motif._mod)
             shifted_coord_mats.extend(shifted)
-            
+
         sorted_coord_mats = []
         for scm in shifted_coord_mats:
             sorted_coord_mat = sort_motif_coord_arr(scm, atom_labels)
             sorted_coord_mats.append(sorted_coord_mat)
 
         sorted_mnfs = get_mnf_strs_from_coord_mats(sorted_coord_mats)
-        
+
         stacked_mnfs = np.stack(sorted_mnfs)
         keys = stacked_mnfs.T
         sorted_indices = np.lexsort(keys[::-1])
         sorted_list = [stacked_mnfs[i] for i in sorted_indices]
         best_candidate = sorted_list[0]
         best_mnf_str = tuple([float(i) for i in best_candidate])
+        candidate = MNFCandidate(best_mnf_str, None, None, None)
+
+        return MNFConstructionResult(
+            original_motif,
+            self.delta,
+            self.stabilizer,
+            [candidate]
+        )
+
+    def _build_vectorized_rust(self, original_motif: FractionalMotif):
+        """Rust-accelerated MNF construction"""
+        import rust_cnf
+
+        if len(original_motif.atoms) == 1:
+            candidate = MNFCandidate(tuple([]), None, None, None)
+            return MNFConstructionResult(
+                original_motif,
+                self.delta,
+                self.stabilizer,
+                [candidate]
+            )
+
+        # Prepare inputs for Rust
+        coords_flat = np.ascontiguousarray(original_motif.coord_matrix.T.flatten(), dtype=np.float64)
+        atom_labels = np.ascontiguousarray(get_atom_labels(original_motif), dtype=np.int32)
+        num_origin_atoms = original_motif.num_origin_atoms
+
+        # Flatten stabilizer matrices
+        stabilizers_flat = np.ascontiguousarray(
+            np.array([mat.flatten() for mat in self.stabilizer]).flatten(),
+            dtype=np.int32
+        )
+
+        # Call Rust implementation
+        mnf_coords_arr = rust_cnf.build_mnf_vectorized_rust(
+            coords_flat,
+            atom_labels,
+            num_origin_atoms,
+            stabilizers_flat,
+            float(original_motif._mod)
+        )
+
+        # Convert to tuple
+        best_mnf_str = tuple([float(i) for i in mnf_coords_arr])
         candidate = MNFCandidate(best_mnf_str, None, None, None)
 
         return MNFConstructionResult(

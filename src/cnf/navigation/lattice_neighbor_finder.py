@@ -121,7 +121,7 @@ class LatticeNeighborFinder():
             verbose_logging=False,
         )
 
-        cnf_result = cnf_constructor.from_vonorms_and_motif_fast(step.vonorms, step.transformed_motif)
+        cnf_result = cnf_constructor._from_vonorms_and_motif_rust(step.vonorms, step.transformed_motif)
 
         if cnf_result.cnf != self.point:
             results.append(LatticeStepResult(
