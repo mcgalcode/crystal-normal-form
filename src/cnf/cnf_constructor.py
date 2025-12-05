@@ -94,7 +94,7 @@ class CNFConstructor():
         return self._from_vonorms_and_motif_rust(vonorms, motif)
     
     @maybe_profile
-    def from_vonorms_and_motif_py(self, vonorms: VonormList, motif: DiscretizedMotif | FractionalMotif, float_tol):
+    def from_vonorms_and_motif_py(self, vonorms: VonormList, motif: DiscretizedMotif | FractionalMotif, float_tol = None):
         use_float = float_tol is not None
         if use_float:
             vonorms = vonorms.set_tol(float_tol)
@@ -103,28 +103,34 @@ class CNFConstructor():
         lnf_constructor = LatticeNormalFormConstructor(self.xi, self.verbose_logging)
         if use_float:
             lnf_result = lnf_constructor.build_lnf_from_vonorms(vonorms)
+            lnf = lnf_result.lnf            
+            canonical_vonorms = lnf_result.lnf.vonorms
+            selling_transform = lnf_result.selling_transform_mat()
+            sorting_transforms = lnf_result.sorting_transforms()
         else:
             canonical_vonorms, lnf, selling_transform, sorting_matrices = lnf_constructor.build_lnf_from_discretized_vonorms_fast(vonorms)
+            sorting_transforms = sorting_matrices
             lnf_result = None
 
         if self.verbose_logging:
-            print(f"Successfully constructed LNF! {lnf_result.lnf}")
-
+            if lnf_result:
+                print(f"Successfully constructed LNF! {lnf_result.lnf}")
 
         if use_float:
-            stabilizer_1 = vonorms.stabilizer_matrices_fast()
-            selling_mat = selling_transform.matrix if selling_transform else np.eye(3)
-            sorting_mat = sorting_matrices[0].matrix if sorting_matrices else np.eye(3)
-            stabilizer_2 = canonical_vonorms.stabilizer_matrices_fast()
-        else:      
             stabilizer_1 = vonorms.stabilizer_matrices()
-            selling = [lnf_result.selling_transform_mat()]
-            sorting_transforms = lnf_result.sorting_transforms()[:1]
-            stabilizer_2 = lnf_result.stabilizer()
+            stabilizer_2 = canonical_vonorms.stabilizer_matrices()
+        else:
+            stabilizer_1 = vonorms.stabilizer_matrices_fast()
+            stabilizer_2 = canonical_vonorms.stabilizer_matrices_fast()            
+            
+
+        # Get matrices
+        selling_mat = selling_transform.matrix if selling_transform else np.eye(3)
+        sorting_mat = sorting_transforms[0].matrix
 
         if self.verbose_logging:
             print(f"Stabilizer_1 count: {len(stabilizer_1)}")
-            print(f"Selling matrix:\n{selling[0].matrix}")
+            print(f"Selling matrix:\n{selling_mat}")
             print(f"Sorting matrix:\n{sorting_transforms[0].matrix}")
             print(f"Stabilizer_2 count: {len(stabilizer_2)}")
 
@@ -161,7 +167,7 @@ class CNFConstructor():
             print(f"Based on motif:")
             mnf_construction_res.canonical_motif.print_details()
 
-        cnf = CrystalNormalForm(lnf_result.lnf, mnf_construction_res.mnf)
+        cnf = CrystalNormalForm(lnf, mnf_construction_res.mnf)
         return CNFConstructionResult(cnf, lnf_result, mnf_construction_res)
     
     def _from_vonorms_and_motif_rust(self, vonorms: VonormList, motif: DiscretizedMotif | FractionalMotif, float_tol=None):
