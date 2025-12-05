@@ -96,6 +96,18 @@ class VonormList():
         return grouped_vonorms
     
     def maximally_ascending_equivalence_class_members(self):
+        """
+        Groups permissible permutations of this vonorm list by the primary vonorm
+        indices. In other words, permutations (0,1,2,3,4,5,6) and (0,2,3,1,4,6,5)
+        would be grouped together because they share a set of primary vonorm values
+        (even though they are permuted differently). This method is used in neighbor
+        finding because the step operations from Dr. Mrdjenovich's thesis are only
+        guaranteed to be reciprocal with respect to S4 operations. What that means is that
+        we haver to launch the neighbor finding algorithm from one of each of the 
+        "equivalence classes" of primary vonorms. If (0,5,2,4,1,3,6) is also a permissible
+        permutation, then that is a distinct equivalence class from (0,1,3,2,4,6,5) because
+        the FIRST FOUR ELEMENTs are distinct.
+        """
         grouped = self.grouped_by_s4_permutations()
         result = {}
         for group, perms in grouped.items():
@@ -107,6 +119,30 @@ class VonormList():
                 "equivalent_perms": equivalent_perms,
                 "maximal_permuted_list": maximal_vlist,
                 "transition_mats": [m for p in equivalent_perms for m in p.all_matrices]
+            }
+        return result
+
+    def s4_equivalence_class_representatives(self):
+        """
+        Groups permissible permutations of this vonorm list by the primary vonorm
+        indices. In other words, permutations (0,1,2,3,4,5,6) and (0,2,3,1,4,6,5)
+        would be grouped together because they share a set of primary vonorm values
+        (even though they are permuted differently). This method is used in neighbor
+        finding because the step operations from Dr. Mrdjenovich's thesis are only
+        guaranteed to be reciprocal with respect to S4 operations. What that means is that
+        we haver to launch the neighbor finding algorithm from one of each of the 
+        "equivalence classes" of primary vonorms. If (0,5,2,4,1,3,6) is also a permissible
+        permutation, then that is a distinct equivalence class from (0,1,3,2,4,6,5) because
+        the FIRST FOUR ELEMENTs are distinct.
+        """
+        grouped = self.grouped_by_s4_permutations()
+        result = {}
+        for group, perms in grouped.items():
+            selected_perm = perms[0]
+            representative_vonorms = self.apply_permutation(selected_perm.vonorm_permutation)
+            result[group] = {
+                "permuted_vonorms": representative_vonorms,
+                "transition_mats": selected_perm.all_matrices
             }
         return result
 
