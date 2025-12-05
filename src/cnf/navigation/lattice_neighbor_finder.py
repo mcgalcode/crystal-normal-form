@@ -39,8 +39,8 @@ class LatticeNeighborFinder():
         step_tuples = []
         current_stabilizer = self.point.lattice_normal_form.vonorms.stabilizer_matrices()
 
-        for s4_idxs, data in vonorms.maximally_ascending_equivalence_class_members().items():
-            permuted_vonorms = data['maximal_permuted_list']
+        for s4_idxs, data in vonorms.s4_equivalence_class_representatives().items():
+            permuted_vonorms = data['permuted_vonorms']
             transform_mats = data['transition_mats']
 
             # Batch compute all matrix products using einsum
@@ -355,7 +355,7 @@ class LatticeNeighborFinder():
         import rust_cnf
 
         vonorms = self._lnf().vonorms
-        current_stabilizer = self.point.lattice_normal_form.vonorms.stabilizer_matrices()
+        current_stabilizer = self.point.lattice_normal_form.vonorms.stabilizer_matrices_fast()
 
         # Get motif data
         motif_coord_matrix = self.discretized_motif.coord_matrix
