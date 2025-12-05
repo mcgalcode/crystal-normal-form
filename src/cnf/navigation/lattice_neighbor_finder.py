@@ -95,7 +95,6 @@ class LatticeNeighborFinder():
                 neighbors.add_neighbor(result)
         return neighbors
     
-    # @profile
     def find_cnf_neighbor_results(self, step: LatticeStep) -> list[LatticeStepResult]:
         results = []
 

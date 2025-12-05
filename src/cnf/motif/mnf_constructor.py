@@ -82,6 +82,7 @@ def get_all_shifted_motifs(m: FractionalMotif) -> tuple[list[FractionalMotif], l
         shifts.append(shift)
     return shifted_motifs, shifts
 
+@profile
 def get_stabilized_coord_mats(stabilizers, motif):
     original_motif_coords = motif.coord_matrix
     stabilizers_inverted = invert_unimods(stabilizers)
@@ -99,6 +100,7 @@ def move_coords_into_bounds(coord_mats, mod):
     all_motifs = np.mod(all_motifs, mod) 
     return all_motifs
 
+@profile
 def get_all_shifted_coord_mats(coord_mat, num_origin_atoms, mod):
     motifs = []
     shift_vecs = -coord_mat.T[:num_origin_atoms]
@@ -119,10 +121,11 @@ def get_atom_labels(motif):
     atom_labels = np.array(atom_labels)
     return atom_labels
     
+@profile
 def sort_motif_coord_arr(coord_mat, atom_labels):
     x_col, y_col, z_col = coord_mat
     sorted_indices = np.lexsort((z_col, y_col, x_col, atom_labels))
-    sorted_coord_mat = coord_mat.T[sorted_indices]    
+    sorted_coord_mat = coord_mat.T[sorted_indices]
     return sorted_coord_mat.T
 
 class MNFConstructor():
@@ -142,6 +145,7 @@ class MNFConstructor():
         self.stabilizer = stabilizer
         self.verbose_logging = verbose_logging
     
+    @profile
     def build_vectorized(self, original_motif: FractionalMotif):
         if len(original_motif.atoms) == 1:
             candidate = MNFCandidate(tuple([]), None, None, None)

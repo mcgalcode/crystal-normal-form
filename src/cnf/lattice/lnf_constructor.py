@@ -10,7 +10,10 @@ from .rounding import DiscretizedVonormComputer
 from .superbasis import Superbasis
 from .lattice_normal_form import LatticeNormalForm
 from ..linalg import MatrixTuple
+from .voronoi.vonorm_list import VONORM_TO_DOT_PRODUCTS
+from .permutations import ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS, CONORM_PERMUTATION_TO_VONORM_PERMUTATION, CONORM_PERMUTATION_TO_VONORM_PERMUTATION_ARRAY
 
+@profile
 def build_lnf_raw(vonorms_tuple, xi):
     """
     Fast LNF construction for discretized vonorms.
@@ -29,8 +32,6 @@ def build_lnf_raw(vonorms_tuple, xi):
     Returns:
         tuple: (canonical_vonorms_tuple, selling_transform_matrix, sorting_perm_matrices)
     """
-    from .voronoi.vonorm_list import VONORM_TO_DOT_PRODUCTS
-    from .permutations import ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS, CONORM_PERMUTATION_TO_VONORM_PERMUTATION
 
     vonorms = np.array(vonorms_tuple, dtype=float)
 
@@ -70,11 +71,11 @@ def build_lnf_raw(vonorms_tuple, xi):
     perm_matrices_list = []
 
     for conorm_perm, mat_list in perm_to_mats.items():
-        # Convert conorm permutation to vonorm permutation using pre-computed mapping
-        vonorm_perm = CONORM_PERMUTATION_TO_VONORM_PERMUTATION[conorm_perm]
+        # Convert conorm permutation to vonorm permutation using pre-computed array
+        vonorm_perm_arr = CONORM_PERMUTATION_TO_VONORM_PERMUTATION_ARRAY[conorm_perm]
 
-        # Apply permutation directly on array
-        permuted = vonorms_reduced[list(vonorm_perm)]
+        # Apply permutation directly on array (faster with numpy array indices)
+        permuted = vonorms_reduced[vonorm_perm_arr]
         permuted_tuple = tuple(permuted)  # Create tuple once, reuse it
         permuted_vonorms_list.append(permuted_tuple)
         perm_matrices_list.append((permuted_tuple, mat_list))
@@ -220,6 +221,7 @@ class LatticeNormalFormConstructor():
             result
         )
 
+    @profile
     def build_lnf_from_discretized_vonorms_fast(self, vonorms: VonormList):
         """
         Fast path for building LNF from already-discretized vonorms.

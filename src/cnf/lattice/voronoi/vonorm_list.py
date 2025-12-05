@@ -117,7 +117,7 @@ class VonormList():
                 mats.add(m)
         return list(mats)
 
-    # @profile
+    @profile
     def stabilizer_matrices_fast(self):
         """
         Fast stabilizer computation for discretized vonorms.

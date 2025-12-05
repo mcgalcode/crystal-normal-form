@@ -103,6 +103,7 @@ if VONORM_PERMUTATION_TO_CONORM_PERMUTATION is None:
     CONORM_PERMUTATION_TO_VONORM_PERMUTATION = { v: k for k, v in VONORM_PERMUTATION_TO_CONORM_PERMUTATION.items() }
     # Pre-convert vonorm permutations to numpy arrays for fast indexing
     CONORM_PERMUTATION_TO_VONORM_PERMUTATION_ARRAY = { k: np.array(v, dtype=np.intp) for k, v in CONORM_PERMUTATION_TO_VONORM_PERMUTATION.items() }
+    CONORM_PERMUTATION_TO_VONORM_PERMUTATION_LIST = { k: list(v) for k, v in CONORM_PERMUTATION_TO_VONORM_PERMUTATION.items() }
 
 def find_matching_permutations():
     s7_permutations = list(permutations(range(7)))
