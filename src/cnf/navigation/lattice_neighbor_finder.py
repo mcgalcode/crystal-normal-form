@@ -372,11 +372,11 @@ class LatticeNeighborFinder():
             transform_mats = data['transition_mats']
 
             # Convert to lists/arrays for Rust
+            # Rust will compute stabilizers, so we don't send them
             vonorms_list = list(permuted_vonorms.vonorms)
             transform_mats_list = [[int(x) for x in mat.matrix.flatten()] for mat in transform_mats[:1]]
-            stabilizer_mats_list = [[int(x) for x in s.matrix.flatten()] for s in permuted_vonorms.stabilizer_matrices()]
 
-            permuted_vonorms_data.append((vonorms_list, transform_mats_list, stabilizer_mats_list))
+            permuted_vonorms_data.append((vonorms_list, transform_mats_list))
 
         # Call Rust function
         motif_coords_flat = np.ascontiguousarray(motif_coord_matrix.flatten(), dtype=np.float64)

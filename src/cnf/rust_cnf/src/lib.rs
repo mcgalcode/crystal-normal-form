@@ -419,7 +419,7 @@ fn validate_vonorm_step(vonorms: &[f64; 7]) -> bool {
 fn compute_step_data_raw_rust<'py>(
     py: Python<'py>,
     current_stabilizers_flat: PyReadonlyArray1<i32>,  // Flat (N1*9) array
-    permuted_vonorms_data: Vec<(Vec<f64>, Vec<Vec<i32>>, Vec<Vec<i32>>)>,  // (vonorms, transform_mats, s2_mats) for each permuted
+    permuted_vonorms_data: Vec<(Vec<f64>, Vec<Vec<i32>>)>,  // (vonorms, transform_mats) - we compute stabilizers in Rust
     motif_coord_matrix: PyReadonlyArray1<f64>,  // Flat (3*N) array
     n_atoms: usize,
     motif_delta: i32,
@@ -450,10 +450,19 @@ fn compute_step_data_raw_rust<'py>(
     let mut all_step_data: Vec<(Vec<i32>, Vec<f64>, Vec<f64>, Vec<i32>)> = Vec::new();
 
     // Process each permuted vonorm
-    for (permuted_vonorms, transform_mats, s2_mats_raw) in permuted_vonorms_data {
+    for (permuted_vonorms, transform_mats) in permuted_vonorms_data {
+        // Convert permuted vonorms to array for stabilizer computation
+        let permuted_vn_arr: [f64; 7] = [
+            permuted_vonorms[0], permuted_vonorms[1], permuted_vonorms[2], permuted_vonorms[3],
+            permuted_vonorms[4], permuted_vonorms[5], permuted_vonorms[6]
+        ];
+
+        // Compute stabilizers in Rust instead of receiving from Python
+        let s2_flat = lnf::find_stabilizers_raw(&permuted_vn_arr);
+
         // Parse transform and s2 matrices
         let n_t = transform_mats.len();
-        let n_s2 = s2_mats_raw.len();
+        let n_s2 = s2_flat.len() / 9;
 
         let mut t_matrices: Vec<[[i32; 3]; 3]> = Vec::with_capacity(n_t);
         for mat_flat in &transform_mats {
@@ -467,11 +476,12 @@ fn compute_step_data_raw_rust<'py>(
         }
 
         let mut s2_matrices: Vec<[[i32; 3]; 3]> = Vec::with_capacity(n_s2);
-        for mat_flat in &s2_mats_raw {
+        for i in 0..n_s2 {
+            let start = i * 9;
             let mut mat = [[0i32; 3]; 3];
             for row in 0..3 {
                 for col in 0..3 {
-                    mat[row][col] = mat_flat[row * 3 + col];
+                    mat[row][col] = s2_flat[start + row * 3 + col];
                 }
             }
             s2_matrices.push(mat);
