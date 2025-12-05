@@ -125,12 +125,20 @@ class CNFConstructor():
 
         # Compute stabilizers using fast path for discretized vonorms
         stabilizer_1 = vonorms.stabilizer_matrices_fast()
-        selling = [selling_transform] if selling_transform else [MatrixTuple.identity()]
-        sorting_transforms = sorting_matrices[:1] if sorting_matrices else [MatrixTuple.identity()]
+        selling_mat = selling_transform.matrix if selling_transform else np.eye(3)
+        sorting_mat = sorting_matrices[0].matrix if sorting_matrices else np.eye(3)
         stabilizer_2 = canonical_vonorms.stabilizer_matrices_fast()
 
-        all_stabilizers = [MatrixTuple(combine_unimodular_mats_np([s.matrix for s in stack]))
-                          for stack in product(stabilizer_1, selling, sorting_transforms, stabilizer_2)]
+        # Pre-extract matrices and compute products more efficiently
+        # Since selling and sorting are single matrices, we can avoid product() overhead
+        all_stabilizers = []
+        for s1 in stabilizer_1:
+            for s2 in stabilizer_2:
+                # Combine all 4 matrices: s1 @ selling @ sorting @ s2
+                combined = np.linalg.multi_dot([s1.matrix, selling_mat, sorting_mat, s2.matrix])
+                all_stabilizers.append(MatrixTuple(combined))
+
+        # Deduplicate
         all_stabilizers = list(set(all_stabilizers))
         np_stabs = [s.matrix for s in all_stabilizers]
 
