@@ -236,7 +236,139 @@ class MNFConstructor():
             self.delta,
             self.stabilizer,
             [candidate]
-        ) 
+        )
+
+    def build_many_from_raw_coords(self, coords_list: list[list[int]], atomic_numbers: list[int], use_rust=False):
+        """
+        Build MNFs for many coordinate sets at once with shared pre-computation.
+
+        Optimized batch processing that pre-computes atom labels and inverted stabilizers once.
+
+        Args:
+            coords_list: List of coordinate lists, each [x1, y1, z1, x2, y2, z2, ...]
+            atomic_numbers: Sorted list of atomic numbers (same for all coords)
+            use_rust: Whether to use Rust implementation
+
+        Returns:
+            list[tuple]: List of canonical MNF coordinate tuples
+        """
+        if len(atomic_numbers) == 1:
+            return [tuple([]) for _ in coords_list]
+
+        # Pre-compute values once for all coords
+        atom_labels, num_origin_atoms, stabilizers_inverted = self._precompute_mnf_data(atomic_numbers)
+
+        # Build MNF for each coordinate set
+        results = []
+        for coords_flat in coords_list:
+            result = self.build_from_raw_coords(
+                coords_flat, atomic_numbers, use_rust,
+                atom_labels, num_origin_atoms, stabilizers_inverted
+            )
+            results.append(result)
+        return results
+
+    def _precompute_mnf_data(self, atomic_numbers: list[int]):
+        """Pre-compute data needed for MNF construction."""
+        # Compute atom labels (group by atomic number)
+        atom_labels = []
+        el_num = 0
+        prev_z = atomic_numbers[0]
+        for z in atomic_numbers:
+            if z != prev_z:
+                el_num += 1
+                prev_z = z
+            atom_labels.append(el_num)
+        atom_labels = np.array(atom_labels, dtype=np.int32)
+
+        # Count origin atoms
+        num_origin_atoms = sum(1 for z in atomic_numbers if z == atomic_numbers[0])
+
+        # Pre-compute inverted stabilizers
+        stabilizers_inverted = np.linalg.inv(np.array(self.stabilizer))
+
+        return atom_labels, num_origin_atoms, stabilizers_inverted
+
+    def build_from_raw_coords(self, coords_flat: list, atomic_numbers: list[int], use_rust=False,
+                              atom_labels=None, num_origin_atoms=None, stabilizers_inverted=None):
+        """
+        Build MNF directly from raw coordinate list and atomic numbers.
+
+        Bypasses DiscretizedMotif construction for performance.
+
+        Args:
+            coords_flat: Flat list of coordinates [x1, y1, z1, x2, y2, z2, ...]
+            atomic_numbers: Sorted list of atomic numbers [22, 22, 8, 8, ...]
+            use_rust: Whether to use Rust implementation
+            atom_labels: Optional pre-computed atom labels (for batch processing)
+            num_origin_atoms: Optional pre-computed origin atom count (for batch processing)
+            stabilizers_inverted: Optional pre-computed inverted stabilizers (for batch processing)
+
+        Returns:
+            tuple: Canonical MNF coordinate tuple
+        """
+        # Handle single atom case
+        if len(atomic_numbers) == 1:
+            return tuple([])
+
+        # Use pre-computed values if provided, otherwise compute them
+        if atom_labels is None or num_origin_atoms is None or stabilizers_inverted is None:
+            atom_labels, num_origin_atoms, stabilizers_inverted = self._precompute_mnf_data(atomic_numbers)
+
+        # Reshape coords to (N, 3) then transpose to (3, N) for coord_matrix
+        n_atoms = len(coords_flat) // 3
+        coords_array = np.array(coords_flat, dtype=np.int32).reshape(n_atoms, 3)
+        coord_matrix = coords_array.T  # Shape: (3, N)
+
+        if use_rust:
+            # Use Rust implementation
+            import rust_cnf
+
+            # Rust expects float64 for coordinates
+            coords_flat_contig = np.ascontiguousarray(coords_array.flatten(), dtype=np.float64)
+            atom_labels_contig = np.ascontiguousarray(atom_labels, dtype=np.int32)
+
+            stabilizers_flat = np.ascontiguousarray(
+                np.array([mat.flatten() for mat in self.stabilizer]).flatten(),
+                dtype=np.int32
+            )
+
+            mnf_coords_arr = rust_cnf.build_mnf_vectorized_rust(
+                coords_flat_contig,
+                atom_labels_contig,
+                num_origin_atoms,
+                stabilizers_flat,
+                float(self.delta)
+            )
+
+            return tuple([int(i) for i in mnf_coords_arr])
+        else:
+            # Python implementation using pre-computed inverted stabilizers
+            stabilized_coords = stabilizers_inverted @ coord_matrix
+            stabilized_coords = move_coords_into_bounds(stabilized_coords, self.delta)
+
+            # Apply shifts
+            shifted_coord_mats = []
+            for scm in stabilized_coords:
+                shifted = get_all_shifted_coord_mats(scm, num_origin_atoms, self.delta)
+                shifted_coord_mats.extend(shifted)
+
+            # Sort
+            sorted_coord_mats = []
+            for scm in shifted_coord_mats:
+                sorted_coord_mat = sort_motif_coord_arr(scm, atom_labels)
+                sorted_coord_mats.append(sorted_coord_mat)
+
+            # Get MNF tuples
+            sorted_mnfs = get_mnf_strs_from_coord_mats(sorted_coord_mats)
+
+            # Find lexicographically smallest
+            stacked_mnfs = np.stack(sorted_mnfs)
+            keys = stacked_mnfs.T
+            sorted_indices = np.lexsort(keys[::-1])
+            sorted_list = [stacked_mnfs[i] for i in sorted_indices]
+            best_candidate = sorted_list[0]
+            return tuple([int(i) for i in best_candidate])
 
     def build(self, original_motif: FractionalMotif):
         mnf_candidates: list[MNFCandidate] = []

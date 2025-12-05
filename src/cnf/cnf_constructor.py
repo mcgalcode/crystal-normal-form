@@ -13,7 +13,10 @@ from .motif.mnf_constructor import MNFConstructor, MNFConstructionResult
 from .crystal_normal_form import CrystalNormalForm
 from .utils.prof import maybe_profile
 
-USE_RUST = os.getenv("USE_RUST") is not None
+
+def should_use_rust():
+    return os.getenv("USE_RUST") is not None
+
 
 class CNFConstructionResult():
 
@@ -36,6 +39,8 @@ class CNFConstructor():
                  xi: float,
                  delta: int,
                  verbose_logging: bool = False):
+        self.USE_RUST = should_use_rust()
+
         self.xi = xi
         self.delta = delta
         self.verbose_logging = verbose_logging
@@ -144,10 +149,10 @@ class CNFConstructor():
         return self.from_vonorms_and_motif_undiscretized(vonorms, motif)
     
     def from_vonorms_and_motif_undiscretized(self, vonorms: VonormList, motif: FractionalMotif):
-        return self._from_vonorms_and_motif_undiscretized_impl(vonorms, motif, use_rust=USE_RUST)
+        return self._from_vonorms_and_motif_undiscretized_impl(vonorms, motif, use_rust=self.USE_RUST)
     
     def from_vonorms_and_motif(self, vonorms: VonormList, motif: FractionalMotif):
-        return self._from_vonorms_and_motif_impl(vonorms, motif, use_rust=USE_RUST)
+        return self._from_vonorms_and_motif_impl(vonorms, motif, use_rust=self.USE_RUST)
     
     def _from_vonorms_and_motif_undiscretized_impl(self, vonorms: VonormList, motif: FractionalMotif, use_rust: bool):
         # First pass: float version with tolerance to find approximate canonical form
@@ -197,49 +202,3 @@ class CNFConstructor():
         motif = FractionalMotif.from_pymatgen_structure(struct)
         superbasis = Superbasis.from_pymatgen_structure(struct)
         return self.from_motif_and_superbasis(motif, superbasis)
-
-    def from_uncanonical_cnf_list(self, cnf_list: list[int], atomic_numbers: list[int]):
-        """
-        Fast path for CNF construction from flat uncanonical CNF list.
-
-        Bypasses DiscretizedMotif construction entirely for maximum performance.
-
-        Args:
-            cnf_list: Flat list [v1, v2, ..., v7, x1, y1, z1, x2, y2, z2, ...]
-                     First 7 values are vonorms (integers), rest are motif coordinates (integers)
-            atomic_numbers: Sorted list of atomic numbers corresponding to atoms
-                          (e.g., [22, 22, 22, 22, 8, 8, 8, 8, 8, 8, 8, 8] for TiO2)
-
-        Returns:
-            CNFConstructionResult with canonical CNF
-        """
-        from pymatgen.core.periodic_table import Element
-
-        # Split into vonorms and motif coordinates
-        vonorms_vals = tuple(cnf_list[:7])
-        motif_coords = cnf_list[7:]
-        vonorms = VonormList(vonorms_vals)
-
-        # Build LNF and get transformation matrices
-        lnf, _, canonical_vonorms, middle = self._build_lnf_and_get_transforms(vonorms, use_float=False)
-
-        # Find and combine stabilizers
-        use_rust = USE_RUST
-        np_stabs = self._combine_stabilizers(vonorms, canonical_vonorms, middle, use_float=False, use_rust=use_rust)
-
-        # Build MNF using raw coordinates (bypassing DiscretizedMotif)
-        mnf_constructor = MNFConstructor(self.delta, np_stabs, self.verbose_logging)
-        mnf_coords = mnf_constructor.build_from_raw_coords(
-            motif_coords,
-            atomic_numbers,
-            use_rust=use_rust
-        )
-
-        # Convert atomic numbers to element symbols only for final CNF
-        elements = [Element.from_Z(z).symbol for z in atomic_numbers]
-
-        # Create MotifNormalForm and CNF
-        mnf = MotifNormalForm(mnf_coords, elements, self.delta)
-        cnf = CrystalNormalForm(lnf, mnf)
-
-        return CNFConstructionResult(cnf, None, None)
