@@ -129,7 +129,7 @@ class VonormList():
         Returns:
             list[MatrixTuple]: List of stabilizer matrices
         """
-        from ..permutations import ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS, ConormPermutation, CONORM_PERMUTATION_TO_VONORM_PERMUTATION
+        from ..permutations import ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS, CONORM_PERMUTATION_TO_VONORM_PERMUTATION_ARRAY
 
         vonorms_tuple = self.tuple
         vonorms_arr = self.vonorms_np
@@ -147,18 +147,17 @@ class VonormList():
         perm_to_mats = ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS[zero_idxs]
         stabilizers = []
 
+        # Use bytes for fast comparison (avoid tuple conversion)
+        vonorms_bytes = vonorms_arr.tobytes()
+
         # Iterate over conorm permutations and check which preserve vonorms
         for conorm_perm, mat_list in perm_to_mats.items():
-            # Convert conorm permutation to vonorm permutation
-                # cp = ConormPermutation(conorm_perm)
-            vonorm_perm_tuple = CONORM_PERMUTATION_TO_VONORM_PERMUTATION[conorm_perm]
+            # Get pre-converted vonorm permutation array (no conversion needed!)
+            vonorm_perm_arr = CONORM_PERMUTATION_TO_VONORM_PERMUTATION_ARRAY[conorm_perm]
 
-            # Apply permutation and check equality
-            vidx_list = list(vonorm_perm_tuple)
-            permuted = vonorms_arr[vidx_list]
-            permuted = tuple(permuted)
-
-            if permuted == vonorms_tuple:
+            # Apply permutation and check equality using bytes (much faster!)
+            permuted = vonorms_arr[vonorm_perm_arr]
+            if permuted.tobytes() == vonorms_bytes:
                 # Collect all matrices for this permutation
                 stabilizers.extend(mat_list)
 

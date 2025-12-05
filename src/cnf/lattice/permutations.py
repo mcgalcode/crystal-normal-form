@@ -12,6 +12,7 @@ from ..linalg import MatrixTuple
 
 VONORM_PERMUTATION_TO_CONORM_PERMUTATION = None
 CONORM_PERMUTATION_TO_VONORM_PERMUTATION = None
+CONORM_PERMUTATION_TO_VONORM_PERMUTATION_ARRAY = None
 
 class Permutation(tuple):
 
@@ -100,6 +101,8 @@ def load_matching_perms():
 if VONORM_PERMUTATION_TO_CONORM_PERMUTATION is None:
     VONORM_PERMUTATION_TO_CONORM_PERMUTATION = load_matching_perms()
     CONORM_PERMUTATION_TO_VONORM_PERMUTATION = { v: k for k, v in VONORM_PERMUTATION_TO_CONORM_PERMUTATION.items() }
+    # Pre-convert vonorm permutations to numpy arrays for fast indexing
+    CONORM_PERMUTATION_TO_VONORM_PERMUTATION_ARRAY = { k: np.array(v, dtype=np.intp) for k, v in CONORM_PERMUTATION_TO_VONORM_PERMUTATION.items() }
 
 def find_matching_permutations():
     s7_permutations = list(permutations(range(7)))

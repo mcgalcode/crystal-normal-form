@@ -75,8 +75,9 @@ def build_lnf_raw(vonorms_tuple, xi):
 
         # Apply permutation directly on array
         permuted = vonorms_reduced[list(vonorm_perm)]
-        permuted_vonorms_list.append(tuple(permuted))
-        perm_matrices_list.append((tuple(permuted), mat_list))
+        permuted_tuple = tuple(permuted)  # Create tuple once, reuse it
+        permuted_vonorms_list.append(permuted_tuple)
+        perm_matrices_list.append((permuted_tuple, mat_list))
 
     # Step 6: Sort to find canonical (lexicographically smallest)
     permuted_vonorms_list.sort()
