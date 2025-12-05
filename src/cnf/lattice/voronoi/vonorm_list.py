@@ -122,28 +122,45 @@ class VonormList():
         """
         Fast stabilizer computation for discretized vonorms.
 
-        Uses exact equality on tuples and avoids creating VonormList objects
-        during the equality check. Much faster than stabilizer_matrices() for
-        discretized vonorms where exact arithmetic can be used.
+        Bypasses Coform/ConormList machinery entirely by directly computing
+        zero conorms with exact arithmetic and using pre-computed permutation mappings.
+        Much faster than stabilizer_matrices() for discretized vonorms.
 
         Returns:
             list[MatrixTuple]: List of stabilizer matrices
         """
+        from ..permutations import ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS, ConormPermutation, CONORM_PERMUTATION_TO_VONORM_PERMUTATION
+
         vonorms_tuple = self.tuple
         vonorms_arr = self.vonorms_np
-        possible_perms = self.permissible_perms
+
+        # Compute conorms directly using exact arithmetic
+        raw_conorms = (0.5 * VONORM_TO_DOT_PRODUCTS @ vonorms_arr[:6])
+
+        # Find zero conorms using EXACT equality (no tolerance)
+        zero_idxs = tuple([idx for idx, cn in enumerate(raw_conorms) if cn == 0])
+
+        # Get permutations directly from the pre-computed mapping
+        if zero_idxs not in ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS:
+            return []  # No valid permutations for this zero set
+
+        perm_to_mats = ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS[zero_idxs]
         stabilizers = []
 
-        # Cache vonorm permutations and their numpy arrays to avoid repeated property access
-        for p in possible_perms:
-            vonorm_perm_tuple = p.vonorm_permutation  # Cache property access
-            # Apply permutation directly without creating intermediate arrays
-            permuted = tuple(vonorms_arr[list(vonorm_perm_tuple)])
+        # Iterate over conorm permutations and check which preserve vonorms
+        for conorm_perm, mat_list in perm_to_mats.items():
+            # Convert conorm permutation to vonorm permutation
+                # cp = ConormPermutation(conorm_perm)
+            vonorm_perm_tuple = CONORM_PERMUTATION_TO_VONORM_PERMUTATION[conorm_perm]
 
-            # Exact tuple equality instead of VonormList comparison
+            # Apply permutation and check equality
+            vidx_list = list(vonorm_perm_tuple)
+            permuted = vonorms_arr[vidx_list]
+            permuted = tuple(permuted)
+
             if permuted == vonorms_tuple:
                 # Collect all matrices for this permutation
-                stabilizers.extend(p.all_matrices)
+                stabilizers.extend(mat_list)
 
         return stabilizers
 
