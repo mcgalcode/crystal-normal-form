@@ -30,20 +30,27 @@ def build_lnf_raw(vonorms_tuple, xi):
         tuple: (canonical_vonorms_tuple, selling_transform_matrix, sorting_perm_matrices)
     """
     from .voronoi.vonorm_list import VONORM_TO_DOT_PRODUCTS
-    from .permutations import ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS
+    from .permutations import ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS, CONORM_PERMUTATION_TO_VONORM_PERMUTATION
 
-    # Convert to numpy array if needed
-    if isinstance(vonorms_tuple, tuple):
-        vonorms = np.array(vonorms_tuple)
-    else:
-        vonorms = np.array(vonorms_tuple)
+    vonorms = np.array(vonorms_tuple, dtype=float)
 
-    # Step 1: Selling reduction (still use existing reducer for now)
-    reducer = VonormListSellingReducer(tol=0, verbose_logging=False)
-    vonorm_list_obj = VonormList(vonorms)
-    reduction_result = reducer.reduce(vonorm_list_obj)
-    vonorms_reduced = np.array(reduction_result.reduced_object.vonorms)
-    selling_transform = reduction_result.transform_matrix
+    # Step 1: Fast Selling reduction for discretized vonorms
+    # Work directly with arrays and use exact arithmetic
+    vonorms_reduced = vonorms.copy()
+    selling_transform = None
+
+    # Compute conorms to check if already obtuse
+    raw_conorms = 0.5 * VONORM_TO_DOT_PRODUCTS @ vonorms_reduced[:6]
+
+    # If all conorms <= 0, already obtuse (no reduction needed)
+    if not np.all(raw_conorms <= 0):
+        # Need to do Selling reduction - fall back to existing reducer
+        # This is rare for discretized vonorms from neighbor finding
+        reducer = VonormListSellingReducer(tol=0, verbose_logging=False)
+        vonorm_list_obj = VonormList(vonorms)
+        reduction_result = reducer.reduce(vonorm_list_obj)
+        vonorms_reduced = np.array(reduction_result.reduced_object.vonorms)
+        selling_transform = reduction_result.transform_matrix
 
     # Step 2: Compute conorms directly using exact arithmetic
     raw_conorms = (0.5 * VONORM_TO_DOT_PRODUCTS @ vonorms_reduced[:6])
@@ -63,14 +70,11 @@ def build_lnf_raw(vonorms_tuple, xi):
     perm_matrices_list = []
 
     for conorm_perm, mat_list in perm_to_mats.items():
-        # Convert conorm permutation to vonorm permutation
-        # This mapping is deterministic based on the permutation structure
-        from .permutations import ConormPermutation
-        cp = ConormPermutation(conorm_perm)
-        vonorm_perm = cp.to_vonorm_permutation().perm
+        # Convert conorm permutation to vonorm permutation using pre-computed mapping
+        vonorm_perm = CONORM_PERMUTATION_TO_VONORM_PERMUTATION[conorm_perm]
 
         # Apply permutation directly on array
-        permuted = vonorms_reduced[np.array(vonorm_perm)]
+        permuted = vonorms_reduced[list(vonorm_perm)]
         permuted_vonorms_list.append(tuple(permuted))
         perm_matrices_list.append((tuple(permuted), mat_list))
 
