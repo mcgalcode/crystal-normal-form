@@ -1,19 +1,16 @@
 import numpy as np
 import os
-from itertools import product
 from pymatgen.core import Structure # Or other library
 from .lattice import Superbasis
 from .motif.atomic_motif import FractionalMotif, DiscretizedMotif
-from .lattice.lnf_constructor import LatticeNormalFormConstructor, LatticeNormalFormConstructionResult, VonormSorter
+from .lattice.lnf_constructor import LatticeNormalFormConstructor, LatticeNormalFormConstructionResult
 from .lattice.voronoi import VonormList
-from .lattice.selling import VonormListSellingReducer
 from .lattice.lattice_normal_form import LatticeNormalForm
 from .motif.motif_normal_form import MotifNormalForm
 from .lattice.permutations import MatrixTuple
 from .lattice.rounding import DiscretizedVonormComputer
 from .motif.mnf_constructor import MNFConstructor, MNFConstructionResult
 from .crystal_normal_form import CrystalNormalForm
-from .linalg.unimodular import combine_unimodular_matrices, combine_unimodular_mats_np
 from .utils.prof import maybe_profile
 
 USE_RUST = os.getenv("USE_RUST") is not None
@@ -43,6 +40,73 @@ class CNFConstructor():
         self.delta = delta
         self.verbose_logging = verbose_logging
 
+
+    def _build_lnf_and_get_transforms(self, vonorms: VonormList, use_float: bool = False):
+        """Build LNF and extract transformation matrices."""
+        lnf_constructor = LatticeNormalFormConstructor(self.xi, self.verbose_logging)
+
+        if use_float:
+            lnf_result = lnf_constructor.build_lnf_from_vonorms(vonorms)
+            lnf = lnf_result.lnf
+            canonical_vonorms = lnf_result.lnf.vonorms
+            selling_transform = lnf_result.selling_transform_mat()
+            sorting_transforms = lnf_result.sorting_transforms()
+        else:
+            canonical_vonorms, lnf, selling_transform, sorting_matrices = lnf_constructor.build_lnf_from_discretized_vonorms_fast(vonorms)
+            sorting_transforms = sorting_matrices
+            lnf_result = None
+
+        # Compute middle transformation matrix
+        selling_mat = selling_transform.matrix if selling_transform else np.eye(3)
+        sorting_mat = sorting_transforms[0].matrix
+        middle = selling_mat @ sorting_mat
+
+        return lnf, lnf_result, canonical_vonorms, middle
+
+    def _combine_stabilizers(self, vonorms: VonormList, canonical_vonorms: VonormList, middle: np.ndarray, use_float: bool = False, use_rust: bool = False):
+        """Find and combine stabilizers for lattice transformations."""
+
+        if use_rust:
+            # Use Rust's combined function
+            import rust_cnf
+            vonorms_arr = np.ascontiguousarray(vonorms.vonorms_np, dtype=np.float64)
+            canonical_arr = np.ascontiguousarray(canonical_vonorms.vonorms_np, dtype=np.float64)
+            middle_flat = middle.astype(np.int32).flatten()
+
+            if use_float:
+                combined_stabs_flat = rust_cnf.find_and_combine_stabilizers_rust_float(
+                    vonorms_arr, canonical_arr, middle_flat, 1e-8  # TODO: make tolerance configurable
+                )
+            else:
+                combined_stabs_flat = rust_cnf.find_and_combine_stabilizers_rust(
+                    vonorms_arr, canonical_arr, middle_flat
+                )
+
+            # Reshape to (N, 3, 3)
+            n_matrices = len(combined_stabs_flat) // 9
+            combined_stabs_3d = combined_stabs_flat.reshape(n_matrices, 3, 3)
+            np_stabs = list(combined_stabs_3d)
+        else:
+            # Python implementation with einsum
+            if use_float:
+                stabilizer_1 = vonorms.stabilizer_matrices()
+                stabilizer_2 = canonical_vonorms.stabilizer_matrices()
+            else:
+                stabilizer_1 = vonorms.stabilizer_matrices_fast()
+                stabilizer_2 = canonical_vonorms.stabilizer_matrices_fast()
+
+            # Combine all stabilizers
+            s1_stack = np.array([s.matrix for s in stabilizer_1])
+            s2_stack = np.array([s.matrix for s in stabilizer_2])
+            result = np.einsum('nij,jk,mkl->nmil', s1_stack, middle, s2_stack)
+            result_flat = result.reshape(-1, 3, 3)
+            all_stabilizers = [MatrixTuple(mat) for mat in result_flat]
+            np_stabs = [s.matrix for s in all_stabilizers]
+
+        if self.verbose_logging:
+            print(f"Found {len(np_stabs)} combined stabilizers...")
+
+        return np_stabs
 
     def from_cnf(self, cnf: CrystalNormalForm):
         assert cnf.xi == self.xi
@@ -99,73 +163,18 @@ class CNFConstructor():
         if use_float:
             vonorms = vonorms.set_tol(float_tol)
 
+        # Build LNF and get transformation matrices
+        lnf, lnf_result, canonical_vonorms, middle = self._build_lnf_and_get_transforms(vonorms, use_float)
 
-        lnf_constructor = LatticeNormalFormConstructor(self.xi, self.verbose_logging)
-        if use_float:
-            lnf_result = lnf_constructor.build_lnf_from_vonorms(vonorms)
-            lnf = lnf_result.lnf            
-            canonical_vonorms = lnf_result.lnf.vonorms
-            selling_transform = lnf_result.selling_transform_mat()
-            sorting_transforms = lnf_result.sorting_transforms()
-        else:
-            canonical_vonorms, lnf, selling_transform, sorting_matrices = lnf_constructor.build_lnf_from_discretized_vonorms_fast(vonorms)
-            sorting_transforms = sorting_matrices
-            lnf_result = None
+        # Find and combine stabilizers
+        np_stabs = self._combine_stabilizers(vonorms, canonical_vonorms, middle, use_float, use_rust=False)
 
-        if self.verbose_logging:
-            if lnf_result:
-                print(f"Successfully constructed LNF! {lnf_result.lnf}")
-
-        if use_float:
-            stabilizer_1 = vonorms.stabilizer_matrices()
-            stabilizer_2 = canonical_vonorms.stabilizer_matrices()
-        else:
-            stabilizer_1 = vonorms.stabilizer_matrices_fast()
-            stabilizer_2 = canonical_vonorms.stabilizer_matrices_fast()            
-            
-
-        # Get matrices
-        selling_mat = selling_transform.matrix if selling_transform else np.eye(3)
-        sorting_mat = sorting_transforms[0].matrix
-
-        if self.verbose_logging:
-            print(f"Stabilizer_1 count: {len(stabilizer_1)}")
-            print(f"Selling matrix:\n{selling_mat}")
-            print(f"Sorting matrix:\n{sorting_transforms[0].matrix}")
-            print(f"Stabilizer_2 count: {len(stabilizer_2)}")
-
-
-        middle = selling_mat @ sorting_mat
-
-        # Stack all s1 and s2 matrices into 3D arrays
-        s1_stack = np.array([s.matrix for s in stabilizer_1])  # shape (N1, 3, 3)
-        s2_stack = np.array([s.matrix for s in stabilizer_2])  # shape (N2, 3, 3)
-
-        # Compute all combinations: s1[i] @ middle @ s2[j] for all i, j
-        # Result shape: (N1, N2, 3, 3)
-        result = np.einsum('nij,jk,mkl->nmil', s1_stack, middle, s2_stack)
-
-        # Flatten and convert to MatrixTuple
-        result_flat = result.reshape(-1, 3, 3)
-        all_stabilizers = [MatrixTuple(mat) for mat in result_flat]
-        np_stabs = [s.matrix for s in all_stabilizers]
-
-        if self.verbose_logging:
-            print(f"Found {len(all_stabilizers)} stabilizers...")
-            if len(all_stabilizers) <= 10:
-                print("Stabilizer matrices (Python):")
-                for i, mat in enumerate(np_stabs):
-                    print(f"  Stabilizer {i}:\n{mat}")
-
+        # Build MNF
         mnf_constructor = MNFConstructor(self.delta, np_stabs, self.verbose_logging)
         mnf_construction_res = mnf_constructor.build_vectorized(motif)
 
         if self.verbose_logging:
             print(f"Found MNF! {mnf_construction_res.mnf}")
-            print(f"Achieved by matrix: {mnf_construction_res.sorted_mnf_candidates[0].unimodular}")
-            print(f"And shift {mnf_construction_res.sorted_mnf_candidates[0].shift}")
-            print(f"Based on motif:")
-            mnf_construction_res.canonical_motif.print_details()
 
         cnf = CrystalNormalForm(lnf, mnf_construction_res.mnf)
         return CNFConstructionResult(cnf, lnf_result, mnf_construction_res)
@@ -178,9 +187,9 @@ class CNFConstructor():
         """
         import rust_cnf
         use_float = float_tol is not None
-        vonorms_arr = np.array(vonorms.vonorms, dtype=np.float64)
+        vonorms_arr = np.ascontiguousarray(vonorms.vonorms_np, dtype=np.float64)
 
-        # Use Rust for LNF construction (now returns transformation matrices)
+        # Use Rust for LNF construction
         if use_float:
             canonical_arr, _, selling_flat, sorting_mats_flat = rust_cnf.build_lnf_raw_float_rust(vonorms_arr, float_tol)
         else:
@@ -189,39 +198,18 @@ class CNFConstructor():
         canonical_vonorms = VonormList(canonical_arr)
         lnf = LatticeNormalForm(canonical_vonorms, self.xi)
 
-        if self.verbose_logging:
-            print(f"Successfully constructed LNF (Rust)! {lnf}")
-
-        # Compute middle matrix from selling and sorting transforms
+        # Compute middle matrix
         if selling_flat is not None:
             selling_mat = np.array(selling_flat, dtype=np.int32).reshape(3, 3)
         else:
             selling_mat = np.eye(3, dtype=np.int32)
-
-        # Use first sorting matrix (always available)
         sorting_mat = np.array(sorting_mats_flat[0], dtype=np.int32).reshape(3, 3)
         middle = (selling_mat @ sorting_mat).astype(np.int32)
-        middle_flat = middle.flatten()
 
-        # Use combined Rust function to find and combine stabilizers in one go
-        # Returns a flat numpy array that we reshape to (N, 3, 3)
-        if use_float:
-            combined_stabs_flat = rust_cnf.find_and_combine_stabilizers_rust_float(
-                vonorms_arr, canonical_arr, middle_flat, float_tol
-            )
-        else:
-            combined_stabs_flat = rust_cnf.find_and_combine_stabilizers_rust(
-                vonorms_arr, canonical_arr, middle_flat
-            )
+        # Find and combine stabilizers using Rust
+        np_stabs = self._combine_stabilizers(vonorms, canonical_vonorms, middle, use_float, use_rust=True)
 
-        # Reshape to (N, 3, 3) and convert to list of matrices
-        n_matrices = len(combined_stabs_flat) // 9
-        combined_stabs_3d = combined_stabs_flat.reshape(n_matrices, 3, 3)
-        np_stabs = list(combined_stabs_3d)
-
-        if self.verbose_logging:
-            print(f"Found {len(np_stabs)} stabilizers (Rust)...")
-
+        # Build MNF
         mnf_constructor = MNFConstructor(self.delta, np_stabs, self.verbose_logging)
         mnf_construction_res = mnf_constructor.build_vectorized(motif, use_rust=True)
 
@@ -229,7 +217,6 @@ class CNFConstructor():
             print(f"Found MNF (Rust)! {mnf_construction_res.mnf}")
 
         cnf = CrystalNormalForm(lnf, mnf_construction_res.mnf)
-
         return CNFConstructionResult(cnf, None, mnf_construction_res)
 
     def from_motif_and_basis_vecs(self, motif: FractionalMotif, basis_vecs: np.array):
