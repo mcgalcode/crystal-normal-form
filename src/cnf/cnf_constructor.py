@@ -123,11 +123,11 @@ class CNFConstructor():
         if self.verbose_logging:
             print(f"Successfully constructed LNF (fast path)! {lnf}")
 
-        # Compute stabilizers directly without the wrapper objects
-        stabilizer_1 = vonorms.stabilizer_matrices()
+        # Compute stabilizers using fast path for discretized vonorms
+        stabilizer_1 = vonorms.stabilizer_matrices_fast()
         selling = [selling_transform] if selling_transform else [MatrixTuple.identity()]
         sorting_transforms = sorting_matrices[:1] if sorting_matrices else [MatrixTuple.identity()]
-        stabilizer_2 = canonical_vonorms.stabilizer_matrices()
+        stabilizer_2 = canonical_vonorms.stabilizer_matrices_fast()
 
         all_stabilizers = [MatrixTuple(combine_unimodular_mats_np([s.matrix for s in stack]))
                           for stack in product(stabilizer_1, selling, sorting_transforms, stabilizer_2)]
