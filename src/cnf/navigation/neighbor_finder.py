@@ -11,8 +11,7 @@ class NeighborFinder():
         lnf_neighbor_finder = LatticeNeighborFinder(self.point)
         mnf_neighbor_finder = MotifNeighborFinder(self.point)
 
-        lattice_neighbors = lnf_neighbor_finder.find_cnf_neighbors_fast()
-        # lattice_neighbors = [nb.point for nb in lnf_neighbor_finder.find_cnf_neighbors().neighbors]
+        lattice_neighbors = lnf_neighbor_finder.find_cnf_neighbors()
         mnf_neighbors = mnf_neighbor_finder.find_motif_neighbors()
 
         

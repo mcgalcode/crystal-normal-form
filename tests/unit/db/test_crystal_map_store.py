@@ -82,7 +82,7 @@ def test_can_get_pt_by_id(zr_hcp_cnf, temp_db: CrystalMapStore):
 def test_can_get_multiple_ids(zr_hcp_cnf, temp_db: CrystalMapStore):
     lnfnf = LatticeNeighborFinder(zr_hcp_cnf)
     nbs = lnfnf.find_cnf_neighbors()
-    cnfs = [nb.point for nb in nbs.neighbors]
+    cnfs = [nb for nb in nbs]
     for c in cnfs:
         temp_db.add_point(c)
     
@@ -97,7 +97,7 @@ def test_can_get_multiple_ids(zr_hcp_cnf, temp_db: CrystalMapStore):
 def test_can_getting_multiple_ids_with_bad_id_raises_error(zr_hcp_cnf, temp_db: CrystalMapStore):
     lnfnf = LatticeNeighborFinder(zr_hcp_cnf)
     nbs = lnfnf.find_cnf_neighbors()
-    cnfs = [nb.point for nb in nbs.neighbors]
+    cnfs = [nb for nb in nbs]
     for c in cnfs[:5]:
         temp_db.add_point(c)
     
@@ -105,7 +105,7 @@ def test_can_getting_multiple_ids_with_bad_id_raises_error(zr_hcp_cnf, temp_db: 
 
     with pytest.raises(ValueError) as excep:
         all_ids = temp_db.get_point_ids(cnfs_to_retrieve)
-        assert "No row in CNFStore found for CNF " in excep.value.__repr__()
+    assert "No row in CNFStore found for CNF " in excep.value.__repr__()
 
 def test_can_add_connection(zr_hcp_cnf, zr_bcc_cnf, temp_db: CrystalMapStore):
     temp_db.add_point(zr_hcp_cnf)
@@ -127,13 +127,13 @@ def test_can_add_connection(zr_hcp_cnf, zr_bcc_cnf, temp_db: CrystalMapStore):
 def test_can_get_all_neighbors_of_point(zr_hcp_cnf, temp_db: CrystalMapStore):
     temp_db.add_point(zr_hcp_cnf)
     nbs = LatticeNeighborFinder(zr_hcp_cnf).find_cnf_neighbors()
-    nbs = [nb.point for nb in nbs.neighbors]
+    nbs = [nb for nb in nbs]
     for nb in nbs:
         temp_db.add_point(nb)
         temp_db.add_connection(zr_hcp_cnf, nb)
 
     other_nbs = LatticeNeighborFinder(nbs[-1]).find_cnf_neighbors()
-    other_nbs = [nb.point for nb in other_nbs.neighbors]
+    other_nbs = [nb for nb in other_nbs]
     for onb in other_nbs:
         existing = temp_db.get_point_by_cnf(onb)
         if existing is None:

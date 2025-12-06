@@ -1,8 +1,8 @@
 from cnf import CrystalNormalForm
 from cnf.cnf_constructor import should_use_rust
 from cnf.motif import MotifNormalForm
-from cnf.motif.atomic_motif import DiscretizedMotif
-from .neighbor import Neighbor
+from cnf.motif.mnf_constructor import MNFConstructor
+from cnf.lattice.lattice_normal_form import LatticeNormalForm
 from .neighbor_set import NeighborSet
 from pymatgen.core.periodic_table import Element
 import copy
@@ -24,9 +24,9 @@ class MotifNeighborFinder():
 
 
         neighbor_mnf_tuples = []
-
-        for stabilizer in self.point.lattice_normal_form.vonorms.stabilizer_matrices(1e-4):
-            current_mnf_tuple = self.point.motif_normal_form.to_discretized_motif().apply_unimodular(stabilizer).to_mnf_list(sort=True)
+        self_disc = self.point.motif_normal_form.to_discretized_motif()
+        for stabilizer in self.point.lattice_normal_form.vonorms.stabilizer_matrices_fast():
+            current_mnf_tuple = self_disc.apply_unimodular(stabilizer).to_mnf_list(sort=True)
             current_mnf_tuple = (0,0,0) + current_mnf_tuple
             for idx in range(len(current_mnf_tuple)):
                 for adj in [-1, +1]:
@@ -54,10 +54,6 @@ class MotifNeighborFinder():
         coords_list = [list(nb_mnf) for nb_mnf, _, _ in neighbor_mnf_tuples]
 
         # Batch build MNFs
-        from cnf.motif.mnf_constructor import MNFConstructor
-        from cnf.lattice.lattice_normal_form import LatticeNormalForm
-        from cnf import CrystalNormalForm
-        from cnf.motif.motif_normal_form import MotifNormalForm
         USE_RUST = should_use_rust()
 
         mnf_constructor = MNFConstructor(self.point.delta, stabilizers)

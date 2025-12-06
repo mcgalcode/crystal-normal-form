@@ -27,9 +27,9 @@ def test_lnf_neighbor_reciprocity_within_cnf_neighbors(idx, struct: Structure):
     original_cnf = constructor.from_pymatgen_structure(struct).cnf
 
     neigb_set = LatticeNeighborFinder(original_cnf).find_cnf_neighbors()
-    for n in neigb_set.neighbors:
+    for n in neigb_set:
         second_neighbor_set = LatticeNeighborFinder(n.point).find_cnf_neighbors()
-        second_neighbor_lnfs = [sn.point.lattice_normal_form for sn in second_neighbor_set.neighbors]
+        second_neighbor_lnfs = [sn.point.lattice_normal_form for sn in second_neighbor_set]
         if original_cnf.lattice_normal_form not in second_neighbor_lnfs:
             print(f"No reciprocal relationship found!")
         assert original_cnf.lattice_normal_form in second_neighbor_lnfs
@@ -55,10 +55,10 @@ def test_neighbor_reciprocity_by_geometry(idx, struct: Structure):
     reciprocal_nbs = [] 
     nonreciprocal_nbs = []
 
-    for n in neighbor_set.neighbors:
+    for n in neighbor_set:
         second_neighbors = LatticeNeighborFinder(n.point).find_cnf_neighbors()
         original_found = False
-        for sn in second_neighbors.neighbors:
+        for sn in second_neighbors:
             neighb_cnf = sn.point
             pdd_dist = helpers.pdd_for_cnfs(original_cnf, neighb_cnf)
             if pdd_dist < CUTOFF:
@@ -73,7 +73,7 @@ def test_neighbor_reciprocity_by_geometry(idx, struct: Structure):
 
     print(f"Found {len(reciprocal_nbs)} GOOD neighbors")
     print(f"Found {len(nonreciprocal_nbs)} BAD neighbors")
-    assert len(neighbor_set.neighbors) == len(reciprocal_nbs)
+    assert len(neighbor_set) == len(reciprocal_nbs)
 
 @helpers.skip_if_fast
 @helpers.parameterized_by_mp_structs
@@ -106,7 +106,7 @@ def test_cnf_neighbor_reciprocity(idx, struct: Structure):
     lnf_rec_neighbs: list[Neighbor] = []
 
     geo_matches = []
-    for nb_idx, n in enumerate(neighbor_set.neighbors):
+    for nb_idx, n in enumerate(neighbor_set):
         second_neighbors = LatticeNeighborFinder(n.point).find_cnf_neighbors()
         if original_cnf not in second_neighbors:
             print(f"No reciprocal relationship found!")
@@ -119,7 +119,7 @@ def test_cnf_neighbor_reciprocity(idx, struct: Structure):
             num_geo_matches = 0
             num_lnf_matches = 0
 
-            for n2 in second_neighbors.neighbors:
+            for n2 in second_neighbors:
                 if n2.point.lattice_normal_form == original_cnf.lattice_normal_form:
                     num_lnf_matches += 1
                     if helpers.are_cnfs_geo_matches(original_cnf, n2.point, tol=1e-7):
@@ -149,7 +149,7 @@ def test_cnf_neighbor_reciprocity(idx, struct: Structure):
                 step.print_details()
     # UnitCell.from_cnf(original_cnf).to_cif(str(helpers.get_data_file_path(Path("patho_pairs") / "mp_190_neighbs" / "n1.cif")))
     # UnitCell.from_cnf(geo_matches[0]).to_cif(str(helpers.get_data_file_path(Path("patho_pairs") / "mp_190_neighbs" / "n2.cif")))
-    assert len(recipricol_nbs) == len(neighbor_set.neighbors)
+    assert len(recipricol_nbs) == len(neighbor_set)
 
 @pytest.mark.debug
 @helpers.parameterized_by_mp_structs
@@ -188,14 +188,14 @@ def test_second_neighbors_obey_reciprocity(idx, struct):
     geo_rec_neighbs = []
     lnf_rec_neighbs = []
 
-    for n in neighbor_set.neighbors:
+    for n in neighbor_set:
         second_neighbors = LatticeNeighborFinder(n.point).find_cnf_neighbors()
         if cnf_2 not in second_neighbors:
             helpers.printif(f"No reciprocal relationship found!", verbose)
             nonreciprocal_nbs.append(n.point)
             num_geo_matches = 0
             num_lnf_matches = 0
-            for n2 in second_neighbors.neighbors:
+            for n2 in second_neighbors:
                 if n2.point.lattice_normal_form == cnf_2.lattice_normal_form:
                     num_lnf_matches += 1
                     helpers.printif(f"Found neighbor w same LNF: {n2.point.coords}", verbose)
@@ -217,7 +217,7 @@ def test_second_neighbors_obey_reciprocity(idx, struct):
     helpers.printif(f"Found {len(geo_rec_neighbs)} GEO neighbors", verbose)
     helpers.printif(f"Found {len(lnf_rec_neighbs)} LNF neighbors", verbose)
 
-    assert len(recipricol_nbs) == len(neighbor_set.neighbors)
+    assert len(recipricol_nbs) == len(neighbor_set)
 
 @pytest.mark.debug
 @helpers.parameterized_by_mp_structs

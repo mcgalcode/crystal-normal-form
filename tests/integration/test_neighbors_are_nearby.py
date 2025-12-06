@@ -15,7 +15,7 @@ def test_lattice_neighbs_neighbors_are_close(idx, struct: Structure):
     original_cnf = constructor.from_pymatgen_structure(struct).cnf
     # helpers.printif(f"Original CNF: {original_cnf.coords}", verbose)
     neigb_set = LatticeNeighborFinder(original_cnf, verbose_logging=True).find_cnf_neighbors()
-    for n in neigb_set.neighbors:
+    for n in neigb_set:
         # helpers.printif(f"Neighbor CNF: {n.point.coords}", verbose)
         pdd = helpers.assertions.pdd_for_cnfs(n.point, original_cnf, k=100)
         # print(pdd)
@@ -37,7 +37,7 @@ def test_basis_neighbs_neighbors_are_close(idx, struct: Structure):
     original_cnf = constructor.from_pymatgen_structure(struct).cnf
     # helpers.printif(f"Original CNF: {original_cnf.coords}", verbose)
     neigb_set = MotifNeighborFinder(original_cnf).find_motif_neighbors()
-    for n in neigb_set.neighbors:
+    for n in neigb_set:
         # helpers.printif(f"Neighbor CNF: {n.point.coords}", verbose)
         pdd = helpers.assertions.pdd_for_cnfs(n.point, original_cnf, k=100)
         # print(pdd)
