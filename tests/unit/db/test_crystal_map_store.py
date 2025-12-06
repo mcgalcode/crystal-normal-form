@@ -3,7 +3,7 @@ from cnf.db.crystal_map_store import CrystalMapStore
 from cnf.db.setup import setup_cnf_db
 from cnf.search import explore_pt
 from cnf import CrystalNormalForm
-from cnf.navigation.neighbor_finder import LatticeNeighborFinder
+from cnf.navigation.neighbor_finder import NeighborFinder
 import tempfile
 
 
@@ -80,8 +80,8 @@ def test_can_get_pt_by_id(zr_hcp_cnf, temp_db: CrystalMapStore):
     assert result.id   
 
 def test_can_get_multiple_ids(zr_hcp_cnf, temp_db: CrystalMapStore):
-    lnfnf = LatticeNeighborFinder(zr_hcp_cnf)
-    nbs = lnfnf.find_cnf_neighbors()
+    lnfnf = NeighborFinder(zr_hcp_cnf)
+    nbs = lnfnf.find_neighbors()
     cnfs = [nb for nb in nbs]
     for c in cnfs:
         temp_db.add_point(c)
@@ -95,17 +95,17 @@ def test_can_get_multiple_ids(zr_hcp_cnf, temp_db: CrystalMapStore):
         assert retrieved.cnf == cnf
 
 def test_can_getting_multiple_ids_with_bad_id_raises_error(zr_hcp_cnf, temp_db: CrystalMapStore):
-    lnfnf = LatticeNeighborFinder(zr_hcp_cnf)
-    nbs = lnfnf.find_cnf_neighbors()
+    lnfnf = NeighborFinder(zr_hcp_cnf)
+    nbs = lnfnf.find_neighbors()
     cnfs = [nb for nb in nbs]
     for c in cnfs[:5]:
         temp_db.add_point(c)
-    
+    assert len(cnfs) > 5
     cnfs_to_retrieve = cnfs[:6]
 
     with pytest.raises(ValueError) as excep:
         all_ids = temp_db.get_point_ids(cnfs_to_retrieve)
-    assert "No row in CNFStore found for CNF " in excep.value.__repr__()
+    assert "No row in CNFStore found for CNF" in excep.value.__repr__()
 
 def test_can_add_connection(zr_hcp_cnf, zr_bcc_cnf, temp_db: CrystalMapStore):
     temp_db.add_point(zr_hcp_cnf)
@@ -126,14 +126,12 @@ def test_can_add_connection(zr_hcp_cnf, zr_bcc_cnf, temp_db: CrystalMapStore):
 
 def test_can_get_all_neighbors_of_point(zr_hcp_cnf, temp_db: CrystalMapStore):
     temp_db.add_point(zr_hcp_cnf)
-    nbs = LatticeNeighborFinder(zr_hcp_cnf).find_cnf_neighbors()
-    nbs = [nb for nb in nbs]
+    nbs = NeighborFinder(zr_hcp_cnf).find_neighbors()
     for nb in nbs:
         temp_db.add_point(nb)
         temp_db.add_connection(zr_hcp_cnf, nb)
 
-    other_nbs = LatticeNeighborFinder(nbs[-1]).find_cnf_neighbors()
-    other_nbs = [nb for nb in other_nbs]
+    other_nbs = NeighborFinder(nbs[-1]).find_neighbors()
     for onb in other_nbs:
         existing = temp_db.get_point_by_cnf(onb)
         if existing is None:
