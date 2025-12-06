@@ -258,15 +258,45 @@ class MNFConstructor():
         # Pre-compute values once for all coords
         atom_labels, num_origin_atoms, stabilizers_inverted = self._precompute_mnf_data(atomic_numbers)
 
-        # Build MNF for each coordinate set
-        results = []
-        for coords_flat in coords_list:
-            result = self.build_from_raw_coords(
-                coords_flat, atomic_numbers, use_rust,
-                atom_labels, num_origin_atoms, stabilizers_inverted
+        if use_rust:
+            # Use batch Rust implementation - single call for all coordinates
+            import rust_cnf
+
+            # Convert coords_list to list of float64 arrays for Rust
+            coords_batch = []
+            for coords_flat in coords_list:
+                n_atoms = len(coords_flat) // 3
+                coords_array = np.array(coords_flat, dtype=np.int32).reshape(n_atoms, 3)
+                coords_batch.append(coords_array.flatten().astype(np.float64).tolist())
+
+            # Prepare shared data
+            atom_labels_contig = np.ascontiguousarray(atom_labels, dtype=np.int32)
+            stabilizers_flat = np.ascontiguousarray(
+                np.array([mat.flatten() for mat in self.stabilizer]).flatten(),
+                dtype=np.int32
             )
-            results.append(result)
-        return results
+
+            # Single Rust call for all coordinate sets
+            mnf_arrays = rust_cnf.build_mnf_batch_rust(
+                coords_batch,
+                atom_labels_contig,
+                num_origin_atoms,
+                stabilizers_flat,
+                float(self.delta)
+            )
+
+            # Convert numpy arrays back to tuples
+            return [tuple([int(i) for i in mnf_arr]) for mnf_arr in mnf_arrays]
+        else:
+            # Python fallback - loop through each coordinate set
+            results = []
+            for coords_flat in coords_list:
+                result = self.build_from_raw_coords(
+                    coords_flat, atomic_numbers, False,
+                    atom_labels, num_origin_atoms, stabilizers_inverted
+                )
+                results.append(result)
+            return results
 
     def _precompute_mnf_data(self, atomic_numbers: list[int]):
         """Pre-compute data needed for MNF construction."""
