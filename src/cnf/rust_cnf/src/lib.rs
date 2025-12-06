@@ -265,6 +265,43 @@ fn build_mnf_vectorized_rust<'py>(
     Ok(mnf_array.into())
 }
 
+/// Build MNFs for many coordinate sets in batch (vectorized across multiple motifs)
+#[pyfunction]
+fn build_mnf_batch_rust<'py>(
+    py: Python<'py>,
+    coords_batch: Vec<Vec<f64>>,     // List of coordinate arrays
+    atom_labels: PyReadonlyArray1<i32>,
+    num_origin_atoms: usize,
+    stabilizers_flat: PyReadonlyArray1<i32>,
+    mod_val: f64,
+) -> PyResult<Py<pyo3::PyAny>> {
+    let labels_arr = atom_labels.as_array();
+    let stabs_arr = stabilizers_flat.as_array();
+
+    let n_atoms = labels_arr.len();
+
+    // Convert labels to usize
+    let labels_usize: Vec<usize> = labels_arr.iter().map(|&x| x as usize).collect();
+
+    // Call Rust batch implementation
+    let mnf_results = mnf::build_mnf_batch(
+        &coords_batch,
+        n_atoms,
+        &labels_usize,
+        num_origin_atoms,
+        stabs_arr.as_slice().unwrap(),
+        mod_val,
+    );
+
+    // Convert results to Python list of numpy arrays
+    let mnf_arrays: Vec<_> = mnf_results
+        .into_iter()
+        .map(|mnf| PyArray1::from_vec_bound(py, mnf).into_py(py))
+        .collect();
+
+    Ok(pyo3::types::PyList::new_bound(py, mnf_arrays).into())
+}
+
 /// Combined pipeline: find stabilizers for both vonorm arrays and combine them
 /// Returns a flat numpy array that can be reshaped to (N, 3, 3) on Python side
 #[pyfunction]
@@ -763,6 +800,7 @@ fn rust_cnf(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(find_and_combine_stabilizers_rust, m)?)?;
     m.add_function(wrap_pyfunction!(find_and_combine_stabilizers_rust_float, m)?)?;
     m.add_function(wrap_pyfunction!(build_mnf_vectorized_rust, m)?)?;
+    m.add_function(wrap_pyfunction!(build_mnf_batch_rust, m)?)?;
     m.add_function(wrap_pyfunction!(compute_step_data_raw_rust, m)?)?;
     m.add_function(wrap_pyfunction!(build_cnfs_from_step_data_rust, m)?)?;
     Ok(())

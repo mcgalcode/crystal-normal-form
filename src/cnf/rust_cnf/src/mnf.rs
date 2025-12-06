@@ -254,3 +254,80 @@ pub fn build_mnf_vectorized(
 
     mnf_strings[0].clone()
 }
+
+/// Build MNFs for many coordinate sets in batch
+///
+/// This processes all coordinate sets in one call, sharing stabilizer parsing and
+/// avoiding Python/Rust boundary overhead.
+///
+/// Returns a vector of MNF coordinate vectors (one per input coordinate set)
+pub fn build_mnf_batch(
+    coords_batch: &[Vec<f64>],    // Vector of coordinate sets, each [x1,y1,z1,x2,y2,z2,...]
+    n_atoms: usize,
+    atom_labels: &[usize],        // Element label for each atom (shared across all)
+    num_origin_atoms: usize,      // Number of origin atoms (shared across all)
+    stabilizers_flat: &[i32],     // Flat array of stabilizer matrices (shared across all)
+    mod_val: f64,                 // Modulus (shared across all)
+) -> Vec<Vec<f64>> {
+    // Handle single atom case
+    if n_atoms == 1 {
+        return vec![vec![]; coords_batch.len()];
+    }
+
+    // Parse stabilizers once for all coordinate sets
+    let n_stabilizers = stabilizers_flat.len() / 9;
+    let mut stabilizers = Vec::with_capacity(n_stabilizers);
+    for i in 0..n_stabilizers {
+        let offset = i * 9;
+        let mat = [
+            [stabilizers_flat[offset], stabilizers_flat[offset + 1], stabilizers_flat[offset + 2]],
+            [stabilizers_flat[offset + 3], stabilizers_flat[offset + 4], stabilizers_flat[offset + 5]],
+            [stabilizers_flat[offset + 6], stabilizers_flat[offset + 7], stabilizers_flat[offset + 8]],
+        ];
+        stabilizers.push(mat);
+    }
+
+    // Process each coordinate set
+    let mut results = Vec::with_capacity(coords_batch.len());
+
+    for coords in coords_batch {
+        // Step 1: Apply all stabilizers
+        let stabilized_mats = apply_stabilizers(&stabilizers, coords, n_atoms, mod_val);
+
+        // Step 2: Generate all shifts for each stabilized motif
+        let mut all_shifted = Vec::new();
+        for stab_coords in stabilized_mats {
+            let shifted = generate_all_shifts(&stab_coords, n_atoms, num_origin_atoms, mod_val);
+            all_shifted.extend(shifted);
+        }
+
+        // Step 3: Sort each shifted motif
+        let mut sorted_mats = Vec::with_capacity(all_shifted.len());
+        for coord_set in all_shifted {
+            let sorted = sort_coords(&coord_set, atom_labels, n_atoms);
+            sorted_mats.push(sorted);
+        }
+
+        // Step 4: Extract MNF strings
+        let mut mnf_strings: Vec<Vec<f64>> = sorted_mats
+            .iter()
+            .map(|coords| extract_mnf(coords, n_atoms))
+            .collect();
+
+        // Step 5: Find lexicographically smallest
+        mnf_strings.sort_by(|a, b| {
+            for (x, y) in a.iter().zip(b.iter()) {
+                match x.partial_cmp(y) {
+                    Some(Ordering::Equal) => continue,
+                    Some(ord) => return ord,
+                    None => continue,
+                }
+            }
+            Ordering::Equal
+        });
+
+        results.push(mnf_strings[0].clone());
+    }
+
+    results
+}
