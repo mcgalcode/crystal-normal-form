@@ -7,7 +7,7 @@ from cnf.unit_cell import UnitCell
 import helpers
 
 @helpers.skip_if_fast
-@helpers.parameterized_by_mp_struct_idxs(every=50)
+@helpers.parameterized_by_mp_struct_idxs(every=20)
 @pytest.mark.debug
 def test_cnf_round_trip_yields_same_crystal_no_disc(idx, struct: Structure):
     xi = 1
@@ -22,7 +22,7 @@ def test_cnf_round_trip_yields_same_crystal_no_disc(idx, struct: Structure):
     helpers.assert_identical_by_pdd_distance(struct, recovered_struct)
 
 @helpers.skip_if_fast
-@helpers.parameterized_by_mp_struct_idxs(every=50)
+@helpers.parameterized_by_mp_struct_idxs(every=20)
 def test_cnf_round_trip_yields_same_crystal_full_cells(idx, struct: Structure):
     xi = 0.01
     delta = 100000
@@ -35,7 +35,7 @@ def test_cnf_round_trip_yields_same_crystal_full_cells(idx, struct: Structure):
     helpers.assert_identical_by_pdd_distance(struct, recovered_struct)
 
 @helpers.skip_if_fast
-@helpers.parameterized_by_mp_struct_idxs(every=50)
+@helpers.parameterized_by_mp_struct_idxs(every=20)
 def test_cnf_round_trip_yields_same_crystal_primitive_cells(idx, struct: Structure):
     xi = 0.01
     delta = 10000
@@ -47,7 +47,7 @@ def test_cnf_round_trip_yields_same_crystal_primitive_cells(idx, struct: Structu
     helpers.assert_identical_by_pdd_distance(struct, recovered_struct)
         
 @helpers.skip_if_fast
-@helpers.parameterized_by_mp_struct_idxs(every=50)
+@helpers.parameterized_by_mp_struct_idxs(every=20)
 def test_motif_and_superbasis_change_together_with_perms(idx, struct):
     lattice_step_size = 0.00001
     delta = 10000

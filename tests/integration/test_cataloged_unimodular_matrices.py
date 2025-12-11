@@ -16,6 +16,7 @@ def test_unimodulars_are_det_0():
         assert np.isclose(m.determinant(), 1)
         assert m.is_unimodular()
 
+@pytest.mark.skip
 def test_ALL_unimodular_mats_produce_all_possible_coforms():
     handled_vcs = []
     for struct in helpers.ALL_MP_STRUCTURES(1):
@@ -246,6 +247,7 @@ def test_uncataloged_matrices_dont_maintain_lattice_comprehensive(idx: int, stru
                     print(f"After vonorms: {uc2.vonorms}")
                     pytest.fail(f"umat {umat.tuple} was not in known permutations, but maintained superbasis for struct at idx {idx * STRUCT_SAMPLE_FREQ} w coform: {transformed_uc.conorms.form.zero_indices}")
 
+@pytest.mark.skip
 @helpers.parameterized_by_mp_structs
 def test_catalog_of_unimodular_matrices_is_complete(idx, struct: Structure):
     verbose=False

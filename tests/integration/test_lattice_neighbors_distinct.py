@@ -28,7 +28,7 @@ def test_neighbors_are_geometrically_distinct(idx, struct: Structure):
     chiral_neighbs = 0
     helpers.printif(f"Original structure is Voronoi: {original_cnf.lattice_normal_form.vonorms.conorms.form.voronoi_class}", verbose)
     for neighb in cnf_neighb_set:
-        current_cnf = neighb.point
+        current_cnf = neighb
         is_duplicate = False
         dup = None
 
