@@ -1,4 +1,5 @@
 from ..crystal_normal_form import CrystalNormalForm
+from ..calculation.grace import GraceCalculator
 from ..db.crystal_map_store import CrystalMapStore
 from ..db.partitioned_db import PartitionedDB
 from ..db.search_store import SearchProcessStore
@@ -21,6 +22,7 @@ def instantiate_search(search_description: str,
                        start_cnfs: list[CrystalNormalForm],
                        end_cnfs: list[CrystalNormalForm],
                        store_file: str):
+    gcalc = GraceCalculator()
     all_cnfs = start_cnfs + end_cnfs
     xis = [cnf.xi for cnf in all_cnfs]
     if len(set(xis)) > 1:
@@ -37,7 +39,8 @@ def instantiate_search(search_description: str,
         
     crystal_map_store = CrystalMapStore.from_file(store_file)
     for cnf in all_cnfs:
-        crystal_map_store.add_point(cnf)
+        pt_id = crystal_map_store.add_point(cnf)
+        crystal_map_store.set_point_value(pt_id, value=gcalc.calculate_energy(cnf))
 
     search_store = SearchProcessStore.from_file(store_file)
     search_id = search_store.create_search_process(search_description)
