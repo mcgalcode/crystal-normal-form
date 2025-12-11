@@ -121,7 +121,7 @@ class VonormSorter():
 
         sorted_vlists = sorted(permuted_vonorm_lists, key=lambda group: group[0].tuple, reverse=False)
         canonical_vonorm_list = sorted_vlists[0][0]
-        equivalent_transformations = [group[1] for group in sorted_vlists if group[0] == canonical_vonorm_list]
+        equivalent_transformations = [group[1] for group in sorted_vlists if group[0].about_equal(canonical_vonorm_list)]
         return canonical_vonorm_list, equivalent_transformations
 
 class VonormCanonicalizer():
