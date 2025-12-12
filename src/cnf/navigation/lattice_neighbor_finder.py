@@ -195,8 +195,8 @@ class LatticeNeighborFinder():
         motif_atoms = self.discretized_motif.atoms
         motif_delta = self.discretized_motif._mod
 
-        for _, data in vonorms.maximally_ascending_equivalence_class_members().items():
-            permuted_vonorms = data['maximal_permuted_list']
+        for _, data in vonorms.s4_equivalence_class_representatives().items():
+            permuted_vonorms = data['permuted_vonorms']
             transform_mats = data['transition_mats']
             # We launch the neighbor finding process from a single arbitrarily chosen
             # member from each group of permutations where the _primary vonorm indices_ are

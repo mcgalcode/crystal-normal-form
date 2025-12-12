@@ -118,7 +118,7 @@ class VonormList():
             equivalent_perms = [c[1] for c in candidates if c[0] == maximal_vlist]
             result[group] = {
                 "equivalent_perms": equivalent_perms,
-                "maximal_permuted_list": maximal_vlist,
+                "permuted_vonorms": maximal_vlist,
                 "transition_mats": [m for p in equivalent_perms for m in p.all_matrices]
             }
         return result

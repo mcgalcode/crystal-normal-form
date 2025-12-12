@@ -121,22 +121,22 @@ class CNFConstructor():
         else:
             # Python implementation with einsum
             if use_float:
-                stabilizer_1 = vonorms.stabilizer_matrices()
+                # stabilizer_1 = vonorms.stabilizer_matrices()
                 stabilizer_2 = canonical_vonorms.stabilizer_matrices()
             else:
-                stabilizer_1 = vonorms.stabilizer_matrices_fast()
+                # stabilizer_1 = vonorms.stabilizer_matrices_fast()
                 stabilizer_2 = canonical_vonorms.stabilizer_matrices_fast()
 
             # OLD IMPLEMENTATION (testing if optimization is incorrect):
-            s1_stack = np.array([s.matrix for s in stabilizer_1])
-            s2_stack = np.array([s.matrix for s in stabilizer_2])
-            result = np.einsum('nij,jk,mkl->nmil', s1_stack, middle, s2_stack)
-            result_flat = result.reshape(-1, 3, 3)
+            # s1_stack = np.array([s.matrix for s in stabilizer_1])
+            # s2_stack = np.array([s.matrix for s in stabilizer_2])
+            # result = np.einsum('nij,jk,mkl->nmil', s1_stack, middle, s2_stack)
+            # result_flat = result.reshape(-1, 3, 3)
 
             # OPTIMIZED: Only combine middle @ s2 (skipping s1 orbit)
             # NEW IMPLEMENTATION (commented out for testing):
-            # s2_stack = np.array([s.matrix for s in stabilizer_2])
-            # result_flat = np.einsum('ij,njk->nik', middle, s2_stack)
+            s2_stack = np.array([s.matrix for s in stabilizer_2])
+            result_flat = np.einsum('ij,njk->nik', middle, s2_stack)
 
             all_stabilizers = [MatrixTuple(mat) for mat in result_flat]
             np_stabs = [s.matrix for s in all_stabilizers]

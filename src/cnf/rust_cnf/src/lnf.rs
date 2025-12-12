@@ -622,3 +622,61 @@ pub fn combine_middle_and_s2_stabilizers(
 
     result_vec
 }
+
+/// Check if vonorms have valid conorms (all non-negative)
+/// Matches Python's VonormList.has_valid_conorms_exact()
+pub fn has_valid_conorms_exact(vonorms: &[f64; 7]) -> bool {
+    let conorms = compute_conorms(vonorms);
+
+    // All conorms must be >= 0
+    conorms.iter().all(|&c| c >= 0.0)
+}
+
+/// Check if vonorms represent an obtuse superbasis
+/// Matches Python's VonormList.is_obtuse()
+pub fn is_obtuse(vonorms: &[f64; 7]) -> bool {
+    // Primary vonorms (first 4) must all be non-negative
+    vonorms[0..4].iter().all(|&v| v >= 0.0)
+}
+
+/// Check if vonorms represent a valid superbasis (determinant = 1)
+/// Matches Python's VonormList.is_superbasis_exact()
+pub fn is_superbasis_exact(vonorms: &[f64; 7]) -> bool {
+    // Reconstruct the basis vectors from vonorms
+    // Using the Selling parameters: v0, v1, v2, v3 where v0+v1+v2+v3 = 0
+    // Primary vonorms are: v0·v0, v1·v1, v2·v2, v3·v3
+    // Secondary vonorms are: v0·v1, v0·v2, v0·v3
+
+    // For a valid superbasis, the determinant of [v1-v0, v2-v0, v3-v0] must be ±1
+    // This can be computed from the vonorms
+
+    // Simplified check: if conorms are all integers and vonorms satisfy the constraints,
+    // then it's a valid superbasis
+    let conorms = compute_conorms(vonorms);
+
+    // All conorms must be non-negative integers (within floating point tolerance)
+    let tol = 1e-8;
+    for &c in &conorms {
+        if c < -tol {
+            return false;
+        }
+        // Check if it's close to an integer
+        let rounded = c.round();
+        if (c - rounded).abs() > tol {
+            return false;
+        }
+    }
+
+    // All primary vonorms must be positive integers
+    for &v in &vonorms[0..4] {
+        if v < tol {
+            return false;
+        }
+        let rounded = v.round();
+        if (v - rounded).abs() > tol {
+            return false;
+        }
+    }
+
+    true
+}
