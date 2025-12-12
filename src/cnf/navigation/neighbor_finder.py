@@ -7,6 +7,15 @@ class NeighborFinder():
     def __init__(self, point: CrystalNormalForm):
         self.point = point
 
+    def find_neighbor_tuples(self) -> list[tuple]:
+        lnf_neighbor_finder = LatticeNeighborFinder(self.point)
+        mnf_neighbor_finder = MotifNeighborFinder(self.point)
+
+        lattice_neighbors = lnf_neighbor_finder.find_neighbor_tuples()
+        mnf_neighbors = mnf_neighbor_finder.find_neighbor_tuples()
+        
+        return list(set(lattice_neighbors + mnf_neighbors))
+
     def find_neighbors(self) -> list[CrystalNormalForm]:
         lnf_neighbor_finder = LatticeNeighborFinder(self.point)
         mnf_neighbor_finder = MotifNeighborFinder(self.point)

@@ -18,8 +18,6 @@ class MotifNeighborFinder():
 
     def __init__(self, point: CrystalNormalForm):
         self.point = point
-    
-
 
     def find_neighbor_tuples(self):
         """
@@ -69,7 +67,7 @@ class MotifNeighborFinder():
         results = []
         vonorms_tuple = vonorms.tuple
         for (nb_mnf, affected_idxs, adj), mnf_coords in zip(neighbor_mnf_tuples, mnf_coords_list):
-            results.append((vonorms_tuple, mnf_coords, affected_idxs, adj))
+            results.append((vonorms_tuple, mnf_coords))
 
         return results
 
@@ -78,7 +76,7 @@ class MotifNeighborFinder():
         Convert neighbor tuples to MotifStepResult objects.
 
         Args:
-            neighbor_tuples: List of (vonorms_tuple, coords_tuple, affected_idxs, adj)
+            neighbor_tuples: List of (vonorms_tuple, coords_tuple)
 
         Returns:
             NeighborSet containing MotifStepResult objects
@@ -88,13 +86,13 @@ class MotifNeighborFinder():
         xi = self.point.xi
         delta = self.point.delta
 
-        for vonorms_tuple, mnf_coords, affected_idxs, adj in neighbor_tuples:
+        for vonorms_tuple, mnf_coords in neighbor_tuples:
             # Create objects
             vonorms = self.point.lattice_normal_form.vonorms  # Reuse same vonorms object
             lnf = LatticeNormalForm(vonorms, xi)
             mnf = MotifNormalForm(mnf_coords, original_els, delta)
             cnf = CrystalNormalForm(lnf, mnf)
-            result = MotifStepResult(cnf, affected_idxs, adj)
+            result = MotifStepResult(cnf, None, None)
             nbs.add_neighbor(result)
 
         return nbs
