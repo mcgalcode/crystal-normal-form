@@ -135,9 +135,6 @@ class LatticeNeighborFinder():
 
         # Prepare all inputs for combined Rust function
         vonorms = self.point.lattice_normal_form.vonorms
-        current_stabilizer = self._get_stabilizers()
-        current_stabilizers_flat = np.array([s.matrix for s in current_stabilizer]).astype(np.int32).flatten()
-
         input_vonorms = np.array(vonorms.vonorms, dtype=np.float64)
 
         # Get motif data using helper (Rust needs origin atom)
@@ -150,8 +147,9 @@ class LatticeNeighborFinder():
 
         # Single Rust call that does: step generation, validation, and canonicalization
         # Returns list of (vonorms_tuple, coords_tuple) - already as tuples with ints
+        # Note: Stabilizers are computed internally in Rust
         return rust_cnf.find_and_canonicalize_lattice_neighbors(
-            current_stabilizers_flat, input_vonorms, motif_coords_flat,
+            input_vonorms, motif_coords_flat,
             n_atoms, motif_delta, atoms, xi, delta
         )
 
@@ -251,23 +249,18 @@ class LatticeNeighborFinder():
         import rust_cnf
 
         vonorms = self.point.lattice_normal_form.vonorms
-        current_stabilizer = self.point.lattice_normal_form.vonorms.stabilizer_matrices_fast()
 
         # Get motif data
         motif_coord_matrix = self.discretized_motif.coord_matrix
         n_atoms = len(self.discretized_motif.atoms)
         motif_delta = self.discretized_motif._mod
 
-        # Prepare current stabilizers as flat array
-        current_stabilizers_flat = np.array([s.matrix for s in current_stabilizer]).astype(np.int32).flatten()
-
-        # Prepare input vonorms - Rust will compute S4 groups internally using precomputed data
+        # Prepare input vonorms - Rust will compute S4 groups and stabilizers internally
         input_vonorms = np.array(vonorms.vonorms, dtype=np.float64)
 
-        # Call Rust function - Rust now handles the S4 grouping internally!
+        # Call Rust function - Rust now handles stabilizers and S4 grouping internally!
         motif_coords_flat = np.ascontiguousarray(motif_coord_matrix.flatten(), dtype=np.float64)
         result = rust_cnf.compute_step_data_raw_rust(
-            current_stabilizers_flat,
             input_vonorms,
             motif_coords_flat,
             n_atoms,

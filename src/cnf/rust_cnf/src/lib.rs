@@ -464,14 +464,12 @@ fn validate_vonorm_step(vonorms: &[f64; 7]) -> bool {
 #[pyfunction]
 fn compute_step_data_raw_rust<'py>(
     py: Python<'py>,
-    current_stabilizers_flat: PyReadonlyArray1<i32>,  // Flat (N1*9) array
     input_vonorms: PyReadonlyArray1<f64>,  // Input vonorms (7 elements)
     motif_coord_matrix: PyReadonlyArray1<f64>,  // Flat (3*N) array
     n_atoms: usize,
     motif_delta: i32,
 ) -> PyResult<Py<pyo3::PyAny>> {
     // Extract arrays
-    let s1_flat = current_stabilizers_flat.as_array();
     let coord_mat = motif_coord_matrix.as_array();
     let input_vn = input_vonorms.as_array();
 
@@ -483,7 +481,6 @@ fn compute_step_data_raw_rust<'py>(
 
     // Call internal function (convert numpy arrays to slices)
     let result_values = compute_step_data_raw_internal(
-        s1_flat.as_slice().unwrap(),
         &vonorms_arr,
         coord_mat.as_slice().unwrap(),
         n_atoms,
@@ -527,8 +524,8 @@ fn generate_step_vectors() -> Vec<Vec<i32>> {
 
 /// Internal version of compute_step_data_raw_rust that works with Rust types
 /// This is the core logic extracted for reuse in pure-Rust pathfinding
+/// Note: Computes stabilizers internally from vonorms
 pub(crate) fn compute_step_data_raw_internal(
-    current_stabilizers_flat: &[i32],
     input_vonorms: &[f64; 7],
     motif_coord_matrix: &[f64],  // Flat (3*N) array
     n_atoms: usize,
@@ -544,15 +541,16 @@ pub(crate) fn compute_step_data_raw_internal(
     // Get S4 representatives using precomputed data
     let s4_reps = get_s4_representatives(input_vonorms, &zero_indices);
 
-    // Parse current stabilizers into 3x3 matrices
-    let n_s1 = current_stabilizers_flat.len() / 9;
+    // Compute current stabilizers from input vonorms
+    let s1_flat = lnf::find_stabilizers_raw(input_vonorms);
+    let n_s1 = s1_flat.len() / 9;
     let mut s1_matrices: Vec<[[i32; 3]; 3]> = Vec::with_capacity(n_s1);
     for i in 0..n_s1 {
         let start = i * 9;
         let mut mat = [[0i32; 3]; 3];
         for row in 0..3 {
             for col in 0..3 {
-                mat[row][col] = current_stabilizers_flat[start + row * 3 + col];
+                mat[row][col] = s1_flat[start + row * 3 + col];
             }
         }
         s1_matrices.push(mat);
@@ -844,7 +842,6 @@ fn canonicalize_cnfs_batch_rust<'py>(
 #[pyfunction]
 fn find_and_canonicalize_lattice_neighbors<'py>(
     py: Python<'py>,
-    current_stabilizers_flat: PyReadonlyArray1<i32>,
     input_vonorms: PyReadonlyArray1<f64>,
     motif_coords_flat: PyReadonlyArray1<f64>,
     n_atoms: usize,
@@ -853,10 +850,9 @@ fn find_and_canonicalize_lattice_neighbors<'py>(
     xi: f64,
     delta: i32,
 ) -> PyResult<Py<pyo3::types::PyList>> {
-    // Step 1: Get step data (line 94)
+    // Step 1: Get step data (line 94) - stabilizers computed internally
     let step_data = compute_step_data_raw_rust(
         py,
-        current_stabilizers_flat,
         input_vonorms,
         motif_coords_flat,
         n_atoms,
@@ -894,6 +890,46 @@ pub(crate) fn validate_step_data_internal(
     }
 
     validated_steps
+}
+
+/// Find all neighbor tuples (lattice + motif) for a given CNF state
+/// Python binding for the pure-Rust neighbor finding
+/// Note: Computes stabilizers internally from vonorms
+#[pyfunction]
+fn find_neighbor_tuples_rust<'py>(
+    py: Python<'py>,
+    vonorms_i32: PyReadonlyArray1<i32>,
+    coords_i32: PyReadonlyArray1<i32>,
+    elements: Vec<String>,
+    n_atoms: usize,
+    xi: f64,
+    delta: i32,
+) -> PyResult<Py<pyo3::types::PyList>> {
+    use pyo3::types::{PyList, PyTuple};
+
+    // Convert to slices
+    let vonorms_slice = vonorms_i32.as_slice()?;
+    let coords_slice = coords_i32.as_slice()?;
+
+    // Call internal function
+    let results = crate::neighbors::find_neighbor_tuples(
+        vonorms_slice,
+        coords_slice,
+        &elements,
+        n_atoms,
+        xi,
+        delta,
+    );
+
+    // Convert results to Python list of tuples
+    let py_results = PyList::empty_bound(py);
+    for (vonorms, coords) in results {
+        let vonorms_tuple = PyTuple::new_bound(py, &vonorms);
+        let coords_tuple = PyTuple::new_bound(py, &coords);
+        py_results.append((vonorms_tuple, coords_tuple))?;
+    }
+
+    Ok(py_results.into())
 }
 
 /// Validate step data by filtering steps that pass vonorm validation
@@ -1169,5 +1205,6 @@ fn rust_cnf(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(find_and_canonicalize_lattice_neighbors, m)?)?;
     m.add_function(wrap_pyfunction!(validate_step_data_rust, m)?)?;
     m.add_function(wrap_pyfunction!(find_and_canonicalize_motif_neighbors, m)?)?;
+    m.add_function(wrap_pyfunction!(find_neighbor_tuples_rust, m)?)?;
     Ok(())
 }

@@ -10,7 +10,6 @@ use std::collections::HashSet;
 /// Args:
 ///     vonorms_i32: Current CNF vonorms as integers (7 values)
 ///     coords_i32: Current CNF coords as integers (flattened, excludes origin)
-///     stabilizers_flat: Current CNF stabilizers (flat array of 3x3 matrices)
 ///     elements: Atom element symbols
 ///     n_atoms: Number of atoms (including origin)
 ///     xi: Lattice step size
@@ -18,20 +17,29 @@ use std::collections::HashSet;
 ///
 /// Returns:
 ///     Vec of (vonorms_tuple, coords_tuple) representing all unique neighbors
+///
+/// Note: Computes stabilizers internally from vonorms
 pub(crate) fn find_neighbor_tuples(
     vonorms_i32: &[i32],
     coords_i32: &[i32],
-    stabilizers_flat: &[i32],
     elements: &[String],
     n_atoms: usize,
     xi: f64,
     delta: i32,
 ) -> Vec<(Vec<i32>, Vec<i32>)> {
+    // Compute stabilizers from vonorms
+    let vonorms_f64: Vec<f64> = vonorms_i32.iter().map(|&v| v as f64).collect();
+    let mut vonorms_arr = [0.0; 7];
+    for (i, &v) in vonorms_f64.iter().enumerate().take(7) {
+        vonorms_arr[i] = v;
+    }
+    let stabilizers_flat = crate::lnf::find_stabilizers_raw(&vonorms_arr);
+
     // Step 1: Find lattice neighbors
     let lattice_neighbors = find_lattice_neighbor_tuples_internal(
         vonorms_i32,
         coords_i32,
-        stabilizers_flat,
+        &stabilizers_flat,
         elements,
         n_atoms,
         delta,
@@ -42,7 +50,7 @@ pub(crate) fn find_neighbor_tuples(
     let motif_neighbors = find_motif_neighbor_tuples_internal(
         vonorms_i32,
         coords_i32,
-        stabilizers_flat,
+        &stabilizers_flat,
         elements,
         n_atoms,
         delta,
@@ -98,9 +106,8 @@ fn find_lattice_neighbor_tuples_internal(
         coord_matrix[2 * n_atoms + atom_idx + 1] = z; // z coordinate
     }
 
-    // Step 1: Generate raw step data
+    // Step 1: Generate raw step data (stabilizers computed internally)
     let raw_steps = crate::compute_step_data_raw_internal(
-        stabilizers_flat,
         &vonorms_f64,
         &coord_matrix,
         n_atoms,
@@ -121,15 +128,27 @@ fn find_lattice_neighbor_tuples_internal(
 }
 
 /// Internal function for finding motif neighbors
-/// This is the core logic extracted from find_and_canonicalize_motif_neighbors
+/// Motif neighbors keep vonorms the same and only change coords
 fn find_motif_neighbor_tuples_internal(
-    _vonorms_i32: &[i32],
-    _coords_i32: &[i32],
-    _stabilizers_flat: &[i32],
-    _elements: &[String],
+    vonorms_i32: &[i32],
+    coords_i32: &[i32],
+    stabilizers_flat: &[i32],
+    elements: &[String],
     _n_atoms: usize,
-    _delta: i32,
+    delta: i32,
 ) -> Vec<(Vec<i32>, Vec<i32>)> {
-    // TODO: Implement by extracting from find_and_canonicalize_motif_neighbors
-    vec![]
+    // Call the existing mnf function which returns canonical coords
+    let canonical_coords_list = crate::mnf::find_and_canonicalize_motif_neighbors(
+        coords_i32,
+        elements,
+        stabilizers_flat,
+        delta,
+    );
+
+    // Pair each result with the unchanged vonorms
+    let vonorms_vec = vonorms_i32.to_vec();
+    canonical_coords_list
+        .into_iter()
+        .map(|coords| (vonorms_vec.clone(), coords))
+        .collect()
 }
