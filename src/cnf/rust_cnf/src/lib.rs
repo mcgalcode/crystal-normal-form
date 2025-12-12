@@ -1049,6 +1049,51 @@ fn get_s4_maximal_representatives_rust<'py>(
     Ok(result_list.into())
 }
 
+/// Find and canonicalize motif neighbors
+///
+/// This function wraps the Rust implementation of motif neighbor finding.
+///
+/// Arguments:
+/// - motif_coords: Coordinate list WITHOUT origin (length = (n_atoms-1)*3)
+/// - atoms: List of atom symbols INCLUDING origin (length = n_atoms)
+/// - stabilizers_flat: Flattened 3x3 stabilizer matrices
+/// - delta: Discretization parameter
+///
+/// Returns: List of canonical motif coordinate lists (WITHOUT origin)
+#[pyfunction]
+fn find_and_canonicalize_motif_neighbors<'py>(
+    py: Python<'py>,
+    motif_coords: Vec<i32>,
+    atoms: Vec<String>,
+    stabilizers_flat: PyReadonlyArray1<i32>,
+    delta: i32,
+) -> PyResult<Py<pyo3::types::PyList>> {
+    use pyo3::types::PyList;
+
+    // Convert stabilizers to slice
+    let stabs_slice = stabilizers_flat.as_slice()?;
+
+    // Call Rust implementation
+    let results = mnf::find_and_canonicalize_motif_neighbors(
+        &motif_coords,
+        &atoms,
+        stabs_slice,
+        delta,
+    );
+
+    // Convert results to Python list of lists
+    let py_results = PyList::empty_bound(py);
+    for result in results {
+        let py_coords = PyList::empty_bound(py);
+        for coord in result {
+            py_coords.append(coord)?;
+        }
+        py_results.append(py_coords)?;
+    }
+
+    Ok(py_results.unbind())
+}
+
 #[pymodule]
 fn rust_cnf(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(hello_rust, m)?)?;
@@ -1068,5 +1113,6 @@ fn rust_cnf(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(get_s4_maximal_representatives_rust, m)?)?;
     m.add_function(wrap_pyfunction!(find_and_canonicalize_lattice_neighbors, m)?)?;
     m.add_function(wrap_pyfunction!(validate_step_data_rust, m)?)?;
+    m.add_function(wrap_pyfunction!(find_and_canonicalize_motif_neighbors, m)?)?;
     Ok(())
 }

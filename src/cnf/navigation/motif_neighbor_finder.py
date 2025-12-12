@@ -19,6 +19,42 @@ class MotifNeighborFinder():
     def __init__(self, point: CrystalNormalForm):
         self.point = point
 
+    def _find_neighbor_tuples_rust(self):
+        """
+        Rust implementation of motif neighbor finding.
+
+        Returns list of (vonorms_tuple, coords_tuple) for each neighbor.
+        """
+        import rust_cnf
+        import numpy as np
+
+        # Get input data
+        mnf = self.point.motif_normal_form
+        motif_coords = list(mnf.coord_list)  # WITHOUT origin
+        atoms = [str(atom) for atom in mnf.elements]  # INCLUDING origin
+        delta = mnf.delta
+
+        # Get stabilizers
+        self_stabs = self.point.lattice_normal_form.vonorms.stabilizer_matrices_fast()
+        stabilizers_flat = np.array([s.matrix for s in self_stabs]).astype(np.int32).flatten()
+
+        # Call Rust function
+        canonical_coords_list = rust_cnf.find_and_canonicalize_motif_neighbors(
+            motif_coords,
+            atoms,
+            stabilizers_flat,
+            delta
+        )
+
+        # Convert to tuples with vonorms
+        vonorms_tuple = self.point.lattice_normal_form.vonorms.tuple
+        results = []
+        for coords in canonical_coords_list:
+            coords_tuple = tuple(coords)
+            results.append((vonorms_tuple, coords_tuple))
+
+        return results
+
     def find_neighbor_tuples(self):
         """
         Find neighbor tuples without constructing CNF objects.
@@ -26,6 +62,11 @@ class MotifNeighborFinder():
         Returns list of (vonorms_tuple, coords_tuple, affected_idxs, adj) for each neighbor.
         This is faster than find_motif_neighbors() when you don't need full objects.
         """
+        import os
+        use_rust = os.getenv("USE_RUST") is not None
+        if use_rust:
+            return self._find_neighbor_tuples_rust()
+
         neighbor_mnf_tuples = []
         self_disc = self.point.motif_normal_form.to_discretized_motif()
         self_stabs = self.point.lattice_normal_form.vonorms.stabilizer_matrices_fast()
