@@ -13,6 +13,9 @@ from .motif.mnf_constructor import MNFConstructor, MNFConstructionResult
 from .crystal_normal_form import CrystalNormalForm
 from .utils.prof import maybe_profile
 
+# Cached constant to avoid recreating on every call
+_IDENTITY_3x3_INT32 = np.eye(3, dtype=np.int32)
+
 
 def should_use_rust():
     return os.getenv("USE_RUST") is not None
@@ -67,7 +70,7 @@ class CNFConstructor():
             if selling_flat is not None:
                 selling_mat = np.array(selling_flat, dtype=np.int32).reshape(3, 3)
             else:
-                selling_mat = np.eye(3, dtype=np.int32)
+                selling_mat = _IDENTITY_3x3_INT32
             sorting_mat = np.array(sorting_mats_flat[0], dtype=np.int32).reshape(3, 3)
             middle = (selling_mat @ sorting_mat).astype(np.int32)
         else:
@@ -124,11 +127,17 @@ class CNFConstructor():
                 stabilizer_1 = vonorms.stabilizer_matrices_fast()
                 stabilizer_2 = canonical_vonorms.stabilizer_matrices_fast()
 
-            # Combine all stabilizers
+            # OLD IMPLEMENTATION (testing if optimization is incorrect):
             s1_stack = np.array([s.matrix for s in stabilizer_1])
             s2_stack = np.array([s.matrix for s in stabilizer_2])
             result = np.einsum('nij,jk,mkl->nmil', s1_stack, middle, s2_stack)
             result_flat = result.reshape(-1, 3, 3)
+
+            # OPTIMIZED: Only combine middle @ s2 (skipping s1 orbit)
+            # NEW IMPLEMENTATION (commented out for testing):
+            # s2_stack = np.array([s.matrix for s in stabilizer_2])
+            # result_flat = np.einsum('ij,njk->nik', middle, s2_stack)
+
             all_stabilizers = [MatrixTuple(mat) for mat in result_flat]
             np_stabs = [s.matrix for s in all_stabilizers]
 
