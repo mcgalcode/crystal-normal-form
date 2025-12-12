@@ -4,8 +4,12 @@ requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.12' and sys_platform == 'win32'",
     "python_full_version < '3.12' and sys_platform == 'win32'",
-    "python_full_version >= '3.12' and sys_platform != 'win32'",
-    "python_full_version < '3.12' and sys_platform != 'win32'",
+    "python_full_version >= '3.12' and sys_platform == 'darwin'",
+    "python_full_version >= '3.12' and sys_platform == 'linux'",
+    "python_full_version >= '3.12' and sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32'",
+    "python_full_version < '3.12' and sys_platform == 'darwin'",
+    "python_full_version < '3.12' and sys_platform == 'linux'",
+    "python_full_version < '3.12' and sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32'",
 ]
 
 [[package]]
@@ -308,7 +312,8 @@ dependencies = [
     { name = "rustworkx" },
     { name = "sortedcontainers" },
     { name = "tensorflow" },
-    { name = "tensorpotential" },
+    { name = "tensorpotential", version = "0.5.1", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'linux'" },
+    { name = "tensorpotential", version = "0.5.5", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux'" },
 ]
 
 [package.dev-dependencies]
@@ -2612,22 +2617,56 @@ wheels = [
 
 [[package]]
 name = "tensorpotential"
-version = "0.4.5"
+version = "0.5.1"
 source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "ase" },
-    { name = "matscipy" },
-    { name = "numpy" },
-    { name = "pandas" },
-    { name = "pyyaml" },
-    { name = "scipy" },
-    { name = "sympy" },
-    { name = "tensorflow" },
-    { name = "tqdm" },
+resolution-markers = [
+    "python_full_version >= '3.12' and sys_platform == 'linux'",
+    "python_full_version < '3.12' and sys_platform == 'linux'",
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f9/9b/98f58e493fe4a950fcebb71a9f93109722b4c166e69dd1455f1571dc9a49/tensorpotential-0.4.5.tar.gz", hash = "sha256:7745dcc93618f29390e371eebb2768a7f620827cb20343766b29d0e02ad79a93", size = 175097, upload-time = "2025-02-05T13:26:05.47Z" }
+dependencies = [
+    { name = "ase", marker = "sys_platform == 'linux'" },
+    { name = "matscipy", marker = "sys_platform == 'linux'" },
+    { name = "numpy", marker = "sys_platform == 'linux'" },
+    { name = "pandas", marker = "sys_platform == 'linux'" },
+    { name = "pyyaml", marker = "sys_platform == 'linux'" },
+    { name = "scipy", marker = "sys_platform == 'linux'" },
+    { name = "sympy", marker = "sys_platform == 'linux'" },
+    { name = "tensorflow", marker = "sys_platform == 'linux'" },
+    { name = "tf-keras", marker = "sys_platform == 'linux'" },
+    { name = "tqdm", marker = "sys_platform == 'linux'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0a/de/b64671575d41df5f9f285bf2342d911aa9bd7855bf54f7cc82634c20a6da/tensorpotential-0.5.1.tar.gz", hash = "sha256:90eb49264c6bc13b55f2b3fd6857989d22411fdfb745c44a2db501374844643d", size = 186169, upload-time = "2025-03-10T13:34:55.763Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8e/03/c4046b60027c4277978735c539eaec6464a50ca2e0b374e95025fa8cc5eb/tensorpotential-0.4.5-py3-none-any.whl", hash = "sha256:177cbfb4dee9abaf8823c52f8bd7468388f005795539cc3a853ec11c36f23f9c", size = 178142, upload-time = "2025-02-05T13:26:04.198Z" },
+    { url = "https://files.pythonhosted.org/packages/3f/e4/ff086b87feebfdeabb9a4ec150629e6d9b90a0ffc66db3a868141470ba30/tensorpotential-0.5.1-py3-none-any.whl", hash = "sha256:5fde417d88daed034cdec811d90fce9719ce60438ecd63d1de24d0ab44d965e7", size = 188964, upload-time = "2025-03-10T13:34:53.865Z" },
+]
+
+[[package]]
+name = "tensorpotential"
+version = "0.5.5"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.12' and sys_platform == 'win32'",
+    "python_full_version < '3.12' and sys_platform == 'win32'",
+    "python_full_version >= '3.12' and sys_platform == 'darwin'",
+    "python_full_version >= '3.12' and sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32'",
+    "python_full_version < '3.12' and sys_platform == 'darwin'",
+    "python_full_version < '3.12' and sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32'",
+]
+dependencies = [
+    { name = "ase", marker = "sys_platform != 'linux'" },
+    { name = "matscipy", marker = "sys_platform != 'linux'" },
+    { name = "numpy", marker = "sys_platform != 'linux'" },
+    { name = "pandas", marker = "sys_platform != 'linux'" },
+    { name = "pyyaml", marker = "sys_platform != 'linux'" },
+    { name = "scipy", marker = "sys_platform != 'linux'" },
+    { name = "sympy", marker = "sys_platform != 'linux'" },
+    { name = "tensorflow", marker = "sys_platform == 'darwin' or sys_platform == 'win32'" },
+    { name = "tf-keras", marker = "sys_platform != 'linux'" },
+    { name = "tqdm", marker = "sys_platform != 'linux'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/13/c6/5b2ba28ca8d78e6c68255cbf84cc7334e6bea56cec8b34b685f34184f74f/tensorpotential-0.5.5.tar.gz", hash = "sha256:b97be8f43d502f9655c226a750dc65188ac8817dfd3908e49e0e12b6df244dc3", size = 209168, upload-time = "2025-11-20T15:16:28.373Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/25/98/2cfca403cbf6aadf5c803df16dbcad34d2109af986b0853271ab5af68e68/tensorpotential-0.5.5-py3-none-any.whl", hash = "sha256:4225066e06e75ed1bc866828d609d4a5c7261b782b573f513df79655a86a1771", size = 207229, upload-time = "2025-11-20T15:16:27.079Z" },
 ]
 
 [[package]]
@@ -2637,6 +2676,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/87/56/ab275c2b56a5e2342568838f0d5e3e66a32354adcc159b495e374cda43f5/termcolor-3.2.0.tar.gz", hash = "sha256:610e6456feec42c4bcd28934a8c87a06c3fa28b01561d46aa09a9881b8622c58", size = 14423, upload-time = "2025-10-25T19:11:42.586Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f9/d5/141f53d7c1eb2a80e6d3e9a390228c3222c27705cbe7f048d3623053f3ca/termcolor-3.2.0-py3-none-any.whl", hash = "sha256:a10343879eba4da819353c55cb8049b0933890c2ebf9ad5d3ecd2bb32ea96ea6", size = 7698, upload-time = "2025-10-25T19:11:41.536Z" },
+]
+
+[[package]]
+name = "tf-keras"
+version = "2.15.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ce/0c/36054828137226dc3a559b525640f296a99ee8eb38beca32b36d29bb303b/tf_keras-2.15.0.tar.gz", hash = "sha256:d7559c2ba40667679fcb2105d3e4b68bbc07ecafbf1037462ce7b3974c3c6798", size = 1250420, upload-time = "2023-11-07T00:47:33.731Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/19/26/ca8a6cca61f2a44f1e7ee71ebdb9c8dfbc4371f418db811cdca4641f6daa/tf_keras-2.15.0-py3-none-any.whl", hash = "sha256:48607ee60a4d1fa7c09d6a44293a803faf3136e7a43f92df089ac094117547d2", size = 1714973, upload-time = "2023-11-07T00:47:31.507Z" },
 ]
 
 [[package]]
