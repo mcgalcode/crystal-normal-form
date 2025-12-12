@@ -160,6 +160,60 @@ class CNFConstructor():
     def from_vonorms_and_motif_undiscretized(self, vonorms: VonormList, motif: FractionalMotif):
         return self._from_vonorms_and_motif_undiscretized_impl(vonorms, motif, use_rust=self.USE_RUST)
     
+    def canonicalize_tuple(self, cnf_tuple: tuple, atoms: list[str]) -> tuple:
+        """
+        Canonicalize a CNF represented as a single tuple.
+
+        This method performs the same canonicalization as from_vonorms_and_motif but works
+        directly with tuple representations, avoiding most object construction overhead.
+
+        Args:
+            cnf_tuple: (vonorms_tuple, coords_tuple) where:
+                - vonorms_tuple: Tuple of 7 vonorm values
+                - coords_tuple: Tuple of flattened motif coordinates (length = (n_atoms - 1) * 3,
+                              excludes origin atom)
+            atoms: List of atom symbols
+
+        Returns:
+            (canonical_vonorms_tuple, canonical_coords_tuple)
+        """
+        vonorms_tuple, coords_tuple = cnf_tuple
+
+        # Convert vonorms tuple to VonormList (lightweight)
+        vonorms = VonormList(vonorms_tuple)
+
+        # Build LNF and get transformation matrices
+        lnf, lnf_result, canonical_vonorms, middle = self._build_lnf_and_get_transforms(
+            vonorms, use_float=False, use_rust=self.USE_RUST, float_tol=None
+        )
+
+        # Find and combine stabilizers
+        np_stabs = self._combine_stabilizers(vonorms, canonical_vonorms, middle, use_float=False, use_rust=self.USE_RUST)
+
+        # MNF coord_list excludes the origin atom, so we need to add it back
+        # coords_tuple has (n_atoms - 1) * 3 elements
+        n_stored_atoms = len(coords_tuple) // 3
+        coords_array = np.array(coords_tuple, dtype=np.int32).reshape(n_stored_atoms, 3)
+
+        # Prepend origin atom at (0, 0, 0)
+        coords_with_origin = np.vstack([np.array([[0, 0, 0]]), coords_array])
+        coords_flat = coords_with_origin.flatten().tolist()
+
+        # Get sorted atomic numbers
+        from pymatgen.core.periodic_table import Element
+        atomic_numbers = [Element(el).Z for el in atoms]
+
+        # Build MNF using raw coords method (avoids DiscretizedMotif construction)
+        mnf_constructor = MNFConstructor(self.delta, np_stabs, self.verbose_logging)
+        canonical_coords_tuple = mnf_constructor.build_from_raw_coords(
+            coords_flat, atomic_numbers, use_rust=self.USE_RUST
+        )
+
+        # Extract canonical vonorms tuple
+        canonical_vonorms_tuple = canonical_vonorms.tuple
+
+        return (canonical_vonorms_tuple, canonical_coords_tuple)
+
     def from_vonorms_and_motif(self, vonorms: VonormList, motif: FractionalMotif):
         return self._from_vonorms_and_motif_impl(vonorms, motif, use_rust=self.USE_RUST)
     
