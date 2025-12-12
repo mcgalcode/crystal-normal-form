@@ -74,17 +74,58 @@ class LatticeNeighborFinder():
 
         return results
 
-    def find_cnf_neighbors(self) -> list[CrystalNormalForm]:
-        """Fast neighbor finding that avoids intermediate object creation."""
+    def find_neighbor_tuples(self) -> list[tuple]:
+        """
+        Find neighbor tuples without constructing CNF objects.
+
+        Returns list of (vonorms_tuple, coords_tuple) for each neighbor.
+        This is faster than find_cnf_neighbors() when you don't need full objects.
+        """
         import os
 
-        # When using Rust, use the complete Rust pipeline
         use_rust = os.getenv("USE_RUST") is not None
         if use_rust:
-            return self._find_cnf_neighbors_fast_rust()
+            return self._find_neighbor_tuples_rust()
 
-        # Python fallback
-        return self._find_cnf_neighbors_fast_python()
+        return self._find_neighbor_tuples_python()
+
+    def tuples_to_cnf_neighbors(self, neighbor_tuples: list[tuple]) -> list[CrystalNormalForm]:
+        """
+        Convert neighbor tuples to CNF objects.
+
+        Args:
+            neighbor_tuples: List of (vonorms_tuple, coords_tuple)
+
+        Returns:
+            List of CrystalNormalForm objects
+        """
+        atoms = [str(atom) for atom in self.discretized_motif.atoms]
+        xi = float(self.point.xi)
+        delta = int(self.point.delta)
+
+        results = []
+        for vonorms_tuple, coords_tuple in neighbor_tuples:
+            vonorms = VonormList(vonorms_tuple)
+            lnf = LatticeNormalForm(vonorms, xi)
+
+            mnf = MotifNormalForm(
+                coords_tuple,
+                atoms,
+                delta
+            )
+
+            cnf = CrystalNormalForm(lnf, mnf)
+
+            # Only include if different from input CNF
+            if cnf != self.point:
+                results.append(cnf)
+
+        return results
+
+    def find_cnf_neighbors(self) -> list[CrystalNormalForm]:
+        """Fast neighbor finding that avoids intermediate object creation."""
+        neighbor_tuples = self.find_neighbor_tuples()
+        return self.tuples_to_cnf_neighbors(neighbor_tuples)
     
     def validate_step_data(self, step_data):
         validated_steps = []
@@ -100,8 +141,8 @@ class LatticeNeighborFinder():
             validated_steps.append((step_vec, vonorms_tuple, motif_coords, matrix))
         return validated_steps
 
-    def _find_cnf_neighbors_fast_rust(self) -> list:
-        """Rust implementation of CNF neighbor finding with complete pipeline in Rust."""
+    def _find_neighbor_tuples_rust(self) -> list[tuple]:
+        """Rust implementation - returns tuples without constructing CNF objects."""
         import rust_cnf
 
         # Prepare all inputs for combined Rust function
@@ -125,36 +166,21 @@ class LatticeNeighborFinder():
             n_atoms, motif_delta, atoms, xi, delta
         )
 
-        # Convert canonical results to Python CNF objects
+        # Convert to tuples (avoid constructing objects yet)
         results = []
         for canonical_vonorms_list, canonical_coords_list in canonical_results:
-            # Data from Rust is already canonical - just wrap in Python objects
-            vonorms = VonormList(tuple([int(v) for v in canonical_vonorms_list[:7]]))
-            lnf = LatticeNormalForm(vonorms, xi)
-
-            # Create MNF from canonical coords
-            mnf = MotifNormalForm(
-                tuple([int(c) for c in canonical_coords_list]),
-                atoms,  # element_list
-                delta
-            )
-
-            # Create CNF
-            cnf = CrystalNormalForm(lnf, mnf)
-
-            # Only include if different from input CNF
-            if cnf != self.point:
-                results.append(cnf)
+            vonorms_tuple = tuple([int(v) for v in canonical_vonorms_list[:7]])
+            coords_tuple = tuple([int(c) for c in canonical_coords_list])
+            results.append((vonorms_tuple, coords_tuple))
 
         return results
 
-    def _find_cnf_neighbors_fast_python(self) -> list:
-        """Python implementation of CNF neighbor finding."""
+    def _find_neighbor_tuples_python(self) -> list[tuple]:
+        """Python implementation - returns tuples without constructing CNF objects."""
         # Get raw step data without creating LatticeStep objects
         step_data = self._compute_step_data_raw_python()
 
         # Filter valid steps and construct CNFs in batch
-        valid_cnfs = []
         valid_step_data = []
 
         for step_vec, vonorms_tuple, motif_coords, matrix in step_data:
@@ -169,9 +195,10 @@ class LatticeNeighborFinder():
 
             valid_step_data.append((vonorms, motif_coords, matrix))
 
-        # Batch construct CNFs
+        # Batch construct CNFs and extract canonical tuples
         cnf_constructor = CNFConstructor(self.point.xi, self.point.delta, verbose_logging=False)
 
+        results = []
         for vonorms, motif_coords, matrix in valid_step_data:
             # Create DiscretizedMotif only when needed for CNF construction
             from ..motif.atomic_motif import DiscretizedMotif
@@ -183,10 +210,13 @@ class LatticeNeighborFinder():
 
             cnf_result = cnf_constructor.from_vonorms_and_motif(vonorms, motif)
 
-            if cnf_result.cnf != self.point:
-                valid_cnfs.append(cnf_result.cnf)
+            # Extract canonical tuples instead of storing CNF object
+            canonical_vonorms = cnf_result.cnf.lattice_normal_form.vonorms.tuple
+            canonical_coords = cnf_result.cnf.motif_normal_form.coord_list
 
-        return valid_cnfs
+            results.append((canonical_vonorms, canonical_coords))
+
+        return results
 
     def _compute_step_data_raw_python(self):
         """Python implementation of step data computation."""
