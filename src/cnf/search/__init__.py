@@ -116,11 +116,11 @@ def explore_pt_partition(partition_db: PartitionedDB, point_cnf: CrystalNormalFo
 
     # Time: Find neighbors (the actual computation)
     t_start = time.time()
-    try:
-        nbs = NeighborFinder(pt.cnf).find_neighbors()
-    except Exception as e:
-        logger.fatal(f"Ran into a problem with point {pt.id}, {point_cnf}")
-        return [], [], {}
+    # try:
+    nbs = NeighborFinder(pt.cnf).find_neighbors()
+    # except Exception as e:
+    #     logger.fatal(f"Ran into a problem with point {pt.id}, {point_cnf}")
+    #     return [], [], {}
 
     timings['find_neighbors'] += time.time() - t_start
 
@@ -285,6 +285,7 @@ def continue_search_flood_fill(search_id,
                        Higher = more options but slower queries
     """
     db = PartitionedDB(partitions_dir)
+    logger = Logger(log_lvl)
 
     if max_iters is None:
         max_iters = math.inf
@@ -309,11 +310,11 @@ def continue_search_flood_fill(search_id,
     }
 
     while True:
-        _log(f"================ BEGINNING STEP {num_iters} ================")
+        logger.log(f"================ BEGINNING STEP {num_iters} ================")
         if num_iters > max_iters:
-            _log(f"Reached {num_iters} iterations, quitting...")
+            logger.log(f"Reached {num_iters} iterations, quitting...")
             break
-        _log(f"Endpoint is not yet in the frontier, continuing search...")
+        logger.log(f"Endpoint is not yet in the frontier, continuing search...")
 
         # Time: Get frontier points
         t_start = time.time()
@@ -322,11 +323,11 @@ def continue_search_flood_fill(search_id,
         random_read_map_store = db.get_map_store_by_idx(random_read_store_idx)
         frontier_points = random_read_search_store.get_frontier_points_in_search(search_id, limit=frontier_limit)
         timing_stats['get_frontier'] += time.time() - t_start
-        _log(f"Found {len(frontier_points)} frontier points to consider (limited to {frontier_limit})...")
+        logger.log(f"Found {len(frontier_points)} frontier points to consider (limited to {frontier_limit})...")
 
         selected_point = None
         for frontier_point in frontier_points:
-            _log(f"Attempting lock on frontier pt ID: {frontier_point.id}, CNF: {frontier_point.cnf.coords}")
+            logger.log(f"Attempting lock on frontier pt ID: {frontier_point.id}, CNF: {frontier_point.cnf.coords}")
 
             # Time: Lock attempt
             t_start = time.time()
@@ -334,13 +335,13 @@ def continue_search_flood_fill(search_id,
             timing_stats['lock_attempts'] += time.time() - t_start
 
             if not lock_acquired:
-                _log(f"Failed to acquire lock (another worker got it first), trying next point...")
+                logger.log(f"Failed to acquire lock (another worker got it first), trying next point...")
                 continue  # Continue to next frontier point
-            _log(f"Lock acquired successfully!")
+            logger.log(f"Lock acquired successfully!")
             selected_point = frontier_point
 
             if not selected_point.explored:
-                _log(f"Point has not been explored... computing neighbors and adding to the map...")
+                logger.log(f"Point has not been explored... computing neighbors and adding to the map...")
                 print(selected_point.cnf.coords)
                 # Time: Exploration (find neighbors)
                 t_start = time.time()
@@ -363,9 +364,9 @@ def continue_search_flood_fill(search_id,
                     nb_store.add_to_search_frontier_by_id(search_id, nb_id)
                 timing_stats['add_to_frontier'] += time.time() - t_start
 
-                _log(f"Added {len(new_nbs)} neighbors to the map!")
+                logger.log(f"Added {len(new_nbs)} neighbors to the map!")
             else:
-                _log(f"Point ID {selected_point.id} has already been explored, marking as searched.")
+                logger.log(f"Point ID {selected_point.id} has already been explored, marking as searched.")
 
             # Time: Mark as searched
             t_start = time.time()
@@ -410,12 +411,12 @@ def continue_search_flood_fill(search_id,
             print(f"{'='*60}\n")
 
         if selected_point is None:
-            _log(f"All tested frontier points locked, sleeping...")
+            logger.log(f"All tested frontier points locked, sleeping...")
             time.sleep(5)
             continue
 
         random_read_map_store.unlock_point(selected_point.id)
-        _log(f"Removed lock!")
+        logger.log(f"Removed lock!")
 
     # Write timing report to disk
     # Calculate total from high-level categories only (exploration breakdown is already included in exploration)
