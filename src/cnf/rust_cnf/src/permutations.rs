@@ -120,6 +120,22 @@ fn load_permutations() -> PermutationMaps {
             }
         }
 
+        // Sort each group's permutations deterministically to ensure consistent ordering
+        for (_s4_key, group) in s4_groups.iter_mut() {
+            // Create indices and sort them by vonorm_perm
+            let mut indices: Vec<usize> = (0..group.vonorm_perms.len()).collect();
+            indices.sort_by(|&a, &b| group.vonorm_perms[a].cmp(&group.vonorm_perms[b]));
+
+            // Reorder all three vectors according to sorted indices
+            let sorted_vonorm_perms: Vec<_> = indices.iter().map(|&i| group.vonorm_perms[i].clone()).collect();
+            let sorted_conorm_perms: Vec<_> = indices.iter().map(|&i| group.conorm_perms[i].clone()).collect();
+            let sorted_transition_mats: Vec<_> = indices.iter().map(|&i| group.transition_mats[i].clone()).collect();
+
+            group.vonorm_perms = sorted_vonorm_perms;
+            group.conorm_perms = sorted_conorm_perms;
+            group.transition_mats = sorted_transition_mats;
+        }
+
         zero_to_s4_groups.insert(zero_idxs.clone(), s4_groups);
     }
 
@@ -182,19 +198,55 @@ pub fn get_s4_representatives(
     // Get the S4 groups for this zero pattern
     if let Some(s4_groups) = PERMUTATIONS.zero_to_s4_groups.get(zero_indices) {
         for (s4_key, group) in s4_groups {
-            // Just take the first permutation from the group
-            if let Some(first_perm) = group.vonorm_perms.first() {
-                let permuted = apply_vonorm_permutation(vonorms, first_perm);
-                let mats = group.transition_mats[0].clone();
+            // Apply all permutations and sort to find the maximal one (matching Python)
+            let mut candidates: Vec<([f64; 7], usize)> = group.vonorm_perms
+                .iter()
+                .enumerate()
+                .map(|(idx, perm)| (apply_vonorm_permutation(vonorms, perm), idx))
+                .collect();
+
+            // Sort by vonorm tuple (ascending)
+            candidates.sort_by(|a, b| {
+                for i in 0..7 {
+                    match a.0[i].partial_cmp(&b.0[i]) {
+                        Some(std::cmp::Ordering::Equal) => continue,
+                        Some(ord) => return ord,
+                        None => return std::cmp::Ordering::Equal,
+                    }
+                }
+                std::cmp::Ordering::Equal
+            });
+
+            // Take the first (maximal) candidate
+            if let Some((maximal_vonorms, _)) = candidates.first() {
+                // Find ALL permutations that produce this same maximal vonorm list
+                // (matching Python: equivalent_perms = [c[1] for c in candidates if c[0] == maximal_vlist])
+                let mut all_mats = Vec::new();
+                for (permuted, idx) in &candidates {
+                    // Compare vonorms element by element
+                    let mut is_equal = true;
+                    for i in 0..7 {
+                        if (permuted[i] - maximal_vonorms[i]).abs() > 1e-10 {
+                            is_equal = false;
+                            break;
+                        }
+                    }
+                    if is_equal {
+                        all_mats.extend(group.transition_mats[*idx].clone());
+                    }
+                }
 
                 results.push(S4Representative {
                     s4_key: s4_key.clone(),
-                    permuted_vonorms: permuted,
-                    transition_mats: mats,
+                    permuted_vonorms: *maximal_vonorms,
+                    transition_mats: all_mats,
                 });
             }
         }
     }
+
+    // Sort results by S4 key to ensure deterministic order
+    results.sort_by(|a, b| a.s4_key.cmp(&b.s4_key));
 
     results
 }

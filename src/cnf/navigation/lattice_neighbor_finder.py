@@ -3,7 +3,9 @@ import itertools
 from ..crystal_normal_form import CrystalNormalForm
 from ..cnf_constructor import CNFConstructor
 from ..lattice.lnf_constructor import LatticeNormalFormConstructor
+from ..lattice.lattice_normal_form import LatticeNormalForm
 from ..lattice.voronoi import VonormList
+from ..motif.motif_normal_form import MotifNormalForm
 from .lattice_step import LatticeStep, LatticeStepResult
 from .neighbor_set import NeighborSet
 from ..utils.pdd import pdd_for_cnfs
@@ -85,15 +87,24 @@ class LatticeNeighborFinder():
         return self._find_cnf_neighbors_fast_python()
 
     def _find_cnf_neighbors_fast_rust(self) -> list:
-        """Rust implementation of CNF neighbor finding."""
+        """Rust implementation of CNF neighbor finding with batch canonicalization."""
         import rust_cnf
 
-        # Get validated step data from Rust
+        # Get step data from Rust (unvalidated)
         step_data = self._compute_step_data_raw_rust()
 
-        # Build CNFs from step data in Rust
-        input_vonorms = np.array(self.point.lattice_normal_form.vonorms.vonorms_np, dtype=np.float64)
-        input_coords = np.ascontiguousarray(self.discretized_motif.coord_matrix.flatten(), dtype=np.float64)
+        # Validate steps (matching Python behavior at lines 147-151)
+        validated_steps = []
+        for step_vec, vonorms_tuple, motif_coords, matrix in step_data:
+            vonorms = VonormList(vonorms_tuple)
+
+            # Validate
+            if not vonorms.has_valid_conorms_exact():
+                continue
+            if not (vonorms.is_obtuse() and vonorms.is_superbasis_exact()):
+                continue
+
+            validated_steps.append((step_vec, vonorms_tuple, motif_coords, matrix))
 
         # Convert atoms to list of Python strings (in case they're numpy strings)
         atoms = [str(atom) for atom in self.discretized_motif.atoms]
@@ -102,35 +113,34 @@ class LatticeNeighborFinder():
         xi = float(self.point.xi)
         delta = int(self.point.delta)
 
-        neighbor_tuples = rust_cnf.build_cnfs_from_step_data_rust(
-            step_data,
-            input_vonorms,
-            input_coords,
+        # Batch canonicalize all CNFs in Rust (avoids Python/Rust boundary crossings)
+        canonical_results = rust_cnf.canonicalize_cnfs_batch_rust(
+            validated_steps,
             atoms,
             xi,
             delta
         )
 
-        # Convert Rust results back to Python CNF objects
-        cnf_constructor = CNFConstructor(self.point.xi, self.point.delta, verbose_logging=False)
-
+        # Convert canonical results to Python CNF objects
         results = []
-        for vonorms_list, coords_list, _ in neighbor_tuples:
-            # Data from Rust is not canonical - CNF constructor will canonicalize
-            vonorms = VonormList(tuple([int(v) for v in vonorms_list]))
+        for canonical_vonorms_list, canonical_coords_list in canonical_results:
+            # Data from Rust is already canonical - just wrap in Python objects
+            vonorms = VonormList(tuple([int(v) for v in canonical_vonorms_list[:7]]))  # Use first 6 elements
+            lnf = LatticeNormalForm(vonorms, xi)
 
-            # coords_list is flattened coords for all atoms
-            motif = DiscretizedMotif.from_elements_and_positions(
-                atoms,
-                np.array(coords_list).reshape(-1, 3),
-                delta=self.point.delta
+            # Create MNF from canonical coords
+            mnf = MotifNormalForm(
+                tuple([int(c) for c in canonical_coords_list]),
+                atoms,  # element_list
+                delta
             )
 
-            cnf_result = cnf_constructor.from_vonorms_and_motif(vonorms, motif)
+            # Create CNF
+            cnf = CrystalNormalForm(lnf, mnf)
 
             # Only include if different from input CNF
-            if cnf_result.cnf != self.point:
-                results.append(cnf_result.cnf)
+            if cnf != self.point:
+                results.append(cnf)
 
         return results
 

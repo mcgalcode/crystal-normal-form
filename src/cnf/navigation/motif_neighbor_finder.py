@@ -41,6 +41,23 @@ class MotifNeighborFinder():
                     n[idx + 1] = n[idx + 1] + adj
                     n[idx + 2] = n[idx + 2] + adj
                     neighbor_mnf_tuples.append((tuple(n), [idx, idx + 1, idx + 2], adj))
+
+        # Just start from the current point
+        # current_mnf_tuple = self.point.motif_normal_form.coord_list
+        # current_mnf_tuple = (0,0,0) + current_mnf_tuple
+        # for idx in range(len(current_mnf_tuple)):
+        #     for adj in [-1, +1]:
+        #         n = list(copy.copy(current_mnf_tuple))
+        #         n[idx] = n[idx] + adj
+        #         neighbor_mnf_tuples.append((tuple(n), [idx], adj))
+        
+        # for idx in range(0, len(current_mnf_tuple), 3):
+        #     for adj in [-1, +1]:
+        #         n = list(copy.copy(current_mnf_tuple))
+        #         n[idx] = n[idx] + adj
+        #         n[idx + 1] = n[idx + 1] + adj
+        #         n[idx + 2] = n[idx + 2] + adj
+        #         neighbor_mnf_tuples.append((tuple(n), [idx, idx + 1, idx + 2], adj))
         
         original_els = self.point.motif_normal_form.elements
         nbs = NeighborSet()

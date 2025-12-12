@@ -110,7 +110,8 @@ class VonormList():
         """
         grouped = self.grouped_by_s4_permutations()
         result = {}
-        for group, perms in grouped.items():
+        # Sort by group key to ensure deterministic ordering (matching Rust)
+        for group, perms in sorted(grouped.items()):
             candidates = [(self.apply_permutation(p.vonorm_permutation), p) for p in perms]
             candidates = sorted(candidates, key=lambda p: p[0].tuple)
             maximal_vlist = candidates[0][0]

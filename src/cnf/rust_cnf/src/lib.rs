@@ -343,12 +343,15 @@ fn find_and_combine_stabilizers_rust<'py>(
         }
     }
 
-    // Find stabilizers for both inputs (already returns flat Vec<i32>)
+    // OLD IMPLEMENTATION (testing if optimization is incorrect):
     let s1_flat = lnf::find_stabilizers_raw(&vonorms1_fixed);
     let s2_flat = lnf::find_stabilizers_raw(&vonorms2_fixed);
-
-    // Combine and deduplicate
     let combined_flat = lnf::combine_stabilizers(&s1_flat, &s2_flat, &middle);
+
+    // OPTIMIZED: Only find s2 stabilizers, skip s1 orbit
+    // NEW IMPLEMENTATION (commented out for testing):
+    // let s2_flat = lnf::find_stabilizers_raw(&vonorms2_fixed);
+    // let combined_flat = lnf::combine_middle_and_s2_stabilizers(&s2_flat, &middle);
 
     // Return as flat numpy array (Python will reshape to (N, 3, 3))
     let result_array = PyArray1::from_vec_bound(py, combined_flat);
@@ -397,12 +400,15 @@ fn find_and_combine_stabilizers_rust_float<'py>(
         }
     }
 
-    // Find stabilizers for both inputs using float version (tolerance-based)
+    // OLD IMPLEMENTATION (testing if optimization is incorrect):
     let s1_flat = lnf::find_stabilizers_raw_float(&vonorms1_fixed, tol);
     let s2_flat = lnf::find_stabilizers_raw_float(&vonorms2_fixed, tol);
-
-    // Combine and deduplicate
     let combined_flat = lnf::combine_stabilizers(&s1_flat, &s2_flat, &middle);
+
+    // OPTIMIZED: Only find s2 stabilizers, skip s1 orbit
+    // NEW IMPLEMENTATION (commented out for testing):
+    // let s2_flat = lnf::find_stabilizers_raw_float(&vonorms2_fixed, tol);
+    // let combined_flat = lnf::combine_middle_and_s2_stabilizers(&s2_flat, &middle);
 
     // Return as flat numpy array (Python will reshape to (N, 3, 3))
     let result_array = PyArray1::from_vec_bound(py, combined_flat);
@@ -546,7 +552,8 @@ fn compute_step_data_raw_rust<'py>(
         let mut unique_products: HashMap<Vec<i32>, [[i32; 3]; 3]> = HashMap::new();
 
         for s1 in &s1_matrices {
-            for t in &t_matrices {
+            // Only use first transition matrix (matching Python behavior: transform_mats[:1])
+            for t in &t_matrices[..1.min(t_matrices.len())] {
                 for s2 in &s2_matrices {
                     // Compute s1 @ t
                     let st = matrix_multiply_i32(s1, t);
@@ -567,7 +574,11 @@ fn compute_step_data_raw_rust<'py>(
         }
 
         // For each unique matrix, transform motif and generate steps
-        for (mat_flat, mat) in unique_products {
+        // Sort by flattened matrix to match Python's np.unique() behavior
+        let mut sorted_products: Vec<(Vec<i32>, [[i32; 3]; 3])> = unique_products.into_iter().collect();
+        sorted_products.sort_by(|a, b| a.0.cmp(&b.0));
+
+        for (mat_flat, mat) in sorted_products {
             // Invert matrix and transform coordinates
             let mat_inv = matrix_inverse_i32(&mat);
 
@@ -622,22 +633,14 @@ fn compute_step_data_raw_rust<'py>(
         unique_steps.entry(key).or_insert((step_vec, vonorms, coords, mat));
     }
 
-    // Convert to Python list of tuples, filtering by validation
-    let mut result = Vec::new();
-    for (step_vec, vonorms, coords, mat) in unique_steps.into_values() {
-        // Convert vonorms Vec to array for validation
-        let vonorms_arr: [f64; 7] = [
-            vonorms[0], vonorms[1], vonorms[2], vonorms[3],
-            vonorms[4], vonorms[5], vonorms[6]
-        ];
+    // Convert to Python list of tuples (no validation - Python validates during CNF construction)
+    // Sort by key to ensure deterministic ordering (matching Python dict iteration)
+    let mut result: Vec<_> = unique_steps.into_iter().collect();
+    result.sort_by(|a, b| a.0.cmp(&b.0));
 
-        // Only include if validation passes
-        if validate_vonorm_step(&vonorms_arr) {
-            result.push((step_vec, vonorms, coords, mat));
-        }
-    }
+    let result_values: Vec<_> = result.into_iter().map(|(_, v)| v).collect();
 
-    Ok(pyo3::types::PyList::new_bound(py, result).into())
+    Ok(pyo3::types::PyList::new_bound(py, result_values).into())
 }
 
 // Helper: Generate step vectors (equivalent to LatticeStep.all_step_vecs())
@@ -770,6 +773,120 @@ fn build_cnfs_from_step_data_rust<'py>(
     Ok(result_list.into())
 }
 
+/// Batch CNF canonicalization - takes step data and returns fully canonical CNF data.
+///
+/// This combines LNF construction, stabilizer finding, and MNF construction
+/// in a single batch operation to minimize Python/Rust boundary crossings.
+///
+/// Returns: List of (canonical_vonorms, canonical_coords) tuples
+#[pyfunction]
+fn canonicalize_cnfs_batch_rust<'py>(
+    py: Python<'py>,
+    step_data_list: &Bound<'py, pyo3::types::PyList>,
+    atoms: Vec<String>,
+    xi: f64,
+    delta: i32,
+) -> PyResult<Py<pyo3::types::PyList>> {
+    use pyo3::types::{PyList, PyTuple};
+
+    let result_list = PyList::empty_bound(py);
+    let atom_labels = compute_atom_labels(&atoms);
+    let n_atoms = atoms.len();
+    // Count how many atoms have the first element type (label 0)
+    let num_origin_atoms = atom_labels.iter().filter(|&&label| label == 0).count();
+
+    // Process each candidate CNF
+    for item in step_data_list.iter() {
+        let tuple: &Bound<'_, PyTuple> = item.downcast()?;
+
+        // Extract step data: (step_vec, vonorms, coords, matrix)
+        let vonorms_list: Vec<f64> = tuple.get_item(1)?.extract()?;
+
+        // Extract coords
+        let coords_obj = tuple.get_item(2)?;
+        let coords_list: Vec<f64> = if let Ok(arr) = coords_obj.downcast::<PyArray1<f64>>() {
+            arr.readonly().as_slice()?.to_vec()
+        } else if let Ok(arr2d) = coords_obj.downcast::<numpy::PyArray2<f64>>() {
+            arr2d.readonly().as_array().iter().copied().collect()
+        } else {
+            coords_obj.extract()?
+        };
+
+        // Step 1: Build LNF (canonicalize vonorms)
+        // Extend vonorms from 6 to 7 elements (7th is padding/derived)
+        let mut vonorms_arr = [0.0; 7];
+        for (i, &v) in vonorms_list.iter().enumerate().take(7) {
+            vonorms_arr[i] = v;
+        }
+
+        let (canonical_vonorms_vec, _, selling_flat_opt, sorting_mats) =
+            lnf::build_lnf_raw_discretized(&vonorms_arr);
+
+        // Convert canonical vonorms back to array
+        let mut canonical_vonorms = [0.0; 7];
+        for (i, &v) in canonical_vonorms_vec.iter().enumerate().take(7) {
+            canonical_vonorms[i] = v;
+        }
+
+        // Step 2: Compute transformation matrix (middle = selling @ sorting)
+        let selling_mat = if let Some(selling_flat) = selling_flat_opt {
+            [
+                [selling_flat[0], selling_flat[1], selling_flat[2]],
+                [selling_flat[3], selling_flat[4], selling_flat[5]],
+                [selling_flat[6], selling_flat[7], selling_flat[8]],
+            ]
+        } else {
+            [[1, 0, 0], [0, 1, 0], [0, 0, 1]]  // Identity
+        };
+
+        // First sorting matrix is a flattened 9-element vec
+        let sorting_flat = &sorting_mats[0];
+        let sorting_mat = [
+            [sorting_flat[0], sorting_flat[1], sorting_flat[2]],
+            [sorting_flat[3], sorting_flat[4], sorting_flat[5]],
+            [sorting_flat[6], sorting_flat[7], sorting_flat[8]],
+        ];
+
+        // Inline matrix multiplication (middle = selling @ sorting)
+        let mut middle = [[0i32; 3]; 3];
+        for i in 0..3 {
+            for j in 0..3 {
+                middle[i][j] = selling_mat[i][0] * sorting_mat[0][j]
+                             + selling_mat[i][1] * sorting_mat[1][j]
+                             + selling_mat[i][2] * sorting_mat[2][j];
+            }
+        }
+
+        // Step 3: Find stabilizers and combine with middle transformation
+        // Need BOTH s1 (original vonorms) and s2 (canonical vonorms) stabilizers
+        // to compute s1 @ middle @ s2 (matching Python line 133 in cnf_constructor.py)
+        let s1_flat = lnf::find_stabilizers_raw(&vonorms_arr);
+        let s2_flat = lnf::find_stabilizers_raw(&canonical_vonorms);
+        let combined_stabs_flat = lnf::combine_stabilizers(&s1_flat, &s2_flat, &middle);
+
+        // Step 4: Build canonical MNF
+        // Convert atom labels from i32 to usize
+        let labels_usize: Vec<usize> = atom_labels.iter().map(|&x| x as usize).collect();
+
+        let canonical_coords = mnf::build_mnf_vectorized(
+            &coords_list,
+            n_atoms,
+            &labels_usize,
+            num_origin_atoms,
+            &combined_stabs_flat,
+            delta as f64,
+        );
+
+        // Return canonical data
+        result_list.append((
+            canonical_vonorms.to_vec(),
+            canonical_coords,
+        ))?;
+    }
+
+    Ok(result_list.into())
+}
+
 /// Helper: Compute atom labels from atom symbols
 fn compute_atom_labels(atoms: &[String]) -> Vec<i32> {
     let mut labels = Vec::new();
@@ -787,7 +904,80 @@ fn compute_atom_labels(atoms: &[String]) -> Vec<i32> {
     labels
 }
 
-/// Python module definition
+/// Get S4 maximal representatives for vonorms (matching Python's maximally_ascending_equivalence_class_members)
+/// Returns a list of dictionaries, each containing:
+///   - 's4_key': The S4 key (sorted first 4 permutation indices)
+///   - 'maximal_permuted_vonorms': The maximal vonorm tuple for this S4 group
+///   - 'transition_matrices': List of transition matrices for this group
+#[pyfunction]
+fn get_s4_maximal_representatives_rust<'py>(
+    py: Python<'py>,
+    vonorms: PyReadonlyArray1<f64>,
+) -> PyResult<Py<pyo3::PyAny>> {
+    use crate::permutations::{compute_conorms, find_zero_indices_exact, get_s4_representatives};
+    use pyo3::types::{PyDict, PyList};
+
+    let vonorms_arr = vonorms.as_array();
+
+    if vonorms_arr.len() != 7 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "vonorms must have exactly 7 elements"
+        ));
+    }
+
+    let mut vonorms_fixed = [0.0; 7];
+    for (i, &v) in vonorms_arr.iter().enumerate() {
+        vonorms_fixed[i] = v;
+    }
+
+    // Compute conorms and zero indices
+    let conorms = compute_conorms(&vonorms_fixed);
+    let zero_indices = find_zero_indices_exact(&conorms);
+
+    // Get S4 representatives
+    let s4_reps = get_s4_representatives(&vonorms_fixed, &zero_indices);
+
+    // Convert to Python list of dicts
+    let result_list = PyList::empty_bound(py);
+
+    for rep in s4_reps {
+        let dict = PyDict::new_bound(py);
+
+        // Add S4 key (sorted first 4 permutation indices)
+        let s4_key_tuple = PyList::empty_bound(py);
+        for &idx in &rep.s4_key {
+            s4_key_tuple.append(idx)?;
+        }
+        dict.set_item("s4_key", s4_key_tuple)?;
+
+        // Add maximal permuted vonorms as tuple
+        let vonorms_tuple = PyList::empty_bound(py);
+        for &v in &rep.permuted_vonorms {
+            vonorms_tuple.append(v)?;
+        }
+        dict.set_item("maximal_permuted_vonorms", vonorms_tuple)?;
+
+        // Add transition matrices as list of 3x3 matrices
+        let mats_list = PyList::empty_bound(py);
+        for mat in rep.transition_mats {
+            let py_mat = PyList::empty_bound(py);
+            for row in mat {
+                let py_row = PyList::empty_bound(py);
+                for &val in &row {
+                    py_row.append(val)?;
+                }
+                py_mat.append(py_row)?;
+            }
+            mats_list.append(py_mat)?;
+        }
+        dict.set_item("transition_matrices", mats_list)?;
+
+        result_list.append(dict)?;
+    }
+
+    Ok(result_list.into())
+}
+
 #[pymodule]
 fn rust_cnf(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(hello_rust, m)?)?;
@@ -803,5 +993,7 @@ fn rust_cnf(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(build_mnf_batch_rust, m)?)?;
     m.add_function(wrap_pyfunction!(compute_step_data_raw_rust, m)?)?;
     m.add_function(wrap_pyfunction!(build_cnfs_from_step_data_rust, m)?)?;
+    m.add_function(wrap_pyfunction!(canonicalize_cnfs_batch_rust, m)?)?;
+    m.add_function(wrap_pyfunction!(get_s4_maximal_representatives_rust, m)?)?;
     Ok(())
 }
