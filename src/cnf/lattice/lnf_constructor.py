@@ -15,7 +15,7 @@ from .permutations import ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS, CONOR
 from ..utils.prof import maybe_profile
 
 @maybe_profile
-def build_lnf_raw(vonorms_tuple, xi):
+def build_lnf_raw(vonorms_tuple, xi, discretized=True):
     """
     Fast LNF construction for discretized vonorms.
 
@@ -29,12 +29,15 @@ def build_lnf_raw(vonorms_tuple, xi):
     Args:
         vonorms_tuple: tuple or array of 7 vonorm values (already discretized)
         xi: lattice step size
+        discretized: if True, returns integer vonorms; if False, returns float vonorms
 
     Returns:
         tuple: (canonical_vonorms_tuple, selling_transform_matrix, sorting_perm_matrices)
     """
 
-    vonorms = np.array(vonorms_tuple, dtype=float)
+    # Use appropriate dtype based on whether vonorms are discretized
+    dtype = int if discretized else float
+    vonorms = np.array(vonorms_tuple, dtype=dtype)
 
     # Step 1: Fast Selling reduction for discretized vonorms
     # Work directly with arrays and use exact arithmetic
@@ -51,7 +54,7 @@ def build_lnf_raw(vonorms_tuple, xi):
         reducer = VonormListSellingReducer(tol=0, verbose_logging=False)
         vonorm_list_obj = VonormList(vonorms)
         reduction_result = reducer.reduce(vonorm_list_obj)
-        vonorms_reduced = np.array(reduction_result.reduced_object.vonorms)
+        vonorms_reduced = np.array(reduction_result.reduced_object.vonorms, dtype=dtype)
         selling_transform = reduction_result.transform_matrix
 
     # Step 2: Compute conorms directly using exact arithmetic
