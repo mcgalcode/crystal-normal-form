@@ -876,11 +876,16 @@ fn canonicalize_cnfs_batch_rust<'py>(
             delta as f64,
         );
 
-        // Return canonical data
-        result_list.append((
-            canonical_vonorms.to_vec(),
-            canonical_coords,
-        ))?;
+        // Return canonical data as tuples (not lists) with integer conversion
+        // This avoids Python-side conversion overhead
+        use pyo3::types::PyTuple;
+        let vonorms_ints: Vec<i32> = canonical_vonorms[..7].iter().map(|&v| v.round() as i32).collect();
+        let coords_ints: Vec<i32> = canonical_coords.iter().map(|&c| c.round() as i32).collect();
+
+        let vonorms_tuple = PyTuple::new_bound(py, &vonorms_ints);
+        let coords_tuple = PyTuple::new_bound(py, &coords_ints);
+
+        result_list.append((vonorms_tuple, coords_tuple))?;
     }
 
     Ok(result_list.into())
@@ -1081,14 +1086,13 @@ fn find_and_canonicalize_motif_neighbors<'py>(
         delta,
     );
 
-    // Convert results to Python list of lists
+    // Convert results to Python list of tuples (not lists)
+    // This avoids Python-side conversion overhead
+    use pyo3::types::PyTuple;
     let py_results = PyList::empty_bound(py);
     for result in results {
-        let py_coords = PyList::empty_bound(py);
-        for coord in result {
-            py_coords.append(coord)?;
-        }
-        py_results.append(py_coords)?;
+        let coords_tuple = PyTuple::new_bound(py, &result);
+        py_results.append(coords_tuple)?;
     }
 
     Ok(py_results.unbind())

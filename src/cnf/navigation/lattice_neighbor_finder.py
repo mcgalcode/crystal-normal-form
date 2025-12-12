@@ -149,19 +149,11 @@ class LatticeNeighborFinder():
         delta = int(self.point.delta)
 
         # Single Rust call that does: step generation, validation, and canonicalization
-        canonical_results = rust_cnf.find_and_canonicalize_lattice_neighbors(
+        # Returns list of (vonorms_tuple, coords_tuple) - already as tuples with ints
+        return rust_cnf.find_and_canonicalize_lattice_neighbors(
             current_stabilizers_flat, input_vonorms, motif_coords_flat,
             n_atoms, motif_delta, atoms, xi, delta
         )
-
-        # Convert to tuples (avoid constructing objects yet)
-        results = []
-        for canonical_vonorms_list, canonical_coords_list in canonical_results:
-            vonorms_tuple = tuple([int(v) for v in canonical_vonorms_list[:7]])
-            coords_tuple = tuple([int(c) for c in canonical_coords_list])
-            results.append((vonorms_tuple, coords_tuple))
-
-        return results
 
     def _find_neighbor_tuples_python(self) -> list[tuple]:
         """Python implementation - returns tuples without constructing CNF objects."""

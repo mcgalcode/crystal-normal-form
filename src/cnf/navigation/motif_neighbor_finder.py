@@ -38,7 +38,7 @@ class MotifNeighborFinder():
         self_stabs = self.point.lattice_normal_form.vonorms.stabilizer_matrices_fast()
         stabilizers_flat = np.array([s.matrix for s in self_stabs]).astype(np.int32).flatten()
 
-        # Call Rust function
+        # Call Rust function - returns coords as tuples already
         canonical_coords_list = rust_cnf.find_and_canonicalize_motif_neighbors(
             motif_coords,
             atoms,
@@ -46,14 +46,9 @@ class MotifNeighborFinder():
             delta
         )
 
-        # Convert to tuples with vonorms
+        # Pair with vonorms tuple
         vonorms_tuple = self.point.lattice_normal_form.vonorms.tuple
-        results = []
-        for coords in canonical_coords_list:
-            coords_tuple = tuple(coords)
-            results.append((vonorms_tuple, coords_tuple))
-
-        return results
+        return [(vonorms_tuple, coords_tuple) for coords_tuple in canonical_coords_list]
 
     def find_neighbor_tuples(self):
         """
