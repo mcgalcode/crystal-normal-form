@@ -6,14 +6,15 @@ from cnf import CrystalNormalForm
 from cnf.cnf_constructor import CNFConstructor
 from cnf.lattice.lnf_constructor import VonormCanonicalizer, LatticeNormalForm
 from cnf.navigation.neighbor_finder import NeighborFinder
+from cnf.navigation.motif_neighbor_finder import MotifNeighborFinder
+from cnf.navigation.lattice_neighbor_finder import LatticeNeighborFinder
 from pymatgen.core.structure import Structure
 from cnf.unit_cell import UnitCell
+from cnf.linalg import MatrixTuple
 
 
 @helpers.parameterized_by_mp_structs
 def test_neighbors_are_unique(idx, struct: Structure):
-    verbose = False
-    save_pairs = False
     xi = 1.5
     delta = 20
 
@@ -26,22 +27,14 @@ def test_neighbors_are_unique(idx, struct: Structure):
         del os.environ['USE_RUST']
     nf = NeighborFinder(original_cnf)
     py_nbs = nf.find_neighbors()
-    py_unique_nbs = set(py_nbs)
 
-    os.environ['USE_RUST'] = "1"
-    constructor = CNFConstructor(xi, delta, False)
-    nf = NeighborFinder(original_cnf)
-    rust_nbs = nf.find_neighbors()
-    rust_unique_nbs = set(rust_nbs)
+    import rust_cnf
 
-    # Debug output
-    print(f"\nPython: {len(py_nbs)} total, {len(py_unique_nbs)} unique")
-    print(f"Rust: {len(rust_nbs)} total, {len(rust_unique_nbs)} unique")
-    print(f"Python only: {len(py_unique_nbs - rust_unique_nbs)}")
-    print(f"Rust only: {len(rust_unique_nbs - py_unique_nbs)}")
-    print(f"Common: {len(py_unique_nbs & rust_unique_nbs)}")
+    for nb in py_nbs:
+        py_stab = nb.lattice_normal_form.vonorms.stabilizer_matrices_fast()
 
-    assert py_unique_nbs == rust_unique_nbs
-    assert len(rust_nbs) == len(py_nbs)
-
-    os.environ['USE_RUST'] = str(before)
+        rust_stab = rust_cnf.find_stabilizers_rust(np.array(nb.lattice_normal_form.vonorms.vonorms, dtype=np.float64))
+        rust_stab = [MatrixTuple(s) for s in rust_stab]
+        assert len(py_stab) >= 1
+        assert set(py_stab) == set(rust_stab)
+        
