@@ -623,60 +623,38 @@ pub fn combine_middle_and_s2_stabilizers(
     result_vec
 }
 
-/// Check if vonorms have valid conorms (all non-negative)
+/// Check if vonorms have valid conorms
 /// Matches Python's VonormList.has_valid_conorms_exact()
+/// Python checks if zero_idxs are in ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS
 pub fn has_valid_conorms_exact(vonorms: &[f64; 7]) -> bool {
-    let conorms = compute_conorms(vonorms);
+    use crate::permutations::{compute_conorms, find_zero_indices_exact, PERMUTATIONS};
 
-    // All conorms must be >= 0
-    conorms.iter().all(|&c| c >= 0.0)
+    let conorms = compute_conorms(vonorms);
+    let zero_indices = find_zero_indices_exact(&conorms);
+
+    // Check if zero_indices is in the valid sets (matching Python's ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS)
+    PERMUTATIONS.zero_to_s4_groups.contains_key(&zero_indices)
 }
 
 /// Check if vonorms represent an obtuse superbasis
 /// Matches Python's VonormList.is_obtuse()
+/// Python: raw_conorms = (1/2) * VONORM_TO_DOT_PRODUCTS @ vonorms[:6]
+///         return all(c <= 0 for c in raw_conorms)
 pub fn is_obtuse(vonorms: &[f64; 7]) -> bool {
-    // Primary vonorms (first 4) must all be non-negative
-    vonorms[0..4].iter().all(|&v| v >= 0.0)
+    let conorms = compute_conorms(vonorms);
+    conorms.iter().all(|&c| c <= 0.0)
 }
 
-/// Check if vonorms represent a valid superbasis (determinant = 1)
+/// Check if vonorms represent a valid superbasis
 /// Matches Python's VonormList.is_superbasis_exact()
+/// Python implementation: return self.primary_sum() == self.secondary_sum()
 pub fn is_superbasis_exact(vonorms: &[f64; 7]) -> bool {
-    // Reconstruct the basis vectors from vonorms
-    // Using the Selling parameters: v0, v1, v2, v3 where v0+v1+v2+v3 = 0
-    // Primary vonorms are: v0·v0, v1·v1, v2·v2, v3·v3
-    // Secondary vonorms are: v0·v1, v0·v2, v0·v3
+    // Sum of primary vonorms (indices 0-3)
+    let primary_sum: f64 = vonorms[0..4].iter().sum();
 
-    // For a valid superbasis, the determinant of [v1-v0, v2-v0, v3-v0] must be ±1
-    // This can be computed from the vonorms
+    // Sum of secondary vonorms (indices 4-6)
+    let secondary_sum: f64 = vonorms[4..7].iter().sum();
 
-    // Simplified check: if conorms are all integers and vonorms satisfy the constraints,
-    // then it's a valid superbasis
-    let conorms = compute_conorms(vonorms);
-
-    // All conorms must be non-negative integers (within floating point tolerance)
-    let tol = 1e-8;
-    for &c in &conorms {
-        if c < -tol {
-            return false;
-        }
-        // Check if it's close to an integer
-        let rounded = c.round();
-        if (c - rounded).abs() > tol {
-            return false;
-        }
-    }
-
-    // All primary vonorms must be positive integers
-    for &v in &vonorms[0..4] {
-        if v < tol {
-            return false;
-        }
-        let rounded = v.round();
-        if (v - rounded).abs() > tol {
-            return false;
-        }
-    }
-
-    true
+    // Check if they're equal (within floating point tolerance)
+    (primary_sum - secondary_sum).abs() < 1e-8
 }

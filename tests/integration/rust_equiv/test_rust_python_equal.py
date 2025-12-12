@@ -52,6 +52,8 @@ def test_neighbors_are_unique(idx, struct: Structure):
     py_only = list(py_unique_nbs - rust_unique_nbs)[:3]  # Check first 3
     rust_only = list(rust_unique_nbs - py_unique_nbs)[:3]
 
+    import rust_cnf
+
     print("\nPython-only neighbors:")
     for cnf in py_only:
         vonorms = cnf.lattice_normal_form.vonorms
@@ -59,7 +61,6 @@ def test_neighbors_are_unique(idx, struct: Structure):
         py_stabs = vonorms.stabilizer_matrices_fast()
 
         # Compute Rust stabilizers
-        import rust_cnf
         rust_stabs_flat = rust_cnf.find_stabilizers_rust(np.array(vonorms.vonorms, dtype=np.float64))
         n_rust = len(rust_stabs_flat)  # Returns list of matrices, not flat array
 

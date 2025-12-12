@@ -35,15 +35,8 @@ def test_basis_neighbs_neighbors_are_close(idx, struct: Structure):
     constructor = CNFConstructor(xi, delta, False) 
 
     original_cnf = constructor.from_pymatgen_structure(struct).cnf
-    # helpers.printif(f"Original CNF: {original_cnf.coords}", verbose)
     neigb_set = MotifNeighborFinder(original_cnf).find_motif_neighbors()
-    for n in neigb_set:
-        # helpers.printif(f"Neighbor CNF: {n.point.coords}", verbose)
+    for n in neigb_set.neighbors:
         pdd = helpers.assertions.pdd_for_cnfs(n.point, original_cnf, k=100)
-        # print(pdd)
-        # cond = 
-        # if not cond:
-        #     n.point.to_file("cnf1.json")
-        #     original_cnf.to_file("cnf2.json")
         exact_geo_matches, reason = helpers.are_cnfs_geo_matches(n.point, original_cnf)
         assert pdd < (xi / 2) and not exact_geo_matches, reason

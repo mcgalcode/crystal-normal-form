@@ -85,15 +85,8 @@ class LatticeNeighborFinder():
 
         # Python fallback
         return self._find_cnf_neighbors_fast_python()
-
-    def _find_cnf_neighbors_fast_rust(self) -> list:
-        """Rust implementation of CNF neighbor finding with batch canonicalization."""
-        import rust_cnf
-
-        # Get step data from Rust (unvalidated)
-        step_data = self._compute_step_data_raw_rust()
-
-        # Validate steps (matching Python behavior at lines 147-151)
+    
+    def validate_step_data(self, step_data):
         validated_steps = []
         for step_vec, vonorms_tuple, motif_coords, matrix in step_data:
             vonorms = VonormList(vonorms_tuple)
@@ -105,27 +98,38 @@ class LatticeNeighborFinder():
                 continue
 
             validated_steps.append((step_vec, vonorms_tuple, motif_coords, matrix))
+        return validated_steps
 
-        # Convert atoms to list of Python strings (in case they're numpy strings)
+    def _find_cnf_neighbors_fast_rust(self) -> list:
+        """Rust implementation of CNF neighbor finding with complete pipeline in Rust."""
+        import rust_cnf
+
+        # Prepare all inputs for combined Rust function
+        vonorms = self._lnf().vonorms
+        current_stabilizer = self.point.lattice_normal_form.vonorms.stabilizer_matrices_fast()
+        current_stabilizers_flat = np.array([s.matrix for s in current_stabilizer]).astype(np.int32).flatten()
+
+        input_vonorms = np.array(vonorms.vonorms, dtype=np.float64)
+        motif_coord_matrix = self.discretized_motif.coord_matrix
+        motif_coords_flat = np.ascontiguousarray(motif_coord_matrix.flatten(), dtype=np.float64)
+        n_atoms = len(self.discretized_motif.atoms)
+        motif_delta = self.discretized_motif._mod
+
         atoms = [str(atom) for atom in self.discretized_motif.atoms]
-
-        # Ensure xi and delta are Python scalars, not numpy types
         xi = float(self.point.xi)
         delta = int(self.point.delta)
 
-        # Batch canonicalize all CNFs in Rust (avoids Python/Rust boundary crossings)
-        canonical_results = rust_cnf.canonicalize_cnfs_batch_rust(
-            validated_steps,
-            atoms,
-            xi,
-            delta
+        # Single Rust call that does: step generation, validation, and canonicalization
+        canonical_results = rust_cnf.find_and_canonicalize_lattice_neighbors(
+            current_stabilizers_flat, input_vonorms, motif_coords_flat,
+            n_atoms, motif_delta, atoms, xi, delta
         )
 
         # Convert canonical results to Python CNF objects
         results = []
         for canonical_vonorms_list, canonical_coords_list in canonical_results:
             # Data from Rust is already canonical - just wrap in Python objects
-            vonorms = VonormList(tuple([int(v) for v in canonical_vonorms_list[:7]]))  # Use first 6 elements
+            vonorms = VonormList(tuple([int(v) for v in canonical_vonorms_list[:7]]))
             lnf = LatticeNormalForm(vonorms, xi)
 
             # Create MNF from canonical coords
