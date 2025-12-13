@@ -40,7 +40,7 @@ def test_permuted_vonorm_stabilizers_equal(idx, struct: Structure):
         assert rust_group is not None, f"Couldn't find Rust group for S4 key {s4_key}"
 
         # Get permuted vonorms
-        py_permuted_vonorms = py_data['maximal_permuted_list']
+        py_permuted_vonorms = py_data['permuted_vonorms']
         rust_permuted_vonorms_arr = np.array(rust_group['maximal_permuted_vonorms'])
 
         # Verify the permuted vonorms themselves match

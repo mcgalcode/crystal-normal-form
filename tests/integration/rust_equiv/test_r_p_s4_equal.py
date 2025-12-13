@@ -58,7 +58,7 @@ def test_s4_groups_equal(idx, struct: Structure):
 
             assert rust_group is not None, f"Couldn't find Rust group for S4 key {group_key}"
 
-            maximal_list = group_data['maximal_permuted_list']
+            maximal_list = group_data['permuted_vonorms']
             vonorms_tuple = tuple(maximal_list.vonorms)
 
             # Compare transition matrices

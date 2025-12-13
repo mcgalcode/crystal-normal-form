@@ -5,7 +5,6 @@ import os
 from cnf.cnf_constructor import CNFConstructor
 from cnf.navigation.lattice_neighbor_finder import LatticeNeighborFinder
 from cnf.lattice.voronoi import VonormList
-from cnf.motif.atomic_motif import DiscretizedMotif
 from pymatgen.core.structure import Structure
 
 
@@ -43,41 +42,37 @@ def test_batch_canonicalize_equals_individual(idx, struct: Structure):
 
     print(f"\nStructure {idx}: {len(validated_steps)} validated steps")
 
-    # Python: canonicalize each individually
+    # Python: canonicalize each individually using canonicalize_tuple
     py_constructor = CNFConstructor(xi, delta, verbose_logging=False)
     py_results = []
+    atoms = lnf._get_atoms_list()
+    atoms_str = [str(atom) for atom in atoms]
 
     for step_vec, vonorms_tuple, motif_coords, matrix in validated_steps:
-        vonorms = VonormList(vonorms_tuple)
-        motif = DiscretizedMotif.from_elements_and_positions(
-            lnf.discretized_motif.atoms,
-            motif_coords.reshape(-1, 3),
-            delta=delta
-        )
-
-        cnf_result = py_constructor._from_vonorms_and_motif_impl(vonorms, motif, use_rust=False)
-        py_results.append((
-            tuple(cnf_result.cnf.lattice_normal_form.vonorms.vonorms),
-            cnf_result.cnf.motif_normal_form.coord_list
-        ))
+        coords_tuple = tuple(motif_coords.flatten())
+        cnf_tuple = (vonorms_tuple, coords_tuple)
+        canonical_tuple = py_constructor.canonicalize_tuple(cnf_tuple, atoms_str)
+        py_results.append(canonical_tuple)
 
     # Rust: batch canonicalize
     import rust_cnf
-    atoms = [str(atom) for atom in lnf.discretized_motif.atoms]
 
-    # Convert validated_steps to ensure proper types (motif_coords should be numpy arrays)
+    # Convert validated_steps to ensure proper types for Rust
+    # Note: Rust expects coords to INCLUDE origin atom at (0,0,0)
     validated_steps_converted = []
     for step_vec, vonorms_tuple, motif_coords, matrix in validated_steps:
+        # Prepend origin atom at (0, 0, 0) to coords
+        coords_with_origin = np.vstack([np.array([[0, 0, 0]]), motif_coords])
         validated_steps_converted.append((
             step_vec,
-            vonorms_tuple,
-            np.ascontiguousarray(motif_coords, dtype=np.float64),
-            matrix
+            list(vonorms_tuple),  # Convert tuple to list for Rust
+            np.ascontiguousarray(coords_with_origin.flatten(), dtype=np.float64),  # Flatten to 1D with origin
+            matrix.flatten().tolist()  # Convert matrix to list
         ))
 
     canonical_results = rust_cnf.canonicalize_cnfs_batch_rust(
         validated_steps_converted,
-        atoms,
+        atoms_str,
         float(xi),
         int(delta)
     )
