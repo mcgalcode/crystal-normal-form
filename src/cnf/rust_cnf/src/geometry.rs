@@ -209,20 +209,19 @@ pub fn compute_pairwise_distances_pbc_with_inv(
             let diff_z = positions[j * 3 + 2] - positions[i * 3 + 2];
 
             // Convert to fractional coordinates
-            let frac_x = inv_lattice[0][0] * diff_x + inv_lattice[0][1] * diff_y + inv_lattice[0][2] * diff_z;
-            let frac_y = inv_lattice[1][0] * diff_x + inv_lattice[1][1] * diff_y + inv_lattice[1][2] * diff_z;
-            let frac_z = inv_lattice[2][0] * diff_x + inv_lattice[2][1] * diff_y + inv_lattice[2][2] * diff_z;
+            let mut frac_x = inv_lattice[0][0] * diff_x + inv_lattice[0][1] * diff_y + inv_lattice[0][2] * diff_z;
+            let mut frac_y = inv_lattice[1][0] * diff_x + inv_lattice[1][1] * diff_y + inv_lattice[1][2] * diff_z;
+            let mut frac_z = inv_lattice[2][0] * diff_x + inv_lattice[2][1] * diff_y + inv_lattice[2][2] * diff_z;
+
+            // Handle edge case: when frac is very close to ±0.5, nudge it slightly
+            // This ensures consistent wrapping behavior with Python when roundoff differs
+            let epsilon = 1e-14;
+            if (frac_x.abs() - 0.5).abs() < epsilon { frac_x += epsilon.copysign(frac_x); }
+            if (frac_y.abs() - 0.5).abs() < epsilon { frac_y += epsilon.copysign(frac_y); }
+            if (frac_z.abs() - 0.5).abs() < epsilon { frac_z += epsilon.copysign(frac_z); }
 
             // Apply minimum image convention: wrap to (-0.5, 0.5]
-            // NumPy's behavior: for values very close to ±0.5, floating point errors can cause
-            // inconsistent rounding. We need to match NumPy's actual behavior, not the theoretical one.
-            //
-            // The issue: Due to floating point arithmetic, a coordinate that should theoretically be
-            // exactly 0.5 might be 0.5+ε or 0.5-ε. NumPy's round() will round 0.5+ε to 1.0 (not using
-            // banker's rounding since it's not exactly 0.5), giving wrapped = (0.5+ε) - 1.0 = -0.5+ε
-            //
-            // Strategy: Use regular rounding (not banker's rounding) to match NumPy's behavior
-            // for values that aren't exactly 0.5
+            // Use regular rounding to match NumPy's behavior for non-exact-0.5 values
             let wrapped_x = frac_x - frac_x.round();
             let wrapped_y = frac_y - frac_y.round();
             let wrapped_z = frac_z - frac_z.round();

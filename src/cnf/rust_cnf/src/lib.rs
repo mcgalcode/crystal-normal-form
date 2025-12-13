@@ -664,11 +664,12 @@ pub(crate) fn compute_step_data_raw_internal(
     }
 
     // Deduplicate by (vonorms, coords)
+    // Note: coords should already be integers (from modulo operation), so just round them
     let mut unique_steps: HashMap<(Vec<i32>, Vec<i32>), (Vec<i32>, Vec<f64>, Vec<f64>, Vec<i32>)> = HashMap::new();
 
     for (step_vec, vonorms, coords, mat) in all_step_data {
         let vonorms_key: Vec<i32> = vonorms.iter().map(|&v| v.round() as i32).collect();
-        let coords_key: Vec<i32> = coords.iter().map(|&v| (v * 1000.0).round() as i32).collect();
+        let coords_key: Vec<i32> = coords.iter().map(|&v| v.round() as i32).collect();
 
         let key = (vonorms_key, coords_key);
         unique_steps.entry(key).or_insert((step_vec, vonorms, coords, mat));
@@ -1185,6 +1186,182 @@ fn find_and_canonicalize_motif_neighbors<'py>(
     Ok(py_results.unbind())
 }
 
+#[pyfunction]
+fn reconstruct_structure_from_cnf<'py>(
+    _py: Python<'py>,
+    vonorms: PyReadonlyArray1<f64>,
+    coords: PyReadonlyArray1<i32>,
+    n_atoms: usize,
+    xi: f64,
+    delta: i32,
+) -> PyResult<(Vec<f64>, Vec<f64>)> {
+    use crate::geometry::{vonorms_to_lattice_matrix, coords_to_cartesian_positions};
+
+    // Convert vonorms to array
+    let vonorms_slice = vonorms.as_slice()?;
+    if vonorms_slice.len() != 7 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "vonorms must have exactly 7 elements"
+        ));
+    }
+    let mut vonorms_arr = [0.0; 7];
+    vonorms_arr.copy_from_slice(vonorms_slice);
+
+    // Convert coords to slice
+    let coords_slice = coords.as_slice()?;
+
+    // Reconstruct lattice matrix from vonorms
+    let lattice_matrix = vonorms_to_lattice_matrix(&vonorms_arr, xi);
+
+    // Reconstruct cartesian positions from coords
+    let cart_coords = coords_to_cartesian_positions(coords_slice, n_atoms, delta, &lattice_matrix);
+
+    // Flatten lattice matrix to return
+    let lattice_flat = vec![
+        lattice_matrix[0][0], lattice_matrix[0][1], lattice_matrix[0][2],
+        lattice_matrix[1][0], lattice_matrix[1][1], lattice_matrix[1][2],
+        lattice_matrix[2][0], lattice_matrix[2][1], lattice_matrix[2][2],
+    ];
+
+    Ok((lattice_flat, cart_coords))
+}
+
+#[pyfunction]
+fn compute_pairwise_distances_pbc_rust<'py>(
+    _py: Python<'py>,
+    positions: PyReadonlyArray1<f64>,
+    n_atoms: usize,
+    lattice_flat: PyReadonlyArray1<f64>,
+) -> PyResult<Vec<f64>> {
+    use crate::geometry::compute_pairwise_distances_pbc;
+
+    // Convert inputs to slices
+    let positions_slice = positions.as_slice()?;
+    let lattice_slice = lattice_flat.as_slice()?;
+
+    // Validate input sizes
+    if lattice_slice.len() != 9 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "lattice_flat must have exactly 9 elements"
+        ));
+    }
+    if positions_slice.len() != n_atoms * 3 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            format!("positions must have {} elements (n_atoms * 3)", n_atoms * 3)
+        ));
+    }
+
+    // Convert flattened array to 3x3 matrix
+    let lattice_matrix = [
+        [lattice_slice[0], lattice_slice[1], lattice_slice[2]],
+        [lattice_slice[3], lattice_slice[4], lattice_slice[5]],
+        [lattice_slice[6], lattice_slice[7], lattice_slice[8]],
+    ];
+
+    // Compute pairwise distances (Rust will compute the inverse internally)
+    let distances = compute_pairwise_distances_pbc(
+        positions_slice,
+        n_atoms,
+        &lattice_matrix,
+    );
+
+    Ok(distances)
+}
+
+/// A* pathfinding from multiple start CNFs to multiple goal CNFs (pure Rust implementation)
+///
+/// Args:
+///     start_points: List of (vonorms, coords) tuples for starting CNFs
+///     goal_points: List of (vonorms, coords) tuples for goal CNFs
+///     elements: List of element symbols for all atoms (including origin)
+///     n_atoms: Number of atoms (including origin)
+///     xi: Lattice step size
+///     delta: Integer discretization factor
+///     min_distance: Minimum allowed pairwise distance for filtering (e.g., 1.4 Angstroms)
+///     max_iterations: Maximum iterations (0 for unlimited)
+///     verbose: Print progress every 100 iterations
+///
+/// Returns:
+///     List of (vonorms, coords) tuples representing the path, or None if no path found
+#[pyfunction]
+fn astar_pathfind_rust<'py>(
+    _py: Python<'py>,
+    start_points: Vec<(Vec<i32>, Vec<i32>)>,
+    goal_points: Vec<(Vec<i32>, Vec<i32>)>,
+    elements: Vec<String>,
+    n_atoms: usize,
+    xi: f64,
+    delta: i32,
+    min_distance: f64,
+    max_iterations: usize,
+    verbose: bool,
+) -> PyResult<Option<Vec<(Vec<i32>, Vec<i32>)>>> {
+    use crate::pathfinding::astar_pathfind;
+
+    // Validate inputs
+    if start_points.is_empty() {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "start_points cannot be empty"
+        ));
+    }
+    if goal_points.is_empty() {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "goal_points cannot be empty"
+        ));
+    }
+
+    let expected_coords_len = (n_atoms - 1) * 3;
+
+    // Validate all start points
+    for (i, (vonorms, coords)) in start_points.iter().enumerate() {
+        if vonorms.len() != 7 {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                format!("start_points[{}] vonorms must have exactly 7 elements", i)
+            ));
+        }
+        if coords.len() != expected_coords_len {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                format!("start_points[{}] coords must have {} elements ((n_atoms-1) * 3)", i, expected_coords_len)
+            ));
+        }
+    }
+
+    // Validate all goal points
+    for (i, (vonorms, coords)) in goal_points.iter().enumerate() {
+        if vonorms.len() != 7 {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                format!("goal_points[{}] vonorms must have exactly 7 elements", i)
+            ));
+        }
+        if coords.len() != expected_coords_len {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                format!("goal_points[{}] coords must have {} elements ((n_atoms-1) * 3)", i, expected_coords_len)
+            ));
+        }
+    }
+
+    if elements.len() != n_atoms {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            format!("elements must have {} elements (n_atoms)", n_atoms)
+        ));
+    }
+
+    // Call the Rust pathfinding function
+    let result = astar_pathfind(
+        &start_points,
+        &goal_points,
+        &elements,
+        n_atoms,
+        xi,
+        delta,
+        min_distance,
+        max_iterations,
+        verbose,
+    );
+
+    Ok(result)
+}
+
 #[pymodule]
 fn rust_cnf(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(hello_rust, m)?)?;
@@ -1206,5 +1383,8 @@ fn rust_cnf(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(validate_step_data_rust, m)?)?;
     m.add_function(wrap_pyfunction!(find_and_canonicalize_motif_neighbors, m)?)?;
     m.add_function(wrap_pyfunction!(find_neighbor_tuples_rust, m)?)?;
+    m.add_function(wrap_pyfunction!(reconstruct_structure_from_cnf, m)?)?;
+    m.add_function(wrap_pyfunction!(compute_pairwise_distances_pbc_rust, m)?)?;
+    m.add_function(wrap_pyfunction!(astar_pathfind_rust, m)?)?;
     Ok(())
 }
