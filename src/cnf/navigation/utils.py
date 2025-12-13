@@ -1,9 +1,7 @@
-from pymatgen.core.structure import Structure
+import numpy as np
 from pymatgen.core import Structure
 from typing import List, Tuple
-from cnf import UnitCell
-
-from pymatgen.core.structure import Structure
+from cnf import UnitCell, CrystalNormalForm
 
 def get_endpoints_from_pmg_structs(struct1: Structure, struct2: Structure):
     uc1 = UnitCell.from_pymatgen_structure(struct1)
@@ -113,3 +111,54 @@ def find_overlapping_atoms(
             if are_atoms_overlapping(structure, i, j, tolerance):
                 overlapping_pairs.append((i, j))
     return overlapping_pairs
+
+def compute_pairwise_distance_matrix(cnf: CrystalNormalForm):
+    return compute_pairwise_distances(cnf.reconstruct())
+
+def compute_pairwise_distances(structure: Structure) -> np.ndarray:
+    """
+    Compute pairwise distances between all atoms in a pymatgen structure
+    using periodic boundary conditions (minimum image convention).
+    a
+    Args:
+        structure: A pymatgen Structure object
+    
+    Returns:
+        A symmetric NxN distance matrix where N is the number of atoms,
+        with distances in Angstroms
+    """
+    n_atoms = len(structure)
+    distance_matrix = np.zeros((n_atoms, n_atoms))
+    
+    # Get lattice matrix and its inverse for PBC calculations
+    lattice_matrix = structure.lattice.matrix
+    inv_lattice = np.linalg.inv(lattice_matrix)
+    
+    # Compute distances with minimum image convention
+    for i in range(n_atoms):
+        for j in range(i + 1, n_atoms):
+            # Vector from atom i to atom j
+            diff = structure.cart_coords[j] - structure.cart_coords[i]
+
+            # Convert to fractional coordinates
+            frac_diff = inv_lattice @ diff
+
+            # Apply minimum image convention: wrap to [-0.5, 0.5]
+            frac_diff = frac_diff - np.round(frac_diff)
+            
+            # Convert back to Cartesian
+            min_image_diff = lattice_matrix @ frac_diff
+            
+            # Compute distance
+            distance = np.linalg.norm(min_image_diff)
+            distance_matrix[i, j] = distance
+            distance_matrix[j, i] = distance
+    
+    return distance_matrix
+
+def no_atoms_closer_than(pt: CrystalNormalForm, min_dist: float):
+    distances = compute_pairwise_distances(pt.reconstruct())
+    # Get non-diagonal elements (distances between different atoms)
+    non_diag_distances = distances[np.triu_indices_from(distances, k=1)]
+    # Keep neighbors where all non-diagonal distances are > 1.4
+    return (non_diag_distances > min_dist).all()
