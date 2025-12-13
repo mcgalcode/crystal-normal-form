@@ -64,17 +64,13 @@ class LatticeNeighborFinder():
 
     def find_neighbor_tuples(self) -> list[tuple]:
         """
-        Find neighbor tuples without constructing CNF objects.
+        Find lattice neighbor tuples without constructing CNF objects.
 
         Returns list of (vonorms_tuple, coords_tuple) for each neighbor.
         This is faster than find_cnf_neighbors() when you don't need full objects.
+
+        Note: Always uses Python implementation. For pure Rust, use NeighborFinder directly.
         """
-        import os
-
-        use_rust = os.getenv("USE_RUST") is not None
-        if use_rust:
-            return self._find_neighbor_tuples_rust()
-
         return self._find_neighbor_tuples_python()
 
     def tuples_to_cnf_neighbors(self, neighbor_tuples: list[tuple]) -> list[CrystalNormalForm]:
@@ -187,7 +183,7 @@ class LatticeNeighborFinder():
         # Get motif data using helper (Python doesn't need origin)
         motif_coord_matrix, _, motif_delta = self._extract_coord_matrix_from_mnf(include_origin=False)
 
-        for _, data in vonorms.s4_equivalence_class_representatives().items():
+        for _, data in vonorms.maximally_ascending_equivalence_class_members().items():
             permuted_vonorms = data['permuted_vonorms']
             transform_mats = data['transition_mats']
             # We launch the neighbor finding process from a single arbitrarily chosen
@@ -250,10 +246,8 @@ class LatticeNeighborFinder():
 
         vonorms = self.point.lattice_normal_form.vonorms
 
-        # Get motif data
-        motif_coord_matrix = self.discretized_motif.coord_matrix
-        n_atoms = len(self.discretized_motif.atoms)
-        motif_delta = self.discretized_motif._mod
+        # Get motif data using helper (Rust needs origin atom)
+        motif_coord_matrix, n_atoms, motif_delta = self._extract_coord_matrix_from_mnf(include_origin=True)
 
         # Prepare input vonorms - Rust will compute S4 groups and stabilizers internally
         input_vonorms = np.array(vonorms.vonorms, dtype=np.float64)
@@ -269,10 +263,13 @@ class LatticeNeighborFinder():
 
         # Convert result back to Python format
         # Result is list of (step_vec, vonorms_tuple, coords, matrix_flat)
+        # Note: coords from Rust include origin, need to remove it to match Python format
         python_result = []
         for step_vec, vonorms_list, coords_flat, mat_flat in result:
             vonorms_tuple = tuple([int(v) for v in vonorms_list])
-            coords = np.array(coords_flat).reshape(n_atoms, 3)
+            # Rust returns coords WITH origin, Python expects WITHOUT origin
+            coords_with_origin = np.array(coords_flat).reshape(n_atoms, 3)
+            coords = coords_with_origin[1:]  # Remove origin atom
             matrix = np.array(mat_flat, dtype=np.int32).reshape(3, 3)
             python_result.append((step_vec, vonorms_tuple, coords, matrix))
 

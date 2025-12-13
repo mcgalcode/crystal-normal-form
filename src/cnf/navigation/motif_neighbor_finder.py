@@ -1,5 +1,4 @@
 from cnf import CrystalNormalForm
-from cnf.cnf_constructor import should_use_rust
 from cnf.motif import MotifNormalForm
 from cnf.motif.mnf_constructor import MNFConstructor
 from cnf.lattice.lattice_normal_form import LatticeNormalForm
@@ -52,16 +51,13 @@ class MotifNeighborFinder():
 
     def find_neighbor_tuples(self):
         """
-        Find neighbor tuples without constructing CNF objects.
+        Find motif neighbor tuples without constructing CNF objects.
 
         Returns list of (vonorms_tuple, coords_tuple, affected_idxs, adj) for each neighbor.
         This is faster than find_motif_neighbors() when you don't need full objects.
-        """
-        import os
-        use_rust = os.getenv("USE_RUST") is not None
-        if use_rust:
-            return self._find_neighbor_tuples_rust()
 
+        Note: Always uses Python implementation. For pure Rust, use NeighborFinder directly.
+        """
         neighbor_mnf_tuples = []
         self_disc = self.point.motif_normal_form.to_discretized_motif()
         self_stabs = self.point.lattice_normal_form.vonorms.stabilizer_matrices_fast()
@@ -93,11 +89,9 @@ class MotifNeighborFinder():
         # Extract just the coordinate tuples for batch processing
         coords_list = [list(nb_mnf) for nb_mnf, _, _ in neighbor_mnf_tuples]
 
-        # Batch build MNFs
-        USE_RUST = should_use_rust()
-
+        # Batch build MNFs (always use Python in this path)
         mnf_constructor = MNFConstructor(self.point.delta, stabilizers)
-        mnf_coords_list = mnf_constructor.build_many_from_raw_coords(coords_list, atomic_numbers, use_rust=USE_RUST)
+        mnf_coords_list = mnf_constructor.build_many_from_raw_coords(coords_list, atomic_numbers, use_rust=False)
 
         # Return tuples with metadata
         results = []
