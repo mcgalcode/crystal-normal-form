@@ -173,68 +173,49 @@ fn invert_matrix_3x3_f64(m: &[[f64; 3]; 3]) -> [[f64; 3]; 3] {
 ///
 /// Returns:
 ///     Flattened upper-triangular distance matrix (n_choose_2 values)
+/// Compute pairwise distances with periodic boundary conditions
+///
+/// For each pair of atoms, checks all 27 periodic images to find the minimum distance.
+/// The 27 images come from: 3 directions (x,y,z) × 3 offsets per direction (-1,0,+1) = 3³ = 27
 pub fn compute_pairwise_distances_pbc(
     positions: &[f64],
     n_atoms: usize,
     lattice_matrix: &[[f64; 3]; 3],
 ) -> Vec<f64> {
-    compute_pairwise_distances_pbc_with_inv(positions, n_atoms, lattice_matrix, None)
-}
-
-/// Internal implementation that allows passing a pre-computed inverse
-pub fn compute_pairwise_distances_pbc_with_inv(
-    positions: &[f64],
-    n_atoms: usize,
-    lattice_matrix: &[[f64; 3]; 3],
-    inv_lattice_opt: Option<&[[f64; 3]; 3]>,
-) -> Vec<f64> {
-    let inv_lattice_computed;
-    let inv_lattice = match inv_lattice_opt {
-        Some(inv) => inv,
-        None => {
-            inv_lattice_computed = invert_matrix_3x3_f64(lattice_matrix);
-            &inv_lattice_computed
-        }
-    };
-
-    // We only need upper triangle (excluding diagonal)
     let n_pairs = (n_atoms * (n_atoms - 1)) / 2;
     let mut distances = Vec::with_capacity(n_pairs);
 
     for i in 0..n_atoms {
         for j in (i + 1)..n_atoms {
-            // Vector from atom i to atom j
-            let diff_x = positions[j * 3] - positions[i * 3];
-            let diff_y = positions[j * 3 + 1] - positions[i * 3 + 1];
-            let diff_z = positions[j * 3 + 2] - positions[i * 3 + 2];
+            let mut min_dist_sq = f64::MAX;
 
-            // Convert to fractional coordinates
-            let mut frac_x = inv_lattice[0][0] * diff_x + inv_lattice[0][1] * diff_y + inv_lattice[0][2] * diff_z;
-            let mut frac_y = inv_lattice[1][0] * diff_x + inv_lattice[1][1] * diff_y + inv_lattice[1][2] * diff_z;
-            let mut frac_z = inv_lattice[2][0] * diff_x + inv_lattice[2][1] * diff_y + inv_lattice[2][2] * diff_z;
+            // Check all 27 periodic images (-1, 0, +1 in each direction)
+            for dx in -1..=1 {
+                for dy in -1..=1 {
+                    for dz in -1..=1 {
+                        // Compute offset from lattice vectors (stored as rows)
+                        let offset_x = dx as f64 * lattice_matrix[0][0] +
+                                      dy as f64 * lattice_matrix[1][0] +
+                                      dz as f64 * lattice_matrix[2][0];
+                        let offset_y = dx as f64 * lattice_matrix[0][1] +
+                                      dy as f64 * lattice_matrix[1][1] +
+                                      dz as f64 * lattice_matrix[2][1];
+                        let offset_z = dx as f64 * lattice_matrix[0][2] +
+                                      dy as f64 * lattice_matrix[1][2] +
+                                      dz as f64 * lattice_matrix[2][2];
 
-            // Handle edge case: when frac is very close to ±0.5, nudge it slightly
-            // This ensures consistent wrapping behavior with Python when roundoff differs
-            let epsilon = 1e-14;
-            if (frac_x.abs() - 0.5).abs() < epsilon { frac_x += epsilon.copysign(frac_x); }
-            if (frac_y.abs() - 0.5).abs() < epsilon { frac_y += epsilon.copysign(frac_y); }
-            if (frac_z.abs() - 0.5).abs() < epsilon { frac_z += epsilon.copysign(frac_z); }
+                        // Compute distance with this periodic image
+                        let diff_x = positions[j * 3] + offset_x - positions[i * 3];
+                        let diff_y = positions[j * 3 + 1] + offset_y - positions[i * 3 + 1];
+                        let diff_z = positions[j * 3 + 2] + offset_z - positions[i * 3 + 2];
 
-            // Apply minimum image convention: wrap to (-0.5, 0.5]
-            // Use regular rounding to match NumPy's behavior for non-exact-0.5 values
-            let wrapped_x = frac_x - frac_x.round();
-            let wrapped_y = frac_y - frac_y.round();
-            let wrapped_z = frac_z - frac_z.round();
+                        let dist_sq = diff_x * diff_x + diff_y * diff_y + diff_z * diff_z;
+                        min_dist_sq = min_dist_sq.min(dist_sq);
+                    }
+                }
+            }
 
-            // Convert back to cartesian: lattice_matrix @ frac_vec
-            // lattice_matrix is stored as row vectors, so we do row · column
-            let min_diff_x = lattice_matrix[0][0] * wrapped_x + lattice_matrix[0][1] * wrapped_y + lattice_matrix[0][2] * wrapped_z;
-            let min_diff_y = lattice_matrix[1][0] * wrapped_x + lattice_matrix[1][1] * wrapped_y + lattice_matrix[1][2] * wrapped_z;
-            let min_diff_z = lattice_matrix[2][0] * wrapped_x + lattice_matrix[2][1] * wrapped_y + lattice_matrix[2][2] * wrapped_z;
-
-            // Compute distance
-            let distance = (min_diff_x * min_diff_x + min_diff_y * min_diff_y + min_diff_z * min_diff_z).sqrt();
-            distances.push(distance);
+            distances.push(min_dist_sq.sqrt());
         }
     }
 
@@ -246,7 +227,7 @@ pub fn compute_pairwise_distances_pbc_with_inv(
 /// For each neighbor:
 /// 1. Reconstruct lattice from vonorms
 /// 2. Reconstruct atom positions from coords
-/// 3. Compute pairwise distances with PBC
+/// 3. Compute pairwise distances with PBC (checking all 27 periodic images)
 /// 4. Check if all distances exceed threshold
 ///
 /// Args:
@@ -280,7 +261,7 @@ pub fn filter_neighbors_by_min_distance(
         // Reconstruct positions
         let positions = coords_to_cartesian_positions(coords_tuple, n_atoms, delta, &lattice_matrix);
 
-        // Compute pairwise distances
+        // Compute pairwise distances with PBC
         let distances = compute_pairwise_distances_pbc(&positions, n_atoms, &lattice_matrix);
 
         // Check if all distances exceed threshold
