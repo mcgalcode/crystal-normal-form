@@ -14,3 +14,9 @@ wheels/
 git
 .vscode
 .DS_Store
+
+src/cnf/rust_cnf/target
+src/cnf/rust_cnf/Cargo.lock
+
+.envrc
+literature

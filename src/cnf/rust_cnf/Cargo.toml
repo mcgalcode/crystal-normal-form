@@ -1,0 +1,21 @@
+[package]
+name = "rust_cnf"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "rust_cnf"
+crate-type = ["cdylib"]  # Creates a dynamic library for Python
+
+[dependencies]
+pyo3 = { version = "0.22", features = ["extension-module"] }
+numpy = "0.22"  # For numpy array integration
+ndarray = "0.16"  # Rust's numpy equivalent
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+lazy_static = "1.4"
+
+[profile.release]
+opt-level = 3
+lto = true  # Link-time optimization
+codegen-units = 1  # Better optimization

@@ -4,6 +4,7 @@ from ..swaps.sorting import swap_vonorm_idxs
 from .conorm_list import ConormList
 from ...linalg import MatrixTuple
 from ..permutations import apply_permutation, Permutation, ConormPermutation, VonormPermutation, PermutationMatrix, apply_permutation_np, ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS
+from ...utils.prof import maybe_profile
 
 # This matrix is found on page 48 of David's thesis
 VONORM_TO_DOT_PRODUCTS = np.array([
@@ -26,13 +27,23 @@ class VonormList():
         self.conorm_tol = conorm_tol
 
     def has_valid_conorms(self):
-        conorms = (1 / 2) * VONORM_TO_DOT_PRODUCTS @ self.vonorms[:6]
+        conorms = self.raw_conorms
         zero_idxs = tuple([idx for idx, cn in enumerate(conorms) if np.abs(cn) < self.conorm_tol])
+        return zero_idxs in ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS
+    
+    def has_valid_conorms_exact(self):
+        conorms = self.raw_conorms
+        zero_idxs = [idx for idx, cn in enumerate(conorms) if cn == 0]
+        zero_idxs = tuple(zero_idxs)
         return zero_idxs in ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS
 
     @cached_property
     def conorms(self):
-        return ConormList((1 / 2) * VONORM_TO_DOT_PRODUCTS @ self.vonorms[:6], self.conorm_tol)
+        return ConormList(self.raw_conorms, self.conorm_tol)
+    
+    @cached_property
+    def raw_conorms(self):
+        return (1 / 2) * VONORM_TO_DOT_PRODUCTS @ self.vonorms[:6]
     
     def set_tol(self, conorm_tol):
         return VonormList(self.vonorms, conorm_tol)
@@ -42,7 +53,7 @@ class VonormList():
         return self.conorms.permissible_permutations
 
     def is_obtuse(self, tol=0):
-        return all([c <= tol for c in self.conorms])
+        return all([c <= tol for c in self.raw_conorms])
     
     def __getitem__(self, key):
         return self.vonorms[key]
@@ -85,17 +96,54 @@ class VonormList():
         return grouped_vonorms
     
     def maximally_ascending_equivalence_class_members(self):
+        """
+        Groups permissible permutations of this vonorm list by the primary vonorm
+        indices. In other words, permutations (0,1,2,3,4,5,6) and (0,2,3,1,4,6,5)
+        would be grouped together because they share a set of primary vonorm values
+        (even though they are permuted differently). This method is used in neighbor
+        finding because the step operations from Dr. Mrdjenovich's thesis are only
+        guaranteed to be reciprocal with respect to S4 operations. What that means is that
+        we haver to launch the neighbor finding algorithm from one of each of the 
+        "equivalence classes" of primary vonorms. If (0,5,2,4,1,3,6) is also a permissible
+        permutation, then that is a distinct equivalence class from (0,1,3,2,4,6,5) because
+        the FIRST FOUR ELEMENTs are distinct.
+        """
         grouped = self.grouped_by_s4_permutations()
         result = {}
-        for group, perms in grouped.items():
+        # Sort by group key to ensure deterministic ordering (matching Rust)
+        for group, perms in sorted(grouped.items()):
             candidates = [(self.apply_permutation(p.vonorm_permutation), p) for p in perms]
             candidates = sorted(candidates, key=lambda p: p[0].tuple)
             maximal_vlist = candidates[0][0]
             equivalent_perms = [c[1] for c in candidates if c[0] == maximal_vlist]
             result[group] = {
                 "equivalent_perms": equivalent_perms,
-                "maximal_permuted_list": maximal_vlist,
+                "permuted_vonorms": maximal_vlist,
                 "transition_mats": [m for p in equivalent_perms for m in p.all_matrices]
+            }
+        return result
+
+    def s4_equivalence_class_representatives(self):
+        """
+        Groups permissible permutations of this vonorm list by the primary vonorm
+        indices. In other words, permutations (0,1,2,3,4,5,6) and (0,2,3,1,4,6,5)
+        would be grouped together because they share a set of primary vonorm values
+        (even though they are permuted differently). This method is used in neighbor
+        finding because the step operations from Dr. Mrdjenovich's thesis are only
+        guaranteed to be reciprocal with respect to S4 operations. What that means is that
+        we haver to launch the neighbor finding algorithm from one of each of the 
+        "equivalence classes" of primary vonorms. If (0,5,2,4,1,3,6) is also a permissible
+        permutation, then that is a distinct equivalence class from (0,1,3,2,4,6,5) because
+        the FIRST FOUR ELEMENTs are distinct.
+        """
+        grouped = self.grouped_by_s4_permutations()
+        result = {}
+        for group, perms in grouped.items():
+            selected_perm = perms[0]
+            representative_vonorms = self.apply_permutation(selected_perm.vonorm_permutation)
+            result[group] = {
+                "permuted_vonorms": representative_vonorms,
+                "transition_mats": selected_perm.all_matrices
             }
         return result
 
@@ -106,6 +154,52 @@ class VonormList():
             for m in p.all_matrices:
                 mats.add(m)
         return list(mats)
+
+    @maybe_profile
+    def stabilizer_matrices_fast(self):
+        """
+        Fast stabilizer computation for discretized vonorms.
+
+        Bypasses Coform/ConormList machinery entirely by directly computing
+        zero conorms with exact arithmetic and using pre-computed permutation mappings.
+        Much faster than stabilizer_matrices() for discretized vonorms.
+
+        Returns:
+            list[MatrixTuple]: List of stabilizer matrices
+        """
+        from ..permutations import ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS, CONORM_PERMUTATION_TO_VONORM_PERMUTATION_ARRAY
+
+        vonorms_tuple = self.tuple
+        vonorms_arr = self.vonorms_np
+
+        # Compute conorms directly using exact arithmetic
+        raw_conorms = (0.5 * VONORM_TO_DOT_PRODUCTS @ vonorms_arr[:6])
+
+        # Find zero conorms using EXACT equality (no tolerance)
+        zero_idxs = tuple([idx for idx, cn in enumerate(raw_conorms) if cn == 0])
+
+        # Get permutations directly from the pre-computed mapping
+        if zero_idxs not in ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS:
+            return []  # No valid permutations for this zero set
+
+        perm_to_mats = ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS[zero_idxs]
+        stabilizers = []
+
+        # Use bytes for fast comparison (avoid tuple conversion)
+        vonorms_bytes = vonorms_arr.tobytes()
+
+        # Iterate over conorm permutations and check which preserve vonorms
+        for conorm_perm, mat_list in perm_to_mats.items():
+            # Get pre-converted vonorm permutation array (no conversion needed!)
+            vonorm_perm_arr = CONORM_PERMUTATION_TO_VONORM_PERMUTATION_ARRAY[conorm_perm]
+
+            # Apply permutation and check equality using bytes (much faster!)
+            permuted = vonorms_arr[vonorm_perm_arr]
+            if permuted.tobytes() == vonorms_bytes:
+                # Collect all matrices for this permutation
+                stabilizers.extend(mat_list)
+
+        return stabilizers
 
     def to_generators(self, lattice_step_size: float):
         physical_vonorms = np.array(self.vonorms) * lattice_step_size

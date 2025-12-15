@@ -3,11 +3,15 @@ import itertools
 from ..crystal_normal_form import CrystalNormalForm
 from ..cnf_constructor import CNFConstructor
 from ..lattice.lnf_constructor import LatticeNormalFormConstructor
+from ..lattice.lattice_normal_form import LatticeNormalForm
 from ..lattice.voronoi import VonormList
+from ..motif.motif_normal_form import MotifNormalForm
 from .lattice_step import LatticeStep, LatticeStepResult
 from .neighbor_set import NeighborSet
 from ..utils.pdd import pdd_for_cnfs
 from ..linalg.unimodular import combine_unimodular_matrices
+from ..utils.prof import maybe_profile
+from ..motif.atomic_motif import DiscretizedMotif
 
 class LatticeNeighborFinder():
 
@@ -15,131 +19,258 @@ class LatticeNeighborFinder():
         self.verbose_logging = verbose_logging
         self.point = cnf_point
 
-        if self._is_cnf_neighbor_finder():
-            self.discretized_motif = cnf_point.motif_normal_form.to_discretized_motif()
-            self.fractional_motif = cnf_point.motif_normal_form.to_motif()
-
-    def _is_cnf_neighbor_finder(self):
-        return isinstance(self.point, CrystalNormalForm)
-    
-    def _lnf(self):
-        if self._is_cnf_neighbor_finder():
-            return self.point.lattice_normal_form
-        else:
-            return self.point
-
     def _log(self, msg):
         if self.verbose_logging:
             print(msg)
 
-    def possible_steps(self):
-        vonorms = self._lnf().vonorms
-        steps: list[LatticeStep] = []
-        current_stabilizer = self.point.lattice_normal_form.vonorms.stabilizer_matrices()
-        for s4_idxs, data in vonorms.maximally_ascending_equivalence_class_members().items():           
-            permuted_vonorms = data['maximal_permuted_list']
-            transform_mats = data['transition_mats']
+    def _get_atoms_list(self):
+        """Extract atoms list from motif normal form."""
+        return list(self.point.motif_normal_form.elements)
 
-            mat_sequences = itertools.product(current_stabilizer, transform_mats, permuted_vonorms.stabilizer_matrices())
-            unimodular_mats = set([combine_unimodular_matrices(mat_seq) for mat_seq in mat_sequences])
-            for mat in unimodular_mats:
-                transformed_motif = self.discretized_motif.apply_unimodular(mat)
-                for step_vec in LatticeStep.all_step_vecs():
-                    old_vonorms = np.array(permuted_vonorms.vonorms)                    
-                    new_vonorms = VonormList(tuple([int(v) for v in old_vonorms + np.array(step_vec)]))                    
-                    steps.append(LatticeStep(step_vec, new_vonorms, transformed_motif, mat))
-        steps = list(set(steps))
-        return steps
+    def _get_stabilizers(self):
+        """Extract stabilizer matrices from lattice normal form."""
+        return self.point.lattice_normal_form.vonorms.stabilizer_matrices_fast()
 
+    def _extract_coord_matrix_from_mnf(self, include_origin: bool = False):
+        """
+        Reconstruct coordinate matrix from MNF coord_list.
 
-    def get_vonorm_neighbor(self, step: LatticeStep):
-        permuted_vonorms = step.vonorms
-        self._log(f"Permuted vonorms: {permuted_vonorms}")
-        old_vonorms = np.array(permuted_vonorms.vonorms)
-        
-        new_vonorms = VonormList(tuple([int(v) for v in old_vonorms + np.array(step.vals)]))
-        self._log(f"Computed neighbor vonorms before canonicalization: {new_vonorms}")
+        Args:
+            include_origin: If True, prepend origin atom at (0,0,0)
 
-        if not new_vonorms.has_valid_conorms():
-            self._log("Neighbor had invalid conorms")
-            return None
+        Returns:
+            coord_matrix: (3, N) or (3, N-1) array depending on include_origin
+            n_atoms: Total number of atoms (including origin)
+            motif_delta: Delta value from MNF
+        """
+        mnf = self.point.motif_normal_form
+        motif_delta = mnf.delta
 
-        if new_vonorms.is_superbasis() and new_vonorms.is_obtuse():
-            return new_vonorms
+        # Reconstruct coord_matrix from coord_list (which excludes origin atom)
+        n_stored_atoms = len(mnf.coord_list) // 3
+        coords_array = np.array(mnf.coord_list, dtype=np.int32).reshape(n_stored_atoms, 3)
+
+        if include_origin:
+            # Prepend origin atom for Rust (needs full structure for transformations)
+            coords_with_origin = np.vstack([np.array([[0, 0, 0]]), coords_array])
+            motif_coord_matrix = coords_with_origin.T  # (3, N) - with origin atom
+            n_atoms = len(coords_with_origin)
         else:
-            if self.verbose_logging:
-                if not new_vonorms.is_obtuse():
-                    self._log(f"Neighbor was not obtuse.")
+            # No origin for Python (transformation of (0,0,0) is always (0,0,0))
+            motif_coord_matrix = coords_array.T  # (3, N-1) - no origin atom
+            n_atoms = n_stored_atoms + 1  # +1 for implicit origin
 
-                if not new_vonorms.is_superbasis():
-                    self._log(f"Neighbor was not a superbasis.")
-            return None
-    
-    def find_lnf_neighbor(self, step: LatticeStep):
-        new_vonorms = step.vonorms
-        if new_vonorms is None:
-            return None
-        
-        lnf_constructor = LatticeNormalFormConstructor(self._lnf().lattice_step_size)
-        construction_result = lnf_constructor.build_lnf_from_vonorms(new_vonorms, skip_reduction=True)
-        neighbor_lnf = construction_result.lnf
-            
-        return LatticeStepResult(step, new_vonorms, construction_result, neighbor_lnf, step.matrix)
-        
+        return motif_coord_matrix, n_atoms, motif_delta
 
-    def find_lnf_neighbors(self) -> NeighborSet:
-        neighbors = NeighborSet()
-        for step in self.possible_steps():
-            result = self.find_lnf_neighbor(step)
-            if result is not None:
-                neighbors.add_neighbor(result)
-        return neighbors
-    
-   # @profile
-    def find_cnf_neighbor_results(self, step: LatticeStep) -> list[LatticeStepResult]:
+    def find_neighbor_tuples(self) -> list[tuple]:
+        """
+        Find lattice neighbor tuples without constructing CNF objects.
+
+        Returns list of (vonorms_tuple, coords_tuple) for each neighbor.
+        This is faster than find_cnf_neighbors() when you don't need full objects.
+
+        Note: Always uses Python implementation. For pure Rust, use NeighborFinder directly.
+        """
+        return self._find_neighbor_tuples_python()
+
+    def tuples_to_cnf_neighbors(self, neighbor_tuples: list[tuple]) -> list[CrystalNormalForm]:
+        """
+        Convert neighbor tuples to CNF objects.
+
+        Args:
+            neighbor_tuples: List of (vonorms_tuple, coords_tuple)
+
+        Returns:
+            List of CrystalNormalForm objects
+        """
+        atoms = self._get_atoms_list()
+        xi = float(self.point.xi)
+        delta = int(self.point.delta)
+
         results = []
+        for vonorms_tuple, coords_tuple in neighbor_tuples:
+            vonorms = VonormList(vonorms_tuple)
+            lnf = LatticeNormalForm(vonorms, xi)
 
-        if not step.vonorms.has_valid_conorms():
-            self._log("Neighbor had invalid conorms")
-            return results
+            mnf = MotifNormalForm(
+                coords_tuple,
+                atoms,
+                delta
+            )
 
-        if not (step.vonorms.is_obtuse() and step.vonorms.is_superbasis()):
-            if self.verbose_logging:
-                if not step.vonorms.is_obtuse():
-                    self._log(f"Neighbor was not obtuse.")
+            cnf = CrystalNormalForm(lnf, mnf)
 
-                if not step.vonorms.is_superbasis():
-                    self._log(f"Neighbor was not a superbasis.")
-            return results
-
-        cnf_constructor = CNFConstructor(
-            self.point.xi,
-            self.point.delta,
-            verbose_logging=False,
-        )
-
-        cnf_result = cnf_constructor.from_vonorms_and_motif(step.vonorms, step.transformed_motif)
-
-        if cnf_result.cnf != self.point:
-            results.append(LatticeStepResult(
-                step,
-                cnf_result.cnf.lattice_normal_form.vonorms,
-                cnf_result,
-                cnf_result.cnf,
-                step.matrix
-            ))
+            # Only include if different from input CNF
+            if cnf != self.point:
+                results.append(cnf)
 
         return results
 
-    #@profile
-    def find_cnf_neighbors(self) -> NeighborSet:
-        neighbors = NeighborSet()
-        steps = self.possible_steps()
-        self._log(f"Considering {len(steps)} possible steps...")
-        for step in steps:
-            self._log("")
-            self._log(f"Step: {step.vals}, {step.matrix}")
-            results = self.find_cnf_neighbor_results(step)
-            for r in results:
-                neighbors.add_neighbor(r)
-        return neighbors
+    def find_cnf_neighbors(self) -> list[CrystalNormalForm]:
+        """Fast neighbor finding that avoids intermediate object creation."""
+        neighbor_tuples = self.find_neighbor_tuples()
+        return self.tuples_to_cnf_neighbors(neighbor_tuples)
+    
+    def validate_step_data(self, step_data):
+        validated_steps = []
+        for step_vec, vonorms_tuple, motif_coords, matrix in step_data:
+            vonorms = VonormList(vonorms_tuple)
+
+            # Validate
+            if not vonorms.has_valid_conorms_exact():
+                continue
+            if not (vonorms.is_obtuse() and vonorms.is_superbasis_exact()):
+                continue
+
+            validated_steps.append((step_vec, vonorms_tuple, motif_coords, matrix))
+        return validated_steps
+
+    def _find_neighbor_tuples_rust(self) -> list[tuple]:
+        """Rust implementation - returns tuples without constructing CNF objects."""
+        import rust_cnf
+
+        # Prepare all inputs for combined Rust function
+        vonorms = self.point.lattice_normal_form.vonorms
+        input_vonorms = np.array(vonorms.vonorms, dtype=np.float64)
+
+        # Get motif data using helper (Rust needs origin atom)
+        atoms = [str(atom) for atom in self.point.motif_normal_form.elements]
+        motif_coord_matrix, n_atoms, motif_delta = self._extract_coord_matrix_from_mnf(include_origin=True)
+        motif_coords_flat = np.ascontiguousarray(motif_coord_matrix.flatten(), dtype=np.float64)
+
+        xi = float(self.point.xi)
+        delta = int(self.point.delta)
+
+        # Single Rust call that does: step generation, validation, and canonicalization
+        # Returns list of (vonorms_tuple, coords_tuple) - already as tuples with ints
+        # Note: Stabilizers are computed internally in Rust
+        return rust_cnf.find_and_canonicalize_lattice_neighbors(
+            input_vonorms, motif_coords_flat,
+            n_atoms, motif_delta, atoms, xi, delta
+        )
+
+    def _find_neighbor_tuples_python(self) -> list[tuple]:
+        """Python implementation - returns tuples without constructing CNF objects."""
+        # Get raw step data without creating LatticeStep objects
+        step_data = self._compute_step_data_raw_python()
+
+        # Filter valid steps and construct CNFs in batch
+        valid_step_data = self.validate_step_data(step_data)
+
+        # Batch canonicalize using tuple method (avoids CNF object construction)
+        cnf_constructor = CNFConstructor(self.point.xi, self.point.delta, verbose_logging=False)
+        atoms = self._get_atoms_list()
+
+        results = []
+        for step_vec, vonorms_tuple, motif_coords, matrix in valid_step_data:
+            # Convert to tuple format for canonicalize_tuple
+            coords_tuple = tuple(motif_coords.flatten())
+            cnf_tuple = (vonorms_tuple, coords_tuple)
+
+            # Canonicalize using tuple method (avoids DiscretizedMotif construction)
+            canonical_tuple = cnf_constructor.canonicalize_tuple(cnf_tuple, atoms)
+
+            results.append(canonical_tuple)
+
+        return results
+
+    def _compute_step_data_raw_python(self):
+        """Python implementation of step data computation."""
+        vonorms = self.point.lattice_normal_form.vonorms
+        step_data = []
+        current_stabilizer = self._get_stabilizers()
+
+        # Get motif data using helper (Python doesn't need origin)
+        motif_coord_matrix, _, motif_delta = self._extract_coord_matrix_from_mnf(include_origin=False)
+
+        for _, data in vonorms.maximally_ascending_equivalence_class_members().items():
+            permuted_vonorms = data['permuted_vonorms']
+            transform_mats = data['transition_mats']
+            # We launch the neighbor finding process from a single arbitrarily chosen
+            # member from each group of permutations where the _primary vonorm indices_ are
+            # the same.
+            #
+            # To do this, we search motifs produced by matrices belonging to the cartesian
+            # product:
+            #   original point stablizer x 
+            #   (a single transformation matrix from the original primary vonorm set to the new primary vonorm set)
+            #   the stabilizer of the other primary vonorm set
+            s1_mats = np.array([s.matrix for s in current_stabilizer])
+            t_mats = np.array([t.matrix for t in transform_mats[:1]])
+            s2_mats = np.array([s.matrix for s in permuted_vonorms.stabilizer_matrices_fast()])
+
+            # Batch compute all matrix products using einsum
+            all_products = np.einsum('nij,mjk,okl->nmoil', s1_mats, t_mats, s2_mats)
+            all_products_flat = all_products.reshape(-1, 3, 3)
+
+            # Deduplicate
+            all_products_rounded = np.round(all_products_flat).astype(int)
+            all_products_2d = all_products_rounded.reshape(-1, 9)
+            unique_flat = np.unique(all_products_2d, axis=0)
+            unimodular_mats = unique_flat.reshape(-1, 3, 3)
+
+            # These step vecs are the canonical vonorm adjustments (+1,-1) pairs
+            # described in Dr. Mrdjenovich's thesis.
+            step_vecs = LatticeStep.all_step_vecs()
+            permuted_vonorms_arr = np.array(permuted_vonorms.vonorms)
+
+            for mat in unimodular_mats:
+                # Transform motif coordinates directly
+                mat_inv = np.linalg.inv(mat).astype(int)
+                transformed_coords = mat_inv @ motif_coord_matrix
+                transformed_coords = np.mod(transformed_coords, motif_delta).T  # (N, 3)
+
+                for step_vec in step_vecs:
+                    # Compute new vonorms by applying the step vec adjustment (a pair of +1, -1) at
+                    # particular indices
+                    new_vonorms_arr = permuted_vonorms_arr + np.array(step_vec)
+                    new_vonorms_tuple = tuple(new_vonorms_arr.astype(int))
+
+                    # Store the data associated with this step
+                    step_data.append((step_vec, new_vonorms_tuple, transformed_coords, mat))
+
+        # Deduplicate by vonorms and transformed coords
+        unique_steps = {}
+        for step_vec, vonorms_tuple, coords, mat in step_data:
+            # Use vonorms and flattened coords as key
+            coords_tuple = tuple(coords.flatten())
+            key = (vonorms_tuple, coords_tuple)
+            if key not in unique_steps:
+                unique_steps[key] = (step_vec, vonorms_tuple, coords, mat)
+
+        return list(unique_steps.values())
+
+    def _compute_step_data_raw_rust(self):
+        """Rust implementation of step data computation."""
+        import rust_cnf
+
+        vonorms = self.point.lattice_normal_form.vonorms
+
+        # Get motif data using helper (Rust needs origin atom)
+        motif_coord_matrix, n_atoms, motif_delta = self._extract_coord_matrix_from_mnf(include_origin=True)
+
+        # Prepare input vonorms - Rust will compute S4 groups and stabilizers internally
+        input_vonorms = np.array(vonorms.vonorms, dtype=np.float64)
+
+        # Call Rust function - Rust now handles stabilizers and S4 grouping internally!
+        motif_coords_flat = np.ascontiguousarray(motif_coord_matrix.flatten(), dtype=np.float64)
+        result = rust_cnf.compute_step_data_raw_rust(
+            input_vonorms,
+            motif_coords_flat,
+            n_atoms,
+            motif_delta
+        )
+
+        # Convert result back to Python format
+        # Result is list of (step_vec, vonorms_tuple, coords, matrix_flat)
+        # Note: coords from Rust include origin, need to remove it to match Python format
+        python_result = []
+        for step_vec, vonorms_list, coords_flat, mat_flat in result:
+            vonorms_tuple = tuple([int(v) for v in vonorms_list])
+            # Rust returns coords WITH origin, Python expects WITHOUT origin
+            coords_with_origin = np.array(coords_flat).reshape(n_atoms, 3)
+            coords = coords_with_origin[1:]  # Remove origin atom
+            matrix = np.array(mat_flat, dtype=np.int32).reshape(3, 3)
+            python_result.append((step_vec, vonorms_tuple, coords, matrix))
+
+        return python_result

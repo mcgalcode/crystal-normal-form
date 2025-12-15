@@ -72,11 +72,11 @@ def test_thesis_neighbors():
     mnf_neighbor_finder = MotifNeighborFinder(starting_cnf)
 
     lnf_neighbor_set = lnf_neighbor_finder.find_cnf_neighbors()
-    lnf_neighbors = lnf_neighbor_set.neighbors
+    lnf_neighbors = lnf_neighbor_set
     lnf_neighbors = [n.point for n in lnf_neighbors]
 
     mnf_neighbor_set = mnf_neighbor_finder.find_motif_neighbors()
-    mnf_neighbors = mnf_neighbor_set.neighbors
+    mnf_neighbors = mnf_neighbor_set
     mnf_neighbors = [n.point for n in mnf_neighbors]
 
     neighbors = lnf_neighbors

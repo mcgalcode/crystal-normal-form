@@ -19,7 +19,7 @@ def test_neighbors_are_geometrically_distinct(idx, struct: Structure):
     constructor = CNFConstructor(xi, delta, False)
     original_cnf = constructor.from_pymatgen_structure(struct).cnf
     nf = LatticeNeighborFinder(original_cnf, verbose_logging=True)
-    cnf_neighb_set = nf.find_cnf_neighbors()
+    cnf_neighb_set = list(set(nf.find_cnf_neighbors()))
     tested_neighbs: list[CrystalNormalForm] = []
     dups = []
 
@@ -27,9 +27,8 @@ def test_neighbors_are_geometrically_distinct(idx, struct: Structure):
 
     chiral_neighbs = 0
     helpers.printif(f"Original structure is Voronoi: {original_cnf.lattice_normal_form.vonorms.conorms.form.voronoi_class}", verbose)
-    for neighb in cnf_neighb_set.neighbors:
-        steps = cnf_neighb_set.steps_for_neighbor(neighb.point)
-        current_cnf = neighb.point
+    for neighb in cnf_neighb_set:
+        current_cnf = neighb
         is_duplicate = False
         dup = None
 
@@ -49,18 +48,7 @@ def test_neighbors_are_geometrically_distinct(idx, struct: Structure):
                 helpers.printif(f"PDD Distance: {pdd_dist}", verbose)
                 helpers.printif(f"Neighbor 1 is Voronoi: {existing_cnf.voronoi_class}", verbose)
                 helpers.printif(f"Neighbor 2 is Voronoi: {current_cnf.voronoi_class}", verbose)
-                helpers.printif("Steps leading to new point:", verbose)
-                for step in steps:
-                    if verbose:
-                        step.step.print_details()
-                    helpers.printif(step.construction_result.cnf.motif_normal_form, verbose)
                 
-                helpers.printif("", verbose)
-                helpers.printif(f"Steps leading to old point: ", verbose)
-                if verbose:
-                    for step in cnf_neighb_set.steps_for_neighbor(existing_cnf):
-                        step.step.print_details()
-                helpers.printif(f"This neighbor was reached by {len(steps)} steps", verbose)
                 clusters[existing_cnf].append(current_cnf)
                 dups.append((current_cnf, dup, pdd_dist))
                 helpers.printif("", verbose)
@@ -84,4 +72,3 @@ def test_neighbors_are_geometrically_distinct(idx, struct: Structure):
                 cidx += 1
     
     assert len(clusters) == len(cnf_neighb_set)
-    # assert len(clusters) == chiral_neighbs

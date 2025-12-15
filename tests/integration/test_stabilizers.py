@@ -93,6 +93,7 @@ def test_vonorm_stabilizers_maintain_vonorm_order(idx: int, struct: Structure):
         assert uc2.vonorms.about_equal(uc.vonorms, tol=tol)
         assert uc2.conorms.about_equal(uc.conorms, tol=tol)
 
+@pytest.mark.debug
 @helpers.parameterized_by_mp_struct_idxs(every=FREQ)
 def test_vonorm_stabilizer_is_complete(idx: int, struct: Structure):
     uc = UnitCell.from_pymatgen_structure(struct).reduce()

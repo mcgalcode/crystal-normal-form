@@ -189,7 +189,7 @@ def test_steps_maintain_structure(idx, struct):
 
         motif = motif.apply_unimodular(mat)
         new_uc = UnitCell(sb, motif)
-        new_uc.to_cif(f"selling_step_{i}_struct_{idx}.cif")
+        # new_uc.to_cif(f"selling_step_{i}_struct_{idx}.cif")
         reduced = new_uc.to_pymatgen_structure()
 
         pdd = helpers.pdd(struct, reduced)
