@@ -95,57 +95,6 @@ class CNFConstructor():
 
         return lnf, lnf_result, canonical_vonorms, middle
 
-    def _combine_stabilizers(self, vonorms: VonormList, canonical_vonorms: VonormList, middle: np.ndarray, use_float: bool = False, use_rust: bool = False):
-        """Find and combine stabilizers for lattice transformations."""
-
-        if use_rust:
-            # Use Rust's combined function
-            import rust_cnf
-            vonorms_arr = np.ascontiguousarray(vonorms.vonorms_np, dtype=np.float64)
-            canonical_arr = np.ascontiguousarray(canonical_vonorms.vonorms_np, dtype=np.float64)
-            middle_flat = middle.astype(np.int32).flatten()
-
-            if use_float:
-                combined_stabs_flat = rust_cnf.find_and_combine_stabilizers_rust_float(
-                    vonorms_arr, canonical_arr, middle_flat, 1e-8  # TODO: make tolerance configurable
-                )
-            else:
-                combined_stabs_flat = rust_cnf.find_and_combine_stabilizers_rust(
-                    vonorms_arr, canonical_arr, middle_flat
-                )
-
-            # Reshape to (N, 3, 3)
-            n_matrices = len(combined_stabs_flat) // 9
-            combined_stabs_3d = combined_stabs_flat.reshape(n_matrices, 3, 3)
-            np_stabs = list(combined_stabs_3d)
-        else:
-            # Python implementation with einsum
-            if use_float:
-                # stabilizer_1 = vonorms.stabilizer_matrices()
-                stabilizer_2 = canonical_vonorms.stabilizer_matrices()
-            else:
-                # stabilizer_1 = vonorms.stabilizer_matrices_fast()
-                stabilizer_2 = canonical_vonorms.stabilizer_matrices_fast()
-
-            # OLD IMPLEMENTATION (testing if optimization is incorrect):
-            # s1_stack = np.array([s.matrix for s in stabilizer_1])
-            # s2_stack = np.array([s.matrix for s in stabilizer_2])
-            # result = np.einsum('nij,jk,mkl->nmil', s1_stack, middle, s2_stack)
-            # result_flat = result.reshape(-1, 3, 3)
-
-            # OPTIMIZED: Only combine middle @ s2 (skipping s1 orbit)
-            # NEW IMPLEMENTATION (commented out for testing):
-            s2_stack = np.array([s.matrix for s in stabilizer_2])
-            result_flat = np.einsum('ij,njk->nik', middle, s2_stack)
-
-            all_stabilizers = [MatrixTuple(mat) for mat in result_flat]
-            np_stabs = [s.matrix for s in all_stabilizers]
-
-        if self.verbose_logging:
-            print(f"Found {len(np_stabs)} combined stabilizers...")
-
-        return np_stabs
-
     def from_cnf(self, cnf: CrystalNormalForm):
         assert cnf.xi == self.xi
         assert cnf.delta == self.delta
@@ -159,6 +108,15 @@ class CNFConstructor():
     
     def from_vonorms_and_motif_undiscretized(self, vonorms: VonormList, motif: FractionalMotif):
         return self._from_vonorms_and_motif_undiscretized_impl(vonorms, motif, use_rust=self.USE_RUST)
+
+    def from_motif_and_basis_vecs(self, motif: FractionalMotif, basis_vecs: np.array):
+        superbasis = Superbasis.from_generating_vecs(basis_vecs)
+        return self.from_motif_and_superbasis(motif, superbasis)
+
+    def from_pymatgen_structure(self, struct: Structure):
+        motif = FractionalMotif.from_pymatgen_structure(struct)
+        superbasis = Superbasis.from_pymatgen_structure(struct)
+        return self.from_motif_and_superbasis(motif, superbasis)
     
     def canonicalize_tuple(self, cnf_tuple: tuple, atoms: list[str]) -> tuple:
         """
@@ -256,12 +214,57 @@ class CNFConstructor():
 
         cnf = CrystalNormalForm(lnf, mnf_construction_res.mnf)
         return CNFConstructionResult(cnf, lnf_result, mnf_construction_res)
+    
+    def _combine_stabilizers(self, vonorms: VonormList, canonical_vonorms: VonormList, middle: np.ndarray, use_float: bool = False, use_rust: bool = False):
+        """Find and combine stabilizers for lattice transformations."""
 
-    def from_motif_and_basis_vecs(self, motif: FractionalMotif, basis_vecs: np.array):
-        superbasis = Superbasis.from_generating_vecs(basis_vecs)
-        return self.from_motif_and_superbasis(motif, superbasis)
+        if use_rust:
+            # Use Rust's combined function
+            import rust_cnf
+            vonorms_arr = np.ascontiguousarray(vonorms.vonorms_np, dtype=np.float64)
+            canonical_arr = np.ascontiguousarray(canonical_vonorms.vonorms_np, dtype=np.float64)
+            middle_flat = middle.astype(np.int32).flatten()
 
-    def from_pymatgen_structure(self, struct: Structure):
-        motif = FractionalMotif.from_pymatgen_structure(struct)
-        superbasis = Superbasis.from_pymatgen_structure(struct)
-        return self.from_motif_and_superbasis(motif, superbasis)
+            if use_float:
+                combined_stabs_flat = rust_cnf.find_and_combine_stabilizers_rust_float(
+                    vonorms_arr, canonical_arr, middle_flat, 1e-8  # TODO: make tolerance configurable
+                )
+            else:
+                combined_stabs_flat = rust_cnf.find_and_combine_stabilizers_rust(
+                    vonorms_arr, canonical_arr, middle_flat
+                )
+
+            # Reshape to (N, 3, 3)
+            n_matrices = len(combined_stabs_flat) // 9
+            combined_stabs_3d = combined_stabs_flat.reshape(n_matrices, 3, 3)
+            np_stabs = list(combined_stabs_3d)
+        else:
+            # Python implementation with einsum
+            if use_float:
+                # stabilizer_1 = vonorms.stabilizer_matrices()
+                stabilizer_2 = canonical_vonorms.stabilizer_matrices()
+            else:
+                # stabilizer_1 = vonorms.stabilizer_matrices_fast()
+                stabilizer_2 = canonical_vonorms.stabilizer_matrices_fast()
+
+            # OLD IMPLEMENTATION (testing if optimization is incorrect):
+            # s1_stack = np.array([s.matrix for s in stabilizer_1])
+            # s2_stack = np.array([s.matrix for s in stabilizer_2])
+            # result = np.einsum('nij,jk,mkl->nmil', s1_stack, middle, s2_stack)
+            # result_flat = result.reshape(-1, 3, 3)
+
+            # OPTIMIZED: Only combine middle @ s2 (skipping s1 orbit)
+            # NEW IMPLEMENTATION (commented out for testing):
+            s2_stack = np.array([s.matrix for s in stabilizer_2])
+            result_flat = np.einsum('ij,njk->nik', middle, s2_stack)
+
+            # Note on this einsum. This einsum computes the product of `middle`
+            # with every matrix in `s2_stack`
+
+            all_stabilizers = [MatrixTuple(mat) for mat in result_flat]
+            np_stabs = [s.matrix for s in all_stabilizers]
+
+        if self.verbose_logging:
+            print(f"Found {len(np_stabs)} combined stabilizers...")
+
+        return np_stabs
