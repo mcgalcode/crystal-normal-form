@@ -19,3 +19,4 @@ src/cnf/rust_cnf/target
 src/cnf/rust_cnf/Cargo.lock
 
 .envrc
+literature
