@@ -13,7 +13,7 @@ from cnf.navigation.utils import get_endpoints_from_pmg_structs
 from cnf.navigation.astar import astar_pathfind as astar_pathfind_py, squared_euclidean_heuristic, min_distance_filter
 
 
-def pathfind_and_save(start_cif, end_cif, output_json, xi=0.2, delta=30, min_distance=0.0, max_iterations=100000):
+def pathfind_and_save(start_cif, end_cif, output_json, xi=0.2, delta=30, min_distance=0.0, max_iterations=100000, use_python=False):
     """Run pathfinding between two CIF structures and save result to JSON
 
     Args:
@@ -24,6 +24,7 @@ def pathfind_and_save(start_cif, end_cif, output_json, xi=0.2, delta=30, min_dis
         delta: Integer discretization factor (default: 30)
         min_distance: Minimum allowed pairwise distance for filtering (default: 0.0)
         max_iterations: Maximum pathfinding iterations (default: 100000)
+        use_python: Use Python A* implementation instead of Rust (default: False)
     """
 
     start_struct = Structure.from_file(start_cif)
@@ -73,33 +74,36 @@ def pathfind_and_save(start_cif, end_cif, output_json, xi=0.2, delta=30, min_dis
     n_atoms = len(elements)
 
     print(f"\n=== Running A* pathfinding ===")
+    print(f"Implementation: {'Python' if use_python else 'Rust'}")
     print(f"Elements: {elements}")
     print(f"N atoms: {n_atoms}")
     print(f"Xi: {xi}, Delta: {delta}")
     print(f"Start points: {len(start_points)}")
     print(f"Goal points: {len(goal_points)}")
 
-    # Call Rust pathfinding with verbose output
-    path = rust_cnf.astar_pathfind_rust(
-        start_points,
-        goal_points,
-        elements,
-        n_atoms,
-        xi,
-        delta,
-        min_distance=min_distance,
-        max_iterations=max_iterations,
-        verbose=True
-    )
-
-    # path = astar_pathfind_py(
-    #     start_cnfs,
-    #     goal_cnfs,
-    #     squared_euclidean_heuristic,
-    #     min_distance_filter(min_distance),
-    #     max_iterations=max_iterations,
-    #     verbose=True
-    # )
+    if use_python:
+        # Use Python A* implementation
+        path = astar_pathfind_py(
+            start_cnfs,
+            goal_cnfs,
+            squared_euclidean_heuristic,
+            min_distance_filter(min_distance),
+            max_iterations=max_iterations,
+            verbose=True
+        )
+    else:
+        # Use Rust A* implementation (default)
+        path = rust_cnf.astar_pathfind_rust(
+            start_points,
+            goal_points,
+            elements,
+            n_atoms,
+            xi,
+            delta,
+            min_distance=min_distance,
+            max_iterations=max_iterations,
+            verbose=True
+        )
 
     if path is None:
         print("❌ No path found!")
@@ -191,6 +195,8 @@ def main():
                         help="Minimum allowed pairwise distance for filtering in Angstroms (default: 0.0)")
     parser.add_argument("--max-iterations", type=int, default=100000,
                         help="Maximum pathfinding iterations (default: 100000)")
+    parser.add_argument("--python", action="store_true",
+                        help="Use Python A* implementation instead of Rust (default: Rust)")
 
     args = parser.parse_args()
 
@@ -201,7 +207,8 @@ def main():
         xi=args.xi,
         delta=args.delta,
         min_distance=args.min_distance,
-        max_iterations=args.max_iterations
+        max_iterations=args.max_iterations,
+        use_python=args.python
     )
 
     if success:
