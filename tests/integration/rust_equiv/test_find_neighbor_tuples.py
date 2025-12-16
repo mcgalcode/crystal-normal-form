@@ -22,8 +22,10 @@ def test_find_neighbor_tuples_equal(idx, struct: Structure):
     print(f"  Coords: {original_cnf.motif_normal_form.coord_list[:6]}...")
 
     # Get Python neighbors using NeighborFinder
-    neighbor_finder = NeighborFinder(original_cnf)
-    py_neighbors = neighbor_finder.find_neighbor_tuples()
+    if 'USE_RUST' in os.environ:
+        del os.environ['USE_RUST']
+    neighbor_finder = NeighborFinder.from_cnf(original_cnf)
+    py_neighbors = neighbor_finder.find_neighbor_tuples(original_cnf)
     print(f"  Python found {len(py_neighbors)} neighbors")
 
     # Get Rust neighbors using find_neighbor_tuples_rust
@@ -45,6 +47,7 @@ def test_find_neighbor_tuples_equal(idx, struct: Structure):
         xi,
         delta
     )
+    rust_neighbors = [(*n[0], *n[1]) for n in rust_neighbors]
     print(f"  Rust found {len(rust_neighbors)} neighbors")
 
     # Convert both to sets of tuples for comparison

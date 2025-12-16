@@ -13,9 +13,7 @@ from cnf.unit_cell import UnitCell
 
 
 @helpers.parameterized_by_mp_structs
-def test_neighbors_are_unique(idx, struct: Structure):
-    verbose = False
-    save_pairs = False
+def test_rust_and_python_recover_same_neighbors(idx, struct: Structure):
     xi = 1.5
     delta = 20
 
@@ -23,29 +21,45 @@ def test_neighbors_are_unique(idx, struct: Structure):
 
     constructor = CNFConstructor(xi, delta, False)
     original_cnf = constructor.from_pymatgen_structure(struct).cnf
+    original_cnf_tup = original_cnf.coords
     # PYTHON
     if before is not None:
         del os.environ['USE_RUST']
-    nf = NeighborFinder(original_cnf)
-    py_nbs = nf.find_neighbors()
-    py_lat_nbs = set(LatticeNeighborFinder(original_cnf).find_cnf_neighbors())
-    py_mot_nbs = set([n.point for n in MotifNeighborFinder(original_cnf).find_motif_neighbors().neighbors])
+    nf = NeighborFinder.from_cnf(original_cnf)
+    py_nbs = nf.find_neighbors(original_cnf)
+    py_lat_nbs = nf.find_lattice_neighbors(original_cnf_tup)
+    py_mot_nbs = nf.find_motif_neighbors(original_cnf_tup)
     py_unique_nbs = set(py_nbs)
 
     os.environ['USE_RUST'] = "1"
     constructor = CNFConstructor(xi, delta, False)
-    nf = NeighborFinder(original_cnf)
-    rust_nbs = nf.find_neighbors()
-    rust_lat_nbs = set(LatticeNeighborFinder(original_cnf).find_cnf_neighbors())
-    rust_mot_nbs = set([n.point for n in MotifNeighborFinder(original_cnf).find_motif_neighbors().neighbors])
+    nf = NeighborFinder.from_cnf(original_cnf)
+    rust_nbs = nf.find_neighbors(original_cnf)
+    rust_lat_nbs = nf.find_lattice_neighbors(original_cnf_tup)
+    rust_mot_nbs = nf.find_motif_neighbors(original_cnf_tup)
     rust_unique_nbs = set(rust_nbs)
 
     # Debug output
+    print("================ ALL NEIGHBORS ===============")
     print(f"\nPython: {len(py_nbs)} total, {len(py_unique_nbs)} unique")
     print(f"Rust: {len(rust_nbs)} total, {len(rust_unique_nbs)} unique")
     print(f"Python only: {len(py_unique_nbs - rust_unique_nbs)}")
     print(f"Rust only: {len(rust_unique_nbs - py_unique_nbs)}")
     print(f"Common: {len(py_unique_nbs & rust_unique_nbs)}")
+
+    print("================ LATTICE NEIGHBORS ===============")
+    print(f"\nPython: {len(py_lat_nbs)} total, {len(set(py_lat_nbs))} unique")
+    print(f"Rust: {len(rust_lat_nbs)} total, {len(set(rust_lat_nbs))} unique")
+    print(f"Python only: {len(set(py_lat_nbs) - set(rust_lat_nbs))}")
+    print(f"Rust only: {len(set(rust_lat_nbs) - set(py_lat_nbs))}")
+    print(f"Common: {len(set(py_lat_nbs) & set(rust_lat_nbs))}")
+
+    print("================ MOTIF NEIGHBORS ===============")
+    print(f"\nPython: {len(py_mot_nbs)} total, {len(set(py_mot_nbs))} unique")
+    print(f"Rust: {len(rust_mot_nbs)} total, {len(set(rust_mot_nbs))} unique")
+    print(f"Python only: {len(set(py_mot_nbs) - set(rust_mot_nbs))}")
+    print(f"Rust only: {len(set(rust_mot_nbs) - set(py_mot_nbs))}")
+    print(f"Common: {len(set(py_mot_nbs) & set(rust_mot_nbs))}")
 
     # Check if stabilizers differ for any neighbors
     print("\nChecking stabilizers for mismatched neighbors...")
@@ -82,8 +96,12 @@ def test_neighbors_are_unique(idx, struct: Structure):
         print(f"  Python stabilizers: {len(py_stabs)}, Rust stabilizers: {n_rust}")
 
 
-    assert rust_mot_nbs == py_mot_nbs
-    assert rust_lat_nbs == py_lat_nbs
+    assert set(rust_mot_nbs) == set(py_mot_nbs)
+    assert len(rust_mot_nbs) == len(py_mot_nbs)
+    
+    assert set(rust_lat_nbs) == set(py_lat_nbs)
+    assert len(rust_lat_nbs) == len(py_lat_nbs)
+
     assert py_unique_nbs == rust_unique_nbs
     assert len(rust_nbs) == len(py_nbs)
 

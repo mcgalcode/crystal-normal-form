@@ -59,18 +59,19 @@ def test_partitioned_flood_fill_integrity(zr_hcp_mp, partitioned_db_dir):
     start_cnf = zr_hcp_cnf
 
     # Find neighbors 3 rings out
-    ring_1 = set(NeighborFinder(start_cnf).find_neighbors())
+    nf = NeighborFinder.from_cnf(start_cnf)
+    ring_1 = set(nf.find_neighbors(start_cnf))
     print(f"Found {len(ring_1)} first neighbs!")
     ring_2 = set()
     for i, nb in enumerate(list(ring_1)[:10]):
-        ring_2.update(NeighborFinder(nb).find_neighbors())
+        ring_2.update(nf.find_neighbors(nb))
         print(f"{i} Found Second neighbs!")
     ring_2 = ring_2 - ring_1 - {start_cnf}
 
     print(f"Found {len(ring_2)} new second neighbs!")
     ring_3 = set()
     for nb in list(ring_2)[:10]:
-        ring_3.update(NeighborFinder(nb).find_neighbors())
+        ring_3.update(nf.find_neighbors(nb))
     ring_3 = ring_3 - ring_2 - ring_1 - {start_cnf}
 
     end_cnf = list(ring_3)[0]  # Pick first point from ring 3
@@ -147,7 +148,7 @@ def test_partitioned_flood_fill_integrity(zr_hcp_mp, partitioned_db_dir):
         db_neighbor_coords = set(nb.coords for nb in db_neighbor_cnfs)
 
         # Get neighbors using NeighborFinder (ground truth)
-        computed_neighbors = NeighborFinder(point.cnf).find_neighbors()
+        computed_neighbors = nf.find_neighbors(point.cnf)
         computed_neighbor_coords = set(nb.coords for nb in computed_neighbors)
 
         # Assert exact set equality - DB should have EXACTLY the same neighbors
@@ -198,13 +199,15 @@ def test_partitioned_flood_fill_neighbor_reciprocity(zr_hcp_mp, partitioned_db_d
 
     # Set up partitioned database
     db = setup_partitioned_search(partitioned_db_dir, xi, delta, elements, num_partitions=4)
-
+    
     # Create search with endpoint a couple rings away
     start_cnf = zr_hcp_cnf
-    neighbors = NeighborFinder(start_cnf).find_neighbors()
+
+    nf = NeighborFinder.from_cnf(start_cnf)
+    neighbors = nf.find_neighbors(start_cnf)
     ring_2 = set()
     for nb in neighbors:
-        ring_2.update(NeighborFinder(nb).find_neighbors())
+        ring_2.update(nf.find_neighbors(nb))
     ring_2 = ring_2 - set(neighbors) - {start_cnf}
     end_cnf = list(ring_2)[0]
 
@@ -237,7 +240,7 @@ def test_partitioned_flood_fill_neighbor_reciprocity(zr_hcp_mp, partitioned_db_d
             db_neighbor_coords = set(nb.coords for nb in db_neighbor_cnfs)
 
             # Get neighbors using NeighborFinder (ground truth)
-            computed_neighbors = NeighborFinder(point.cnf).find_neighbors()
+            computed_neighbors = nf.find_neighbors(point.cnf)
             computed_neighbor_coords = set(nb.coords for nb in computed_neighbors)
 
             # Assert exact set equality

@@ -25,16 +25,17 @@ def test_can_find_path(zr_hcp_mp):
         cmap_store = CrystalMapStore.from_file(tf.name)
         start_pt = zr_hcp_cnf
         known_pts = set([zr_hcp_cnf])
-        all_nbs1 = NeighborFinder(zr_hcp_cnf).find_neighbors()
+        nf = NeighborFinder.from_cnf(zr_hcp_cnf)
+        all_nbs1 = nf.find_neighbors(zr_hcp_cnf)
         new_nbs1 = set(all_nbs1).difference(known_pts)
         known_pts = known_pts.union(all_nbs1)
         path_pt_1 = list(new_nbs1)[0]
-        all_nbs2 = NeighborFinder(path_pt_1).find_neighbors()
+        all_nbs2 = nf.find_neighbors(path_pt_1)
         new_nbs2 = set(all_nbs2).difference(known_pts)
         known_pts = known_pts.union(all_nbs2)
 
         path_pt_2 = list(new_nbs2)[0]
-        all_nbs3 = NeighborFinder(path_pt_2).find_neighbors()
+        all_nbs3 = nf.find_neighbors(path_pt_2)
         new_nbs3 = set(all_nbs3).difference(known_pts)
         endpt = list(new_nbs3)[0]
         # print("path:")

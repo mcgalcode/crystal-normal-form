@@ -655,6 +655,6 @@ pub fn is_superbasis_exact(vonorms: &[f64; 7]) -> bool {
     // Sum of secondary vonorms (indices 4-6)
     let secondary_sum: f64 = vonorms[4..7].iter().sum();
 
-    // Check if they're equal (within floating point tolerance)
-    (primary_sum - secondary_sum).abs() < 1e-8
+    // Check if they're exactly equal (for integer vonorms, this should be exact)
+    primary_sum == secondary_sum
 }

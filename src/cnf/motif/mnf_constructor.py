@@ -129,6 +129,30 @@ def sort_motif_coord_arr(coord_mat, atom_labels):
     sorted_coord_mat = coord_mat.T[sorted_indices]
     return sorted_coord_mat.T
 
+def extract_coord_matrix_from_mnf_tuple(mnf_tuple, include_origin: bool = False):
+    """
+    Reconstruct coordinate matrix from MNF coord_list.
+
+    Args:
+        include_origin: If True, prepend origin atom at (0,0,0)
+
+    Returns:
+        coord_matrix: (3, N) or (3, N-1) array depending on include_origin
+        n_atoms: Total number of atoms (including origin)
+    """
+    # Reconstruct coord_matrix from coord_list (which excludes origin atom)
+    n_stored_atoms = len(mnf_tuple) // 3
+    coords_array = np.array(mnf_tuple, dtype=np.int32).reshape(n_stored_atoms, 3)
+
+    n_atoms = n_stored_atoms + 1  # +1 for implicit origin
+    if include_origin:
+        # Prepend origin atom for Rust (needs full structure for transformations)
+        coords_array = np.vstack([np.array([[0, 0, 0]]), coords_array])
+        
+    motif_coord_matrix = coords_array.T  # (3, N-1) - no origin atom
+
+    return motif_coord_matrix, n_atoms
+
 class MNFConstructor():
     """Implements methods for taking a list of atomic positions
     in fractional coordinates and producing the Motif Normal Form string

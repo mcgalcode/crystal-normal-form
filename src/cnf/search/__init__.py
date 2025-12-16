@@ -63,7 +63,7 @@ def explore_pt(map_store: CrystalMapStore, pt_id: int, filters: list[SearchFilte
 
     pt = map_store.get_point_by_id(pt_id)
 
-    nbs = NeighborFinder(pt.cnf).find_neighbors()
+    nbs = NeighborFinder.from_cnf(pt.cnf).find_neighbors(pt.cnf)
     
     all_nb_ids = []
     new_nb_ids = []
@@ -117,7 +117,7 @@ def explore_pt_partition(partition_db: PartitionedDB, point_cnf: CrystalNormalFo
     # Time: Find neighbors (the actual computation)
     t_start = time.time()
     # try:
-    nbs = NeighborFinder(pt.cnf).find_neighbors()
+    nbs = NeighborFinder.from_cnf(pt.cnf).find_neighbors(pt.cnf)
     # except Exception as e:
     #     logger.fatal(f"Ran into a problem with point {pt.id}, {point_cnf}")
     #     return [], [], {}

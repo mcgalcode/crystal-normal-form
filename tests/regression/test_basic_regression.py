@@ -20,7 +20,7 @@ def _make_neighbor_data():
     }
     for s in tqdm.tqdm(structs):
         cnf = UnitCell.from_pymatgen_structure(s).to_cnf(xi=XI, delta=DELTA)
-        nbs = NeighborFinder(cnf).find_neighbors()
+        nbs = NeighborFinder.from_cnf(cnf).find_neighbors(cnf)
         
         nb_data["examples"].append({
             "point": cnf.coords,
@@ -66,7 +66,7 @@ def test_neighbor_id_regression():
         els = ex["elements"]
         cnf_pt = CrystalNormalForm.from_tuple(point, els, xi, delta)
         expected_nbs = [CrystalNormalForm.from_tuple(list(nb), els, xi, delta) for nb in ex["neighbors"]]
-        actual_nbs = NeighborFinder(cnf_pt).find_neighbors()
+        actual_nbs = NeighborFinder.from_cnf(cnf_pt).find_neighbors(cnf_pt)
         assert len(expected_nbs) == len(actual_nbs), f"Different #s of neighbors found in regression test for example {idx}"
         assert set(expected_nbs) == set(actual_nbs), f"Different neighbor sets found in regression test for example {idx}"
 

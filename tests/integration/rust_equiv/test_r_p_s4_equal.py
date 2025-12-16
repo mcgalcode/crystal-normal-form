@@ -25,8 +25,8 @@ def test_s4_groups_equal(idx, struct: Structure):
     # PYTHON
     if before is not None:
         del os.environ['USE_RUST']
-    nf = NeighborFinder(original_cnf)
-    py_nbs = nf.find_neighbors()
+    nf = NeighborFinder.from_cnf(original_cnf)
+    py_nbs = nf.find_neighbors(original_cnf)
 
     import rust_cnf
 

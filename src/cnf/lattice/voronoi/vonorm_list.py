@@ -156,7 +156,7 @@ class VonormList():
         return list(mats)
 
     @maybe_profile
-    def stabilizer_matrices_fast(self):
+    def stabilizer_matrices_fast(self) -> list[MatrixTuple]:
         """
         Fast stabilizer computation for discretized vonorms.
 
@@ -169,7 +169,6 @@ class VonormList():
         """
         from ..permutations import ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS, CONORM_PERMUTATION_TO_VONORM_PERMUTATION_ARRAY
 
-        vonorms_tuple = self.tuple
         vonorms_arr = self.vonorms_np
 
         # Compute conorms directly using exact arithmetic

@@ -6,7 +6,7 @@ from ..lattice.permutations import apply_permutation
 def sort_elements(elements: list[str]) -> list[str]:
     return list(sorted(elements, key=lambda e: Element(e).number))
 
-def move_coords_into_cell(frac_coords: np.ndarray, mod) -> np.array:
+def move_coords_into_cell(frac_coords: np.ndarray, mod) -> np.ndarray:
     frac_coords_modded = frac_coords.round(13)
     frac_coords_modded = np.mod(frac_coords_modded, mod)
     if (frac_coords_modded == mod).any():
