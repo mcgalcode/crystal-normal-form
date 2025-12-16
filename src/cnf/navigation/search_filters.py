@@ -73,13 +73,4 @@ class MinDistanceFilter(SearchFilter):
         self.dist = min_dist
     
     def should_add_pt(self, pt: CrystalNormalForm, struct: Structure):
-        return no_atoms_closer_than(pt, self.dist)        
-
-class AtomOverlapFilter(SearchFilter):
-
-    def __init__(self, overlap_tol=0.5):
-        self.overlap_tol = overlap_tol
-    
-    def should_add_pt(self, pt: CrystalNormalForm, struct: Structure):
-        overlaps = find_overlapping_atoms(struct, self.overlap_tol)
-        return len(overlaps) == 0
+        return no_atoms_closer_than(pt, self.dist)
