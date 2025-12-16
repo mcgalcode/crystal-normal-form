@@ -206,12 +206,6 @@ fn selling_reduce_with_transform(vonorms: &[f64; 7], tol: f64, max_steps: usize)
     }
 }
 
-/// Perform Selling reduction to make all conorms <= 0
-fn selling_reduce(vonorms: &[f64; 7], tol: f64, max_steps: usize) -> [f64; 7] {
-    let (reduced, _) = selling_reduce_with_transform(vonorms, tol, max_steps);
-    reduced
-}
-
 /// Fast LNF construction for discretized vonorms (exact equality)
 ///
 /// Returns:

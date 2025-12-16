@@ -418,39 +418,6 @@ fn find_and_combine_stabilizers_rust_float<'py>(
     Ok(result_array.into())
 }
 
-/// Validate a vonorm step
-///
-/// Combines three validation checks:
-/// 1. has_valid_conorms_exact: Check if zero conorm set is valid
-/// 2. is_obtuse: All conorms should be <= 0
-/// 3. is_superbasis_exact: primary_sum == secondary_sum
-fn validate_vonorm_step(vonorms: &[f64; 7]) -> bool {
-    use crate::permutations::{compute_conorms, find_zero_indices_exact, PERMUTATIONS};
-
-    // 1. Compute conorms
-    let conorms = compute_conorms(vonorms);
-
-    // 2. Check if zero conorm set is valid (has_valid_conorms_exact)
-    let zero_indices = find_zero_indices_exact(&conorms);
-    if !PERMUTATIONS.zero_to_perm_to_mats.contains_key(&zero_indices) {
-        return false;
-    }
-
-    // 3. Check if obtuse (all conorms <= 0)
-    if !conorms.iter().all(|&c| c <= 0.0) {
-        return false;
-    }
-
-    // 4. Check if superbasis (primary_sum == secondary_sum)
-    let primary_sum: f64 = vonorms[0..4].iter().sum();
-    let secondary_sum: f64 = vonorms[4..7].iter().sum();
-    if (primary_sum - secondary_sum).abs() > 1e-10 {
-        return false;
-    }
-
-    true
-}
-
 /// Compute step data for lattice neighbor finding
 ///
 /// This function performs all the heavy numpy operations for step data computation:

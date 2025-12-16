@@ -1,14 +1,5 @@
 use lazy_static::lazy_static;
 use std::collections::HashMap;
-use serde::Deserialize;
-
-/// Structure matching the JSON data format
-#[derive(Deserialize, Clone)]
-struct PermutationEntry {
-    zeros: Vec<usize>,
-    matrix: Vec<Vec<i32>>,
-    permutations: Vec<Vec<usize>>,
-}
 
 /// Data for one S4 equivalence class group
 #[derive(Clone)]
