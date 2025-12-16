@@ -42,8 +42,9 @@ impl Ord for AStarNode {
     }
 }
 
-/// Compute Euclidean distance heuristic between two CNF states
-/// Considers both vonorms and coords
+/// Compute squared Euclidean distance heuristic between two CNF states
+/// Uses sum of squared differences WITHOUT sqrt
+/// This is inadmissible (overestimates) but works well in practice for CNF navigation
 fn euclidean_heuristic(vonorms1: &[i32], coords1: &[i32], vonorms2: &[i32], coords2: &[i32]) -> f64 {
     assert_eq!(coords1.len(), coords2.len());
     assert_eq!(vonorms1.len(), vonorms2.len());
@@ -66,8 +67,8 @@ fn euclidean_heuristic(vonorms1: &[i32], coords1: &[i32], vonorms2: &[i32], coor
         })
         .sum();
 
-    // Combined distance
-    (vonorm_dist_sq + coord_dist_sq).sqrt()
+    // Combined SQUARED distance (no sqrt)
+    vonorm_dist_sq + coord_dist_sq
 }
 
 /// Create a hash key from vonorms and coords for deduplication
@@ -240,8 +241,10 @@ pub fn astar_pathfind(
                 continue;
             }
 
-            // Edge cost: use heuristic as distance measure
-            let edge_cost = euclidean_heuristic(&current_node.vonorms, &current_node.coords, &neighbor_vonorms, &neighbor_coords);
+            // Edge cost: uniform cost 1 (topology-based, not metric-based)
+            // Canonicalization doesn't preserve Euclidean distances, so we treat
+            // CNF space as a topological graph with uniform edge weights
+            let edge_cost = 1.0;
             let tentative_g = current_node.g_score + edge_cost;
 
             if iterations == 1 && added_count == 0 {
