@@ -10,6 +10,7 @@ from pymatgen.core import Structure
 from cnf import UnitCell
 from cnf.cnf_constructor import CNFConstructor
 from cnf.navigation.utils import get_endpoints_from_pmg_structs
+from cnf.navigation.astar import astar_pathfind as astar_pathfind_py, squared_euclidean_heuristic, min_distance_filter
 
 
 def pathfind_and_save(start_cif, end_cif, output_json, xi=0.2, delta=30, min_distance=0.0, max_iterations=100000):
@@ -91,21 +92,38 @@ def pathfind_and_save(start_cif, end_cif, output_json, xi=0.2, delta=30, min_dis
         verbose=True
     )
 
+    # path = astar_pathfind_py(
+    #     start_cnfs,
+    #     goal_cnfs,
+    #     squared_euclidean_heuristic,
+    #     min_distance_filter(min_distance),
+    #     max_iterations=max_iterations,
+    #     verbose=True
+    # )
+
     if path is None:
         print("❌ No path found!")
         return False
 
     print(f"\n✅ Path found with {len(path)} steps!")
 
+    # Path from Python A* is flat tuples (vonorms + coords concatenated)
+    # Split them into (vonorms, coords) pairs for validation and output
+    path_split = []
+    for flat_tuple in path:
+        vonorms = list(flat_tuple[:7])
+        coords = list(flat_tuple[7:])
+        path_split.append((vonorms, coords))
+
     # Show path summary
     print(f"\nPath summary:")
-    print(f"  First step vonorms: {path[0][0]}")
-    print(f"  First step coords:  {path[0][1]}")
-    print(f"  Last step vonorms:  {path[-1][0]}")
-    print(f"  Last step coords:   {path[-1][1]}")
+    print(f"  First step vonorms: {path_split[0][0]}")
+    print(f"  First step coords:  {path_split[0][1]}")
+    print(f"  Last step vonorms:  {path_split[-1][0]}")
+    print(f"  Last step coords:   {path_split[-1][1]}")
 
     # Verify path starts at one of the start states
-    path_start = path[0]
+    path_start = path_split[0]
     start_matches = any(
         path_start[0] == s[0] and path_start[1] == s[1]
         for s in start_points
@@ -118,7 +136,7 @@ def pathfind_and_save(start_cif, end_cif, output_json, xi=0.2, delta=30, min_dis
         return False
 
     # Verify path ends at one of the goal states
-    path_goal = path[-1]
+    path_goal = path_split[-1]
     goal_matches = any(
         path_goal[0] == g[0] and path_goal[1] == g[1]
         for g in goal_points
@@ -147,7 +165,7 @@ def pathfind_and_save(start_cif, end_cif, output_json, xi=0.2, delta=30, min_dis
                 "vonorms": vonorms,
                 "coords": coords
             }
-            for vonorms, coords in path
+            for vonorms, coords in path_split
         ]
     }
 

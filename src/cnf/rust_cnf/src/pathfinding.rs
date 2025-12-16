@@ -98,7 +98,7 @@ fn states_equal(vonorms1: &[i32], coords1: &[i32], vonorms2: &[i32], coords2: &[
 ///     verbose: Print progress every 100 iterations
 ///
 /// Returns:
-///     Option containing path as Vec of (vonorms, coords) tuples, or None if no path found
+///     Option containing path as Vec of flat Vec<i32> (vonorms + coords concatenated), or None if no path found
 pub fn astar_pathfind(
     start_points: &[(Vec<i32>, Vec<i32>)],
     goal_points: &[(Vec<i32>, Vec<i32>)],
@@ -109,12 +109,15 @@ pub fn astar_pathfind(
     min_distance: f64,
     max_iterations: usize,
     verbose: bool,
-) -> Option<Vec<(Vec<i32>, Vec<i32>)>> {
+) -> Option<Vec<Vec<i32>>> {
     // Check if any start equals any goal
     for (start_vonorms, start_coords) in start_points {
         for (goal_vonorms, goal_coords) in goal_points {
             if states_equal(start_vonorms, start_coords, goal_vonorms, goal_coords) {
-                return Some(vec![(start_vonorms.clone(), start_coords.clone())]);
+                // Return flat concatenated format
+                let mut flat = start_vonorms.clone();
+                flat.extend_from_slice(start_coords);
+                return Some(vec![flat]);
             }
         }
     }
@@ -227,6 +230,12 @@ pub fn astar_pathfind(
             eprintln!("DEBUG: {} neighbors after filtering (min_distance={})", filtered_neighbors.len(), min_distance);
         }
 
+        // Sort neighbors for deterministic behavior (avoids hash randomization issues)
+        let mut filtered_neighbors = filtered_neighbors;
+        filtered_neighbors.sort_by(|a, b| {
+            a.0.cmp(&b.0).then_with(|| a.1.cmp(&b.1))
+        });
+
         let mut added_count = 0;
         let mut closed_count = 0;
 
@@ -292,22 +301,20 @@ pub fn astar_pathfind(
 }
 
 /// Reconstruct the path from start to goal using the came_from map
+/// Returns path as flat concatenated vectors (vonorms + coords)
 fn reconstruct_path(
     came_from: &HashMap<Vec<i32>, Vec<i32>>,
     goal_vonorms: &[i32],
     goal_coords: &[i32],
-) -> Vec<(Vec<i32>, Vec<i32>)> {
+) -> Vec<Vec<i32>> {
     let mut path = Vec::new();
     let mut current_key = make_key(goal_vonorms, goal_coords);
 
-    // Extract vonorms and coords from the current key
-    let vonorm_len = 7; // CNFs always have 7 vonorms
-    let (vonorms, coords) = current_key.split_at(vonorm_len);
-    path.push((vonorms.to_vec(), coords.to_vec()));
+    // Add current key (already concatenated)
+    path.push(current_key.clone());
 
     while let Some(parent_key) = came_from.get(&current_key) {
-        let (vonorms, coords) = parent_key.split_at(vonorm_len);
-        path.push((vonorms.to_vec(), coords.to_vec()));
+        path.push(parent_key.clone());
         current_key = parent_key.clone();
     }
 

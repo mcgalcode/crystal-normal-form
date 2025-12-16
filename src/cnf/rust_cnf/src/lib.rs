@@ -1240,7 +1240,7 @@ fn reconstruct_structure_from_cnf<'py>(
 ///     verbose: Print progress every 100 iterations
 ///
 /// Returns:
-///     List of (vonorms, coords) tuples representing the path, or None if no path found
+///     List of flat Vec<i32> (vonorms + coords concatenated) representing the path, or None if no path found
 #[pyfunction]
 fn astar_pathfind_rust<'py>(
     _py: Python<'py>,
@@ -1253,7 +1253,7 @@ fn astar_pathfind_rust<'py>(
     min_distance: f64,
     max_iterations: usize,
     verbose: bool,
-) -> PyResult<Option<Vec<(Vec<i32>, Vec<i32>)>>> {
+) -> PyResult<Option<Vec<Vec<i32>>>> {
     use crate::pathfinding::astar_pathfind;
 
     // Validate inputs
@@ -1320,6 +1320,57 @@ fn astar_pathfind_rust<'py>(
     Ok(result)
 }
 
+/// Filter neighbor tuples by minimum pairwise distance
+///
+/// Args:
+///     neighbor_tuples: List of neighbor tuples where each tuple is vonorms + coords concatenated
+///     n_atoms: Number of atoms (including origin)
+///     xi: Lattice step size
+///     delta: Integer discretization factor
+///     min_distance: Minimum allowed pairwise distance in Angstroms
+///
+/// Returns:
+///     Filtered list of neighbor tuples that pass the distance check
+#[pyfunction]
+fn filter_neighbors_by_min_distance_rust(
+    neighbor_tuples: Vec<Vec<i32>>,
+    n_atoms: usize,
+    xi: f64,
+    delta: i32,
+    min_distance: f64,
+) -> PyResult<Vec<Vec<i32>>> {
+    // Split each neighbor tuple into (vonorms, coords)
+    let split_tuples: Vec<(Vec<i32>, Vec<i32>)> = neighbor_tuples
+        .iter()
+        .map(|tuple| {
+            let vonorms = tuple[..7].to_vec();
+            let coords = tuple[7..].to_vec();
+            (vonorms, coords)
+        })
+        .collect();
+
+    // Filter using the existing Rust function
+    let filtered = geometry::filter_neighbors_by_min_distance(
+        &split_tuples,
+        n_atoms,
+        xi,
+        delta,
+        min_distance,
+    );
+
+    // Concatenate vonorms and coords back together
+    let result: Vec<Vec<i32>> = filtered
+        .into_iter()
+        .map(|(vonorms, coords)| {
+            let mut combined = vonorms;
+            combined.extend(coords);
+            combined
+        })
+        .collect();
+
+    Ok(result)
+}
+
 #[pymodule]
 fn rust_cnf(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(hello_rust, m)?)?;
@@ -1343,5 +1394,6 @@ fn rust_cnf(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(find_neighbor_tuples_rust, m)?)?;
     m.add_function(wrap_pyfunction!(reconstruct_structure_from_cnf, m)?)?;
     m.add_function(wrap_pyfunction!(astar_pathfind_rust, m)?)?;
+    m.add_function(wrap_pyfunction!(filter_neighbors_by_min_distance_rust, m)?)?;
     Ok(())
 }
