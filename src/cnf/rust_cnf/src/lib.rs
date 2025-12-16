@@ -1226,48 +1226,6 @@ fn reconstruct_structure_from_cnf<'py>(
     Ok((lattice_flat, cart_coords))
 }
 
-#[pyfunction]
-fn compute_pairwise_distances_pbc_rust<'py>(
-    _py: Python<'py>,
-    positions: PyReadonlyArray1<f64>,
-    n_atoms: usize,
-    lattice_flat: PyReadonlyArray1<f64>,
-) -> PyResult<Vec<f64>> {
-    use crate::geometry::compute_pairwise_distances_pbc;
-
-    // Convert inputs to slices
-    let positions_slice = positions.as_slice()?;
-    let lattice_slice = lattice_flat.as_slice()?;
-
-    // Validate input sizes
-    if lattice_slice.len() != 9 {
-        return Err(pyo3::exceptions::PyValueError::new_err(
-            "lattice_flat must have exactly 9 elements"
-        ));
-    }
-    if positions_slice.len() != n_atoms * 3 {
-        return Err(pyo3::exceptions::PyValueError::new_err(
-            format!("positions must have {} elements (n_atoms * 3)", n_atoms * 3)
-        ));
-    }
-
-    // Convert flattened array to 3x3 matrix
-    let lattice_matrix = [
-        [lattice_slice[0], lattice_slice[1], lattice_slice[2]],
-        [lattice_slice[3], lattice_slice[4], lattice_slice[5]],
-        [lattice_slice[6], lattice_slice[7], lattice_slice[8]],
-    ];
-
-    // Compute pairwise distances (Rust will compute the inverse internally)
-    let distances = compute_pairwise_distances_pbc(
-        positions_slice,
-        n_atoms,
-        &lattice_matrix,
-    );
-
-    Ok(distances)
-}
-
 /// A* pathfinding from multiple start CNFs to multiple goal CNFs (pure Rust implementation)
 ///
 /// Args:
@@ -1384,7 +1342,6 @@ fn rust_cnf(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(find_and_canonicalize_motif_neighbors, m)?)?;
     m.add_function(wrap_pyfunction!(find_neighbor_tuples_rust, m)?)?;
     m.add_function(wrap_pyfunction!(reconstruct_structure_from_cnf, m)?)?;
-    m.add_function(wrap_pyfunction!(compute_pairwise_distances_pbc_rust, m)?)?;
     m.add_function(wrap_pyfunction!(astar_pathfind_rust, m)?)?;
     Ok(())
 }

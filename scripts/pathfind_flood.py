@@ -1,6 +1,6 @@
 from cnf.search import continue_search, continue_search_flood_fill
 from cnf.db.search_store import SearchProcessStore
-from cnf.navigation.search_filters import VolumeLimitFilter, AtomOverlapFilter
+from cnf.navigation.search_filters import VolumeLimitFilter, MinDistanceFilter
 from cnf.calculation.grace import GraceCalculator
 import sys
 
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     #     1.3
     # )
 
-    # atomic_overlap_filter = AtomOverlapFilter(0.8)
+    # atomic_overlap_filter = MinDistanceFilter(0.8)
 
     filters = [
         # vol_filter,
