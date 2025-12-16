@@ -18,8 +18,8 @@ def test_neighbors_are_unique(idx, struct: Structure):
     delta = 20
     constructor = CNFConstructor(xi, delta, False)
     original_cnf = constructor.from_pymatgen_structure(struct).cnf
-    nf = NeighborFinder(original_cnf)
-    nbs = nf.find_neighbors()
+    nf = NeighborFinder.from_cnf(original_cnf)
+    nbs = nf.find_neighbors(original_cnf)
     unique_nbs = set(nbs)
     assert len(nbs) == len(unique_nbs)
     assert original_cnf not in nbs

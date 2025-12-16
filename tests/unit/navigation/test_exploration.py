@@ -19,8 +19,8 @@ def point_set():
     xi = 1.5
     delta = 10
     cnf = UnitCell.from_pymatgen_structure(struct).to_cnf(xi=xi, delta=delta)
-    nf = NeighborFinder(cnf)
-    nbs = nf.find_neighbors()
+    nf = NeighborFinder.from_cnf(cnf)
+    nbs = nf.find_neighbors(cnf)
     return xi, delta, nbs
 
 

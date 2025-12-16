@@ -2,27 +2,6 @@
 
 use crate::permutations::compute_conorms;
 
-/// Round to nearest integer using round-half-to-even (bankers rounding)
-/// This matches NumPy's rounding behavior
-#[inline]
-fn round_half_to_even(x: f64) -> f64 {
-    let floor = x.floor();
-    let frac = x - floor;
-
-    if frac < 0.5 {
-        floor
-    } else if frac > 0.5 {
-        floor + 1.0
-    } else {
-        // Exactly 0.5 - round to nearest even
-        if floor as i64 % 2 == 0 {
-            floor  // floor is even, keep it
-        } else {
-            floor + 1.0  // floor is odd, round up to make it even
-        }
-    }
-}
-
 /// Convert vonorms to 3x3 lattice matrix (row vectors)
 ///
 /// This implements the algorithm from vonorm_list.py:to_generators()
@@ -124,40 +103,6 @@ pub fn coords_to_cartesian_positions(
     }
 
     cartesian_positions
-}
-
-/// Compute 3x3 matrix inverse for f64
-#[inline]
-fn invert_matrix_3x3_f64(m: &[[f64; 3]; 3]) -> [[f64; 3]; 3] {
-    // Compute determinant
-    let det = m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1])
-            - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
-            + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
-
-    if det.abs() < 1e-10 {
-        panic!("Matrix is singular and cannot be inverted");
-    }
-
-    let inv_det = 1.0 / det;
-
-    // Compute inverse using cofactor matrix
-    [
-        [
-            inv_det * (m[1][1] * m[2][2] - m[1][2] * m[2][1]),
-            inv_det * (m[0][2] * m[2][1] - m[0][1] * m[2][2]),
-            inv_det * (m[0][1] * m[1][2] - m[0][2] * m[1][1]),
-        ],
-        [
-            inv_det * (m[1][2] * m[2][0] - m[1][0] * m[2][2]),
-            inv_det * (m[0][0] * m[2][2] - m[0][2] * m[2][0]),
-            inv_det * (m[0][2] * m[1][0] - m[0][0] * m[1][2]),
-        ],
-        [
-            inv_det * (m[1][0] * m[2][1] - m[1][1] * m[2][0]),
-            inv_det * (m[0][1] * m[2][0] - m[0][0] * m[2][1]),
-            inv_det * (m[0][0] * m[1][1] - m[0][1] * m[1][0]),
-        ],
-    ]
 }
 
 /// Compute pairwise distances between atoms with periodic boundary conditions

@@ -5,7 +5,7 @@ import helpers
 from cnf import CrystalNormalForm
 from cnf.cnf_constructor import CNFConstructor
 from cnf.lattice.lnf_constructor import VonormCanonicalizer, LatticeNormalForm
-from cnf.navigation.lattice_neighbor_finder import LatticeStep, LatticeNeighborFinder
+from cnf.navigation.neighbor_finder import NeighborFinder
 from cnf.navigation.neighbor import Neighbor
 from pymatgen.core.structure import Structure
 from cnf.unit_cell import UnitCell
@@ -26,9 +26,10 @@ def test_lnf_neighbor_reciprocity_within_cnf_neighbors(idx, struct: Structure):
 
     original_cnf = constructor.from_pymatgen_structure(struct).cnf
 
-    neigb_set = LatticeNeighborFinder(original_cnf).find_cnf_neighbors()
+    nf = NeighborFinder.from_cnf(original_cnf)
+    neigb_set = nf.find_neighbors(original_cnf)
     for n in neigb_set:
-        second_neighbor_set = LatticeNeighborFinder(n).find_cnf_neighbors()
+        second_neighbor_set = nf.find_neighbors(n)
         second_neighbor_lnfs = [sn.lattice_normal_form for sn in second_neighbor_set]
         if original_cnf.lattice_normal_form not in second_neighbor_lnfs:
             print(f"No reciprocal relationship found!")
@@ -50,13 +51,14 @@ def test_neighbor_reciprocity_by_geometry(idx, struct: Structure):
     original_cnf = cnf_constructor.from_pymatgen_structure(struct).cnf
     print(f"Original CNF: {original_cnf.coords}")
 
-    neighbor_set = LatticeNeighborFinder(original_cnf).find_cnf_neighbors()
+    nf = NeighborFinder.from_cnf(original_cnf)
+    neighbor_set = nf.find_neighbors(original_cnf)
     print(f"Structure has {len(neighbor_set)} neighbors")
     reciprocal_nbs = [] 
     nonreciprocal_nbs = []
 
     for n in neighbor_set:
-        second_neighbors = LatticeNeighborFinder(n).find_cnf_neighbors()
+        second_neighbors = nf.find_neighbors(n)
         original_found = False
         for sn in second_neighbors:
             neighb_cnf = sn
@@ -98,7 +100,8 @@ def test_cnf_neighbor_reciprocity(idx, struct: Structure):
     print("Original elements: ", original_cnf.motif_normal_form.elements)
     print(f"Original Voronoi: {original_cnf.voronoi_class}, {original_cnf.lattice_normal_form.vonorms.conorms.form}")
     CUTOFF = 0.015
-    neighbor_set = LatticeNeighborFinder(original_cnf).find_cnf_neighbors()
+    nf = NeighborFinder.from_cnf(original_cnf)
+    neighbor_set = nf.find_neighbors(original_cnf)
     print(f"Structure has {len(neighbor_set)} neighbors")
     recipricol_nbs = [] 
     nonreciprocal_nbs = []
@@ -107,7 +110,7 @@ def test_cnf_neighbor_reciprocity(idx, struct: Structure):
 
     geo_matches = []
     for nb_idx, n in enumerate(neighbor_set):
-        second_neighbors = LatticeNeighborFinder(n).find_cnf_neighbors()
+        second_neighbors = nf.find_neighbors(n)
         if original_cnf not in second_neighbors:
             print(f"No reciprocal relationship found!")
             print(f"Original LNF: {original_cnf.lattice_normal_form.coords}")
@@ -170,26 +173,20 @@ def test_second_neighbors_obey_reciprocity(idx, struct):
     original_xtal = original_cnf.reconstruct()
     # helpers.assert_identical_by_pdd_distance(struct, original_xtal, cutoff=0.1)
 
-    nf = LatticeNeighborFinder(original_cnf)
+    nf = NeighborFinder.from_cnf(original_cnf)
 
-    for step in nf.possible_steps():
-        nb = nf.find_cnf_neighbor(step)
-        if nb is not None:
-            break
-
-    cnf_2 = nb.result
+    cnf_2 = nf.find_neighbors(original_cnf)[0]
     helpers.printif(f"Original Voronoi: {cnf_2.voronoi_class}", verbose)
     helpers.printif(f"Original CNF: {cnf_2.coords}", verbose)
-    nf2 = LatticeNeighborFinder(cnf_2)
-    neighbor_set = nf2.find_cnf_neighbors()
-    helpers.printif(f"Structure has {len(neighbor_set)} neighbors", verbose)
+    cnf_2_nbs = nf.find_neighbors(cnf_2)
+    helpers.printif(f"Structure has {len(cnf_2_nbs)} neighbors", verbose)
     recipricol_nbs = [] 
     nonreciprocal_nbs = []
     geo_rec_neighbs = []
     lnf_rec_neighbs = []
 
-    for n in neighbor_set:
-        second_neighbors = LatticeNeighborFinder(n).find_cnf_neighbors()
+    for n in cnf_2_nbs:
+        second_neighbors = nf.find_neighbors(n)
         if cnf_2 not in second_neighbors:
             helpers.printif(f"No reciprocal relationship found!", verbose)
             nonreciprocal_nbs.append(n)
@@ -217,75 +214,4 @@ def test_second_neighbors_obey_reciprocity(idx, struct):
     helpers.printif(f"Found {len(geo_rec_neighbs)} GEO neighbors", verbose)
     helpers.printif(f"Found {len(lnf_rec_neighbs)} LNF neighbors", verbose)
 
-    assert len(recipricol_nbs) == len(neighbor_set)
-
-@pytest.mark.debug
-@helpers.parameterized_by_mp_structs
-def test_third_neighbors_obey_reciprocity(idx, struct):
-    verbose = True
-    xi = 0.001
-    delta = 30
-
-    helpers.printif("", verbose)
-    helpers.printif(f"Attempting struct at idx {idx * STRUCT_SAMPLE_FREQ}", verbose)
-    constructor = CNFConstructor(xi, delta, False) 
-
-    struct = struct.to_primitive()
-    
-    helpers.printif(f"Struct has {len(struct)} sites", verbose)
-
-    original_cnf = constructor.from_pymatgen_structure(struct).cnf
-    nf = LatticeNeighborFinder(original_cnf)
-
-    for step in nf.possible_steps():
-        nb1 = nf.find_cnf_neighbor(step)
-        if nb1 is not None:
-            break
-    
-    nf1 = LatticeNeighborFinder(nb1.result)
-    for step in nf.possible_steps():
-        nb2 = nf.find_cnf_neighbor(step)
-        if nb2 is not None:
-            break
-
-    cnf_2 = nb2.result
-    helpers.printif(f"Original Voronoi: {cnf_2.voronoi_class}", verbose)
-    helpers.printif(f"Original CNF: {cnf_2.coords}", verbose)
-    nf2 = LatticeNeighborFinder(cnf_2)
-    neighbor_set = nf2.find_cnf_neighbors()
-    helpers.printif(f"Structure has {len(neighbor_set)} neighbors", verbose)
-    recipricol_nbs = [] 
-    nonreciprocal_nbs = []
-    geo_rec_neighbs = []
-    lnf_rec_neighbs = []
-
-    for n in neighbor_set.neighbors:
-        second_neighbors = LatticeNeighborFinder(n).find_cnf_neighbors()
-        if cnf_2 not in second_neighbors:
-            helpers.printif(f"No reciprocal relationship found!", verbose)
-            nonreciprocal_nbs.append(n)
-            num_geo_matches = 0
-            num_lnf_matches = 0
-            for n2 in second_neighbors.neighbors:
-                if n2.lattice_normal_form == cnf_2.lattice_normal_form:
-                    num_lnf_matches += 1
-                    helpers.printif(f"Found neighbor w same LNF: {n2.coords}", verbose)
-                    if helpers.are_cnfs_geo_matches(n2, original_cnf):
-                        num_geo_matches += 1
-                        helpers.printif(f"NB V Class: {n.voronoi_class}, {cnf_2.lattice_normal_form.vonorms.conorms.form}", verbose)
-                        helpers.printif(n2.coords, verbose)
-            if num_geo_matches > 0:
-                geo_rec_neighbs.append(n)
-            
-            if num_lnf_matches > 0:
-                lnf_rec_neighbs.append(n)
-            # assert num_geo_matches > 0
-            helpers.printif(f"Found {num_geo_matches} geometrically identical second degree neighbs with same LNF!", verbose)
-        else:
-            recipricol_nbs.append(n)
-    helpers.printif(f"Found {len(recipricol_nbs)} GOOD neighbors", verbose)
-    helpers.printif(f"Found {len(nonreciprocal_nbs)} BAD neighbors", verbose)
-    helpers.printif(f"Found {len(geo_rec_neighbs)} GEO neighbors", verbose)
-    helpers.printif(f"Found {len(lnf_rec_neighbs)} LNF neighbors", verbose)
-
-    assert len(recipricol_nbs) == len(neighbor_set.neighbors)
+    assert len(recipricol_nbs) == len(cnf_2_nbs)

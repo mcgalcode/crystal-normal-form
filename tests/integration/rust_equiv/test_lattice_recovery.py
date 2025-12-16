@@ -36,7 +36,7 @@ def test_rust_reconstructs_lattice_correctly(idx, struct: Structure):
     struct = struct.to_primitive()
     original_cnf = constructor.from_pymatgen_structure(struct).cnf
 
-    nbs = NeighborFinder(original_cnf).find_neighbors()
+    nbs = NeighborFinder.from_cnf(original_cnf).find_neighbors(original_cnf)
 
     # Test every 10th neighbor for speed
     for nb in nbs[::10]:

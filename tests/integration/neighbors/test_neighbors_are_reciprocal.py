@@ -25,7 +25,8 @@ def test_cnf_neighbor_reciprocity(idx, struct: Structure):
     struct = struct.to_primitive()
     original_cnf = constructor.from_pymatgen_structure(struct).cnf
 
-    nbs = NeighborFinder(original_cnf).find_neighbors()
+    nf = NeighborFinder.from_cnf(original_cnf)
+    nbs = nf.find_neighbors(original_cnf)
     for nb in nbs:
-        nb2s = NeighborFinder(nb).find_neighbors()
+        nb2s = nf.find_neighbors(nb)
         assert original_cnf in nb2s

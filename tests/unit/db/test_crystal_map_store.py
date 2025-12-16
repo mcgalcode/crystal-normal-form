@@ -80,8 +80,8 @@ def test_can_get_pt_by_id(zr_hcp_cnf, temp_db: CrystalMapStore):
     assert result.id   
 
 def test_can_get_multiple_ids(zr_hcp_cnf, temp_db: CrystalMapStore):
-    lnfnf = NeighborFinder(zr_hcp_cnf)
-    nbs = lnfnf.find_neighbors()
+    lnfnf = NeighborFinder.from_cnf(zr_hcp_cnf)
+    nbs = lnfnf.find_neighbors(zr_hcp_cnf)
     cnfs = [nb for nb in nbs]
     for c in cnfs:
         temp_db.add_point(c)
@@ -95,8 +95,8 @@ def test_can_get_multiple_ids(zr_hcp_cnf, temp_db: CrystalMapStore):
         assert retrieved.cnf == cnf
 
 def test_can_getting_multiple_ids_with_bad_id_raises_error(zr_hcp_cnf, temp_db: CrystalMapStore):
-    lnfnf = NeighborFinder(zr_hcp_cnf)
-    nbs = lnfnf.find_neighbors()
+    lnfnf = NeighborFinder.from_cnf(zr_hcp_cnf)
+    nbs = lnfnf.find_neighbors(zr_hcp_cnf)
     cnfs = [nb for nb in nbs]
     for c in cnfs[:5]:
         temp_db.add_point(c)
@@ -126,12 +126,13 @@ def test_can_add_connection(zr_hcp_cnf, zr_bcc_cnf, temp_db: CrystalMapStore):
 
 def test_can_get_all_neighbors_of_point(zr_hcp_cnf, temp_db: CrystalMapStore):
     temp_db.add_point(zr_hcp_cnf)
-    nbs = NeighborFinder(zr_hcp_cnf).find_neighbors()
+    nf = NeighborFinder.from_cnf(zr_hcp_cnf)
+    nbs = nf.find_neighbors(zr_hcp_cnf)
     for nb in nbs:
         temp_db.add_point(nb)
         temp_db.add_connection(zr_hcp_cnf, nb)
 
-    other_nbs = NeighborFinder(nbs[-1]).find_neighbors()
+    other_nbs = nf.find_neighbors(nbs[-1])
     for onb in other_nbs:
         existing = temp_db.get_point_by_cnf(onb)
         if existing is None:

@@ -27,7 +27,7 @@ def test_lattice_neighbor_lnfs_make_sense(cnf_constructor):
     struct = helpers.ALL_MP_STRUCTURES()[0]
     original_cnf = cnf_constructor.from_pymatgen_structure(struct).cnf
 
-    neighbor_set = LatticeNeighborFinder(original_cnf).find_cnf_neighbors()
+    neighbor_set = NeighborFinder.from_cnf(original_cnf).find_lattice_neighbor_cnfs(original_cnf)
 
     for n in neighbor_set:
         lnf = n.lattice_normal_form
@@ -35,20 +35,13 @@ def test_lattice_neighbor_lnfs_make_sense(cnf_constructor):
         assert np.sum(np.abs(diff)) == 2
         assert np.max(np.abs(diff)) == 1
 
-def test_tricky_neighbor():
-    xi = 1.5
-    delta = 5
-    element_list = ['Zr', 'Zr']
-    cnf = CrystalNormalForm.from_tuple((1, 7, 21, 25, 7, 22, 25, 1, 3, 3), element_list, xi, delta)
-    nbs = NeighborFinder(cnf).find_neighbors()
-
 
 @helpers.skip_if_fast
 @helpers.parameterized_by_mp_struct_idxs(range(0,1000,100))
 def test_lattice_neighbor_cnfs_make_sense(idx, struct, cnf_constructor):
     original_cnf = cnf_constructor.from_pymatgen_structure(struct).cnf
 
-    neighbor_set = LatticeNeighborFinder(original_cnf).find_cnf_neighbors()
+    neighbor_set = NeighborFinder.from_cnf(original_cnf).find_lattice_neighbor_cnfs(original_cnf)
 
     for n in neighbor_set:
         neighb_lnf = n.lattice_normal_form

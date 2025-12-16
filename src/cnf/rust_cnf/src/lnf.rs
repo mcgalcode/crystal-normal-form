@@ -206,12 +206,6 @@ fn selling_reduce_with_transform(vonorms: &[f64; 7], tol: f64, max_steps: usize)
     }
 }
 
-/// Perform Selling reduction to make all conorms <= 0
-fn selling_reduce(vonorms: &[f64; 7], tol: f64, max_steps: usize) -> [f64; 7] {
-    let (reduced, _) = selling_reduce_with_transform(vonorms, tol, max_steps);
-    reduced
-}
-
 /// Fast LNF construction for discretized vonorms (exact equality)
 ///
 /// Returns:
@@ -655,6 +649,6 @@ pub fn is_superbasis_exact(vonorms: &[f64; 7]) -> bool {
     // Sum of secondary vonorms (indices 4-6)
     let secondary_sum: f64 = vonorms[4..7].iter().sum();
 
-    // Check if they're equal (within floating point tolerance)
-    (primary_sum - secondary_sum).abs() < 1e-8
+    // Check if they're exactly equal (for integer vonorms, this should be exact)
+    primary_sum == secondary_sum
 }

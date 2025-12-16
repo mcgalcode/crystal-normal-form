@@ -5,7 +5,7 @@ import helpers
 from cnf import CrystalNormalForm
 from cnf.cnf_constructor import CNFConstructor
 from cnf.lattice.lnf_constructor import VonormCanonicalizer, LatticeNormalForm
-from cnf.navigation.lattice_neighbor_finder import LatticeStep, LatticeNeighborFinder, LatticeStepResult
+from cnf.navigation.neighbor_finder import NeighborFinder
 from pymatgen.core.structure import Structure
 from cnf.unit_cell import UnitCell
 
@@ -18,8 +18,8 @@ def test_neighbors_are_geometrically_distinct(idx, struct: Structure):
     delta = 20
     constructor = CNFConstructor(xi, delta, False)
     original_cnf = constructor.from_pymatgen_structure(struct).cnf
-    nf = LatticeNeighborFinder(original_cnf, verbose_logging=True)
-    cnf_neighb_set = list(set(nf.find_cnf_neighbors()))
+    nf = NeighborFinder.from_cnf(original_cnf)
+    cnf_neighb_set = nf.find_neighbors()
     tested_neighbs: list[CrystalNormalForm] = []
     dups = []
 

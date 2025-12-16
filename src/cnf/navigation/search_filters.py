@@ -1,5 +1,5 @@
 from ..crystal_normal_form import CrystalNormalForm
-from .utils import find_overlapping_atoms, no_atoms_closer_than
+from .utils import no_atoms_closer_than
 from abc import ABC, abstractmethod
 from pymatgen.core.structure import Structure
 

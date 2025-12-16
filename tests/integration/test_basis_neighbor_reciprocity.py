@@ -4,7 +4,7 @@ import helpers
 
 from cnf import CrystalNormalForm
 from cnf.cnf_constructor import CNFConstructor
-from cnf.navigation.motif_neighbor_finder import MotifStepResult, MotifNeighborFinder
+from cnf.navigation.neighbor_finder import NeighborFinder
 from cnf.navigation.neighbor import Neighbor
 from pymatgen.core.structure import Structure
 from cnf.unit_cell import UnitCell
@@ -26,27 +26,27 @@ def test_motif_neighbor_reciprocity(idx, struct: Structure):
     struct = struct.to_primitive()
     
     original_cnf = constructor.from_pymatgen_structure(struct).cnf
-
-    neighbor_set = MotifNeighborFinder(original_cnf).find_motif_neighbors()
+    nf = NeighborFinder.from_cnf(original_cnf)
+    neighbor_set = nf.find_motif_neighbor_cnfs()
     print(f"Structure had {len(struct)} sites")
     print(f"Found {len(neighbor_set)} basis neighbors!")
     recipricol_nbs = [] 
     nonreciprocal_nbs = []
     geo_rec_neighbs = []
     geo_matches = []
-    for nb_idx, n in enumerate(neighbor_set.neighbors):
-        assert n.point.lattice_normal_form == original_cnf.lattice_normal_form
-        second_neighbors = MotifNeighborFinder(n.point).find_motif_neighbors()
+    for nb_idx, n in enumerate(neighbor_set):
+        assert n.lattice_normal_form == original_cnf.lattice_normal_form
+        second_neighbors = nf.find_motif_neighbor_cnfs(n)
         print(f"Found {len(neighbor_set)} basis SECOND neighbors!")
         if original_cnf not in second_neighbors:
-            # helpers.save_cnfs_to_dir(f"patho_neighbor_pairs/mp_{idx}_nb_{nb_idx}", [original_cnf, n.point])
-            nonreciprocal_nbs.append(n.point)
+            # helpers.save_cnfs_to_dir(f"patho_neighbor_pairs/mp_{idx}_nb_{nb_idx}", [original_cnf, n])
+            nonreciprocal_nbs.append(n)
             num_geo_matches = 0
 
-            for n2 in second_neighbors.neighbors:
-                if helpers.are_cnfs_geo_matches(original_cnf, n2.point, tol=1e-7):
+            for n2 in second_neighbors:
+                if helpers.are_cnfs_geo_matches(original_cnf, n2, tol=1e-7):
                     num_geo_matches += 1
-                    geo_matches.append(n2.point)
+                    geo_matches.append(n2)
             if num_geo_matches > 0:
                 geo_rec_neighbs.append(n)
             
@@ -54,4 +54,4 @@ def test_motif_neighbor_reciprocity(idx, struct: Structure):
         else:
             recipricol_nbs.append(n)
     
-    assert len(recipricol_nbs) == len(neighbor_set.neighbors)
+    assert len(recipricol_nbs) == len(neighbor_set)

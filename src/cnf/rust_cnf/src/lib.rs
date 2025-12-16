@@ -418,39 +418,6 @@ fn find_and_combine_stabilizers_rust_float<'py>(
     Ok(result_array.into())
 }
 
-/// Validate a vonorm step
-///
-/// Combines three validation checks:
-/// 1. has_valid_conorms_exact: Check if zero conorm set is valid
-/// 2. is_obtuse: All conorms should be <= 0
-/// 3. is_superbasis_exact: primary_sum == secondary_sum
-fn validate_vonorm_step(vonorms: &[f64; 7]) -> bool {
-    use crate::permutations::{compute_conorms, find_zero_indices_exact, PERMUTATIONS};
-
-    // 1. Compute conorms
-    let conorms = compute_conorms(vonorms);
-
-    // 2. Check if zero conorm set is valid (has_valid_conorms_exact)
-    let zero_indices = find_zero_indices_exact(&conorms);
-    if !PERMUTATIONS.zero_to_perm_to_mats.contains_key(&zero_indices) {
-        return false;
-    }
-
-    // 3. Check if obtuse (all conorms <= 0)
-    if !conorms.iter().all(|&c| c <= 0.0) {
-        return false;
-    }
-
-    // 4. Check if superbasis (primary_sum == secondary_sum)
-    let primary_sum: f64 = vonorms[0..4].iter().sum();
-    let secondary_sum: f64 = vonorms[4..7].iter().sum();
-    if (primary_sum - secondary_sum).abs() > 1e-10 {
-        return false;
-    }
-
-    true
-}
-
 /// Compute step data for lattice neighbor finding
 ///
 /// This function performs all the heavy numpy operations for step data computation:
@@ -1240,7 +1207,7 @@ fn reconstruct_structure_from_cnf<'py>(
 ///     verbose: Print progress every 100 iterations
 ///
 /// Returns:
-///     List of (vonorms, coords) tuples representing the path, or None if no path found
+///     List of flat Vec<i32> (vonorms + coords concatenated) representing the path, or None if no path found
 #[pyfunction]
 fn astar_pathfind_rust<'py>(
     _py: Python<'py>,
@@ -1253,7 +1220,7 @@ fn astar_pathfind_rust<'py>(
     min_distance: f64,
     max_iterations: usize,
     verbose: bool,
-) -> PyResult<Option<Vec<(Vec<i32>, Vec<i32>)>>> {
+) -> PyResult<Option<Vec<Vec<i32>>>> {
     use crate::pathfinding::astar_pathfind;
 
     // Validate inputs
@@ -1320,6 +1287,57 @@ fn astar_pathfind_rust<'py>(
     Ok(result)
 }
 
+/// Filter neighbor tuples by minimum pairwise distance
+///
+/// Args:
+///     neighbor_tuples: List of neighbor tuples where each tuple is vonorms + coords concatenated
+///     n_atoms: Number of atoms (including origin)
+///     xi: Lattice step size
+///     delta: Integer discretization factor
+///     min_distance: Minimum allowed pairwise distance in Angstroms
+///
+/// Returns:
+///     Filtered list of neighbor tuples that pass the distance check
+#[pyfunction]
+fn filter_neighbors_by_min_distance_rust(
+    neighbor_tuples: Vec<Vec<i32>>,
+    n_atoms: usize,
+    xi: f64,
+    delta: i32,
+    min_distance: f64,
+) -> PyResult<Vec<Vec<i32>>> {
+    // Split each neighbor tuple into (vonorms, coords)
+    let split_tuples: Vec<(Vec<i32>, Vec<i32>)> = neighbor_tuples
+        .iter()
+        .map(|tuple| {
+            let vonorms = tuple[..7].to_vec();
+            let coords = tuple[7..].to_vec();
+            (vonorms, coords)
+        })
+        .collect();
+
+    // Filter using the existing Rust function
+    let filtered = geometry::filter_neighbors_by_min_distance(
+        &split_tuples,
+        n_atoms,
+        xi,
+        delta,
+        min_distance,
+    );
+
+    // Concatenate vonorms and coords back together
+    let result: Vec<Vec<i32>> = filtered
+        .into_iter()
+        .map(|(vonorms, coords)| {
+            let mut combined = vonorms;
+            combined.extend(coords);
+            combined
+        })
+        .collect();
+
+    Ok(result)
+}
+
 #[pymodule]
 fn rust_cnf(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(hello_rust, m)?)?;
@@ -1343,5 +1361,6 @@ fn rust_cnf(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(find_neighbor_tuples_rust, m)?)?;
     m.add_function(wrap_pyfunction!(reconstruct_structure_from_cnf, m)?)?;
     m.add_function(wrap_pyfunction!(astar_pathfind_rust, m)?)?;
+    m.add_function(wrap_pyfunction!(filter_neighbors_by_min_distance_rust, m)?)?;
     Ok(())
 }

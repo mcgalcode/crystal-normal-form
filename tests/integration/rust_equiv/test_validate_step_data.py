@@ -4,7 +4,8 @@ import helpers
 import os
 from cnf import CrystalNormalForm
 from cnf.cnf_constructor import CNFConstructor
-from cnf.navigation.lattice_neighbor_finder import LatticeNeighborFinder
+from cnf.navigation.neighbor_finder import NeighborFinder
+from cnf.navigation.motif_neighbor_finder import extract_coord_matrix_from_mnf_tuple
 from pymatgen.core.structure import Structure
 
 
@@ -18,30 +19,30 @@ def test_validate_step_data_equal(idx, struct: Structure):
     original_cnf = constructor.from_pymatgen_structure(struct).cnf
 
     # Create neighbor finder
-    lnf = LatticeNeighborFinder(original_cnf)
+    nf = NeighborFinder.from_cnf(original_cnf)
 
     # Get step data from Rust (unvalidated)
     os.environ['USE_RUST'] = '1'
     import rust_cnf
 
-    vonorms = lnf.point.lattice_normal_form.vonorms
+    vonorms = original_cnf.lattice_normal_form.vonorms
     input_vonorms = np.array(vonorms.vonorms, dtype=np.float64)
 
     # Extract motif data from MNF
-    motif_coord_matrix, n_atoms, motif_delta = lnf._extract_coord_matrix_from_mnf(include_origin=True)
+    motif_coord_matrix, n_atoms = extract_coord_matrix_from_mnf_tuple(original_cnf.coords[7:], include_origin=True)
     motif_coords_flat = np.ascontiguousarray(motif_coord_matrix.flatten(), dtype=np.float64)
 
     # Note: Stabilizers are computed internally in Rust
     step_data = rust_cnf.compute_step_data_raw_rust(
         input_vonorms, motif_coords_flat,
-        n_atoms, motif_delta
+        n_atoms, delta
     )
 
     print(f"\nStructure {idx}:")
     print(f"  Total step data entries: {len(step_data)}")
 
     # Validate using Python method
-    py_validated = lnf.validate_step_data(step_data)
+    py_validated = nf.lattice_neighbor_finder.validate_step_data(step_data)
     print(f"  Python validated: {len(py_validated)}")
 
     # Validate using Rust function

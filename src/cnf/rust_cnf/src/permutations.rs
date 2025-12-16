@@ -1,14 +1,5 @@
 use lazy_static::lazy_static;
 use std::collections::HashMap;
-use serde::Deserialize;
-
-/// Structure matching the JSON data format
-#[derive(Deserialize, Clone)]
-struct PermutationEntry {
-    zeros: Vec<usize>,
-    matrix: Vec<Vec<i32>>,
-    permutations: Vec<Vec<usize>>,
-}
 
 /// Data for one S4 equivalence class group
 #[derive(Clone)]
@@ -224,13 +215,9 @@ pub fn get_s4_representatives(
                 let mut all_mats = Vec::new();
                 for (permuted, idx) in &candidates {
                     // Compare vonorms element by element
-                    let mut is_equal = true;
-                    for i in 0..7 {
-                        if (permuted[i] - maximal_vonorms[i]).abs() > 1e-10 {
-                            is_equal = false;
-                            break;
-                        }
-                    }
+                    // NOTE: Using exact equality for integer vonorms stored as f64
+                    // Python uses VonormList.__eq__ which compares tuples exactly
+                    let is_equal = permuted == maximal_vonorms;
                     if is_equal {
                         all_mats.extend(group.transition_mats[*idx].clone());
                     }

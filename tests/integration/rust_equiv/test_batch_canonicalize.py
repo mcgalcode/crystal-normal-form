@@ -18,12 +18,12 @@ def test_batch_canonicalize_equals_individual(idx, struct: Structure):
     original_cnf = constructor.from_pymatgen_structure(struct).cnf
 
     # Get validated step data (same for both)
-    lnf = LatticeNeighborFinder(original_cnf)
+    lnf = LatticeNeighborFinder(original_cnf.xi, original_cnf.delta, original_cnf.elements)
 
     # Get raw step data
     if 'USE_RUST' in os.environ:
         del os.environ['USE_RUST']
-    step_data = lnf._compute_step_data_raw_python()
+    step_data = lnf._compute_step_data_raw_python(original_cnf.coords)
 
     # Validate steps
     validated_steps = []
@@ -45,12 +45,12 @@ def test_batch_canonicalize_equals_individual(idx, struct: Structure):
     # Python: canonicalize each individually using canonicalize_tuple
     py_constructor = CNFConstructor(xi, delta, verbose_logging=False)
     py_results = []
-    atoms = lnf._get_atoms_list()
+    atoms = lnf.elements
     atoms_str = [str(atom) for atom in atoms]
 
     for step_vec, vonorms_tuple, motif_coords, matrix in validated_steps:
         coords_tuple = tuple(motif_coords.flatten())
-        cnf_tuple = (vonorms_tuple, coords_tuple)
+        cnf_tuple = (*vonorms_tuple, *coords_tuple)
         canonical_tuple = py_constructor.canonicalize_tuple(cnf_tuple, atoms_str)
         py_results.append(canonical_tuple)
 
@@ -94,7 +94,9 @@ def test_batch_canonicalize_equals_individual(idx, struct: Structure):
 
     # Compare each result
     for i, (py_result, rust_result) in enumerate(zip(py_results, rust_results)):
-        py_vonorms, py_motif = py_result
+        py_vonorms = py_result[:7]
+        py_motif = py_result[7:]
+        
         rust_vonorms, rust_motif = rust_result
 
         if py_vonorms != rust_vonorms:

@@ -54,8 +54,8 @@ def test_can_explore_point(cnf_db_file, zr_bcc_cnfs):
     cmap = CrystalMapStore.from_file(cnf_db_file)
     pt_id = cmap.add_point(zr_bcc_cnfs[0])
 
-    nf = NeighborFinder(zr_bcc_cnfs[0])
-    nbs = nf.find_neighbors()
+    nf = NeighborFinder.from_cnf(zr_bcc_cnfs[0])
+    nbs = nf.find_neighbors(zr_bcc_cnfs[0])
 
     explore_pt(cmap, pt_id)
 

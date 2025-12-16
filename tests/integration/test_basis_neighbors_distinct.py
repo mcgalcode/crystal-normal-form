@@ -5,7 +5,7 @@ import helpers
 from cnf import CrystalNormalForm
 from cnf.cnf_constructor import CNFConstructor
 from cnf.lattice.lnf_constructor import VonormCanonicalizer, LatticeNormalForm
-from cnf.navigation.motif_neighbor_finder import MotifStepResult, MotifNeighborFinder
+from cnf.navigation.neighbor_finder import NeighborFinder
 from pymatgen.core.structure import Structure
 from cnf.unit_cell import UnitCell
 
@@ -18,15 +18,14 @@ def test_neighbors_are_geometrically_distinct(idx, struct: Structure):
     delta = 20
     constructor = CNFConstructor(xi, delta, False)
     original_cnf = constructor.from_pymatgen_structure(struct).cnf
-    nf = MotifNeighborFinder(original_cnf)
-    neighb_set = nf.find_motif_neighbors()
+    nf = NeighborFinder.from_cnf(original_cnf)
+    neighb_set = nf.find_motif_neighbor_cnfs(original_cnf)
     tested_neighbs: list[CrystalNormalForm] = []
     clusters: dict[CrystalNormalForm, list[CrystalNormalForm]] = {}
 
     helpers.printif(f"Original structure is Voronoi: {original_cnf.lattice_normal_form.vonorms.conorms.form.voronoi_class}", verbose)
-    for neighb in neighb_set.neighbors:
-        steps = neighb_set.steps_for_neighbor(neighb.point)
-        current_cnf = neighb.point
+    for neighb in neighb_set:
+        current_cnf = neighb
         is_duplicate = False
 
         for existing_cnf in clusters:
@@ -36,7 +35,6 @@ def test_neighbors_are_geometrically_distinct(idx, struct: Structure):
                 verbose = False
                 print(existing_cnf.motif_normal_form.coord_list)
                 print(current_cnf.motif_normal_form.coord_list)
-                helpers.printif(f"This neighbor was reached by {len(steps)} steps", verbose)
                 clusters[existing_cnf].append(current_cnf)
                 helpers.printif("", verbose)
 

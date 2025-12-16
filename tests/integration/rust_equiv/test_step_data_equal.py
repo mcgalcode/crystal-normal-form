@@ -4,9 +4,43 @@ import helpers
 import os
 from cnf import CrystalNormalForm
 from cnf.cnf_constructor import CNFConstructor
+from cnf.motif.mnf_constructor import extract_coord_matrix_from_mnf_tuple
 from cnf.navigation.lattice_neighbor_finder import LatticeNeighborFinder
 from pymatgen.core.structure import Structure
 
+
+def _compute_step_data_raw_rust(cnf_tuple: tuple, delta):
+    """Rust implementation of step data computation."""
+    import rust_cnf
+
+    # Get motif data using helper (Rust needs origin atom)
+    motif_coord_matrix, n_atoms = extract_coord_matrix_from_mnf_tuple(cnf_tuple[7:], include_origin=True)
+
+    # Prepare input vonorms - Rust will compute S4 groups and stabilizers internally
+    input_vonorms = np.array(cnf_tuple[:7], dtype=np.float64)
+
+    # Call Rust function - Rust now handles stabilizers and S4 grouping internally!
+    motif_coords_flat = np.ascontiguousarray(motif_coord_matrix.flatten(), dtype=np.float64)
+    result = rust_cnf.compute_step_data_raw_rust(
+        input_vonorms,
+        motif_coords_flat,
+        n_atoms,
+        delta
+    )
+
+    # Convert result back to Python format
+    # Result is list of (step_vec, vonorms_tuple, coords, matrix_flat)
+    # Note: coords from Rust include origin, need to remove it to match Python format
+    python_result = []
+    for step_vec, vonorms_list, coords_flat, mat_flat in result:
+        vonorms_tuple = tuple([int(v) for v in vonorms_list])
+        # Rust returns coords WITH origin, Python expects WITHOUT origin
+        coords_with_origin = np.array(coords_flat).reshape(n_atoms, 3)
+        coords = coords_with_origin[1:]  # Remove origin atom
+        matrix = np.array(mat_flat, dtype=np.int32).reshape(3, 3)
+        python_result.append((step_vec, vonorms_tuple, coords, matrix))
+
+    return python_result
 
 @helpers.parameterized_by_mp_structs
 def test_step_data_equal(idx, struct: Structure):
@@ -18,17 +52,14 @@ def test_step_data_equal(idx, struct: Structure):
     original_cnf = constructor.from_pymatgen_structure(struct).cnf
 
     # Create neighbor finder
-    lnf = LatticeNeighborFinder(original_cnf)
+    lnf = LatticeNeighborFinder(xi, delta, original_cnf.elements)
 
     # Get step data from Python
     if 'USE_RUST' in os.environ:
         del os.environ['USE_RUST']
-    py_step_data = lnf._compute_step_data_raw_python()
+    py_step_data = lnf._compute_step_data_raw_python(original_cnf.coords)
 
-    # Get step data from Rust
-    os.environ['USE_RUST'] = '1'
-    lnf_rust = LatticeNeighborFinder(original_cnf)
-    rust_step_data = lnf_rust._compute_step_data_raw_rust()
+    rust_step_data = _compute_step_data_raw_rust(original_cnf.coords, delta)
 
     print(f"\nStructure {idx}:")
     print(f"  Python step data entries: {len(py_step_data)}")

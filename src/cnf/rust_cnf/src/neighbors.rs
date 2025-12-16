@@ -39,7 +39,6 @@ pub(crate) fn find_neighbor_tuples(
     let lattice_neighbors = find_lattice_neighbor_tuples_internal(
         vonorms_i32,
         coords_i32,
-        &stabilizers_flat,
         elements,
         n_atoms,
         delta,
@@ -72,7 +71,6 @@ pub(crate) fn find_neighbor_tuples(
 fn find_lattice_neighbor_tuples_internal(
     vonorms_i32: &[i32],
     coords_i32: &[i32],
-    stabilizers_flat: &[i32],
     elements: &[String],
     n_atoms: usize,
     delta: i32,
