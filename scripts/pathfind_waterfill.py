@@ -8,8 +8,7 @@ Usage:
 """
 
 import argparse
-from cnf.search import continue_search_waterfill, continue_search_flood_fill
-from cnf.db.search_store import SearchProcessStore
+from cnf.search import continue_search_waterfill
 from cnf.db.partitioned_db import PartitionedDB
 from cnf.navigation.search_filters import VolumeLimitFilter, MinDistanceFilter
 from cnf.calculation.grace import GraceCalculator
