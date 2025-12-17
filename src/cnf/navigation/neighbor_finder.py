@@ -78,3 +78,7 @@ class NeighborFinder():
     def find_motif_neighbor_cnfs(self, point: Union[tuple, CrystalNormalForm]):
         point = self._normalize_point(point)
         return self._tuples_to_cnfs(set(self.motif_neighbor_finder.find_neighbor_tuples(point)))
+
+
+def find_neighbors(pt: CrystalNormalForm):
+    return NeighborFinder.from_cnf(pt).find_neighbors(pt)
