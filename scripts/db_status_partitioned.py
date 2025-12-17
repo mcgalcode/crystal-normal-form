@@ -21,6 +21,7 @@ import glob
 import statistics
 from datetime import datetime
 from cnf.search import FRONTIER_WIDTH
+from cnf.db.crystal_map_store import CrystalMapStore
 
 
 def clear_screen():
@@ -88,6 +89,9 @@ def get_partitioned_stats(partition_dir, search_id=1, sample_partitions=None, db
         'start_points': [],
         'current_water_level': None
     }
+
+    cmap_store = CrystalMapStore.from_file(db_files[0])
+    stats['metadata'] = cmap_store.get_metadata()
 
     for db_file in db_files:
         conn = sqlite3.connect(db_file)
@@ -285,6 +289,12 @@ def display_stats(stats, rates=None, show_global=True, show_partitions=True, sho
             print(f"  Global Energy Range:       [{stats['global_min_energy']:.8f}, {stats['global_max_energy']:.8f}]")
         else:
             print(f"  Global Energy Range:       No energies calculated")
+        
+        print()
+        print("Metadata:")
+        print(f"  xi: {stats['metadata'].xi}")
+        print(f"  delta: {stats['metadata'].delta}")
+        print(f"  elements: {stats['metadata'].element_list}")
 
         print()
         print("START POINTS (where water began):")
