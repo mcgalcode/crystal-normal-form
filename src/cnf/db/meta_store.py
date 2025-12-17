@@ -29,7 +29,7 @@ class MetaStore(BaseStore):
             meta_queries.get_global_water_level
         )
         self.conn.commit()
-        return result
+        return result.fetchone()[0]
     
     def update_min_water_level(self, partition_id: int, energy_val: float):
         res = self.cursor.execute(
