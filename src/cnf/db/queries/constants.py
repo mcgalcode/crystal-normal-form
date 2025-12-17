@@ -7,3 +7,5 @@ SEARCH_FRONTIER_MEMBER_TABLE_NAME = 'search_frontier_member'
 SEARCHED_POINT_TABLE_NAME = 'searched_point'
 SEARCH_START_POINT_TABLE_NAME = 'search_start_point'
 SEARCH_END_POINT_TABLE_NAME = 'search_end_point'
+
+PARTITION_STATUS_TABLE_NAME = 'partition_status'

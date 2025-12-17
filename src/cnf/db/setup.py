@@ -3,6 +3,7 @@ import json
 
 from .queries import crystal_map as crystal_map_queries
 from .queries import search_process as search_process_queries
+from .queries import meta as meta_queries
 
 def setup_cnf_db(dbfname: str, xi: float, delta: int, element_list: list[str]):
     conn = sqlite3.connect(dbfname)
@@ -43,3 +44,13 @@ def setup_cnf_db(dbfname: str, xi: float, delta: int, element_list: list[str]):
     )
     conn.commit()
     return dbfname
+
+def setup_meta_db(dbfname: str):
+    conn = sqlite3.connect(dbfname)
+    cur = conn.cursor()
+
+    # Enable WAL mode for better concurrent write performance
+    cur.execute("PRAGMA journal_mode=WAL")
+
+    # Create tables
+    cur.execute(meta_queries.create_partition_status_table)    
