@@ -5,12 +5,12 @@ from ase import Atoms
 from .base_calculator import BaseCalculator
 
 
-ASE_CALC = grace_fm(GRACEModels.GRACE_1L_OAM) # for better code completion
+DEFAULT_MODEL = GRACEModels.GRACE_1L_OAM
 
 class GraceCalculator(BaseCalculator):
 
-    def __init__(self):
-        self._calc = ASE_CALC
+    def __init__(self, model_string: str = DEFAULT_MODEL):
+        self._calc = grace_fm(model_string)
 
     def calculate_energy(self, cnf: CrystalNormalForm):
         atoms = cnf.reconstruct().to_ase_atoms()
