@@ -18,6 +18,11 @@ def compute_pairwise_distances(structure: Union[Structure, CrystalNormalForm, Un
         A symmetric NxN distance matrix where N is the number of atoms,
         with distances in Angstroms
     """
+    if isinstance(structure, CrystalNormalForm):
+        structure = structure.reconstruct()
+    elif isinstance(structure, UnitCell):
+        structure = structure.to_pymatgen_structure()
+    
     n_atoms = len(structure)
     distance_matrix = np.zeros((n_atoms, n_atoms))
 
@@ -51,7 +56,7 @@ def compute_pairwise_distances(structure: Union[Structure, CrystalNormalForm, Un
     return distance_matrix
 
 def no_atoms_closer_than(pt: CrystalNormalForm, min_dist: float):
-    distances = compute_pairwise_distances(pt.reconstruct())
+    distances = compute_pairwise_distances(pt)
     # Get non-diagonal elements (distances between different atoms)
     non_diag_distances = distances[np.triu_indices_from(distances, k=1)]
     # Keep neighbors where all non-diagonal distances are > 1.4
