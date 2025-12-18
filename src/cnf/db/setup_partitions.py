@@ -31,8 +31,8 @@ def setup_search_dir(location,
                      num_partitions: int,
                      start_cnfs: list[CrystalNormalForm],
                      end_cnfs: list[CrystalNormalForm],
-                     calculator_model: str,
                      calculator: BaseCalculator):
     xi, delta, element_list = _meta_params_from_cnfs(start_cnfs)
+    calc_identifier = calculator.identifier()
     setup_partitioned_db(location, description, num_partitions, start_cnfs, end_cnfs, calculator)
-    write_meta_file(location, xi, delta, element_list, calculator_model, start_cnfs, end_cnfs, description)
+    write_meta_file(location, xi, delta, element_list, calc_identifier, start_cnfs, end_cnfs, description)

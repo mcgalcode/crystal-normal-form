@@ -7,3 +7,6 @@ class ConstantCalculator(BaseCalculator):
     
     def calculate_energy(self, _):
         return self.val
+
+    def identifier(self):
+        return f"ConstantCalculator(value={self.val})"

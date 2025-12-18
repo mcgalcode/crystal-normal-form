@@ -128,7 +128,6 @@ Examples:
             num_partitions,
             start_cnfs,
             end_cnfs,
-            calculator_model=calc_model,
             calculator=gcalc
         )
         sys.exit(0)
