@@ -33,7 +33,7 @@ def are_endpoints_compatible(endpt1: Endpoint, endpt2: Endpoint):
                endpt1.delta == endpt2.delta
     return True
 
-def get_endpoint_cnfs(pt1: Endpoint, pt2: Endpoint, min_atoms: int = None, xi: float = None, delta: int = None):
+def get_endpoint_cnfs(pt1: Endpoint, pt2: Endpoint, xi: float = None, delta: int = None, min_atoms: int = None):
     if not are_endpoints_compatible(pt1, pt2) and (xi is None or delta is None):
         raise ValueError("CNF Endpoints are incompatible (mismatch in xi, delta)")
     
