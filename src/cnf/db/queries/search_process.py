@@ -37,6 +37,13 @@ CREATE TABLE {constants.SEARCHED_POINT_TABLE_NAME} (
 )
 """
 
+create_incoming_point_table = f"""
+CREATE TABLE {constants.INCOMING_POINT_TABLE_NAME} (
+    search_id INTEGER,
+    cnf TEXT
+)
+"""
+
 insert_search_process = f"""
 INSERT INTO {constants.SEARCH_PROCESS_TABLE_NAME}
     (description)
@@ -121,22 +128,6 @@ SELECT point_id FROM {constants.SEARCH_FRONTIER_MEMBER_TABLE_NAME}
 WHERE search_id = ?
 """
 
-select_unsearched_neighbors = f"""
-SELECT pt2.*
-FROM {constants.POINT_TABLE_NAME} AS pt1
-INNER JOIN {constants.EDGE_TABLE_NAME} AS edge ON pt1.id = edge.source_id 
-INNER JOIN {constants.POINT_TABLE_NAME} AS pt2 ON edge.target_id = pt2.id
-LEFT JOIN {constants.SEARCHED_POINT_TABLE_NAME} AS searched_pt ON searched_pt.point_id = pt2.id
-WHERE pt1.id = ? AND searched_pt.point_id IS NULL
-UNION
-SELECT pt2.*
-FROM {constants.POINT_TABLE_NAME} AS pt1
-INNER JOIN {constants.EDGE_TABLE_NAME} AS edge ON pt1.id = edge.target_id 
-INNER JOIN {constants.POINT_TABLE_NAME} AS pt2 ON edge.source_id = pt2.id
-LEFT JOIN {constants.SEARCHED_POINT_TABLE_NAME} AS searched_pt ON searched_pt.point_id = pt2.id
-WHERE pt1.id = ? AND searched_pt.point_id IS NULL
-"""
-
 select_endpt_ids_in_frontier = f"""
 SELECT ft.point_id
 FROM {constants.SEARCH_FRONTIER_MEMBER_TABLE_NAME} as ft
@@ -165,4 +156,21 @@ ON {constants.SEARCH_START_POINT_TABLE_NAME} (search_id)
 create_index_end_point_search = f"""
 CREATE INDEX IF NOT EXISTS idx_end_point_search
 ON {constants.SEARCH_END_POINT_TABLE_NAME} (search_id)
+"""
+
+select_all_incoming_points = f"""
+SELECT cnf FROM {constants.INCOMING_POINT_TABLE_NAME}
+WHERE search_id = ?
+"""
+
+delete_all_incoming_points = f"""
+DELETE FROM {constants.INCOMING_POINT_TABLE_NAME}
+WHERE search_id = ?
+"""
+
+insert_incoming_point = f"""
+INSERT INTO {constants.INCOMING_POINT_TABLE_NAME}
+    (search_id, cnf)
+VALUES
+    (?, ?)
 """

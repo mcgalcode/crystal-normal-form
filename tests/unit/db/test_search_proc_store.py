@@ -5,8 +5,10 @@ from cnf import UnitCell
 
 from cnf.db.crystal_map_store import CrystalMapStore
 from cnf.db.search_store import SearchProcessStore
-from cnf.db.setup import setup_cnf_db
-from cnf.search import explore_pt, instantiate_search
+from cnf.db.setup import setup_cnf_db, instantiate_search
+from cnf.search import explore_pt
+from cnf.navigation.neighbor_finder import find_neighbors
+from cnf.calculation.grace import GraceCalculator
 
 XI = 1.5
 DELTA = 10
@@ -44,7 +46,8 @@ def test_can_add_and_rm_pt_from_frontier(search_store, zr_bcc_cnfs, zr_hcp_cnfs)
         "test process",
         zr_bcc_cnfs,
         zr_hcp_cnfs,
-        search_store.db_filename
+        search_store.db_filename,
+        GraceCalculator()
     )
 
     start_pt_frontier = search_store.get_frontier_points_in_search(sp_id)
@@ -64,7 +67,8 @@ def test_can_mark_point_as_searched(search_store, zr_bcc_cnfs, zr_hcp_cnfs):
         "test process",
         zr_bcc_cnfs,
         zr_hcp_cnfs,
-        search_store.db_filename
+        search_store.db_filename,
+        GraceCalculator()
     )
 
     searched_pts = search_store.get_searched_points_in_search(sp_id)
@@ -86,7 +90,8 @@ def test_candidate_neighbors_are_not_searched(search_store, crystal_map_store, z
         "test process",
         zr_bcc_cnfs,
         zr_hcp_cnfs,
-        search_store.db_filename
+        search_store.db_filename,
+        GraceCalculator()
     )
     start_pt = zr_bcc_cnfs[0]
     start_pt_id = crystal_map_store.get_point_by_cnf(start_pt).id
@@ -103,12 +108,16 @@ def test_candidate_neighbors_are_not_searched(search_store, crystal_map_store, z
     assert len(simple_nb_ids) == len(all_nb_ids)
     assert set(simple_nb_ids) == set(all_nb_ids)
 
-def test_candidate_neighbors_are_not_in_frontier(search_store, crystal_map_store, zr_bcc_cnfs, zr_hcp_cnfs):
+def test_candidate_neighbors_are_not_in_frontier(search_store: SearchProcessStore,
+                                                 crystal_map_store: CrystalMapStore,
+                                                 zr_bcc_cnfs,
+                                                 zr_hcp_cnfs):
     sp_id = instantiate_search(
         "test process",
         zr_bcc_cnfs,
         zr_hcp_cnfs,
-        search_store.db_filename
+        search_store.db_filename,
+        GraceCalculator()
     )
 
     start_pt = zr_bcc_cnfs[1]
@@ -126,12 +135,16 @@ def test_candidate_neighbors_are_not_in_frontier(search_store, crystal_map_store
     assert len(simple_nb_ids) == len(all_nb_ids)
     assert set(simple_nb_ids) == set(all_nb_ids)
 
-def test_can_get_endpoint_ids_in_frontier(search_store, crystal_map_store, zr_bcc_cnfs, zr_hcp_cnfs):
+def test_can_get_endpoint_ids_in_frontier(search_store: SearchProcessStore,
+                                          crystal_map_store: CrystalMapStore,
+                                          zr_bcc_cnfs,
+                                          zr_hcp_cnfs):
     sp_id = instantiate_search(
         "test process",
         zr_bcc_cnfs,
         zr_hcp_cnfs,
-        search_store.db_filename
+        search_store.db_filename,
+        GraceCalculator()
     )
 
     endpt_ids = search_store.get_endpoint_ids_in_frontier(sp_id)
@@ -156,3 +169,30 @@ def test_can_get_endpoint_ids_in_frontier(search_store, crystal_map_store, zr_bc
     endpt_ids = search_store.get_endpoint_ids_in_frontier(sp_id)
     assert len(endpt_ids) == 1
     assert endpt_ids[0] == endpt_id2
+
+def test_can_manipulate_incoming_points(search_store: SearchProcessStore,
+                                        crystal_map_store: CrystalMapStore,
+                                        zr_bcc_cnfs,
+                                        zr_hcp_cnfs):
+    sp_id = instantiate_search(
+        "test process",
+        zr_bcc_cnfs,
+        zr_hcp_cnfs,
+        search_store.db_filename,
+        GraceCalculator()
+    )
+
+    nbs = find_neighbors(zr_bcc_cnfs[0])
+
+    incoming_pts = search_store.get_and_empty_incoming_points(sp_id)
+    assert len(incoming_pts) == 0
+
+    for nb in nbs:
+        search_store.add_incoming_point(sp_id, nb)
+    
+    incoming_pts = search_store.get_and_empty_incoming_points(sp_id)
+    assert len(incoming_pts) == len(nbs)
+    assert set(incoming_pts) == set(nbs)
+
+    incoming_pts = search_store.get_and_empty_incoming_points(sp_id)
+    assert len(incoming_pts) == 0

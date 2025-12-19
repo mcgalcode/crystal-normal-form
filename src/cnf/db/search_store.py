@@ -7,7 +7,7 @@ from .db_adapter import DBAdapter
 from .base import BaseStore
 from ..crystal_normal_form import CrystalNormalForm
 from .crystal_map_store import CrystalMapStore
-from .utilities import cnf_pt_from_row, CNFPoint, cnf_to_str
+from .utilities import cnf_pt_from_row, CNFPoint, cnf_to_str, cnf_from_str
 
 class SearchProcessStore(BaseStore):
 
@@ -152,27 +152,6 @@ class SearchProcessStore(BaseStore):
         )
         rows = res.fetchall()
         return [r[0] for r in rows]
-    
-    def get_unsearched_neighbors_with_lock_info(self, search_id: int, pt_id: int) -> tuple[list[CNFPoint], dict[int, bool]]:
-        res = self.cursor.execute(
-            sp_queries.select_unsearched_neighbors_w_lock,
-            ([search_id, search_id, pt_id, search_id, search_id, pt_id])
-        )
-        rows = res.fetchall()
-        cnfs = [cnf_pt_from_row(r, self.metadata.delta, self.metadata.xi, self.metadata.element_list) for r in rows]
-        lock_info = {row[0]: row[-1] for row in rows}
-        return cnfs, lock_info
-    
-    def get_unsearched_points_by_cnfs_with_lock_info(self, search_id: int, cnfs: list[CrystalNormalForm]) -> tuple[list[CNFPoint], dict[int, bool]]:
-        cnf_strs = [cnf_to_str(c) for c in cnfs]
-        res = self.cursor.execute(
-            sp_queries.select_unsearched_points_by_cnf_with_lock_info(cnfs),
-            ([search_id, search_id, *cnf_strs])
-        )
-        rows = res.fetchall()
-        cnfs = [cnf_pt_from_row(r, self.metadata.delta, self.metadata.xi, self.metadata.element_list) for r in rows]
-        lock_info = {row[0]: row[-1] for row in rows}
-        return cnfs, lock_info
 
     def get_endpoint_ids_in_frontier(self, search_id: int):
         res = self.cursor.execute(
@@ -181,3 +160,25 @@ class SearchProcessStore(BaseStore):
         )
         rows = res.fetchall()
         return [r[0] for r in rows]
+    
+    def get_and_empty_incoming_points(self, search_id: int):
+        res = self.cursor.execute(
+            sp_queries.select_all_incoming_points,
+            ([search_id])
+        )
+        full_result = res.fetchall()
+        cnfs = [cnf_from_str(row[0], self.metadata.xi, self.metadata.delta, self.metadata.element_list) for row in full_result]
+        self.cursor.execute(
+            sp_queries.delete_all_incoming_points,
+            ([search_id])
+        )
+        self.conn.commit()
+        return cnfs
+    
+    def add_incoming_point(self, search_id: int, incoming_point: CrystalNormalForm):
+        cnf_str = cnf_to_str(incoming_point)
+        self.cursor.execute(
+            sp_queries.insert_incoming_point,
+            ([search_id, cnf_str])
+        )
+        self.conn.commit()
