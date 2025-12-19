@@ -49,3 +49,27 @@ class MetaStore(BaseStore):
         )
         self.conn.commit()
         return res
+    
+    def create_search_status(self, search_id: int):
+        res = self.cursor.execute(
+            meta_queries.insert_search_status,
+            ([search_id, False])
+        )
+        self.conn.commit()
+        return None
+    
+    def set_search_status(self, search_id: int, is_complete: bool):
+        res = self.cursor.execute(
+            meta_queries.update_search_status,
+            ([is_complete, search_id])
+        )
+        self.conn.commit()
+        return search_id
+
+    def is_search_complete(self, search_id: int):
+        res = self.cursor.execute(
+            meta_queries.select_search_status,
+            ([search_id])
+        )
+        is_complete = res.fetchone()[0]
+        return is_complete == 1

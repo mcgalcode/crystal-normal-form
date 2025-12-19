@@ -11,6 +11,13 @@ CREATE TABLE {constants.PARTITION_STATUS_TABLE_NAME} (
 )
 """
 
+create_search_status_table = f"""
+CREATE TABLE {constants.SEARCH_STATUS_TABLE_NAME} (
+    search_id INTEGER UNIQUE,
+    is_complete INTEGER
+)
+"""
+
 create_partition_entry = f"""
 INSERT INTO {constants.PARTITION_STATUS_TABLE_NAME}
     (partition_number, search_id, worker_heartbeat)
@@ -35,4 +42,23 @@ UPDATE {constants.PARTITION_STATUS_TABLE_NAME} SET
 min_frontier_energy = ?,
 worker_heartbeat = CURRENT_TIMESTAMP
 WHERE partition_number = ? AND search_id = ?;
+"""
+
+insert_search_status = f"""
+INSERT INTO {constants.SEARCH_STATUS_TABLE_NAME}
+    (search_id, is_complete)
+VALUES
+    (?, ?)
+"""
+
+update_search_status = f"""
+UPDATE {constants.SEARCH_STATUS_TABLE_NAME} SET
+is_complete = ?
+WHERE search_id = ?
+"""
+
+select_search_status = f"""
+SELECT is_complete
+FROM {constants.SEARCH_STATUS_TABLE_NAME}
+WHERE search_id = ?
 """

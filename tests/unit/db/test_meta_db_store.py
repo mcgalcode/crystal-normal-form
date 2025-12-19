@@ -56,3 +56,13 @@ def test_can_update_min_water_level(store_with_3_partitions):
 
     global_lev_1 = store_with_3_partitions.get_global_water_level(sid1)
     assert global_lev_1 == 1
+
+def test_can_manipulate_search_status(meta_store: MetaStore):
+    sid = 1
+    meta_store.create_search_status(sid)
+
+    assert meta_store.is_search_complete(sid) == False
+
+    meta_store.set_search_status(sid, True)
+
+    assert meta_store.is_search_complete(sid) == True
