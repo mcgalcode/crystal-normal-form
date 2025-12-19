@@ -26,8 +26,7 @@ def setup_cnf_db(dbfname: str, xi: float, delta: int, element_list: list[str]):
     cur.execute(search_process_queries.create_search_process_table)
     cur.execute(search_process_queries.create_search_start_point_table)
     cur.execute(search_process_queries.create_search_end_point_table)
-    cur.execute(search_process_queries.create_search_frontier_member_table)
-    cur.execute(search_process_queries.create_searched_point_table)
+    cur.execute(search_process_queries.create_search_point_status_table)
     cur.execute(search_process_queries.create_incoming_point_table)
 
     # Create indexes for performance
@@ -37,9 +36,8 @@ def setup_cnf_db(dbfname: str, xi: float, delta: int, element_list: list[str]):
     cur.execute(crystal_map_queries.create_index_point_value)
     cur.execute(crystal_map_queries.create_index_point_cnf)
 
-    cur.execute(search_process_queries.create_index_frontier_search_point)
-    cur.execute(search_process_queries.create_index_searched_search_point)
     cur.execute(search_process_queries.create_index_start_point_search)
+    cur.execute(search_process_queries.create_idx_point_status_composite)
     cur.execute(search_process_queries.create_index_end_point_search)
 
     # Set metadata

@@ -21,18 +21,11 @@ CREATE TABLE {constants.SEARCH_END_POINT_TABLE_NAME} (
 )
 """
 
-create_search_frontier_member_table = f"""
-CREATE TABLE {constants.SEARCH_FRONTIER_MEMBER_TABLE_NAME} (
+create_search_point_status_table = f"""
+CREATE TABLE {constants.SEARCH_POINT_STATUS_TABLE_NAME} (
     search_id INTEGER,
     point_id INTEGER,
-    UNIQUE(search_id, point_id)
-)
-"""
-
-create_searched_point_table = f"""
-CREATE TABLE {constants.SEARCHED_POINT_TABLE_NAME} (
-    search_id INTEGER,
-    point_id INTEGER,
+    point_status TEXT,
     UNIQUE(search_id, point_id)
 )
 """
@@ -62,6 +55,19 @@ INSERT INTO {constants.SEARCH_END_POINT_TABLE_NAME}
 VALUES (?, ?)
 """
 
+upsert_search_point_status = f"""
+INSERT INTO {constants.SEARCH_POINT_STATUS_TABLE_NAME}
+    (search_id, point_id, point_status)
+VALUES (?, ?, "{constants.POINT_STATUS_OPEN}")
+ON CONFLICT(search_id, point_id) DO UPDATE SET
+    point_status =  "{constants.POINT_STATUS_OPEN}"
+"""
+
+delete_search_point_status = f"""
+DELETE FROM {constants.SEARCH_POINT_STATUS_TABLE_NAME}
+WHERE search_id = ? AND point_id = ?
+"""
+
 select_search_end_points = f"""
 SELECT pt.* FROM {constants.SEARCH_END_POINT_TABLE_NAME} AS sep
 LEFT JOIN {constants.POINT_TABLE_NAME} AS pt
@@ -76,81 +82,77 @@ ON pt.id = ssp.start_point_id
 WHERE ssp.search_id = ?
 """
 
-mark_point_searched = f"""
-INSERT OR IGNORE INTO {constants.SEARCHED_POINT_TABLE_NAME} (search_id, point_id)
-VALUES (?, ?)
+set_point_closed = f"""
+UPDATE {constants.SEARCH_POINT_STATUS_TABLE_NAME}
+SET point_status = "{constants.POINT_STATUS_CLOSED}"
+WHERE search_id = ? AND point_id = ?
 """
 
-add_point_to_frontier = f"""
-INSERT OR IGNORE INTO {constants.SEARCH_FRONTIER_MEMBER_TABLE_NAME} (search_id, point_id)
-VALUES (?, ?)
-"""
-
-rm_point_from_frontier = f"""
-DELETE FROM {constants.SEARCH_FRONTIER_MEMBER_TABLE_NAME}
+set_point_open = f"""
+UPDATE {constants.SEARCH_POINT_STATUS_TABLE_NAME}
+SET point_status = "{constants.POINT_STATUS_OPEN}"
 WHERE search_id = ? AND point_id = ?
 """
 
 select_searched_points = f"""
-SELECT pt.* FROM {constants.SEARCHED_POINT_TABLE_NAME} AS searched_pts
+SELECT pt.* FROM {constants.SEARCH_POINT_STATUS_TABLE_NAME} AS status
 LEFT JOIN {constants.POINT_TABLE_NAME} AS pt
-ON pt.id = searched_pts.point_id
-WHERE searched_pts.search_id = ?
+ON pt.id = status.point_id
+WHERE status.search_id = ? AND status.point_status = "{constants.POINT_STATUS_CLOSED}"
 """
 
 select_frontier_points = f"""
-SELECT pt.* FROM {constants.SEARCH_FRONTIER_MEMBER_TABLE_NAME} AS frontier_pts
+SELECT pt.* FROM {constants.SEARCH_POINT_STATUS_TABLE_NAME} AS status
 LEFT JOIN {constants.POINT_TABLE_NAME} AS pt
-ON pt.id = frontier_pts.point_id
-WHERE frontier_pts.search_id = ?
+ON pt.id = status.point_id
+WHERE status.search_id = ? AND status.point_status = "{constants.POINT_STATUS_OPEN}"
 ORDER BY pt.value ASC
 LIMIT ?
 """
 
 select_min_frontier_energy = f"""
-SELECT MIN(pt.value) FROM {constants.SEARCH_FRONTIER_MEMBER_TABLE_NAME} AS frontier_pts
-LEFT JOIN {constants.POINT_TABLE_NAME} AS pt
-ON pt.id = frontier_pts.point_id
-WHERE frontier_pts.search_id = ? AND pt.value IS NOT NULL
+SELECT MIN(pt.value) FROM {constants.SEARCH_POINT_STATUS_TABLE_NAME} AS status
+INNER JOIN {constants.POINT_TABLE_NAME} AS pt
+ON pt.id = status.point_id
+WHERE status.search_id = ? AND
+      status.point_status = "{constants.POINT_STATUS_OPEN}" AND
+      pt.value IS NOT NULL
 """
 
 select_frontier_points_with_max_energy = f"""
-SELECT pt.* FROM {constants.SEARCH_FRONTIER_MEMBER_TABLE_NAME} AS frontier_pts
-LEFT JOIN {constants.POINT_TABLE_NAME} AS pt
-ON pt.id = frontier_pts.point_id
-WHERE frontier_pts.search_id = ? AND pt.value IS NOT NULL AND pt.value <= ?
+SELECT pt.* FROM {constants.SEARCH_POINT_STATUS_TABLE_NAME} AS status
+INNER JOIN {constants.POINT_TABLE_NAME} AS pt
+ON pt.id = status.point_id
+WHERE status.search_id = ? AND
+      pt.value IS NOT NULL AND
+      pt.value <= ? AND
+      status.point_status = "{constants.POINT_STATUS_OPEN}"
 ORDER BY pt.value ASC
 LIMIT ?
 """
 
 select_frontier_point_ids = f"""
-SELECT point_id FROM {constants.SEARCH_FRONTIER_MEMBER_TABLE_NAME}
-WHERE search_id = ?
+SELECT point_id FROM {constants.SEARCH_POINT_STATUS_TABLE_NAME}
+WHERE search_id = ? AND point_status = "{constants.POINT_STATUS_OPEN}"
 """
 
 select_endpt_ids_in_frontier = f"""
-SELECT ft.point_id
-FROM {constants.SEARCH_FRONTIER_MEMBER_TABLE_NAME} as ft
-WHERE ft.search_id = ?
+SELECT status.point_id
+FROM {constants.SEARCH_POINT_STATUS_TABLE_NAME} as status
+WHERE status.search_id = ? AND status.point_status = "{constants.POINT_STATUS_OPEN}"
 INTERSECT
 SELECT sep.end_point_id FROM {constants.SEARCH_END_POINT_TABLE_NAME} AS sep
 WHERE sep.search_id = ?
 """
 
-# Index creation queries for performance optimization
-create_index_frontier_search_point = f"""
-CREATE INDEX IF NOT EXISTS idx_frontier_search_point
-ON {constants.SEARCH_FRONTIER_MEMBER_TABLE_NAME} (search_id, point_id)
-"""
-
-create_index_searched_search_point = f"""
-CREATE INDEX IF NOT EXISTS idx_searched_search_point
-ON {constants.SEARCHED_POINT_TABLE_NAME} (search_id, point_id)
-"""
-
 create_index_start_point_search = f"""
 CREATE INDEX IF NOT EXISTS idx_start_point_search
 ON {constants.SEARCH_START_POINT_TABLE_NAME} (search_id)
+"""
+
+create_idx_point_status_composite = f"""
+CREATE INDEX idx_status_composite 
+ON {constants.SEARCH_POINT_STATUS_TABLE_NAME} (point_id, search_id, point_status);
 """
 
 create_index_end_point_search = f"""

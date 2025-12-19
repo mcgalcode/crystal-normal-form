@@ -73,7 +73,6 @@ def explore_pt_partition(partition_db: PartitionedDB, point_cnf: CrystalNormalFo
         nb_partition = partition_db.get_partition_idx(nb)
         nb_map_store = partition_db.get_map_store_by_idx(nb_partition)
 
-        # Time: Filter checks
         if filters:
             struct = nb.reconstruct()
             if not all([f.should_add_pt(nb, struct) for f in filters]):

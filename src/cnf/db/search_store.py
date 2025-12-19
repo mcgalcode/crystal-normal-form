@@ -68,7 +68,19 @@ class SearchProcessStore(BaseStore):
 
     def mark_point_searched_by_id(self, search_id: int, point_id: int):
         self.cursor.execute(
-            sp_queries.mark_point_searched,
+            sp_queries.set_point_closed,
+            ([search_id, point_id])
+        )
+        self.conn.commit()
+        return point_id
+    
+    def remove_point_from_search(self, search_id: int, cnf: CrystalNormalForm):
+        pt_id = self._map_store.get_point_ids([cnf])[0]
+        return self.remove_point_from_search_by_id(search_id, pt_id)
+
+    def remove_point_from_search_by_id(self, search_id: int, point_id: int):
+        self.cursor.execute(
+            sp_queries.delete_search_point_status,
             ([search_id, point_id])
         )
         self.conn.commit()
@@ -80,22 +92,11 @@ class SearchProcessStore(BaseStore):
 
     def add_to_search_frontier_by_id(self, search_id: int, point_id: int):
         self.cursor.execute(
-            sp_queries.add_point_to_frontier,
+            sp_queries.upsert_search_point_status,
             ([search_id, point_id])
         )
         self.conn.commit()
         return point_id
-
-    def remove_from_search_frontier(self, search_id: int, cnf: CrystalNormalForm):
-        pt_id = self._map_store.get_point_ids([cnf])[0]
-        return self.remove_from_search_frontier_by_id(search_id, pt_id)        
-
-    def remove_from_search_frontier_by_id(self, search_id: int, point_id: int):
-        self.cursor.execute(
-            sp_queries.rm_point_from_frontier,
-            ([search_id, point_id])
-        )
-        self.conn.commit()
 
     def get_searched_points_in_search(self, search_id: int):
         res = self.cursor.execute(
