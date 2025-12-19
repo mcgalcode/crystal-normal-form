@@ -171,17 +171,6 @@ def test_can_get_unexplored_points(temp_db, zr_hcp_cnf):
     assert len(explored_ids) == len(all_nb_ids[:10])
     assert set(explored_ids) == set(all_nb_ids[:10])
 
-def test_can_lock_point(zr_hcp_cnf, temp_db):
-    pt_id = temp_db.add_point(zr_hcp_cnf)
-    
-    assert temp_db.is_point_locked(pt_id) == False
-
-    temp_db.lock_point(pt_id)
-    assert temp_db.is_point_locked(pt_id) == True
-
-    temp_db.unlock_point(pt_id)
-    assert temp_db.is_point_locked(pt_id) == False
-
 def test_can_set_point_value(zr_hcp_cnf, temp_db):
     pt_id = temp_db.add_point(zr_hcp_cnf)
 

@@ -229,31 +229,6 @@ class CrystalMapStore(BaseStore):
         self.conn.commit()
         return pt_id
     
-    def lock_point(self, pt_id: int) -> bool:
-        """Try to lock a point. Returns True if lock was acquired, False if already locked."""
-        self.cursor.execute(
-            queries.add_lock_for_point,
-            ([pt_id])
-        )
-        self.conn.commit()
-        # Check if a row was actually inserted (rowcount > 0 means successful insert)
-        return self.cursor.rowcount > 0
-    
-    def unlock_point(self, pt_id: int):
-        self.cursor.execute(
-            queries.rm_lock_for_point,
-            ([pt_id])
-        )
-        self.conn.commit()
-    
-    def is_point_locked(self, pt_id: int):
-        res = self.cursor.execute(
-            queries.get_lock_for_point,
-            ([pt_id])
-        )
-        rows = res.fetchall()
-        return len(rows) > 0
-    
     def set_point_value(self, pt_id: int, value: float):
         self.cursor.execute(
             queries.set_value_for_point,

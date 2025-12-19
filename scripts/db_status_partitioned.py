@@ -74,7 +74,6 @@ def get_partitioned_stats(partition_dir, search_id=1, sample_partitions=None, db
         'explored_points': 0,
         'global_min_energy': None,
         'global_max_energy': None,
-        'locked_points': 0,
         'total_frontier_points': 0,
         'searched_points': 0,
         'searched_min_energy': None,
@@ -103,7 +102,6 @@ def get_partitioned_stats(partition_dir, search_id=1, sample_partitions=None, db
             'total_points': 0,
             'explored_points': 0,
             'total_edges': 0,
-            'locked_points': 0,
             'frontier_points': 0,
             'searched_points': 0,
             'points_with_energy': 0
@@ -138,10 +136,6 @@ def get_partitioned_stats(partition_dir, search_id=1, sample_partitions=None, db
             else:
                 stats['global_min_energy'] = min(stats['global_min_energy'], result[0])
                 stats['global_max_energy'] = max(stats['global_max_energy'], result[1])
-
-        result = cur.execute("SELECT COUNT(*) FROM lock").fetchone()
-        partition_stats['locked_points'] = result[0]
-        stats['locked_points'] += result[0]
 
         # Frontier points (check if search_frontier table exists)
         try:
@@ -241,7 +235,6 @@ def get_partitioned_stats(partition_dir, search_id=1, sample_partitions=None, db
         stats['points_with_energy'] = int(stats['points_with_energy'] * scaling_factor)
         stats['total_edges'] = int(stats['total_edges'] * scaling_factor)
         stats['explored_points'] = int(stats['explored_points'] * scaling_factor)
-        stats['locked_points'] = int(stats['locked_points'] * scaling_factor)
         stats['total_frontier_points'] = int(stats['total_frontier_points'] * scaling_factor)
         stats['searched_points'] = int(stats['searched_points'] * scaling_factor)
         # Note: Energy min/max values are NOT scaled as they represent actual energy values
@@ -281,7 +274,6 @@ def display_stats(stats, rates=None, show_global=True, show_partitions=True, sho
         print(f"  Neighbors Found (explored):{stats['explored_points']:,}{explored_rate}")
         print(f"  Points with Energy:        {stats['points_with_energy']:,}{energy_rate}")
         print(f"  Total Edges:               {stats['total_edges']:,}{edges_rate}")
-        print(f"  Locked Points:             {stats['locked_points']:,}")
         print(f"  Frontier Points:           {stats['total_frontier_points']:,}{frontier_rate}")
         print(f"  Searched Points:           {stats['searched_points']:,}{searched_rate}")
 

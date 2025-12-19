@@ -137,49 +137,6 @@ LEFT JOIN {constants.SEARCHED_POINT_TABLE_NAME} AS searched_pt ON searched_pt.po
 WHERE pt1.id = ? AND searched_pt.point_id IS NULL
 """
 
-select_unsearched_neighbors_w_lock = f"""
-SELECT pt2.*, (lock.point_id IS NOT NULL) AS is_locked
-FROM {constants.POINT_TABLE_NAME} AS pt1
-INNER JOIN {constants.EDGE_TABLE_NAME} AS edge ON pt1.id = edge.source_id 
-INNER JOIN {constants.POINT_TABLE_NAME} AS pt2 ON edge.target_id = pt2.id
-LEFT JOIN {constants.SEARCHED_POINT_TABLE_NAME} AS searched_pt 
-    ON searched_pt.point_id = pt2.id AND searched_pt.search_id = ?
-LEFT JOIN {constants.SEARCH_FRONTIER_MEMBER_TABLE_NAME} AS frontier_pt
-    ON frontier_pt.point_id = pt2.id AND frontier_pt.search_id = ?
-LEFT JOIN {constants.LOCK_TABLE_NAME} AS lock ON lock.point_id = pt2.id
-WHERE pt1.id = ? AND
-      searched_pt.point_id IS NULL AND
-      frontier_pt.point_id IS NULL
-UNION
-SELECT pt2.*, (lock.point_id IS NOT NULL) AS is_locked
-FROM {constants.POINT_TABLE_NAME} AS pt1
-INNER JOIN {constants.EDGE_TABLE_NAME} AS edge ON pt1.id = edge.target_id 
-INNER JOIN {constants.POINT_TABLE_NAME} AS pt2 ON edge.source_id = pt2.id
-LEFT JOIN {constants.SEARCHED_POINT_TABLE_NAME} AS searched_pt 
-    ON searched_pt.point_id = pt2.id AND searched_pt.search_id = ?
-LEFT JOIN {constants.SEARCH_FRONTIER_MEMBER_TABLE_NAME} AS frontier_pt
-    ON frontier_pt.point_id = pt2.id AND frontier_pt.search_id = ?
-LEFT JOIN {constants.LOCK_TABLE_NAME} AS lock ON lock.point_id = pt2.id
-WHERE pt1.id = ? AND
-      searched_pt.point_id IS NULL AND
-      frontier_pt.point_id IS NULL
-"""
-
-def select_unsearched_points_by_cnf_with_lock_info(cnf_pts: list[str]):
-    placeholders = ','.join(['?'] * len(cnf_pts))
-    return f"""
-SELECT pt.*, (lock.point_id IS NOT NULL) AS is_locked
-FROM {constants.POINT_TABLE_NAME} AS pt
-LEFT JOIN {constants.SEARCHED_POINT_TABLE_NAME} AS searched_pt 
-    ON searched_pt.point_id = pt.id AND searched_pt.search_id = ?
-LEFT JOIN {constants.SEARCH_FRONTIER_MEMBER_TABLE_NAME} AS frontier_pt
-    ON frontier_pt.point_id = pt.id AND frontier_pt.search_id = ?
-LEFT JOIN {constants.LOCK_TABLE_NAME} AS lock ON lock.point_id = pt.id
-WHERE pt.cnf IN ({placeholders}) AND
-      searched_pt.point_id IS NULL AND
-      frontier_pt.point_id IS NULL
-"""
-
 select_endpt_ids_in_frontier = f"""
 SELECT ft.point_id
 FROM {constants.SEARCH_FRONTIER_MEMBER_TABLE_NAME} as ft

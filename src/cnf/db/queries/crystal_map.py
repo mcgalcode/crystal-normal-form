@@ -27,12 +27,6 @@ CREATE TABLE {constants.METADATA_TABLE_NAME} (
 )
 """
 
-create_lock_table = f"""
-CREATE TABLE {constants.LOCK_TABLE_NAME} (
-    point_id INTEGER UNIQUE
-)
-"""
-
 set_metadata =  f"""
 INSERT INTO {constants.METADATA_TABLE_NAME} 
     (delta, xi, element_list) 
@@ -157,21 +151,6 @@ mark_point_unexplored = f"""
 UPDATE {constants.POINT_TABLE_NAME} AS pt
 SET explored = 0
 WHERE pt.id = ?
-"""
-
-add_lock_for_point = f"""
-INSERT OR IGNORE INTO {constants.LOCK_TABLE_NAME} (point_id)
-VALUES (?)
-"""
-
-rm_lock_for_point = f"""
-DELETE FROM {constants.LOCK_TABLE_NAME}
-WHERE point_id = ?
-"""
-
-get_lock_for_point = f"""
-SELECT * FROM {constants.LOCK_TABLE_NAME}
-WHERE point_id = ?
 """
 
 set_value_for_point = f"""
