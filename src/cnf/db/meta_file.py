@@ -32,10 +32,7 @@ def write_meta_file(location: str,
                     delta: int,
                     atom_list: list[str],
                     calculator_model: str,
-                    description: str = "",
-                    search_processes: list[SearchProcess] = None):
-    if search_processes is None:
-        search_processes = []
+                    description: str = ""):
 
     timestamp = datetime.now()
     timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
@@ -59,8 +56,8 @@ def _write_metafile(location: str, search_metadata: SearchMetadata):
         json.dump(metadata, f)
         return f.name
 
-def add_search_process(metafile, sid, start_cnfs: list[CrystalNormalForm], end_cnfs: list[CrystalNormalForm]):
-    metadata = load_meta_file(metafile)
+def add_search_process(search_dir, sid, start_cnfs: list[CrystalNormalForm], end_cnfs: list[CrystalNormalForm]):
+    metadata = load_meta_file(search_dir)
     timestamp = datetime.now()
     timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")    
     new_sp = SearchProcess(search_id=sid,
@@ -68,7 +65,7 @@ def add_search_process(metafile, sid, start_cnfs: list[CrystalNormalForm], end_c
                            end_cnfs=[cnf.coords for cnf in end_cnfs],
                            time_created=timestamp)
     metadata.search_processes.append(new_sp)
-    _write_metafile(metafile, metadata)
+    _write_metafile(search_dir, metadata)
 
 def load_meta_file(search_dir):
     full_loc = Path(search_dir) / META_FILE_NAME

@@ -1,24 +1,30 @@
 import pathlib
+import os
 import random
 from .search_store import SearchProcessStore
 from .crystal_map_store import CrystalMapStore
+from .meta_store import MetaStore
+from .meta_file import load_meta_file
+from .constants import PARTITION_SUFFIX, META_DB_NAME
 
 from ..crystal_normal_form import CrystalNormalForm
 from .utilities import CNFPoint
         
-DB_PREFIX = "graph_partition"
 
 class PartitionedDB():
 
     def __init__(self, db_dir: str):
         self._db_dir = db_dir
+        self.metadata = load_meta_file(db_dir)
         directory = pathlib.Path(self._db_dir)
 
-        db_files = sorted(list(directory.glob(f"{DB_PREFIX}*.db")))
-        self.num_partitions = len(db_files)
+        partition_files = sorted(list(directory.glob(f"*{PARTITION_SUFFIX}")))
+        control_file = os.path.join(db_dir, META_DB_NAME)
+        self.meta_store = MetaStore.from_file(control_file)
+        self.num_partitions = len(partition_files)
 
         self.partition_map = {}
-        for i, f in enumerate(db_files):
+        for i, f in enumerate(partition_files):
             
             search_store = SearchProcessStore.from_file(f)
             map_store = CrystalMapStore.from_file(f)
@@ -107,4 +113,11 @@ class PartitionedDB():
                 min_energy = min(min_energy, partition_min) if min_energy is not None else partition_min
 
         return min_energy
+    
+    def sync_control_water_level(self, search_id: int):
+        for i in range(self.num_partitions):
+            search_store = self.get_search_store_by_idx(i)
+            partition_min = search_store.get_min_frontier_energy(search_id)
+            self.meta_store.update_min_water_level(search_id, i, partition_min)
+
 

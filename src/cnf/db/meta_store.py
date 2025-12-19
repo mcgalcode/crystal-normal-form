@@ -16,25 +16,36 @@ class MetaStore(BaseStore):
         if res.fetchone() is None:
             raise ValueError(f"Tried to instantiate MetaStore from uninitialized DB file: {adapter.db_filename}")
         
-    def create_partition_entry(self, partition_id):
+    def create_partition_entry(self, search_id: int, partition_number: int):
         self.cursor.execute(
             meta_queries.create_partition_entry,
-            ([partition_id])
+            ([partition_number, search_id])
         )
         self.conn.commit()
         return self.cursor.lastrowid
 
-    def get_global_water_level(self):
+    def get_global_water_level(self, search_id: int):
         result = self.cursor.execute(
-            meta_queries.get_global_water_level
+            meta_queries.get_global_water_level,
+            ([search_id])
         )
         self.conn.commit()
         return result.fetchone()[0]
+
+    def get_partition_water_level(self, search_id: int, partition_number: int):
+        result = self.cursor.execute(
+            meta_queries.get_partition_water_level,
+            ([partition_number, search_id])
+        )
+        result = result.fetchone()
+        if result is not None:
+            return result[0]
+        return None
     
-    def update_min_water_level(self, partition_id: int, energy_val: float):
+    def update_min_water_level(self, search_id, partition_number: int, energy_val: float):
         res = self.cursor.execute(
             meta_queries.update_min_water_level,
-            ([energy_val, partition_id])
+            ([energy_val, partition_number, search_id])
         )
         self.conn.commit()
         return res

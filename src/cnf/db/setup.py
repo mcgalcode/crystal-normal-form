@@ -7,6 +7,7 @@ from .queries import meta as meta_queries
 
 from .search_store import SearchProcessStore
 from .crystal_map_store import CrystalMapStore
+from .meta_store import MetaStore
 from ..calculation.base_calculator import BaseCalculator
 from ..crystal_normal_form import CrystalNormalForm
 
@@ -59,12 +60,15 @@ def setup_meta_db(dbfname: str):
 
     # Create tables
     cur.execute(meta_queries.create_partition_status_table)
+    return MetaStore.from_file(dbfname)
 
 def instantiate_search(search_description: str,
                        start_cnfs: list[CrystalNormalForm],
                        end_cnfs: list[CrystalNormalForm],
                        store_file: str,
-                       calculator: BaseCalculator):
+                       calculator: BaseCalculator,
+                       start_energies: list[float] = None,
+                       end_energies: list[float] = None):
     all_cnfs = start_cnfs + end_cnfs
     xis = [cnf.xi for cnf in all_cnfs]
     if len(set(xis)) > 1:
@@ -80,9 +84,18 @@ def instantiate_search(search_description: str,
             raise ValueError("Tried to instantiate search with CNFs having different element lists!")
         
     crystal_map_store = CrystalMapStore.from_file(store_file)
-    for cnf in all_cnfs:
+
+    if start_energies is None:
+        start_energies = [calculator.calculate_energy(c) for c in start_cnfs]
+    
+    if end_energies is None:
+        end_energies = [calculator.calculate_energy(c) for c in end_cnfs]
+    
+    all_energies = start_energies + end_energies
+        
+    for cnf, energy in zip(all_cnfs, all_energies):
         pt_id = crystal_map_store.add_point(cnf)
-        crystal_map_store.set_point_value(pt_id, value=calculator.calculate_energy(cnf))
+        crystal_map_store.set_point_value(pt_id, value=energy)
 
     search_store = SearchProcessStore.from_file(store_file)
     search_id = search_store.create_search_process(search_description)

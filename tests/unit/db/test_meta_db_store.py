@@ -17,25 +17,42 @@ def store_with_3_partitions():
         setup_meta_db(t.name)
         store = MetaStore.from_file(t.name)
         for i in range(3):
-            store.create_partition_entry(i)
+            store.create_partition_entry(1, i)
         yield store
 
 def test_can_setup_meta_db():
 
     with tempfile.NamedTemporaryFile() as t:
         setup_meta_db(t.name)
-        MetaStore.from_file(t.name)
+        ms = MetaStore.from_file(t.name)
+        ms.create_partition_entry(1, 1)
         
 def test_can_create_partition_entry(meta_store: MetaStore):
-    meta_store.create_partition_entry(2)
+    sid = 1
+    meta_store.create_partition_entry(sid, 2)
+    meta_store.create_partition_entry(2, 2)
     with pytest.raises(sqlite3.IntegrityError):
-        meta_store.create_partition_entry(2)
+        meta_store.create_partition_entry(sid, 2)
 
 def test_can_update_min_water_level(store_with_3_partitions):
-    store_with_3_partitions.update_min_water_level(0, 1)
-    store_with_3_partitions.update_min_water_level(1, 2)
-    store_with_3_partitions.update_min_water_level(2, 3)
+    sid1 = 1
+    sid2 = 2
+    for i in range(3):
+        store_with_3_partitions.create_partition_entry(2, i)    
+    store_with_3_partitions.update_min_water_level(sid1, 0, 1)
+    store_with_3_partitions.update_min_water_level(sid1, 1, 2)
+    store_with_3_partitions.update_min_water_level(sid1, 2, 3)
 
-    global_lev = store_with_3_partitions.get_global_water_level()
+    global_lev_1 = store_with_3_partitions.get_global_water_level(sid1)
+    assert global_lev_1 == 1
 
-    assert global_lev == 1
+    global_lev_2 = store_with_3_partitions.get_global_water_level(sid2)
+    assert global_lev_2 == None
+
+    store_with_3_partitions.update_min_water_level(sid2, 0, 0)
+    store_with_3_partitions.update_min_water_level(sid2, 1, -1)
+    global_lev_2 = store_with_3_partitions.get_global_water_level(sid2)
+    assert global_lev_2 == -1
+
+    global_lev_1 = store_with_3_partitions.get_global_water_level(sid1)
+    assert global_lev_1 == 1
