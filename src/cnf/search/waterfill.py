@@ -47,7 +47,7 @@ def process_cnf_batch(cnfs: list[CrystalNormalForm],
                       search_id: int,
                       calculator: BaseCalculator):
     map_store.bulk_insert_points(cnfs)
-    all_ids = map_store.get_point_ids(cnfs)   
+    all_ids = map_store.get_point_ids(cnfs)
     return process_cnf_ids_batch(all_ids, map_store, search_store, search_id, calculator) 
 
 def process_cnf_ids_batch(cnf_ids: list[int],
@@ -180,7 +180,7 @@ def continue_search_waterfill(search_id,
         # Choose a partition to operate on for this iteration
         partition_idx = db.get_random_partition_idx()
 
-        waterfill_step(db,
+        new_ids = waterfill_step(db,
                        partition_idx,
                        search_id,
                        logger,
