@@ -48,7 +48,7 @@ def setup_partitioned_db(location,
 
     for i in range(num_partitions):
         meta_db.create_partition_entry(sid, i)
-        
+
     return sid
     
 
@@ -63,5 +63,5 @@ def setup_search_dir(location,
     sid = setup_partitioned_db(location, description, num_partitions, start_cnfs, end_cnfs, calculator)
     write_meta_file(location, xi, delta, element_list, calc_identifier, description)
     add_search_process(location, sid, start_cnfs, end_cnfs)
-    PartitionedDB(location).sync_control_water_level(sid)
+    PartitionedDB(location, sid).sync_control_water_level()
     return sid

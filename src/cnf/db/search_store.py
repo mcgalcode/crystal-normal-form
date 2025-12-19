@@ -107,6 +107,10 @@ class SearchProcessStore(BaseStore):
         self.conn.commit()
         return point_ids
 
+    def get_searched_cnfs_in_search(self, search_id: int):
+        pts = self.get_searched_points_in_search(search_id)
+        return [pt.cnf for pt in pts]
+
     def get_searched_points_in_search(self, search_id: int):
         res = self.cursor.execute(
             sp_queries.select_searched_points,
@@ -138,6 +142,9 @@ class SearchProcessStore(BaseStore):
         )
         result = res.fetchone()
         return result[0] if result and result[0] is not None else None
+    
+    def get_frontier_cnfs_in_search(self, search_id: int, limit: int = 100, max_energy = None):
+        return [pt.cnf for pt in self.get_frontier_points_in_search(search_id, limit, max_energy)]
 
     def get_frontier_points_in_search(self, search_id: int, limit: int = 100, max_energy=None):
         """Get frontier points for a search, ordered by energy (lowest first).

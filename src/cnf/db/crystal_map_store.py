@@ -111,7 +111,7 @@ class CrystalMapStore(BaseStore):
     def get_points_by_ids(self, ids: list[int]):
         res = self.cursor.execute(
             queries.get_points_batch(ids),
-            (ids)
+            (list(ids))
         )
         rows = res.fetchall()
         pts = [self._cnf_pt_from_row(r) for r in rows]
@@ -191,9 +191,9 @@ class CrystalMapStore(BaseStore):
         rows = res.fetchmany()
         return len(rows) > 0
     
-    def get_neighbors(self, pt_id: int) -> list[CNFPoint]:
+    def get_local_neighbors(self, pt_id: int) -> list[CNFPoint]:
         res = self.cursor.execute(
-            queries.select_neighbors,
+            queries.select_local_nbs,
             ([pt_id, pt_id])
         )
         rows = res.fetchall()

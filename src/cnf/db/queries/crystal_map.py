@@ -119,7 +119,7 @@ DELETE FROM {constants.EDGE_TABLE_NAME}
 WHERE (source_id = ? AND target_id = ?) OR (target_id = ? AND source_id = ?)
 """
 
-select_neighbors = f"""
+select_local_nbs = f"""
 SELECT pt2.* FROM {constants.POINT_TABLE_NAME} AS pt1
 INNER JOIN {constants.EDGE_TABLE_NAME} AS edge ON pt1.id = edge.source_id
 INNER JOIN {constants.POINT_TABLE_NAME} AS pt2 ON edge.target_id = pt2.id
