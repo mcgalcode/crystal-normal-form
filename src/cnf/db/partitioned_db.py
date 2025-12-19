@@ -13,25 +13,36 @@ from .utilities import CNFPoint
 
 class PartitionedDB():
 
-    def __init__(self, db_dir: str):
+    def __init__(self,
+                 db_dir: str,
+                 search_id: int,
+                 partition_range: list[int] = None):
         self._db_dir = db_dir
         self.metadata = load_meta_file(db_dir)
+        self.search_id = search_id
+        
         directory = pathlib.Path(self._db_dir)
 
         partition_files = sorted(list(directory.glob(f"*{PARTITION_SUFFIX}")))
         control_file = os.path.join(db_dir, META_DB_NAME)
+        
         self.meta_store = MetaStore.from_file(control_file)
         self.num_partitions = len(partition_files)
 
+        if partition_range is None:
+            partition_range = list(range(self.num_partitions))
+        
+        self.partition_range = partition_range
         self.partition_map = {}
+
         for i, f in enumerate(partition_files):
-            
-            search_store = SearchProcessStore.from_file(f)
-            map_store = CrystalMapStore.from_file(f)
-            self.partition_map[i] = {
-                "search_store": search_store,
-                "map_store": map_store
-            }
+            if i in self.partition_range:
+                search_store = SearchProcessStore.from_file(f)
+                map_store = CrystalMapStore.from_file(f)
+                self.partition_map[i] = {
+                    "search_store": search_store,
+                    "map_store": map_store
+                }
     
     def partition_cnfs(self, cnfs: list[CrystalNormalForm]):
         partitions = { i: [] for i in range(self.num_partitions) }
@@ -62,35 +73,23 @@ class PartitionedDB():
         return self.partition_map[idx]["map_store"]
     
     def get_random_partition_idx(self):
-        return random.randint(0, self.num_partitions - 1)
+        return random.choice(self.partition_range)
 
-    def get_current_water_level(self, search_id: int):
+    def get_current_water_level(self):
         """Get current water level across ALL partitions.
-
-        Queries all partitions for their minimum frontier energy and returns
-        the global minimum. This ensures we have the true lowest energy point
-        on the frontier for proper water-filling behavior.
-
-        Args:
-            search_id: Search process ID
 
         Returns:
             Minimum frontier energy across all partitions, or None if no frontier points
         """
-        min_energy = None
-
-        for idx in range(self.num_partitions):
-            search_store = self.get_search_store_by_idx(idx)
-            partition_min = search_store.get_min_frontier_energy(search_id)
-            if partition_min is not None:
-                min_energy = min(min_energy, partition_min) if min_energy is not None else partition_min
-
-        return min_energy
+        return self.meta_store.get_global_water_level(self.search_id)
     
-    def sync_control_water_level(self, search_id: int):
+    def is_search_complete(self):
+        return self.meta_store.is_search_complete(self.search_id)
+    
+    def sync_control_water_level(self):
         for i in range(self.num_partitions):
             search_store = self.get_search_store_by_idx(i)
-            partition_min = search_store.get_min_frontier_energy(search_id)
-            self.meta_store.update_min_water_level(search_id, i, partition_min)
+            partition_min = search_store.get_min_frontier_energy(self.search_id)
+            self.meta_store.update_min_water_level(self.search_id, i, partition_min)
 
 

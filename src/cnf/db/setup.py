@@ -28,6 +28,7 @@ def setup_cnf_db(dbfname: str, xi: float, delta: int, element_list: list[str]):
     cur.execute(search_process_queries.create_search_end_point_table)
     cur.execute(search_process_queries.create_search_frontier_member_table)
     cur.execute(search_process_queries.create_searched_point_table)
+    cur.execute(search_process_queries.create_incoming_point_table)
 
     # Create indexes for performance
     cur.execute(crystal_map_queries.create_index_edge_source)
@@ -59,6 +60,7 @@ def setup_meta_db(dbfname: str):
 
     # Create tables
     cur.execute(meta_queries.create_partition_status_table)
+    cur.execute(meta_queries.create_search_status_table)
     return MetaStore.from_file(dbfname)
 
 def instantiate_search(search_description: str,

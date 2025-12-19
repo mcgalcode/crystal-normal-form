@@ -12,45 +12,6 @@ import math
 
 FRONTIER_WIDTH = 0.002 # eV
 
-def instantiate_search(search_description: str,
-                       start_cnfs: list[CrystalNormalForm],
-                       end_cnfs: list[CrystalNormalForm],
-                       store_file: str):
-    gcalc = GraceCalculator()
-    all_cnfs = start_cnfs + end_cnfs
-    xis = [cnf.xi for cnf in all_cnfs]
-    if len(set(xis)) > 1:
-        raise ValueError("Tried to instantiate search with CNFs having different xi values!")
-    
-    deltas = [cnf.delta for cnf in all_cnfs]
-    if len(set(deltas)) > 1:
-        raise ValueError("Tried to instantiate search with CNFs having different delta values!")
-
-    element_list = start_cnfs[0].elements
-    for cnf in all_cnfs:
-        if cnf.elements != element_list:
-            raise ValueError("Tried to instantiate search with CNFs having different element lists!")
-        
-    crystal_map_store = CrystalMapStore.from_file(store_file)
-    for cnf in all_cnfs:
-        pt_id = crystal_map_store.add_point(cnf)
-        crystal_map_store.set_point_value(pt_id, value=gcalc.calculate_energy(cnf))
-
-    search_store = SearchProcessStore.from_file(store_file)
-    search_id = search_store.create_search_process(search_description)
-
-    start_point_ids = crystal_map_store.get_point_ids(start_cnfs)
-    end_point_ids = crystal_map_store.get_point_ids(end_cnfs)
-
-    for sid in start_point_ids:
-        search_store.add_search_start_point(search_id, sid)
-        search_store.add_to_search_frontier_by_id(search_id, sid)
-    
-    for eid in end_point_ids:
-        search_store.add_search_end_point(search_id, eid)
-    return search_id
-
-
 def explore_pt(map_store: CrystalMapStore, pt_id: int, filters: list[SearchFilter] = None, log_lvl=1):
     if filters is None:
         filters = []
@@ -88,31 +49,17 @@ def explore_pt(map_store: CrystalMapStore, pt_id: int, filters: list[SearchFilte
 
     return all_nb_ids, new_nb_ids
 
-
 def explore_pt_partition(partition_db: PartitionedDB, point_cnf: CrystalNormalForm, filters: list[SearchFilter] = None, log_lvl=1):
     logger = Logger(log_lvl)
     if filters is None:
         filters = []
 
-    # Timing instrumentation for explore_pt internals
-    timings = {
-        'find_neighbors': 0.0,
-        'filter_checks': 0.0,
-        'add_points': 0.0,
-        'get_existing_points': 0.0,
-        'add_edges': 0.0,
-        'mark_explored': 0.0
-    }
 
     point_partition = partition_db.get_partition_idx(point_cnf)
     point_map_store = partition_db.get_map_store(point_cnf)
     pt = point_map_store.get_point_by_cnf(point_cnf)
 
-    # Time: Find neighbors (the actual computation)
-    t_start = time.time()
     nbs = NeighborFinder.from_cnf(pt.cnf).find_neighbors(pt.cnf)
-
-    timings['find_neighbors'] += time.time() - t_start
 
     all_nb_ids = []
     new_nb_ids = []
@@ -128,26 +75,17 @@ def explore_pt_partition(partition_db: PartitionedDB, point_cnf: CrystalNormalFo
 
         # Time: Filter checks
         if filters:
-            t_start = time.time()
             struct = nb.reconstruct()
             if not all([f.should_add_pt(nb, struct) for f in filters]):
                 filtered_ct += 1
-                timings['filter_checks'] += time.time() - t_start
                 continue
-            timings['filter_checks'] += time.time() - t_start
 
-        # Time: Add point to database
-        t_start = time.time()
         nb_id = nb_map_store.add_point(nb)
-        timings['add_points'] += time.time() - t_start
 
         if nb_id is not None:
             new_nb_ids.append((nb_partition, nb_id))
         else:
-            # Time: Get existing point ID
-            t_start = time.time()
             nb_id = nb_map_store.get_point_by_cnf(nb).id
-            timings['get_existing_points'] += time.time() - t_start
             existing_nb_ids.append((nb_partition, nb_id))
 
 
@@ -159,20 +97,13 @@ def explore_pt_partition(partition_db: PartitionedDB, point_cnf: CrystalNormalFo
 
         all_nb_ids.append((nb_partition, nb_id))
     
-    # Time: Add edges
-    t_start = time.time()
     point_map_store.bulk_add_edges(edges_to_add_to_point_store)
-    timings['add_edges'] += time.time() - t_start
-
 
     logger.info(f"Exploration: {len(new_nb_ids)} new neighbors, {len(existing_nb_ids)} existing, {edges_added} edges added, {filtered_ct} filtered")
 
-    # Time: Mark explored
-    t_start = time.time()
     point_map_store.mark_point_explored(pt.id)
-    timings['mark_explored'] += time.time() - t_start
 
-    return all_nb_ids, new_nb_ids, timings
+    return all_nb_ids, new_nb_ids
 
 def continue_search_waterfill(search_id,
                                partitions_dir: str,
@@ -230,10 +161,12 @@ def continue_search_waterfill(search_id,
         random_read_search_store = db.get_search_store_by_idx(random_read_store_idx)
         random_read_map_store = db.get_map_store_by_idx(random_read_store_idx)
 
-        max_energy = (water_level + tolerance) if water_level is not None else None
+        max_energy = water_level + tolerance
+
         frontier_points = random_read_search_store.get_frontier_points_in_search(
             search_id, limit=frontier_limit, max_energy=max_energy
         )
+
         logger.debug(f"Found {len(frontier_points)} frontier points at/near water level (limit={frontier_limit}, max_energy={max_energy})...")
 
         # If no frontier points at current level, update water level
