@@ -55,12 +55,20 @@ INSERT INTO {constants.SEARCH_END_POINT_TABLE_NAME}
 VALUES (?, ?)
 """
 
-upsert_search_point_status = f"""
+upsert_search_point_status_open = f"""
 INSERT INTO {constants.SEARCH_POINT_STATUS_TABLE_NAME}
     (search_id, point_id, point_status)
 VALUES (?, ?, "{constants.POINT_STATUS_OPEN}")
 ON CONFLICT(search_id, point_id) DO UPDATE SET
     point_status =  "{constants.POINT_STATUS_OPEN}"
+"""
+
+upsert_search_point_status_closed = f"""
+INSERT INTO {constants.SEARCH_POINT_STATUS_TABLE_NAME}
+    (search_id, point_id, point_status)
+VALUES (?, ?, "{constants.POINT_STATUS_CLOSED}")
+ON CONFLICT(search_id, point_id) DO UPDATE SET
+    point_status =  "{constants.POINT_STATUS_CLOSED}"
 """
 
 delete_search_point_status = f"""
@@ -99,6 +107,20 @@ SELECT pt.* FROM {constants.SEARCH_POINT_STATUS_TABLE_NAME} AS status
 LEFT JOIN {constants.POINT_TABLE_NAME} AS pt
 ON pt.id = status.point_id
 WHERE status.search_id = ? AND status.point_status = "{constants.POINT_STATUS_CLOSED}"
+"""
+
+select_searched_ids = f"""
+SELECT status.point_id FROM {constants.SEARCH_POINT_STATUS_TABLE_NAME} AS status
+WHERE status.search_id = ? AND status.point_status = "{constants.POINT_STATUS_CLOSED}"
+"""
+
+def select_searched_ids_scoped_by_id(ids: list[int]):
+    placeholders = ','.join(['?'] * len(ids))
+    return f"""
+SELECT status.point_id FROM {constants.SEARCH_POINT_STATUS_TABLE_NAME} AS status
+WHERE status.search_id = ? AND
+      status.point_status = "{constants.POINT_STATUS_CLOSED}" AND
+      status.point_id IN ({placeholders})
 """
 
 select_frontier_points = f"""

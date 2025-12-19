@@ -68,7 +68,7 @@ class SearchProcessStore(BaseStore):
 
     def mark_point_searched_by_id(self, search_id: int, point_id: int):
         self.cursor.execute(
-            sp_queries.set_point_closed,
+            sp_queries.upsert_search_point_status_closed,
             ([search_id, point_id])
         )
         self.conn.commit()
@@ -92,7 +92,7 @@ class SearchProcessStore(BaseStore):
 
     def add_to_search_frontier_by_id(self, search_id: int, point_id: int):
         self.cursor.execute(
-            sp_queries.upsert_search_point_status,
+            sp_queries.upsert_search_point_status_open,
             ([search_id, point_id])
         )
         self.conn.commit()
@@ -105,6 +105,14 @@ class SearchProcessStore(BaseStore):
         )
         rows = res.fetchall()
         return [cnf_pt_from_row(r, self.metadata.delta, self.metadata.xi, self.metadata.element_list) for r in rows]
+    
+    def get_searched_ids_intersecting_with(self, search_id: int, id_set: list[int]):
+        res = self.cursor.execute(
+            sp_queries.select_searched_ids_scoped_by_id(id_set),
+            ([search_id, *id_set])
+        )
+        rows = res.fetchall()
+        return [r[0] for r in rows]
 
     def get_min_frontier_energy(self, search_id: int):
         """Get the minimum energy value among frontier points.
