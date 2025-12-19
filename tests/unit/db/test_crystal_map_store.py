@@ -3,7 +3,7 @@ from cnf.db.crystal_map_store import CrystalMapStore
 from cnf.db.setup import setup_cnf_db
 from cnf.search import explore_pt
 from cnf import CrystalNormalForm
-from cnf.navigation.neighbor_finder import NeighborFinder
+from cnf.navigation.neighbor_finder import NeighborFinder, find_neighbors
 import tempfile
 
 
@@ -184,3 +184,15 @@ def test_can_set_point_value(zr_hcp_cnf, temp_db):
     v = 2.5
     temp_db.set_point_value(pt_id, v)
     assert temp_db.get_point_value(pt_id) == v
+
+def test_can_get_points_batch_by_ids(zr_hcp_cnf, temp_db: CrystalMapStore):
+    nbs = find_neighbors(zr_hcp_cnf)
+    temp_db.bulk_insert_points(nbs)
+
+    targets = nbs[:8]
+    retrieval_ids = temp_db.get_point_ids(targets)
+
+    retrieved = temp_db.get_points_by_ids(retrieval_ids)
+    assert len(retrieved) == len(retrieval_ids)
+    assert len(retrieved) == len(targets)
+    assert set(targets) == set([pt.cnf for pt in retrieved])

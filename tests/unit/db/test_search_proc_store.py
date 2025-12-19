@@ -58,7 +58,7 @@ def test_can_add_and_rm_pt_from_frontier(search_store, zr_bcc_cnfs, zr_hcp_cnfs)
     assert len(new_frontier) == len(zr_bcc_cnfs) + 1
     assert set([pt.cnf for pt in new_frontier]) == set(zr_bcc_cnfs).union(set(zr_hcp_cnfs[:1]))
 
-    search_store.remove_from_search_frontier(sp_id, zr_hcp_cnfs[0])
+    search_store.mark_point_searched(sp_id, zr_hcp_cnfs[0])
     start_pt_frontier = search_store.get_frontier_points_in_search(sp_id)
     assert len(start_pt_frontier) == len(zr_bcc_cnfs)
 
@@ -164,7 +164,7 @@ def test_can_get_endpoint_ids_in_frontier(search_store: SearchProcessStore,
     assert len(endpt_ids) == 2
     assert set(endpt_ids) == set([endpt_id1, endpt_id2])
 
-    search_store.remove_from_search_frontier_by_id(sp_id, endpt_id1)
+    search_store.remove_point_from_search_by_id(sp_id, endpt_id1)
 
     endpt_ids = search_store.get_endpoint_ids_in_frontier(sp_id)
     assert len(endpt_ids) == 1
@@ -196,3 +196,64 @@ def test_can_manipulate_incoming_points(search_store: SearchProcessStore,
 
     incoming_pts = search_store.get_and_empty_incoming_points(sp_id)
     assert len(incoming_pts) == 0
+
+def test_intersecting_searched_ids(search_store: SearchProcessStore,
+                                    crystal_map_store: CrystalMapStore,
+                                    zr_bcc_cnfs,
+                                    zr_hcp_cnfs):
+    sp_id = instantiate_search(
+        "test process",
+        zr_bcc_cnfs,
+        zr_hcp_cnfs,
+        search_store.db_filename,
+        GraceCalculator()
+    )
+
+    nbs = find_neighbors(zr_bcc_cnfs[0])
+    crystal_map_store.bulk_insert_points(nbs)
+    ids = crystal_map_store.get_point_ids(nbs)
+
+    assert len(ids) > 15
+    searched_ids = ids[:10]
+    frontier_ids = ids[10:]
+
+    query_id_set = ids[8:13]
+
+    for i in searched_ids:
+        search_store.mark_point_searched_by_id(sp_id, i)
+    
+    for i in frontier_ids:
+        search_store.add_to_search_frontier_by_id(sp_id, i)
+    
+    result = search_store.get_searched_ids_intersecting_with(sp_id, query_id_set)
+
+    expected_result = ids[8:10]
+    assert sorted(result) == sorted(expected_result)
+
+def test_bulk_frontier_add(search_store: SearchProcessStore,
+                                    crystal_map_store: CrystalMapStore,
+                                    zr_bcc_cnfs,
+                                    zr_hcp_cnfs):
+    sp_id = instantiate_search(
+        "test process",
+        zr_bcc_cnfs,
+        zr_hcp_cnfs,
+        search_store.db_filename,
+        GraceCalculator()
+    )
+
+    nbs = find_neighbors(zr_bcc_cnfs[0])
+    crystal_map_store.bulk_insert_points(nbs)
+    ids = crystal_map_store.get_point_ids(nbs)
+
+    frontier_ids = ids[:10]
+    before_frontier = len(search_store.get_frontier_points_in_search(sp_id))
+    assert before_frontier == len(zr_bcc_cnfs)
+
+    # Add one manually to check for idempotence
+    search_store.add_to_search_frontier_by_id(sp_id, frontier_ids[0])
+
+    search_store.bulk_add_to_search_frontier_by_id(sp_id, frontier_ids)
+    after_frontier = search_store.get_frontier_points_in_search(sp_id)
+    after_frontier = [pt.id for pt in after_frontier if pt.cnf not in zr_bcc_cnfs]
+    assert sorted(after_frontier) == sorted(frontier_ids)

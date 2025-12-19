@@ -108,6 +108,13 @@ class CrystalMapStore(BaseStore):
             return None
         return cnf_pt_from_row(row, self.metadata.delta, self.metadata.xi, self.metadata.element_list)
 
+    def get_points_by_ids(self, ids: list[int]):
+        res = self.cursor.execute(
+            queries.get_points_batch(ids),
+            (ids)
+        )
+        rows = res.fetchall()
+        return [self._cnf_pt_from_row(r) for r in rows]
     
     def remove_point(self, point: CrystalNormalForm):
         cnf_str = cnf_to_str(point)

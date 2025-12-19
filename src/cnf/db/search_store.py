@@ -97,6 +97,15 @@ class SearchProcessStore(BaseStore):
         )
         self.conn.commit()
         return point_id
+    
+    def bulk_add_to_search_frontier_by_id(self, search_id: int, point_ids: int):
+        rows = [(search_id, pid) for pid in point_ids]
+        self.cursor.executemany(
+            sp_queries.upsert_search_point_status_open,
+            rows
+        )
+        self.conn.commit()
+        return point_ids
 
     def get_searched_points_in_search(self, search_id: int):
         res = self.cursor.execute(
