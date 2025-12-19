@@ -3,6 +3,7 @@ from ..crystal_normal_form import CrystalNormalForm
 from ..db import PartitionedDB, CrystalMapStore, SearchProcessStore
 from ..utils.log import Logger
 from ..navigation import find_neighbors
+import math
 
 FRONTIER_WIDTH = 0.002
 
@@ -55,7 +56,7 @@ def process_cnf_ids_batch(cnf_ids: list[int],
                           search_id: int,
                           calculator: BaseCalculator):
     searched_ids = search_store.get_searched_ids_intersecting_with(search_id, cnf_ids)
-    new_frontier_ids = set(cnf_ids) - set(searched_ids)
+    new_frontier_ids = list(set(cnf_ids) - set(searched_ids))
     search_store.bulk_add_to_search_frontier_by_id(search_id, new_frontier_ids)
     new_frontier_cnfs = map_store.get_points_by_ids(new_frontier_ids)
     new_frontier_cnfs = [pt.cnf for pt in new_frontier_cnfs]
@@ -111,7 +112,7 @@ def waterfill_step(db: PartitionedDB,
         search_id, limit=batch_size, max_energy=energy_limit
     )
 
-    logger.debug(f"Found {len(frontier_points)} frontier points at/near water level (limit={batch_size}, max_energy={max_energy})...")
+    logger.debug(f"Found {len(frontier_points)} frontier points at/near water level (limit={batch_size}, max_energy={energy_limit})...")
 
     for frontier_point in frontier_points:
         logger.debug(f"Considering frontier pt ID: {frontier_point.id}, VALUE: {frontier_point.value}, CNF: {frontier_point.cnf.coords}")
@@ -171,6 +172,7 @@ def continue_search_waterfill(search_id,
 
         if db.is_search_complete():
             logger.info(f"Search is complete! Worker retiring...")
+            break
 
         water_level = db.get_current_water_level() + FRONTIER_WIDTH
         logger.debug(f"Current water level: {water_level}")
@@ -186,5 +188,8 @@ def continue_search_waterfill(search_id,
                        batch_size,
                        water_level,
                        log_lvl)
-      
+
+        # Update global water level based on current partition frontiers
+        db.sync_control_water_level()
+
         num_iters += 1
