@@ -8,6 +8,7 @@ from cnf.db import CrystalMapStore, SearchProcessStore, MetaStore
 from cnf.db.partitioned_db import PartitionedDB
 from cnf.calculation.grace import GraceCalculator
 from cnf.navigation.endpoints import get_endpoint_cnfs
+from cnf import UnitCell
 import glob
 import os
 
@@ -50,7 +51,7 @@ def test_can_setup_search_dir(zr_bcc_mp, zr_hcp_mp):
                          end_cnfs,
                          calc)
         
-        partition_db = PartitionedDB(tmpdir)
+        partition_db = PartitionedDB(tmpdir, sid)
         
         db_files = glob.glob(os.path.join(tmpdir, f"*{PARTITION_SUFFIX}"))
         assert len(db_files) == num_partitions

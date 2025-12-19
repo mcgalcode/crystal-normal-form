@@ -140,7 +140,7 @@ def test_can_get_all_neighbors_of_point(zr_hcp_cnf, temp_db: CrystalMapStore):
 
         temp_db.add_connection(nbs[-1], onb)
     
-    retrieved_nbs = temp_db.get_neighbors(temp_db.get_point_ids([zr_hcp_cnf])[0])
+    retrieved_nbs = temp_db.get_local_neighbors(temp_db.get_point_ids([zr_hcp_cnf])[0])
     assert len(retrieved_nbs) == len(nbs)
     assert set([nb.cnf for nb in retrieved_nbs]) == set(nbs)
 

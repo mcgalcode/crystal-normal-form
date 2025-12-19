@@ -103,7 +103,7 @@ def test_candidate_neighbors_are_not_searched(search_store, crystal_map_store, z
     for sid in searched_nb_ids:
         search_store.mark_point_searched_by_id(sp_id, sid)
     
-    simple_nbs = crystal_map_store.get_neighbors(start_pt_id)
+    simple_nbs = crystal_map_store.get_local_neighbors(start_pt_id)
     simple_nb_ids = [snb.id for snb in simple_nbs]
     assert len(simple_nb_ids) == len(all_nb_ids)
     assert set(simple_nb_ids) == set(all_nb_ids)
@@ -130,7 +130,7 @@ def test_candidate_neighbors_are_not_in_frontier(search_store: SearchProcessStor
     for sid in frontier_nb_ids:
         search_store.add_to_search_frontier_by_id(sp_id, sid)
     
-    simple_nbs = crystal_map_store.get_neighbors(start_pt_id)
+    simple_nbs = crystal_map_store.get_local_neighbors(start_pt_id)
     simple_nb_ids = [snb.id for snb in simple_nbs]
     assert len(simple_nb_ids) == len(all_nb_ids)
     assert set(simple_nb_ids) == set(all_nb_ids)
