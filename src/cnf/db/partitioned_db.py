@@ -44,7 +44,7 @@ class PartitionedDB():
                     "map_store": map_store
                 }
     
-    def partition_cnfs(self, cnfs: list[CrystalNormalForm]):
+    def partition_cnfs(self, cnfs: list[CrystalNormalForm]) -> dict[int, list[CrystalNormalForm]]:
         partitions = { i: [] for i in range(self.num_partitions) }
         for c in cnfs:
             partition = self.get_partition_idx(c)

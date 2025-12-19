@@ -196,3 +196,6 @@ def test_can_get_points_batch_by_ids(zr_hcp_cnf, temp_db: CrystalMapStore):
     assert len(retrieved) == len(retrieval_ids)
     assert len(retrieved) == len(targets)
     assert set(targets) == set([pt.cnf for pt in retrieved])
+
+    for id, pt in zip(retrieval_ids, retrieved):
+        assert temp_db.get_point_by_id(id).cnf == pt.cnf

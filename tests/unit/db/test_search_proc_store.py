@@ -197,6 +197,31 @@ def test_can_manipulate_incoming_points(search_store: SearchProcessStore,
     incoming_pts = search_store.get_and_empty_incoming_points(sp_id)
     assert len(incoming_pts) == 0
 
+def test_can_manipulate_incoming_points_batch(search_store: SearchProcessStore,
+                                        zr_bcc_cnfs,
+                                        zr_hcp_cnfs):
+    sp_id = instantiate_search(
+        "test process",
+        zr_bcc_cnfs,
+        zr_hcp_cnfs,
+        search_store.db_filename,
+        GraceCalculator()
+    )
+
+    nbs = find_neighbors(zr_bcc_cnfs[0])
+
+    incoming_pts = search_store.get_and_empty_incoming_points(sp_id)
+    assert len(incoming_pts) == 0
+
+    search_store.bulk_add_incoming_points(sp_id, nbs)
+    
+    incoming_pts = search_store.get_and_empty_incoming_points(sp_id)
+    assert len(incoming_pts) == len(nbs)
+    assert set(incoming_pts) == set(nbs)
+
+    incoming_pts = search_store.get_and_empty_incoming_points(sp_id)
+    assert len(incoming_pts) == 0
+
 def test_intersecting_searched_ids(search_store: SearchProcessStore,
                                     crystal_map_store: CrystalMapStore,
                                     zr_bcc_cnfs,

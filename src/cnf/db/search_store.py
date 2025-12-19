@@ -200,3 +200,12 @@ class SearchProcessStore(BaseStore):
             ([search_id, cnf_str])
         )
         self.conn.commit()
+    
+    def bulk_add_incoming_points(self, search_id: int, cnfs: list[CrystalNormalForm]):
+        params = [(search_id, cnf_to_str(cnf)) for cnf in cnfs]
+        self.cursor.executemany(
+            sp_queries.insert_incoming_point,
+            params
+        )
+        self.conn.commit()
+        return self.cursor.rowcount

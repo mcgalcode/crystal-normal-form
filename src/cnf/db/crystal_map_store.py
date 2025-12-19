@@ -114,7 +114,9 @@ class CrystalMapStore(BaseStore):
             (ids)
         )
         rows = res.fetchall()
-        return [self._cnf_pt_from_row(r) for r in rows]
+        pts = [self._cnf_pt_from_row(r) for r in rows]
+        pt_lookup = {pt.id: pt for pt in pts}
+        return [pt_lookup[id] for id in ids]
     
     def remove_point(self, point: CrystalNormalForm):
         cnf_str = cnf_to_str(point)
