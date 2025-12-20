@@ -18,8 +18,9 @@ class PartitionedDB():
                  search_id: int,
                  partition_range: list[int] = None):
         self._db_dir = db_dir
-        self.metadata = load_meta_file(db_dir)
+        self.db_metadata = load_meta_file(db_dir)
         self.search_id = search_id
+        self.search_metadata = [s for s in self.db_metadata.search_processes if s.search_id == search_id][0]
         
         directory = pathlib.Path(self._db_dir)
 
