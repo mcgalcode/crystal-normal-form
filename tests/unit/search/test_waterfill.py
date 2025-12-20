@@ -149,21 +149,52 @@ def test_take_waterfill_step(zr_bcc_mp, zr_hcp_mp):
         for cnf_pt in sps:
             local_partition_idx = pdb.get_partition_idx(cnf_pt)
             
+            nbs = find_neighbors(cnf_pt)
+            for nb in nbs:
+                if pdb.get_partition_idx(nb) == local_partition_idx:
+                    assert pdb.get_search_store(nb).is_point_in_frontier(sp_id, nb)
+                    assert pdb.get_map_store(nb).get_point_by_cnf(nb).value is not None
+
             # assert that point is marked as explored
             assert pdb.get_map_store(cnf_pt).get_point_by_cnf(cnf_pt).explored
+            assert pdb.get_search_store(cnf_pt).is_point_searched(sp_id, cnf_pt)
             _assert_graph_is_correct_in_local_partition(pdb, cnf_pt)
 
             # for every other partition / node_set
-            for partition_idx, cnfs in pdb.partition_cnfs(find_neighbors(cnf_pt)).items():
+            for partition_idx, cnfs in pdb.partition_cnfs(nbs).items():
                 if partition_idx == local_partition_idx:
                     continue
 
                 # Assert that the inbox holds the same set of CNFs
                 inbox_cnfs = pdb.get_search_store_by_idx(partition_idx).peek_incoming_points(sp_id)
-                assert len(inbox_cnfs) == len(cnfs)
-                assert set(inbox_cnfs) == set(cnfs)
+                assert set(inbox_cnfs).issuperset(cnfs)
 
                 # assert that these points have not been added anywhere yet
                 for cnf in cnfs:
                     assert pdb.get_map_store_by_idx(local_partition_idx).get_point_by_cnf(cnf) is None
-                    assert pdb.get_map_store_by_idx(partition_idx).get_point_by_cnf(cnf) is None            
+                    assert pdb.get_map_store_by_idx(partition_idx).get_point_by_cnf(cnf) is None   
+
+def test_take_second_waterfill_step(zr_bcc_mp, zr_hcp_mp):
+    xi = 1.5
+    delta = 10
+    sps, eps = get_endpoint_cnfs(zr_bcc_mp, zr_hcp_mp, xi, delta)
+    logger = Logger()
+
+    DUMB_ENERGY_LIMIT = 100
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        sp_id = setup_search_dir(tmpdir, "test", 3, sps, eps, GraceCalculator())
+        pdb = PartitionedDB(tmpdir, sp_id)
+
+
+        waterfill_step(pdb, 0, sp_id, logger, GraceCalculator(), 100, DUMB_ENERGY_LIMIT, 2)
+        waterfill_step(pdb, 1, sp_id, logger, GraceCalculator(), 100, DUMB_ENERGY_LIMIT, 2)
+        waterfill_step(pdb, 2, sp_id, logger, GraceCalculator(), 100, DUMB_ENERGY_LIMIT, 2)
+
+        for cnf_pt in sps:
+            local_partition_idx = pdb.get_partition_idx(cnf_pt)
+            
+            nbs = find_neighbors(cnf_pt)
+            for nb in nbs:
+                if pdb.get_partition_idx(nb) == local_partition_idx:
+                    assert pdb.get_map_store(nb).get_point_by_cnf(nb).value is not None
