@@ -186,6 +186,14 @@ class SearchProcessStore(BaseStore):
         rows = res.fetchall()
         return [r[0] for r in rows]
     
+    def peek_incoming_points(self, search_id: int):
+        res = self.cursor.execute(
+            sp_queries.select_all_incoming_points,
+            ([search_id])
+        )
+        full_result = res.fetchall()
+        return [cnf_from_str(row[0], self.metadata.xi, self.metadata.delta, self.metadata.element_list) for row in full_result]
+    
     def get_and_empty_incoming_points(self, search_id: int):
         res = self.cursor.execute(
             sp_queries.select_all_incoming_points,
