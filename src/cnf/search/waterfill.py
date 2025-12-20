@@ -191,6 +191,10 @@ def continue_search_waterfill(search_id,
                        log_lvl)
 
         # Update global water level based on current partition frontiers
-        db.sync_control_water_level()
+        if new_ids < 5:
+            db.sync_control_water_level()
+
+        # Review partitions to see if endpoint is reached
+        db.sync_search_completion_status()
 
         num_iters += 1
