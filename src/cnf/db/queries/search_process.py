@@ -123,6 +123,28 @@ WHERE status.search_id = ? AND
       status.point_id IN ({placeholders})
 """
 
+is_point_in_frontier_by_cnf = f"""
+SELECT pt.* FROM {constants.SEARCH_POINT_STATUS_TABLE_NAME} AS status
+LEFT JOIN {constants.POINT_TABLE_NAME} AS pt
+ON pt.id = status.point_id
+WHERE status.search_id = ? AND
+      status.point_status = "{constants.POINT_STATUS_OPEN}" AND
+      pt.cnf = ?
+ORDER BY pt.value ASC
+LIMIT 1
+"""
+
+is_point_searched_by_cnf = f"""
+SELECT pt.* FROM {constants.SEARCH_POINT_STATUS_TABLE_NAME} AS status
+LEFT JOIN {constants.POINT_TABLE_NAME} AS pt
+ON pt.id = status.point_id
+WHERE status.search_id = ? AND
+      status.point_status = "{constants.POINT_STATUS_CLOSED}" AND
+      pt.cnf = ?
+ORDER BY pt.value ASC
+LIMIT 1
+"""
+
 select_frontier_points = f"""
 SELECT pt.* FROM {constants.SEARCH_POINT_STATUS_TABLE_NAME} AS status
 LEFT JOIN {constants.POINT_TABLE_NAME} AS pt

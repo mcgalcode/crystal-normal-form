@@ -216,3 +216,21 @@ class SearchProcessStore(BaseStore):
         )
         self.conn.commit()
         return self.cursor.rowcount
+    
+    def is_point_searched(self, search_id: int, cnf: CrystalNormalForm):
+        cnf_str = cnf_to_str(cnf)
+        res = self.cursor.execute(
+            sp_queries.is_point_searched_by_cnf,
+            ([search_id, cnf_str])
+        )
+        res = res.fetchone()
+        return res is not None
+    
+    def is_point_in_frontier(self, search_id: int, cnf: CrystalNormalForm):
+        cnf_str = cnf_to_str(cnf)
+        res = self.cursor.execute(
+            sp_queries.is_point_in_frontier_by_cnf,
+            ([search_id, cnf_str])
+        )
+        res = res.fetchone()
+        return res is not None
