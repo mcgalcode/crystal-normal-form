@@ -147,28 +147,29 @@ def test_can_get_endpoint_ids_in_frontier(search_store: SearchProcessStore,
         GraceCalculator()
     )
 
-    endpt_ids = search_store.get_endpoint_ids_in_frontier(sp_id)
-    assert len(endpt_ids) == 0
-
-    search_store.add_to_search_frontier(sp_id, zr_hcp_cnfs[0])
     endpt_id1 = crystal_map_store.get_point_ids([zr_hcp_cnfs[0]])[0]
-
-    endpt_ids = search_store.get_endpoint_ids_in_frontier(sp_id)
-    assert len(endpt_ids) == 1
-    assert endpt_ids[0] == endpt_id1
-
-    search_store.add_to_search_frontier(sp_id, zr_hcp_cnfs[1])
     endpt_id2 = crystal_map_store.get_point_ids([zr_hcp_cnfs[1]])[0]
 
-    endpt_ids = search_store.get_endpoint_ids_in_frontier(sp_id)
-    assert len(endpt_ids) == 2
-    assert set(endpt_ids) == set([endpt_id1, endpt_id2])
+    found_endpt_ids = search_store.get_located_endpoint_ids(sp_id)
+    assert len(found_endpt_ids) == 0
+
+    search_store.add_to_search_frontier(sp_id, zr_hcp_cnfs[0])
+
+    found_endpt_ids = search_store.get_located_endpoint_ids(sp_id)
+    assert len(found_endpt_ids) == 1
+    assert found_endpt_ids[0] == endpt_id1
+
+    search_store.mark_point_searched(sp_id, zr_hcp_cnfs[1])
+
+    found_endpt_ids = search_store.get_located_endpoint_ids(sp_id)
+    assert len(found_endpt_ids) == 2
+    assert set(found_endpt_ids) == set([endpt_id1, endpt_id2])
 
     search_store.remove_point_from_search_by_id(sp_id, endpt_id1)
 
-    endpt_ids = search_store.get_endpoint_ids_in_frontier(sp_id)
-    assert len(endpt_ids) == 1
-    assert endpt_ids[0] == endpt_id2
+    found_endpt_ids = search_store.get_located_endpoint_ids(sp_id)
+    assert len(found_endpt_ids) == 1
+    assert found_endpt_ids[0] == endpt_id2
 
 def test_can_manipulate_incoming_points(search_store: SearchProcessStore,
                                         crystal_map_store: CrystalMapStore,

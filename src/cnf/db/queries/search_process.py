@@ -189,6 +189,21 @@ SELECT sep.end_point_id FROM {constants.SEARCH_END_POINT_TABLE_NAME} AS sep
 WHERE sep.search_id = ?
 """
 
+select_found_endpts = f"""
+SELECT status.point_id
+FROM {constants.SEARCH_POINT_STATUS_TABLE_NAME} as status
+WHERE status.search_id = ? AND
+(
+    status.point_status = "{constants.POINT_STATUS_OPEN}" OR
+    status.point_status = "{constants.POINT_STATUS_CLOSED}"
+)
+INTERSECT
+SELECT sep.end_point_id FROM {constants.SEARCH_END_POINT_TABLE_NAME} AS sep
+WHERE sep.search_id = ?
+"""
+
+
+
 create_index_start_point_search = f"""
 CREATE INDEX IF NOT EXISTS idx_start_point_search
 ON {constants.SEARCH_START_POINT_TABLE_NAME} (search_id)

@@ -185,6 +185,14 @@ class SearchProcessStore(BaseStore):
         )
         rows = res.fetchall()
         return [r[0] for r in rows]
+
+    def get_located_endpoint_ids(self, search_id: int):
+        res = self.cursor.execute(
+            sp_queries.select_found_endpts,
+            ([search_id, search_id])
+        )
+        rows = res.fetchall()
+        return [r[0] for r in rows]
     
     def peek_incoming_points(self, search_id: int):
         res = self.cursor.execute(
