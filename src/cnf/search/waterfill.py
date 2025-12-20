@@ -159,6 +159,7 @@ def continue_search_waterfill(search_id,
         log_lvl: Logging verbosity level
     """
     db = PartitionedDB(partitions_dir, search_id, partition_range)
+
     logger = Logger(log_lvl)
     if max_iters is None:
         max_iters = math.inf

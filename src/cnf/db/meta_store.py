@@ -71,5 +71,7 @@ class MetaStore(BaseStore):
             meta_queries.select_search_status,
             ([search_id])
         )
-        is_complete = res.fetchone()[0]
-        return is_complete == 1
+        res = res.fetchone()
+        if res is None:
+            return False
+        return res[0] == 1

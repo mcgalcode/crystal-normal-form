@@ -88,9 +88,18 @@ class PartitionedDB():
         return self.meta_store.is_search_complete(self.search_id)
     
     def sync_control_water_level(self):
-        for i in range(self.num_partitions):
+        for i in self.partition_range:
             search_store = self.get_search_store_by_idx(i)
             partition_min = search_store.get_min_frontier_energy(self.search_id)
             self.meta_store.update_min_water_level(self.search_id, i, partition_min)
-
+    
+    def sync_search_completion_status(self):
+        found_it = False
+        for pidx in self.partition_range:
+            found_endpt_ids = self.get_search_store_by_idx(pidx).get_located_endpoint_ids(self.search_id)
+            if len(found_endpt_ids) > 0:
+                found_it = True
+                self.meta_store.set_search_status(self.search_id, True)
+        if not found_it:
+            self.meta_store.set_search_status(self.search_id, False)
 

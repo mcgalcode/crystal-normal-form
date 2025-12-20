@@ -45,7 +45,7 @@ def setup_partitioned_db(location,
     sid = sids[0]
 
     meta_db = setup_meta_db(os.path.join(location, META_DB_NAME))
-
+    meta_db.create_search_status(sid)
     for i in range(num_partitions):
         meta_db.create_partition_entry(sid, i)
 
