@@ -80,7 +80,7 @@ Examples:
     print(f"Start structure: {start_atoms} atoms per unit cell")
     print(f"End structure:   {end_atoms} atoms per unit cell")
 
-    unrelaxed_start_cnfs, unrelaxed_end_cnfs = get_endpoint_cnfs(start_unit_cell, end_unit_cell, args.min_num_atoms, xi, delta)
+    unrelaxed_start_cnfs, unrelaxed_end_cnfs = get_endpoint_cnfs(start_unit_cell, end_unit_cell, xi, delta, args.min_num_atoms)
 
     gcalc = GraceCalculator(model_string=calc_model)
     if should_relax:

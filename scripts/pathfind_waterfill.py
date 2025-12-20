@@ -8,7 +8,7 @@ Usage:
 """
 
 import argparse
-from cnf.search import continue_search_waterfill
+from cnf.search.waterfill import continue_search_waterfill
 from cnf.db.partitioned_db import PartitionedDB
 from cnf.navigation.search_filters import VolumeLimitFilter, MinDistanceFilter
 from cnf.calculation.grace import GraceCalculator
@@ -48,32 +48,12 @@ Examples:
     print(f"Log level: {args.log_lvl}")
     print()
 
-    db = PartitionedDB(args.partitions_dir)
     search_proc_id = 1
-    search_store = db.get_search_store_by_idx(db.get_random_partition_idx())
-    endpts = search_store.get_search_endpoints(search_proc_id)
-    end_cnfs = [pt.cnf for pt in endpts]
-    start_pts = search_store.get_search_startpoints(search_proc_id)
-    start_cnfs = [pt.cnf for pt in start_pts]
-
-    vol_filter = VolumeLimitFilter.from_endpoint_structs(
-        [cnf.reconstruct() for cnf in start_cnfs + end_cnfs],
-        0.7,
-        1.3
-    )
-
-    atomic_overlap_filter = MinDistanceFilter(0.8)
-
-    filters = [
-        # vol_filter,
-        # atomic_overlap_filter
-    ]
 
     continue_search_waterfill(
         search_proc_id,
         args.partitions_dir,
         GraceCalculator(),
-        filters,
         log_lvl=args.log_lvl,
         max_iters=args.max_iters
     )

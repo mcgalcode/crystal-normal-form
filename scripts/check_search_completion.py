@@ -26,7 +26,7 @@ def clear_screen():
 def gather_completion_data(partitions_dir: str, search_id: int = 1):
     """Gather completion data without printing. Returns (completion_found, endpoint_data_list, num_endpoints)."""
 
-    db = PartitionedDB(partitions_dir)
+    db = PartitionedDB(partitions_dir, search_id)
 
     # Get endpoints from one of the partitions (they should all have the same search metadata)
     search_store = db.get_search_store_by_idx(0)
