@@ -108,6 +108,29 @@ def test_explore_point_multiple_partitions(zr_bcc_mp, zr_hcp_mp):
                 assert pdb.get_map_store_by_idx(local_partition_idx).get_point_by_cnf(cnf) is None
                 assert pdb.get_map_store_by_idx(partition_idx).get_point_by_cnf(cnf) is None
 
+def test_explore_already_explored_pt(zr_bcc_mp, zr_hcp_mp):
+    xi = 1.5
+    delta = 10
+    sps, eps = get_endpoint_cnfs(zr_bcc_mp, zr_hcp_mp, xi, delta)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        sp_id = setup_search_dir(tmpdir, "test", 3, sps, eps, GraceCalculator())
+        pdb = PartitionedDB(tmpdir, sp_id)
+
+        # select a partition to act as the source partition
+        pt_to_explore = sps[0]
+
+        nbs = find_neighbors(pt_to_explore)
+        local_nbs = pdb.partition_cnfs(nbs)[pdb.get_partition_idx(pt_to_explore)]
+        local_ids_1 = explore_pt_partition(pdb, pt_to_explore)
+        assert len(local_nbs) == len(local_ids_1)
+        local_ids_2 = explore_pt_partition(pdb, pt_to_explore)
+        assert set(local_ids_1) == set(local_ids_2)
+
+        retrieved_local_nbs = pdb.get_map_store(pt_to_explore).get_points_by_ids(local_ids_2)
+        retrieved_local_nbs = [pt.cnf for pt in retrieved_local_nbs]
+        assert set(retrieved_local_nbs) == set(local_nbs)
+
 def test_take_waterfill_step(zr_bcc_mp, zr_hcp_mp):
     xi = 1.5
     delta = 10

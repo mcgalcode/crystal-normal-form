@@ -13,7 +13,7 @@ def explore_pt_partition(partition_db: PartitionedDB, point_cnf: CrystalNormalFo
     pt = local_map_store.get_point_by_cnf(point_cnf)
 
     if pt.explored:
-        return local_map_store.get_local_neighbors(pt.id)
+        return [nb.id for nb in local_map_store.get_local_neighbors(pt.id)]
 
     nbs = find_neighbors(pt.cnf)
 
@@ -38,7 +38,7 @@ def explore_pt_partition(partition_db: PartitionedDB, point_cnf: CrystalNormalFo
 
     local_map_store.bulk_add_edges(local_edges)
     local_map_store.mark_point_explored(pt.id)
-    
+
     return local_nb_ids
 
 def process_cnf_batch(cnfs: list[CrystalNormalForm],
