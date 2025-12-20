@@ -1,11 +1,13 @@
 import tempfile
 
+from cnf import CrystalNormalForm
 from cnf.calculation import GraceCalculator
-from cnf.search.waterfill import process_cnf_batch, explore_pt_partition
+from cnf.search.waterfill import process_cnf_batch, explore_pt_partition, waterfill_step
 from cnf.db.setup_partitions import setup_search_dir
 from cnf.navigation.endpoints import get_endpoint_cnfs
 from cnf.navigation import find_neighbors
 from cnf.db import PartitionedDB
+from cnf.utils.log import Logger
 
 def test_process_cnf_batch_basic(zr_bcc_mp, zr_hcp_mp):
     xi = 1.5
@@ -48,6 +50,30 @@ def test_process_cnf_batch_basic(zr_bcc_mp, zr_hcp_mp):
             if cnf not in already_searched_cnfs and cnf not in already_in_frontier_cnfs:
                 assert pdb.get_map_store(cnf).get_point_by_cnf(cnf).value is not None
 
+def _assert_graph_is_correct_in_local_partition(pdb: PartitionedDB, explored_pt: CrystalNormalForm):
+    local_partition_idx = pdb.get_partition_idx(explored_pt)
+    local_pt_id = pdb.get_map_store(explored_pt).get_point_by_cnf(explored_pt).id
+
+    known_nbs = find_neighbors(explored_pt)  
+    expected_parts = pdb.partition_cnfs(known_nbs)    
+    local_nodes = expected_parts[local_partition_idx]
+    for n in local_nodes:
+        assert pdb.get_map_store(explored_pt).get_point_by_cnf(n) is not None
+    
+    # assert that all local edges are added to local
+    local_nbs = pdb.get_map_store(explored_pt).get_local_neighbors(local_pt_id)
+    local_nb_cnfs = [pt.cnf for pt in local_nbs]
+    assert len(local_nb_cnfs) == len(local_nodes)
+    assert set(local_nb_cnfs) == set(local_nodes)
+
+    # assert that all edges are added to local partition
+    # (the only place where edges should be added)
+    retrieved_nonlocal_nodes = pdb.get_map_store(explored_pt).get_nonlocal_neighbor_cnfs(local_pt_id)
+    expected_nonlocal_nodes = set(known_nbs).difference(local_nodes)
+    assert len(retrieved_nonlocal_nodes) == len(expected_nonlocal_nodes)
+    assert set(retrieved_nonlocal_nodes) == set(expected_nonlocal_nodes)    
+
+
 def test_explore_point_multiple_partitions(zr_bcc_mp, zr_hcp_mp):
     xi = 1.5
     delta = 10
@@ -59,43 +85,62 @@ def test_explore_point_multiple_partitions(zr_bcc_mp, zr_hcp_mp):
 
         # select a partition to act as the source partition
         pt_to_explore = sps[0]
-        local_partition_idx = pdb.get_partition_idx(pt_to_explore)
-        local_pt_id = pdb.get_map_store(pt_to_explore).get_point_by_cnf(pt_to_explore).id
-        known_nbs = find_neighbors(sps[0])  
-        expected_parts = pdb.partition_cnfs(known_nbs)
 
         explore_pt_partition(pdb, pt_to_explore)
-
-        # assert that all local nodes are added to local partition
-        local_nodes = expected_parts[local_partition_idx]
-        for n in local_nodes:
-            assert pdb.get_map_store(pt_to_explore).get_point_by_cnf(n) is not None
+        local_partition_idx = pdb.get_partition_idx(pt_to_explore)
         
-        # assert that all local edges are added to local
-        local_nbs = pdb.get_map_store(pt_to_explore).get_local_neighbors(local_pt_id)
-        local_nb_cnfs = [pt.cnf for pt in local_nbs]
-        assert len(local_nb_cnfs) == len(local_nodes)
-        assert set(local_nb_cnfs) == set(local_nodes)
-
-        # assert that all edges are added to local partition
-        # (the only place where edges should be added)
-        retrieved_nonlocal_nodes = pdb.get_map_store(pt_to_explore).get_nonlocal_neighbor_cnfs(local_pt_id)
-        expected_nonlocal_nodes = set(known_nbs).difference(local_nodes)
-        assert len(retrieved_nonlocal_nodes) == len(expected_nonlocal_nodes)
-        assert set(retrieved_nonlocal_nodes) == set(expected_nonlocal_nodes)
+        # assert that point is marked as explored
+        assert pdb.get_map_store(pt_to_explore).get_point_by_cnf(pt_to_explore).explored
+        _assert_graph_is_correct_in_local_partition(pdb, pt_to_explore)
 
         # for every other partition / node_set
-        for partition_idx, cnfs in expected_parts.items():
+        for partition_idx, cnfs in pdb.partition_cnfs(find_neighbors(pt_to_explore)).items():
             if partition_idx == local_partition_idx:
                 continue
 
-            # Assert that emptying the inbox yields the same set of CNFs
-            inbox_cnfs = pdb.get_search_store_by_idx(partition_idx).get_and_empty_incoming_points(sp_id)
+            # Assert that the inbox holds the same set of CNFs
+            inbox_cnfs = pdb.get_search_store_by_idx(partition_idx).peek_incoming_points(sp_id)
             assert len(inbox_cnfs) == len(cnfs)
             assert set(inbox_cnfs) == set(cnfs)
 
+            # assert that these points have not been added anywhere yet
             for cnf in cnfs:
                 assert pdb.get_map_store_by_idx(local_partition_idx).get_point_by_cnf(cnf) is None
                 assert pdb.get_map_store_by_idx(partition_idx).get_point_by_cnf(cnf) is None
 
+def test_take_waterfill_step(zr_bcc_mp, zr_hcp_mp):
+    xi = 1.5
+    delta = 10
+    sps, eps = get_endpoint_cnfs(zr_bcc_mp, zr_hcp_mp, xi, delta)
+    logger = Logger()
 
+    DUMB_ENERGY_LIMIT = 100
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        sp_id = setup_search_dir(tmpdir, "test", 3, sps, eps, GraceCalculator())
+        pdb = PartitionedDB(tmpdir, sp_id)
+
+
+        waterfill_step(pdb, 0, sp_id, logger, GraceCalculator(), 100, DUMB_ENERGY_LIMIT, 2)
+
+        for cnf_pt in sps:
+            local_partition_idx = pdb.get_partition_idx(cnf_pt)
+            
+            # assert that point is marked as explored
+            assert pdb.get_map_store(cnf_pt).get_point_by_cnf(cnf_pt).explored
+            _assert_graph_is_correct_in_local_partition(pdb, cnf_pt)
+
+            # for every other partition / node_set
+            for partition_idx, cnfs in pdb.partition_cnfs(find_neighbors(cnf_pt)).items():
+                if partition_idx == local_partition_idx:
+                    continue
+
+                # Assert that the inbox holds the same set of CNFs
+                inbox_cnfs = pdb.get_search_store_by_idx(partition_idx).peek_incoming_points(sp_id)
+                assert len(inbox_cnfs) == len(cnfs)
+                assert set(inbox_cnfs) == set(cnfs)
+
+                # assert that these points have not been added anywhere yet
+                for cnf in cnfs:
+                    assert pdb.get_map_store_by_idx(local_partition_idx).get_point_by_cnf(cnf) is None
+                    assert pdb.get_map_store_by_idx(partition_idx).get_point_by_cnf(cnf) is None            
