@@ -65,7 +65,7 @@ def test_can_setup_search_dir(zr_bcc_mp, zr_hcp_mp):
             wl = ms.get_partition_water_level(sid, i)
             assert wl == min(start_energies)
 
-        metadata = partition_db.metadata
+        metadata = partition_db.db_metadata
         assert metadata.xi == xi
         assert metadata.delta == delta
         assert metadata.calculator_model == calc.identifier()
