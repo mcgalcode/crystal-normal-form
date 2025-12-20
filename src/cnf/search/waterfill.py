@@ -99,13 +99,15 @@ def waterfill_step(db: PartitionedDB,
     # PROCESS INCOMING NODES
 
     incoming_cnfs = search_store.get_and_empty_incoming_points(search_id)
-    mailbox_frontier_ids = process_cnf_batch(incoming_cnfs,
-                                             map_store,
-                                             search_store,
-                                             search_id,
+    logger.info(f"[partition={partition_idx}] Received {len(incoming_cnfs)} from other workers")
+    if len(incoming_cnfs) > 0:
+        mailbox_frontier_ids = process_cnf_batch(incoming_cnfs,
+                                                map_store,
+                                                search_store,
+                                                search_id,
                                              calculator)
 
-    all_new_frontier_ids = all_new_frontier_ids + mailbox_frontier_ids
+        all_new_frontier_ids = all_new_frontier_ids + mailbox_frontier_ids
 
     # PROCESS FRONTIER NODES
     frontier_points = search_store.get_frontier_points_in_search(
@@ -115,11 +117,10 @@ def waterfill_step(db: PartitionedDB,
     logger.debug(f"Found {len(frontier_points)} frontier points at/near water level (limit={batch_size}, max_energy={energy_limit})...")
 
     for frontier_point in frontier_points:
-        logger.debug(f"Considering frontier pt ID: {frontier_point.id}, VALUE: {frontier_point.value}, CNF: {frontier_point.cnf.coords}")
+        logger.debug(f"Searching frontier pt ID: {frontier_point.id}, VALUE: {frontier_point.value}, CNF: {frontier_point.cnf.coords}")
 
         # Explore
         local_nb_ids = explore_pt_partition(db, frontier_point.cnf, log_lvl=log_lvl)
-        logger.debug(f"Found {len(local_nb_ids)} local neighbors")
         # Calculate NBs + add them to frontier
         new_frontier_ids = process_cnf_ids_batch(local_nb_ids, map_store, search_store,search_id, calculator)
         logger.debug(f"Added {len(new_frontier_ids)} to the search frontier")
@@ -127,7 +128,6 @@ def waterfill_step(db: PartitionedDB,
 
         # Mark this frontier point as searched (we're done with it)
         search_store.mark_point_searched_by_id(search_id, frontier_point.id)
-        logger.debug(f"Marked frontier point as searched and removed from frontier")
 
     return all_new_frontier_ids
 
@@ -189,9 +189,10 @@ def continue_search_waterfill(search_id,
                        batch_size,
                        water_level,
                        log_lvl)
-
+        logger.info(f"Added {len(new_ids)} to the frontier during this step!")
         # Update global water level based on current partition frontiers
-        if new_ids < 5:
+        if len(new_ids) < 5:
+            logger.info(f"Syncing water level to control plane!")
             db.sync_control_water_level()
 
         # Review partitions to see if endpoint is reached
