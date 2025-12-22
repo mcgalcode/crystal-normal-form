@@ -32,6 +32,7 @@ CREATE TABLE {constants.SEARCH_POINT_STATUS_TABLE_NAME} (
 
 create_incoming_point_table = f"""
 CREATE TABLE {constants.INCOMING_POINT_TABLE_NAME} (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     search_id INTEGER,
     cnf TEXT
 )
@@ -224,9 +225,23 @@ SELECT cnf FROM {constants.INCOMING_POINT_TABLE_NAME}
 WHERE search_id = ?
 """
 
+select_incoming_points_with_limit = f"""
+SELECT id, cnf FROM {constants.INCOMING_POINT_TABLE_NAME}
+WHERE search_id = ?
+ORDER BY id ASC
+LIMIT ?
+"""
+
 delete_all_incoming_points = f"""
 DELETE FROM {constants.INCOMING_POINT_TABLE_NAME}
 WHERE search_id = ?
+"""
+
+def delete_incoming_points_by_ids(ids: list[int]):
+    placeholders = ','.join(['?'] * len(ids))
+    return f"""
+DELETE FROM {constants.INCOMING_POINT_TABLE_NAME}
+WHERE id IN ({placeholders})
 """
 
 insert_incoming_point = f"""

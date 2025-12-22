@@ -202,20 +202,44 @@ class SearchProcessStore(BaseStore):
         full_result = res.fetchall()
         return [cnf_from_str(row[0], self.metadata.xi, self.metadata.delta, self.metadata.element_list) for row in full_result]
     
-    def get_and_empty_incoming_points(self, search_id: int):
+    def get_incoming_points(self, search_id: int, limit: int = 1000):
+        """Get incoming points from mailbox without deleting them.
+
+        Args:
+            search_id: The search process ID
+            limit: Maximum number of points to retrieve (default: 1000)
+
+        Returns:
+            Tuple of (list of CNFs, list of IDs) - IDs should be used to delete after processing
+        """
         res = self.cursor.execute(
-            sp_queries.select_all_incoming_points,
-            ([search_id])
+            sp_queries.select_incoming_points_with_limit,
+            ([search_id, limit])
         )
         full_result = res.fetchall()
-        cnfs = [cnf_from_str(row[0], self.metadata.xi, self.metadata.delta, self.metadata.element_list) for row in full_result]
+        ids = [row[0] for row in full_result]
+        cnfs = [cnf_from_str(row[1], self.metadata.xi, self.metadata.delta, self.metadata.element_list) for row in full_result]
+        return cnfs, ids
+
+    def delete_incoming_points_by_ids(self, ids: list[int]):
+        """Delete incoming points by their IDs after successful processing.
+
+        Args:
+            ids: List of inbox entry IDs to delete
+
+        Returns:
+            Number of rows deleted
+        """
+        if not ids:
+            return 0
+
         self.cursor.execute(
-            sp_queries.delete_all_incoming_points,
-            ([search_id])
+            sp_queries.delete_incoming_points_by_ids(ids),
+            ids
         )
         self.conn.commit()
-        return cnfs
-    
+        return self.cursor.rowcount
+
     def add_incoming_point(self, search_id: int, incoming_point: CrystalNormalForm):
         cnf_str = cnf_to_str(incoming_point)
         self.cursor.execute(
