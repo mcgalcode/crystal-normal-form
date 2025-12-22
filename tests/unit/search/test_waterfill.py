@@ -2,7 +2,7 @@ import tempfile
 
 from cnf import CrystalNormalForm
 from cnf.calculation import GraceCalculator
-from cnf.search.waterfill import process_cnf_batch, explore_pt_partition, waterfill_step
+from cnf.search.waterfill import process_cnf_batch, explore_pt_partition, waterfill_step, continue_search_waterfill
 from cnf.db.setup_partitions import setup_search_dir
 from cnf.navigation.endpoints import get_endpoint_cnfs
 from cnf.navigation import find_neighbors
@@ -198,3 +198,18 @@ def test_take_second_waterfill_step(zr_bcc_mp, zr_hcp_mp):
             for nb in nbs:
                 if pdb.get_partition_idx(nb) == local_partition_idx:
                     assert pdb.get_map_store(nb).get_point_by_cnf(nb).value is not None
+
+
+def test_waterfill_tio2(ti_o2_anatase, ti_o2_rutile):
+    xi = 1.5
+    delta = 10
+    sps, eps = get_endpoint_cnfs(ti_o2_anatase, ti_o2_rutile, xi, delta)
+    logger = Logger()
+
+    DUMB_ENERGY_LIMIT = 100
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        sp_id = setup_search_dir(tmpdir, "test", 3, sps, eps, GraceCalculator())
+
+
+        continue_search_waterfill(sp_id, tmpdir, GraceCalculator(), 3, batch_size=10)
