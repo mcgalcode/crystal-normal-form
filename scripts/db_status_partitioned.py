@@ -82,10 +82,6 @@ def get_partitioned_stats(partition_dir, search_id=1, sample_partitions=None, db
         'global_max_energy': None,
         'total_frontier_points': 0,
         'searched_points': 0,
-        'searched_min_energy': None,
-        'searched_max_energy': None,
-        'frontier_min_energy': None,
-        'frontier_max_energy': None,
         'num_partitions': len(db_files),
         'total_partitions': total_partitions,
         'is_sampled': is_sampled,
@@ -190,43 +186,6 @@ def get_partitioned_stats(partition_dir, search_id=1, sample_partitions=None, db
         except sqlite3.OperationalError:
             pass
 
-        # Energy range of searched points (below water surface)
-        try:
-            result = cur.execute(
-                """SELECT MIN(pt.value), MAX(pt.value)
-                   FROM searched_point AS sp
-                   JOIN point AS pt ON pt.id = sp.point_id
-                   WHERE sp.search_id = ? AND pt.value IS NOT NULL""",
-                (search_id,)
-            ).fetchone()
-            if result[0] is not None:
-                if stats['searched_min_energy'] is None:
-                    stats['searched_min_energy'] = result[0]
-                    stats['searched_max_energy'] = result[1]
-                else:
-                    stats['searched_min_energy'] = min(stats['searched_min_energy'], result[0])
-                    stats['searched_max_energy'] = max(stats['searched_max_energy'], result[1])
-        except sqlite3.OperationalError:
-            pass
-
-        # Energy range of frontier points (water surface)
-        try:
-            result = cur.execute(
-                """SELECT MIN(pt.value), MAX(pt.value)
-                   FROM search_frontier_member AS fm
-                   JOIN point AS pt ON pt.id = fm.point_id
-                   WHERE fm.search_id = ? AND pt.value IS NOT NULL""",
-                (search_id,)
-            ).fetchone()
-            if result[0] is not None:
-                if stats['frontier_min_energy'] is None:
-                    stats['frontier_min_energy'] = result[0]
-                    stats['frontier_max_energy'] = result[1]
-                else:
-                    stats['frontier_min_energy'] = min(stats['frontier_min_energy'], result[0])
-                    stats['frontier_max_energy'] = max(stats['frontier_max_energy'], result[1])
-        except sqlite3.OperationalError:
-            pass
 
         # Get start points with their energies
         try:
@@ -346,18 +305,6 @@ def display_stats(stats, rates=None, show_global=True, show_partitions=True, sho
             print(f"  (Algorithm explores points with energy <= {format_value(max_threshold)})")
         else:
             print(f"  No water level data in meta store")
-
-        print()
-        print("SEARCHED REGION (below water surface):")
-        print(f"  Energy Range:              {format_value(stats['searched_min_energy'])} to {format_value(stats['searched_max_energy'])}")
-        searched_range = stats['searched_max_energy'] - stats['searched_min_energy'] if stats['searched_max_energy'] and stats['searched_min_energy'] else None
-        print(f"  Range Width:               {format_value(searched_range)}")
-
-        print()
-        print("FRONTIER (water surface - being explored):")
-        print(f"  Energy Range:              {format_value(stats['frontier_min_energy'])} to {format_value(stats['frontier_max_energy'])}")
-        frontier_range = stats['frontier_max_energy'] - stats['frontier_min_energy'] if stats['frontier_max_energy'] and stats['frontier_min_energy'] else None
-        print(f"  Range Width:               {format_value(frontier_range)}")
 
         print("=" * 60)
 
@@ -520,9 +467,12 @@ def gather_completion_data(partition_dir: str, search_id: int = 1):
     """Gather completion data for endpoints. Returns (completion_found, endpoint_data_list, num_endpoints)."""
     db = PartitionedDB(partition_dir, search_id)
 
-    # Get endpoints from one of the partitions (they should all have the same search metadata)
-    search_store = db.get_search_store_by_idx(0)
-    endpoints = search_store.get_search_endpoints(search_id)
+    # Get endpoints from all partitions (endpoints are only in their correct partitions)
+    endpoints = []
+    for partition_idx in db.partition_range:
+        search_store = db.get_search_store_by_idx(partition_idx)
+        partition_endpoints = search_store.get_search_endpoints(search_id)
+        endpoints.extend(partition_endpoints)
 
     if not endpoints:
         return None, None, 0
