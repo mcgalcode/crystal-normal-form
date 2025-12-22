@@ -54,3 +54,11 @@ def zr_hcp_mp():
 @pytest.fixture
 def zr_bcc_mp():
     return helpers.load_specific_cif("Zr_BCC.cif")
+
+@pytest.fixture
+def ti_o2_anatase():
+    return helpers.load_specific_cif("TiO2_anatase.cif")
+
+@pytest.fixture
+def ti_o2_rutile():
+    return helpers.load_specific_cif("TiO2_rutile.cif")
