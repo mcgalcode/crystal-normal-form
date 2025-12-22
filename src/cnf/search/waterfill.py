@@ -164,7 +164,9 @@ def continue_search_waterfill(search_id,
 
     num_iters = 0
     while True:
-        logger.debug(f"================ BEGINNING STEP {num_iters} ================")
+        water_level = db.get_current_water_level() + FRONTIER_WIDTH
+        partition_idx = db.get_random_partition_idx()
+        logger.debug(f"========== [partition {partition_idx}] BEGINNING STEP {num_iters} - water level: {water_level} ================")
         if num_iters > max_iters:
             logger.info(f"Reached {num_iters} iterations, quitting...")
             break
