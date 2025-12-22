@@ -7,7 +7,7 @@ import math
 import time
 from collections import defaultdict
 
-FRONTIER_WIDTH = 0.005
+FRONTIER_WIDTH = 0.050
 
 def explore_pt_partition(partition_db: PartitionedDB, point_cnf: CrystalNormalForm, log_lvl=1,
                          profile_timings: dict = None, profile_counts: dict = None):
@@ -273,9 +273,8 @@ def continue_search_waterfill(search_id,
         db.gather_and_sync_partition_stats(partition_idx)
 
         # Update global water level based on current partition frontiers
-        if len(new_ids) < 5:
-            logger.info(f"Syncing water level to control plane!")
-            db.sync_control_water_level()
+        logger.info(f"Syncing water level to control plane!")
+        db.sync_control_water_level()
 
         # Review partitions to see if endpoint is reached
         db.sync_search_completion_status()
