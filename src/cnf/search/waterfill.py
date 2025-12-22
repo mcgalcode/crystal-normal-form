@@ -21,7 +21,6 @@ def explore_pt_partition(partition_db: PartitionedDB, point_cnf: CrystalNormalFo
     local_edges = []   
 
     for partition_idx, cnfs in partition_db.partition_cnfs(nbs).items():
-        
         # If these are local, insert them and add edges
         if partition_idx == point_partition:
             local_map_store.bulk_insert_points(cnfs)
@@ -175,11 +174,7 @@ def continue_search_waterfill(search_id,
             logger.info(f"Search is complete! Worker retiring...")
             break
 
-        water_level = db.get_current_water_level() + FRONTIER_WIDTH
-        logger.debug(f"Current water level: {water_level}")
-
         # Choose a partition to operate on for this iteration
-        partition_idx = db.get_random_partition_idx()
 
         new_ids = waterfill_step(db,
                        partition_idx,

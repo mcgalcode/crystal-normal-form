@@ -163,18 +163,18 @@ def get_partitioned_stats(partition_dir, search_id=1, sample_partitions=None, db
                 stats['global_min_energy'] = min(stats['global_min_energy'], result[0])
                 stats['global_max_energy'] = max(stats['global_max_energy'], result[1])
 
-        # Frontier points (check if search_frontier table exists)
+        # Frontier points (OPEN status in search_point_status table)
         try:
-            result = cur.execute("SELECT COUNT(*) FROM search_frontier_member WHERE search_id = ?", (search_id,)).fetchone()
+            result = cur.execute("SELECT COUNT(*) FROM search_point_status WHERE search_id = ? AND point_status = 'OPEN'", (search_id,)).fetchone()
             partition_stats['frontier_points'] = result[0]
             stats['total_frontier_points'] += result[0]
         except sqlite3.OperationalError:
             # Table doesn't exist in this partition
             partition_stats['frontier_points'] = 0
 
-        # Searched points count
+        # Searched points count (CLOSED status in search_point_status table)
         try:
-            result = cur.execute("SELECT COUNT(*) FROM searched_point WHERE search_id = ?", (search_id,)).fetchone()
+            result = cur.execute("SELECT COUNT(*) FROM search_point_status WHERE search_id = ? AND point_status = 'CLOSED'", (search_id,)).fetchone()
             partition_stats['searched_points'] = result[0]
             stats['searched_points'] += result[0]
         except sqlite3.OperationalError:
