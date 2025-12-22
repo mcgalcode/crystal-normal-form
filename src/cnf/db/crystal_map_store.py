@@ -261,9 +261,40 @@ class CrystalMapStore(BaseStore):
         rows = res.fetchall()
         return rows[0][0]
 
+    def get_stats(self):
+        """Get aggregate statistics for this partition.
+
+        Returns:
+            Dictionary with partition statistics
+        """
+        stats = {}
+
+        # Total points
+        result = self.cursor.execute(queries.count_total_points).fetchone()
+        stats['total_points'] = result[0]
+
+        # Points with energy
+        result = self.cursor.execute(queries.count_points_with_energy).fetchone()
+        stats['points_with_energy'] = result[0]
+
+        # Explored points
+        result = self.cursor.execute(queries.count_explored_points).fetchone()
+        stats['explored_points'] = result[0]
+
+        # Total edges
+        result = self.cursor.execute(queries.count_total_edges).fetchone()
+        stats['total_edges'] = result[0]
+
+        # Energy range
+        result = self.cursor.execute(queries.get_energy_range).fetchone()
+        stats['min_energy'] = result[0]
+        stats['max_energy'] = result[1]
+
+        return stats
+
     def __contains__(self, item):
         pass
-    
+
     def __len__(self):
         pass
 

@@ -25,6 +25,7 @@ import re
 from datetime import datetime
 from cnf.search import FRONTIER_WIDTH
 from cnf.db.crystal_map_store import CrystalMapStore
+from cnf.db.search_store import SearchProcessStore
 from cnf.db.partitioned_db import PARTITION_SUFFIX, PartitionedDB
 from cnf.db.meta_store import MetaStore
 from cnf.db.constants import META_DB_NAME
@@ -33,6 +34,112 @@ from cnf.db.constants import META_DB_NAME
 def clear_screen():
     """Clear the terminal screen."""
     os.system('clear' if os.name != 'nt' else 'cls')
+
+
+def get_stats_from_metastore(partition_dir, search_id=1):
+    """Get statistics from metastore (fast - no partition scanning).
+
+    Args:
+        partition_dir: Directory containing partition databases
+        search_id: Search process ID to query
+
+    Returns:
+        Dictionary with aggregated statistics
+    """
+    meta_db_path = os.path.join(partition_dir, META_DB_NAME)
+    meta_store = MetaStore.from_file(meta_db_path)
+
+    # Get all partition stats from metastore
+    partition_stats_list = meta_store.get_all_partition_stats(search_id)
+
+    # Get metadata from first partition
+    pattern = os.path.join(partition_dir, f"*{PARTITION_SUFFIX}")
+    db_files = sorted(glob.glob(pattern))
+    if not db_files:
+        raise ValueError(f"No partition files found in {partition_dir}")
+
+    cmap_store = CrystalMapStore.from_file(db_files[0])
+    metadata = cmap_store.get_metadata()
+
+    # Aggregate stats
+    stats = {
+        'total_points': 0,
+        'points_with_energy': 0,
+        'total_edges': 0,
+        'explored_points': 0,
+        'global_min_energy': None,
+        'global_max_energy': None,
+        'global_max_searched_energy': None,
+        'total_frontier_points': 0,
+        'searched_points': 0,
+        'total_incoming_points': 0,
+        'num_partitions': len(partition_stats_list),
+        'total_partitions': len(db_files),
+        'is_sampled': False,
+        'scaling_factor': 1.0,
+        'per_partition': [],
+        'start_points': [],
+        'metadata': metadata,
+        'global_water_level': meta_store.get_global_water_level(search_id),
+        'partition_water_levels': {}
+    }
+
+    for pstats in partition_stats_list:
+        partition_idx = pstats['partition_number']
+
+        # Aggregate counts
+        stats['total_points'] += pstats['total_points']
+        stats['points_with_energy'] += pstats['points_with_energy']
+        stats['explored_points'] += pstats['explored_points']
+        stats['total_edges'] += pstats['total_edges']
+        stats['total_frontier_points'] += pstats['frontier_points']
+        stats['searched_points'] += pstats['searched_points']
+        stats['total_incoming_points'] += pstats['inbox_size']
+
+        # Track global energy ranges
+        if pstats['min_energy'] is not None:
+            if stats['global_min_energy'] is None:
+                stats['global_min_energy'] = pstats['min_energy']
+                stats['global_max_energy'] = pstats['max_energy']
+            else:
+                stats['global_min_energy'] = min(stats['global_min_energy'], pstats['min_energy'])
+                stats['global_max_energy'] = max(stats['global_max_energy'], pstats['max_energy'])
+
+        # Track global max searched energy
+        if pstats['max_searched_energy'] is not None:
+            if stats['global_max_searched_energy'] is None:
+                stats['global_max_searched_energy'] = pstats['max_searched_energy']
+            else:
+                stats['global_max_searched_energy'] = max(stats['global_max_searched_energy'], pstats['max_searched_energy'])
+
+        # Per-partition breakdown
+        stats['per_partition'].append({
+            'name': f"{partition_idx}.partition.db",
+            'partition_idx': partition_idx,
+            'total_points': pstats['total_points'],
+            'explored_points': pstats['explored_points'],
+            'total_edges': pstats['total_edges'],
+            'frontier_points': pstats['frontier_points'],
+            'searched_points': pstats['searched_points'],
+            'points_with_energy': pstats['points_with_energy'],
+            'incoming_points': pstats['inbox_size'],
+            'water_level': pstats['min_frontier_energy']
+        })
+
+        stats['partition_water_levels'][partition_idx] = pstats['min_frontier_energy']
+
+    # Get start points from first partition (they're stored in each partition)
+    search_store = SearchProcessStore.from_file(db_files[0])
+    start_points = search_store.get_search_startpoints(search_id)
+    for sp in start_points:
+        stats['start_points'].append({
+            'id': sp.id,
+            'energy': sp.value,
+            'cnf': sp.cnf,
+            'partition': os.path.basename(db_files[0])
+        })
+
+    return stats
 
 
 def get_partitioned_stats(partition_dir, search_id=1, sample_partitions=None, db_files_list=None):
@@ -299,6 +406,16 @@ def display_stats(stats, rates=None, show_global=True, show_partitions=True, sho
             print(f"  Global Water Level:        {format_value(stats['global_water_level'])}")
             print(f"  Max Threshold (+{FRONTIER_WIDTH}):  {format_value(max_threshold)}")
             print(f"  (Algorithm explores points with energy <= {format_value(max_threshold)})")
+
+            # Show max searched energy (high water mark)
+            if stats.get('global_max_searched_energy') is not None:
+                max_searched = stats['global_max_searched_energy']
+                print(f"\n  High Water Mark (max searched): {format_value(max_searched)}")
+                if max_searched > stats['global_water_level']:
+                    diff = max_searched - stats['global_water_level']
+                    print(f"  ⬇️  Water flowing DOWNHILL (descended {format_value(diff, 6)} from peak)")
+                else:
+                    print(f"  ⬆️  Water still rising")
         else:
             print(f"  No water level data in meta store")
 
@@ -411,9 +528,7 @@ def watch_mode(partition_dir, interval=1.0, search_id=1, show_global=True, show_
         while True:
             # Query FIRST (so screen isn't blank while waiting)
             start_time = time.time()
-            stats = get_partitioned_stats(partition_dir, search_id=search_id,
-                                         sample_partitions=sample_partitions,
-                                         db_files_list=sampled_db_files)
+            stats = get_stats_from_metastore(partition_dir, search_id=search_id)
             query_time = time.time() - start_time
             current_time = time.time()
 
@@ -675,8 +790,7 @@ def main():
                    show_global=show_global, show_partitions=show_partitions,
                    sample_partitions=args.num_partitions, show_summary=args.summary)
     else:
-        stats = get_partitioned_stats(args.partition_dir, search_id=args.search,
-                                     sample_partitions=args.num_partitions)
+        stats = get_stats_from_metastore(args.partition_dir, search_id=args.search)
         display_stats(stats, show_global=show_global, show_partitions=show_partitions, show_summary=args.summary)
 
 

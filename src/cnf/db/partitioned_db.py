@@ -125,3 +125,22 @@ class PartitionedDB():
             if len(found_endpt_ids) > 0:
                 self.meta_store.set_search_status(self.search_id, True)
 
+    def gather_and_sync_partition_stats(self, partition_idx: int):
+        """Gather statistics from a partition and sync to metastore.
+
+        Args:
+            partition_idx: The partition index to gather stats from
+        """
+        map_store = self.get_map_store_by_idx(partition_idx)
+        search_store = self.get_search_store_by_idx(partition_idx)
+
+        # Get partition stats from map store
+        stats = map_store.get_stats()
+
+        # Get search-specific stats and merge
+        search_stats = search_store.get_search_stats(self.search_id)
+        stats.update(search_stats)
+
+        # Update metastore
+        self.meta_store.update_partition_stats(self.search_id, partition_idx, stats)
+

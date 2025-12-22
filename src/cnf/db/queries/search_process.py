@@ -250,3 +250,23 @@ INSERT INTO {constants.INCOMING_POINT_TABLE_NAME}
 VALUES
     (?, ?)
 """
+
+# Statistics queries for partition monitoring
+count_frontier_points = f"""
+SELECT COUNT(*)
+FROM {constants.SEARCH_POINT_STATUS_TABLE_NAME}
+WHERE search_id = ? AND point_status = "{constants.POINT_STATUS_OPEN}"
+"""
+
+count_searched_points_and_max_energy = f"""
+SELECT COUNT(*), MAX(pt.value)
+FROM {constants.SEARCH_POINT_STATUS_TABLE_NAME} AS sps
+LEFT JOIN {constants.POINT_TABLE_NAME} AS pt ON pt.id = sps.point_id
+WHERE sps.search_id = ? AND sps.point_status = "{constants.POINT_STATUS_CLOSED}"
+"""
+
+count_inbox_size = f"""
+SELECT COUNT(*)
+FROM {constants.INCOMING_POINT_TABLE_NAME}
+WHERE search_id = ?
+"""

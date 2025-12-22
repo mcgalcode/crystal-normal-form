@@ -200,3 +200,28 @@ create_index_point_cnf = f"""
 CREATE INDEX IF NOT EXISTS idx_point_cnf
 ON {constants.POINT_TABLE_NAME} (cnf)
 """
+
+# Statistics queries for partition monitoring
+count_total_points = f"""
+SELECT COUNT(*) FROM {constants.POINT_TABLE_NAME}
+"""
+
+count_points_with_energy = f"""
+SELECT COUNT(*) FROM {constants.POINT_TABLE_NAME}
+WHERE value IS NOT NULL
+"""
+
+count_explored_points = f"""
+SELECT COUNT(*) FROM {constants.POINT_TABLE_NAME}
+WHERE explored = 1
+"""
+
+count_total_edges = f"""
+SELECT COUNT(*) FROM {constants.EDGE_TABLE_NAME}
+"""
+
+get_energy_range = f"""
+SELECT MIN(value), MAX(value)
+FROM {constants.POINT_TABLE_NAME}
+WHERE value IS NOT NULL
+"""

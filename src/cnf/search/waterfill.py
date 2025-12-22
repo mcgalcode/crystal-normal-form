@@ -268,6 +268,10 @@ def continue_search_waterfill(search_id,
                        profile_counts)
 
         logger.info(f"Added {len(new_ids)} to the frontier during this step!")
+
+        # Sync partition stats to metastore for monitoring
+        db.gather_and_sync_partition_stats(partition_idx)
+
         # Update global water level based on current partition frontiers
         if len(new_ids) < 5:
             logger.info(f"Syncing water level to control plane!")
