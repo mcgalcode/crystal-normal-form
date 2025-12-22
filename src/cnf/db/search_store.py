@@ -274,3 +274,48 @@ class SearchProcessStore(BaseStore):
         )
         res = res.fetchone()
         return res is not None
+
+    def get_search_stats(self, search_id: int):
+        """Get search-specific statistics for this partition.
+
+        Args:
+            search_id: The search process ID
+
+        Returns:
+            Dictionary with search statistics
+        """
+        stats = {}
+
+        # Frontier points count
+        try:
+            result = self.cursor.execute(
+                sp_queries.count_frontier_points,
+                (search_id,)
+            ).fetchone()
+            stats['frontier_points'] = result[0]
+        except Exception:
+            stats['frontier_points'] = 0
+
+        # Searched points count and max searched energy
+        try:
+            result = self.cursor.execute(
+                sp_queries.count_searched_points_and_max_energy,
+                (search_id,)
+            ).fetchone()
+            stats['searched_points'] = result[0]
+            stats['max_searched_energy'] = result[1]
+        except Exception:
+            stats['searched_points'] = 0
+            stats['max_searched_energy'] = None
+
+        # Inbox size
+        try:
+            result = self.cursor.execute(
+                sp_queries.count_inbox_size,
+                (search_id,)
+            ).fetchone()
+            stats['inbox_size'] = result[0]
+        except Exception:
+            stats['inbox_size'] = 0
+
+        return stats
