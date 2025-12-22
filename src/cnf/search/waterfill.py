@@ -30,8 +30,7 @@ def explore_pt_partition(partition_db: PartitionedDB, point_cnf: CrystalNormalFo
 
         # If these are in another partition, send to mailbox
         else:
-            foreign_store = partition_db.get_search_store_by_idx(partition_idx)
-            foreign_store.bulk_add_incoming_points(partition_db.search_id, cnfs)
+            partition_db.bulk_add_incoming_points(cnfs, partition_idx)
             for cnf in cnfs:
                 local_edges.append((pt.id, None, cnf))
 

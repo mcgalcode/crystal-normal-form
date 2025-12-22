@@ -40,16 +40,21 @@ class PartitionedDB():
         
         self.partition_range = partition_range
         self.partition_map = {}
+        self._forbidden_partition_map = {}
 
         for f in partition_files:
             partition_num = extact_partition_num_from_db_name(f.stem)
+            search_store = SearchProcessStore.from_file(f)
+            map_store = CrystalMapStore.from_file(f)
             if partition_num in self.partition_range:
-                search_store = SearchProcessStore.from_file(f)
-                map_store = CrystalMapStore.from_file(f)
                 self.partition_map[partition_num] = {
                     "search_store": search_store,
                     "map_store": map_store
                 }
+            self._forbidden_partition_map[partition_num] = {
+                "search_store": search_store,
+                "map_store": map_store
+            }
     
     def partition_cnfs(self, cnfs: list[CrystalNormalForm]) -> dict[int, list[CrystalNormalForm]]:
         partitions = { i: [] for i in range(self.num_partitions) }
@@ -58,10 +63,21 @@ class PartitionedDB():
             partitions[partition].append(c)
         return partitions
 
+    def _validate_partition(self, pt: CrystalNormalForm):
+        pt_partition = self.get_partition_idx(pt)
+        if pt_partition not in self.partition_range:
+            raise RuntimeError("Tried to access partition outside of partition range for forbidden action!")
+
     def add_point(self, pt: CrystalNormalForm):
+        self._validate_partition(pt)
         return self.get_map_store(pt).add_point(pt)
     
+    def bulk_add_incoming_points(self, points: list[CrystalNormalForm], partition_idx: int):
+        foreign_store: SearchProcessStore = self._forbidden_partition_map[partition_idx]["search_store"]
+        foreign_store.bulk_add_incoming_points(self.search_id, points)
+    
     def get_point_by_cnf(self, pt: CrystalNormalForm):
+        self._validate_partition(pt)
         return self.get_map_store(pt).get_point_by_cnf(pt)
 
     def get_partition_idx(self, cnf: CrystalNormalForm):
@@ -102,12 +118,10 @@ class PartitionedDB():
             self.meta_store.update_min_water_level(self.search_id, i, partition_min)
     
     def sync_search_completion_status(self):
-        found_it = False
+        if self.meta_store.is_search_complete(self.search_id):
+            return
         for pidx in self.partition_range:
             found_endpt_ids = self.get_search_store_by_idx(pidx).get_located_endpoint_ids(self.search_id)
             if len(found_endpt_ids) > 0:
-                found_it = True
                 self.meta_store.set_search_status(self.search_id, True)
-        if not found_it:
-            self.meta_store.set_search_status(self.search_id, False)
 
