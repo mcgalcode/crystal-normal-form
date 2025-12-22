@@ -1,0 +1,1 @@
+{"description": "Search: Zr_BCC \u2192 Zr_HCP", "xi": 2.0, "delta": 8, "atom_list": ["Zr", "Zr"], "calculator_model": "GraceMLIPCalculator(model=GRACE-1L-OAM)", "time_created": "2025-12-21 20:24:42", "search_processes": [{"search_id": 1, "start_cnfs": [[6, 6, 6, 15, 11, 11, 11, 4, 4, 4]], "end_cnfs": [[5, 5, 13, 15, 4, 17, 17, 3, 5, 4]], "time_created": "2025-12-21 20:24:42"}]}
