@@ -522,8 +522,8 @@ def watch_mode(partition_dir, interval=1.0, search_id=1, show_global=True, show_
                 sampled_db_files = sorted(sampled_db_files)  # Sort for consistent display
 
         iteration = 0
-        prev_stats = None
-        prev_time = None
+        initial_stats = None
+        initial_time = None
 
         while True:
             # Query FIRST (so screen isn't blank while waiting)
@@ -532,24 +532,34 @@ def watch_mode(partition_dir, interval=1.0, search_id=1, show_global=True, show_
             query_time = time.time() - start_time
             current_time = time.time()
 
-            # Calculate rates
+            # Calculate rates over lifetime (since monitoring started)
             rates = {}
-            if prev_stats is not None and prev_time is not None:
-                time_delta = current_time - prev_time
+            if initial_stats is None:
+                # First iteration - save initial state
+                initial_stats = stats.copy()
+                initial_time = current_time
+            else:
+                # Calculate rates from start of monitoring session
+                time_delta = current_time - initial_time
                 if time_delta > 0:
-                    rates['total_points'] = (stats['total_points'] - prev_stats['total_points']) / time_delta
-                    rates['points_with_energy'] = (stats['points_with_energy'] - prev_stats['points_with_energy']) / time_delta
-                    rates['explored_points'] = (stats['explored_points'] - prev_stats['explored_points']) / time_delta
-                    rates['total_edges'] = (stats['total_edges'] - prev_stats['total_edges']) / time_delta
-                    rates['total_frontier_points'] = (stats['total_frontier_points'] - prev_stats['total_frontier_points']) / time_delta
-                    rates['searched_points'] = (stats['searched_points'] - prev_stats['searched_points']) / time_delta
-                    rates['total_incoming_points'] = (stats.get('total_incoming_points', 0) - prev_stats.get('total_incoming_points', 0)) / time_delta
+                    rates['total_points'] = (stats['total_points'] - initial_stats['total_points']) / time_delta
+                    rates['points_with_energy'] = (stats['points_with_energy'] - initial_stats['points_with_energy']) / time_delta
+                    rates['explored_points'] = (stats['explored_points'] - initial_stats['explored_points']) / time_delta
+                    rates['total_edges'] = (stats['total_edges'] - initial_stats['total_edges']) / time_delta
+                    rates['total_frontier_points'] = (stats['total_frontier_points'] - initial_stats['total_frontier_points']) / time_delta
+                    rates['searched_points'] = (stats['searched_points'] - initial_stats['searched_points']) / time_delta
+                    rates['total_incoming_points'] = (stats.get('total_incoming_points', 0) - initial_stats.get('total_incoming_points', 0)) / time_delta
 
             # THEN clear and display
             clear_screen()
             print(f"CNF Partitioned Database Monitor - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
             print(f"Partition Directory: {partition_dir}")
-            print(f"Update #{iteration} (refreshing every {interval}s, Ctrl+C to exit)")
+            if initial_stats is not None:
+                elapsed = current_time - initial_time
+                print(f"Update #{iteration} (refreshing every {interval}s, running for {elapsed:.1f}s, Ctrl+C to exit)")
+                print(f"Rates shown are averages since monitoring started")
+            else:
+                print(f"Update #{iteration} (refreshing every {interval}s, Ctrl+C to exit)")
             print()
 
             display_stats(stats, rates=rates, show_global=show_global, show_partitions=show_partitions, show_summary=show_summary)
@@ -563,8 +573,6 @@ def watch_mode(partition_dir, interval=1.0, search_id=1, show_global=True, show_
                 print(f"\n⚠️  Warning: Queries taking {query_time:.2f}s (longer than refresh interval)")
                 print(f"   Consider using --interval {max(2.0, query_time * 1.5):.1f} for smoother updates")
 
-            prev_stats = stats.copy()
-            prev_time = current_time
             iteration += 1
 
             time.sleep(interval)
