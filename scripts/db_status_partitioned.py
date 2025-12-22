@@ -87,8 +87,7 @@ def get_partitioned_stats(partition_dir, search_id=1, sample_partitions=None, db
         'is_sampled': is_sampled,
         'scaling_factor': scaling_factor,
         'per_partition': [],
-        'start_points': [],
-        'current_water_level': None
+        'start_points': []
     }
 
     cmap_store = CrystalMapStore.from_file(db_files[0])
@@ -209,9 +208,6 @@ def get_partitioned_stats(partition_dir, search_id=1, sample_partitions=None, db
 
         stats['per_partition'].append(partition_stats)
         conn.close()
-
-    # Current water level is the minimum frontier energy
-    stats['current_water_level'] = stats['frontier_min_energy']
 
     # Deduplicate start points by CNF (same start point may be in multiple partitions)
     unique_start_points = {}
