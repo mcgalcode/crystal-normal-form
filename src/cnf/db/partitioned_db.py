@@ -10,6 +10,8 @@ from .constants import PARTITION_SUFFIX, META_DB_NAME
 from ..crystal_normal_form import CrystalNormalForm
 from .utilities import CNFPoint
         
+def get_partition_number(cnf: CrystalNormalForm, total_num_partitions: int):
+    return hash(cnf) % total_num_partitions
 
 class PartitionedDB():
 
@@ -59,7 +61,7 @@ class PartitionedDB():
         return self.get_map_store(pt).get_point_by_cnf(pt)
 
     def get_partition_idx(self, cnf: CrystalNormalForm):
-        return hash(cnf) % self.num_partitions
+        return get_partition_number(cnf, self.num_partitions)
     
     def get_search_store(self, cnf: CrystalNormalForm) -> SearchProcessStore:
         return self.partition_map[self.get_partition_idx(cnf)]["search_store"]
