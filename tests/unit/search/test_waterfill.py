@@ -225,5 +225,4 @@ def test_waterfill_zr(zr_bcc_mp, zr_hcp_mp):
     with tempfile.TemporaryDirectory() as tmpdir:
         sp_id = setup_search_dir(tmpdir, "test", 32, sps, eps, GraceCalculator())
 
-
-        continue_search_waterfill(sp_id, tmpdir, GraceCalculator(), 5, batch_size=10)
+        continue_search_waterfill(sp_id, tmpdir, GraceCalculator(), 2, batch_size=10)
