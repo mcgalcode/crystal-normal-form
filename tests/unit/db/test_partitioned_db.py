@@ -6,7 +6,7 @@ from cnf.search.waterfill import process_cnf_batch, explore_pt_partition, waterf
 from cnf.db.setup_partitions import setup_search_dir
 from cnf.navigation.endpoints import get_endpoint_cnfs
 from cnf.navigation import find_neighbors
-from cnf.db import PartitionedDB
+from cnf.db.partitioned_db import PartitionedDB, extact_partition_num_from_db_name
 from cnf.utils.log import Logger
 
 def test_sync_water_level_basic(zr_bcc_mp, zr_hcp_mp):
@@ -65,3 +65,20 @@ def test_sync_completion_status(zr_bcc_mp, zr_hcp_mp):
         assert not db.is_search_complete()
         db.sync_search_completion_status()
         assert db.is_search_complete()
+
+def test_db_partition_names_are_correct(zr_bcc_mp, zr_hcp_mp):
+    xi = 1.5
+    delta = 10
+    sps, eps = get_endpoint_cnfs(zr_bcc_mp, zr_hcp_mp, xi, delta, min_atoms=3)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        num_partitions = 32
+        sid = setup_search_dir(tmpdir, "test", num_partitions, sps, eps, GraceCalculator())
+        db = PartitionedDB(tmpdir, sid)
+
+        for partition_num in range(num_partitions):
+            s = db.get_search_store_by_idx(partition_num)
+            m = db.get_map_store_by_idx(partition_num)
+            assert s.db_filename == m.db_filename
+            extracted = extact_partition_num_from_db_name(s.db_filename.stem)
+            assert extracted == partition_num

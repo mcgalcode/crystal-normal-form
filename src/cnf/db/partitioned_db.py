@@ -13,6 +13,9 @@ from .utilities import CNFPoint
 def get_partition_number(cnf: CrystalNormalForm, total_num_partitions: int):
     return hash(cnf) % total_num_partitions
 
+def extact_partition_num_from_db_name(db_fname):
+    return int(db_fname.split(".")[0])
+
 class PartitionedDB():
 
     def __init__(self,
@@ -26,7 +29,7 @@ class PartitionedDB():
         
         directory = pathlib.Path(self._db_dir)
 
-        partition_files = sorted(list(directory.glob(f"*{PARTITION_SUFFIX}")))
+        partition_files = list(directory.glob(f"*{PARTITION_SUFFIX}"))
         control_file = os.path.join(db_dir, META_DB_NAME)
         
         self.meta_store = MetaStore.from_file(control_file)
@@ -38,11 +41,12 @@ class PartitionedDB():
         self.partition_range = partition_range
         self.partition_map = {}
 
-        for i, f in enumerate(partition_files):
-            if i in self.partition_range:
+        for f in partition_files:
+            partition_num = extact_partition_num_from_db_name(f.stem)
+            if partition_num in self.partition_range:
                 search_store = SearchProcessStore.from_file(f)
                 map_store = CrystalMapStore.from_file(f)
-                self.partition_map[i] = {
+                self.partition_map[partition_num] = {
                     "search_store": search_store,
                     "map_store": map_store
                 }
@@ -93,6 +97,8 @@ class PartitionedDB():
         for i in self.partition_range:
             search_store = self.get_search_store_by_idx(i)
             partition_min = search_store.get_min_frontier_energy(self.search_id)
+            if partition_min is None:
+                partition_min = 1e999
             self.meta_store.update_min_water_level(self.search_id, i, partition_min)
     
     def sync_search_completion_status(self):
