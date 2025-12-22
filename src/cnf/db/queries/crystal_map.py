@@ -67,6 +67,10 @@ SELECT id, cnf, external_id, value, explored FROM {constants.POINT_TABLE_NAME}
 WHERE cnf = ?
 """
 
+get_all_points = f"""
+SELECT id, cnf, external_id, value, explored FROM {constants.POINT_TABLE_NAME}
+"""
+
 def get_points_ids(cnf_pts: list[str]):
     placeholders = ','.join(['?'] * len(cnf_pts))
     return f"""

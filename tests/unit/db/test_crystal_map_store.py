@@ -171,6 +171,18 @@ def test_can_get_unexplored_points(temp_db, zr_hcp_cnf):
     assert len(explored_ids) == len(all_nb_ids[:10])
     assert set(explored_ids) == set(all_nb_ids[:10])
 
+def test_can_get_all_points(temp_db, zr_hcp_cnf):
+    pt_id = temp_db.add_point(zr_hcp_cnf)
+    points = find_neighbors(zr_hcp_cnf)
+    points = points + find_neighbors(points[10])
+    points = set(points)
+    for p in points:
+        temp_db.add_point(p)
+    
+    all_points = temp_db.get_all_points()
+    all_cnfs = [p.cnf for p in all_points]
+    assert set(all_cnfs) == points.union(set([zr_hcp_cnf]))
+
 def test_can_set_point_value(zr_hcp_cnf, temp_db):
     pt_id = temp_db.add_point(zr_hcp_cnf)
 

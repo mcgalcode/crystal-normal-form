@@ -79,6 +79,13 @@ class CrystalMapStore(BaseStore):
         )
         rows = res.fetchall()
         return [self._cnf_pt_from_row(r) for r in rows]
+
+    def get_all_points(self):
+        res = self.cursor.execute(
+            queries.get_all_points
+        )
+        rows = res.fetchall()
+        return [self._cnf_pt_from_row(r) for r in rows]
     
     def get_point_ids(self, points: list[CrystalNormalForm]):
         pts = self.get_points_by_cnfs(points)
