@@ -5,10 +5,11 @@ import tempfile
 from cnf.db.setup_partitions import setup_search_dir, setup_cnf_db, instantiate_search, PARTITION_SUFFIX, META_DB_NAME
 from cnf.db.meta_file import load_meta_file
 from cnf.db import CrystalMapStore, SearchProcessStore, MetaStore
-from cnf.db.partitioned_db import PartitionedDB
+from cnf.db.partitioned_db import PartitionedDB, get_partition_number, extact_partition_num_from_db_name
 from cnf.calculation.grace import GraceCalculator
 from cnf.navigation.endpoints import get_endpoint_cnfs
-from cnf import UnitCell
+
+import math
 import glob
 import os
 
@@ -18,6 +19,11 @@ def _assert_file_is_cnf_store(fname, xi, delta, element_list):
     assert md.delta == delta
     assert md.xi == xi
     assert md.element_list == element_list
+
+def _assert_partitioned_search_instantiated(fname, search_id, eps, sps, pnum = None, total_parts = None):
+    expected_eps = [e for e in eps if get_partition_number(e, total_parts) == pnum]
+    expected_sps = [s for s in sps if get_partition_number(s, total_parts) == pnum]
+    _assert_search_instantiated(fname, search_id, expected_eps, expected_sps)
 
 def _assert_search_instantiated(fname, search_id, eps, sps):
     sp = SearchProcessStore.from_file(fname)
@@ -56,14 +62,23 @@ def test_can_setup_search_dir(zr_bcc_mp, zr_hcp_mp):
         db_files = glob.glob(os.path.join(tmpdir, f"*{PARTITION_SUFFIX}"))
         assert len(db_files) == num_partitions
         for db_file in db_files:
+            pnum = extact_partition_num_from_db_name(db_file.split("/")[-1])
             _assert_file_is_cnf_store(db_file, xi, delta, el_list)
-            _assert_search_instantiated(db_file, sid, end_cnfs, start_cnfs)
+            _assert_partitioned_search_instantiated(db_file, sid, end_cnfs, start_cnfs, pnum, num_partitions)
         
         ms = MetaStore.from_file(os.path.join(tmpdir, META_DB_NAME))
-        start_energies = [calc.calculate_energy(sc) for sc in start_cnfs]
+
+        # Only partitions with start points should have water level set
         for i in range(num_partitions):
             wl = ms.get_partition_water_level(sid, i)
-            assert wl == min(start_energies)
+            partition_starts = [s for s in start_cnfs if get_partition_number(s, num_partitions) == i]
+            if len(partition_starts) > 0:
+                # Partition has start points, water level should be minimum start energy in this partition
+                partition_start_energies = [calc.calculate_energy(s) for s in partition_starts]
+                assert wl == min(partition_start_energies)
+            else:
+                # Partition has no start points, water level should be infinity
+                assert wl == math.inf
 
         metadata = partition_db.db_metadata
         assert metadata.xi == xi

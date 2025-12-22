@@ -213,3 +213,17 @@ def test_waterfill_tio2(ti_o2_anatase, ti_o2_rutile):
 
 
         continue_search_waterfill(sp_id, tmpdir, GraceCalculator(), 3, batch_size=10)
+
+def test_waterfill_zr(zr_bcc_mp, zr_hcp_mp):
+    xi = 1.5
+    delta = 10
+    sps, eps = get_endpoint_cnfs(zr_bcc_mp, zr_hcp_mp, xi, delta)
+    logger = Logger()
+
+    DUMB_ENERGY_LIMIT = 100
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        sp_id = setup_search_dir(tmpdir, "test", 32, sps, eps, GraceCalculator())
+
+
+        continue_search_waterfill(sp_id, tmpdir, GraceCalculator(), 5, batch_size=10)
