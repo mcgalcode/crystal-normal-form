@@ -77,10 +77,11 @@ def instantiate_search(search_description: str,
     if len(set(deltas)) > 1:
         raise ValueError("Tried to instantiate search with CNFs having different delta values!")
 
-    element_list = start_cnfs[0].elements
-    for cnf in all_cnfs:
-        if cnf.elements != element_list:
-            raise ValueError("Tried to instantiate search with CNFs having different element lists!")
+    if len(all_cnfs) > 0:
+        element_list = all_cnfs[0].elements
+        for cnf in all_cnfs:
+            if cnf.elements != element_list:
+                raise ValueError("Tried to instantiate search with CNFs having different element lists!")
         
     crystal_map_store = CrystalMapStore.from_file(store_file)
 
