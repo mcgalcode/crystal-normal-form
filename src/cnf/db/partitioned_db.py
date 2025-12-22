@@ -144,3 +144,16 @@ class PartitionedDB():
         # Update metastore
         self.meta_store.update_partition_stats(self.search_id, partition_idx, stats)
 
+    def reload_frontier_width(self):
+        """Reload frontier_width from metadata file.
+
+        This allows updating the frontier_width while the search is running
+        without restarting worker processes.
+
+        Returns:
+            The current frontier_width value from the metadata file
+        """
+        self.db_metadata = load_meta_file(self._db_dir)
+        self.search_metadata = [s for s in self.db_metadata.search_processes if s.search_id == self.search_id][0]
+        return self.search_metadata.frontier_width
+

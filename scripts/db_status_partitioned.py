@@ -23,7 +23,6 @@ import glob
 import statistics
 import re
 from datetime import datetime
-from cnf.search import FRONTIER_WIDTH
 from cnf.db.crystal_map_store import CrystalMapStore
 from cnf.db.search_store import SearchProcessStore
 from cnf.db.partitioned_db import PARTITION_SUFFIX, PartitionedDB
@@ -61,6 +60,11 @@ def get_stats_from_metastore(partition_dir, search_id=1):
     cmap_store = CrystalMapStore.from_file(db_files[0])
     metadata = cmap_store.get_metadata()
 
+    # Load frontier_width using PartitionedDB for consistency with workers
+    # This allows dynamic updates without restarting monitoring
+    db = PartitionedDB(partition_dir, search_id)
+    frontier_width = db.reload_frontier_width()
+
     # Aggregate stats
     stats = {
         'total_points': 0,
@@ -81,7 +85,8 @@ def get_stats_from_metastore(partition_dir, search_id=1):
         'start_points': [],
         'metadata': metadata,
         'global_water_level': meta_store.get_global_water_level(search_id),
-        'partition_water_levels': {}
+        'partition_water_levels': {},
+        'frontier_width': frontier_width
     }
 
     for pstats in partition_stats_list:
@@ -401,10 +406,10 @@ def display_stats(stats, rates=None, show_global=True, show_partitions=True, sho
         print()
         print("CURRENT WATER LEVEL (from Meta Store):")
         if stats.get('global_water_level') is not None:
-            tolerance = FRONTIER_WIDTH  # Same as in the algorithm
+            tolerance = stats['frontier_width']  # From search metadata
             max_threshold = stats['global_water_level'] + tolerance
             print(f"  Global Water Level:        {format_value(stats['global_water_level'])}")
-            print(f"  Max Threshold (+{FRONTIER_WIDTH}):  {format_value(max_threshold)}")
+            print(f"  Max Threshold (+{stats['frontier_width']}):  {format_value(max_threshold)}")
             print(f"  (Algorithm explores points with energy <= {format_value(max_threshold)})")
 
             # Show max searched energy (high water mark)

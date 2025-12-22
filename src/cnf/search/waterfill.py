@@ -7,8 +7,6 @@ import math
 import time
 from collections import defaultdict
 
-FRONTIER_WIDTH = 0.050
-
 def explore_pt_partition(partition_db: PartitionedDB, point_cnf: CrystalNormalForm, log_lvl=1,
                          profile_timings: dict = None, profile_counts: dict = None):
     point_partition = partition_db.get_partition_idx(point_cnf)
@@ -242,7 +240,9 @@ def continue_search_waterfill(search_id,
     while True:
         step_start = time.time()
 
-        water_level = db.get_current_water_level() + FRONTIER_WIDTH
+        # Reload frontier_width from metadata file to allow dynamic updates
+        frontier_width = db.reload_frontier_width()
+        water_level = db.get_current_water_level() + frontier_width
         partition_idx = db.get_random_partition_idx()
 
         logger.debug(f"========== [partition {partition_idx}] BEGINNING STEP {num_iters} - water level: {water_level} ================")

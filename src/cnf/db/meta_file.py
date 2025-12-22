@@ -14,6 +14,7 @@ class SearchProcess():
     start_cnfs: list[list[int]]
     end_cnfs: list[list[int]]
     time_created: str
+    frontier_width: float = 0.005  # Default for backward compatibility
 
 @dataclasses.dataclass
 class SearchMetadata():
@@ -56,14 +57,15 @@ def _write_metafile(location: str, search_metadata: SearchMetadata):
         json.dump(metadata, f)
         return f.name
 
-def add_search_process(search_dir, sid, start_cnfs: list[CrystalNormalForm], end_cnfs: list[CrystalNormalForm]):
+def add_search_process(search_dir, sid, start_cnfs: list[CrystalNormalForm], end_cnfs: list[CrystalNormalForm], frontier_width: float = 0.005):
     metadata = load_meta_file(search_dir)
     timestamp = datetime.now()
-    timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")    
+    timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
     new_sp = SearchProcess(search_id=sid,
                            start_cnfs=[cnf.coords for cnf in start_cnfs],
                            end_cnfs=[cnf.coords for cnf in end_cnfs],
-                           time_created=timestamp)
+                           time_created=timestamp,
+                           frontier_width=frontier_width)
     metadata.search_processes.append(new_sp)
     _write_metafile(search_dir, metadata)
 
