@@ -27,12 +27,6 @@ CREATE TABLE {constants.METADATA_TABLE_NAME} (
 )
 """
 
-create_lock_table = f"""
-CREATE TABLE {constants.LOCK_TABLE_NAME} (
-    point_id INTEGER UNIQUE
-)
-"""
-
 set_metadata =  f"""
 INSERT INTO {constants.METADATA_TABLE_NAME} 
     (delta, xi, element_list) 
@@ -73,6 +67,10 @@ SELECT id, cnf, external_id, value, explored FROM {constants.POINT_TABLE_NAME}
 WHERE cnf = ?
 """
 
+get_all_points = f"""
+SELECT id, cnf, external_id, value, explored FROM {constants.POINT_TABLE_NAME}
+"""
+
 def get_points_ids(cnf_pts: list[str]):
     placeholders = ','.join(['?'] * len(cnf_pts))
     return f"""
@@ -80,6 +78,12 @@ SELECT id, cnf, external_id, value, explored FROM {constants.POINT_TABLE_NAME} W
 cnf IN ({placeholders})
 """
 
+def get_points_batch(ids: list[int]):
+    placeholders = ','.join(['?'] * len(ids))
+    return f"""
+SELECT id, cnf, external_id, value, explored FROM {constants.POINT_TABLE_NAME} WHERE
+id IN ({placeholders})
+"""
 
 delete_point_by_id = f"""
 DELETE FROM {constants.POINT_TABLE_NAME}
@@ -119,7 +123,7 @@ DELETE FROM {constants.EDGE_TABLE_NAME}
 WHERE (source_id = ? AND target_id = ?) OR (target_id = ? AND source_id = ?)
 """
 
-select_neighbors = f"""
+select_local_nbs = f"""
 SELECT pt2.* FROM {constants.POINT_TABLE_NAME} AS pt1
 INNER JOIN {constants.EDGE_TABLE_NAME} AS edge ON pt1.id = edge.source_id
 INNER JOIN {constants.POINT_TABLE_NAME} AS pt2 ON edge.target_id = pt2.id
@@ -157,21 +161,6 @@ mark_point_unexplored = f"""
 UPDATE {constants.POINT_TABLE_NAME} AS pt
 SET explored = 0
 WHERE pt.id = ?
-"""
-
-add_lock_for_point = f"""
-INSERT OR IGNORE INTO {constants.LOCK_TABLE_NAME} (point_id)
-VALUES (?)
-"""
-
-rm_lock_for_point = f"""
-DELETE FROM {constants.LOCK_TABLE_NAME}
-WHERE point_id = ?
-"""
-
-get_lock_for_point = f"""
-SELECT * FROM {constants.LOCK_TABLE_NAME}
-WHERE point_id = ?
 """
 
 set_value_for_point = f"""

@@ -3,7 +3,7 @@ from cnf.db.crystal_map_store import CrystalMapStore
 from cnf.db.setup import setup_cnf_db
 from cnf.search import explore_pt
 from cnf import CrystalNormalForm
-from cnf.navigation.neighbor_finder import NeighborFinder
+from cnf.navigation.neighbor_finder import NeighborFinder, find_neighbors
 import tempfile
 
 
@@ -140,7 +140,7 @@ def test_can_get_all_neighbors_of_point(zr_hcp_cnf, temp_db: CrystalMapStore):
 
         temp_db.add_connection(nbs[-1], onb)
     
-    retrieved_nbs = temp_db.get_neighbors(temp_db.get_point_ids([zr_hcp_cnf])[0])
+    retrieved_nbs = temp_db.get_local_neighbors(temp_db.get_point_ids([zr_hcp_cnf])[0])
     assert len(retrieved_nbs) == len(nbs)
     assert set([nb.cnf for nb in retrieved_nbs]) == set(nbs)
 
@@ -168,19 +168,20 @@ def test_can_get_unexplored_points(temp_db, zr_hcp_cnf):
 
     all_unexplored_pts = temp_db.get_all_explored_points()
     explored_ids = [pt.id for pt in all_unexplored_pts]
-    assert len(explored_ids) == len(all_nb_ids[:10])
-    assert set(explored_ids) == set(all_nb_ids[:10])
+    assert len(explored_ids) == len(all_nb_ids[:10]) + 1  # +1 for the original point
+    assert set(explored_ids) == set([pt_id] + all_nb_ids[:10])
 
-def test_can_lock_point(zr_hcp_cnf, temp_db):
+def test_can_get_all_points(temp_db, zr_hcp_cnf):
     pt_id = temp_db.add_point(zr_hcp_cnf)
+    points = find_neighbors(zr_hcp_cnf)
+    points = points + find_neighbors(points[10])
+    points = set(points)
+    for p in points:
+        temp_db.add_point(p)
     
-    assert temp_db.is_point_locked(pt_id) == False
-
-    temp_db.lock_point(pt_id)
-    assert temp_db.is_point_locked(pt_id) == True
-
-    temp_db.unlock_point(pt_id)
-    assert temp_db.is_point_locked(pt_id) == False
+    all_points = temp_db.get_all_points()
+    all_cnfs = [p.cnf for p in all_points]
+    assert set(all_cnfs) == points.union(set([zr_hcp_cnf]))
 
 def test_can_set_point_value(zr_hcp_cnf, temp_db):
     pt_id = temp_db.add_point(zr_hcp_cnf)
@@ -195,3 +196,18 @@ def test_can_set_point_value(zr_hcp_cnf, temp_db):
     v = 2.5
     temp_db.set_point_value(pt_id, v)
     assert temp_db.get_point_value(pt_id) == v
+
+def test_can_get_points_batch_by_ids(zr_hcp_cnf, temp_db: CrystalMapStore):
+    nbs = find_neighbors(zr_hcp_cnf)
+    temp_db.bulk_insert_points(nbs)
+
+    targets = nbs[:8]
+    retrieval_ids = temp_db.get_point_ids(targets)
+
+    retrieved = temp_db.get_points_by_ids(retrieval_ids)
+    assert len(retrieved) == len(retrieval_ids)
+    assert len(retrieved) == len(targets)
+    assert set(targets) == set([pt.cnf for pt in retrieved])
+
+    for id, pt in zip(retrieval_ids, retrieved):
+        assert temp_db.get_point_by_id(id).cnf == pt.cnf

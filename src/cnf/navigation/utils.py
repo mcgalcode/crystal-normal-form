@@ -1,29 +1,9 @@
 import numpy as np
 from pymatgen.core import Structure
-from typing import List, Tuple
-from cnf import UnitCell, CrystalNormalForm
+from cnf import CrystalNormalForm, UnitCell
+from typing import Union
 
-def get_endpoints_from_pmg_structs(struct1: Structure, struct2: Structure):
-    uc1 = UnitCell.from_pymatgen_structure(struct1)
-    uc2 = UnitCell.from_pymatgen_structure(struct2)
-    return get_endpoints_from_unit_cells(uc1, uc2)
-
-def get_endpoints_from_unit_cells(cell1: UnitCell, cell2: UnitCell):
-    if len(cell1) == len(cell2):
-        return [cell1], [cell2]
-    if len(cell1) > len(cell2):
-        multiplier = len(cell1) / len(cell2)
-        other_supercells = cell2.supercells(multiplier)
-        return [cell1], other_supercells
-    if len(cell2) > len(cell1):
-        multiplier = len(cell2) / len(cell1)
-        other_supercells = cell1.supercells(multiplier)
-        return other_supercells, [cell2]
-
-def compute_pairwise_distance_matrix(cnf: CrystalNormalForm):
-    return compute_pairwise_distances(cnf.reconstruct())
-
-def compute_pairwise_distances(structure: Structure) -> np.ndarray:
+def compute_pairwise_distances(structure: Union[Structure, CrystalNormalForm, UnitCell]) -> np.ndarray:
     """
     Compute pairwise distances between all atoms in a pymatgen structure
     using periodic boundary conditions.
@@ -38,6 +18,11 @@ def compute_pairwise_distances(structure: Structure) -> np.ndarray:
         A symmetric NxN distance matrix where N is the number of atoms,
         with distances in Angstroms
     """
+    if isinstance(structure, CrystalNormalForm):
+        structure = structure.reconstruct()
+    elif isinstance(structure, UnitCell):
+        structure = structure.to_pymatgen_structure()
+    
     n_atoms = len(structure)
     distance_matrix = np.zeros((n_atoms, n_atoms))
 
@@ -71,7 +56,7 @@ def compute_pairwise_distances(structure: Structure) -> np.ndarray:
     return distance_matrix
 
 def no_atoms_closer_than(pt: CrystalNormalForm, min_dist: float):
-    distances = compute_pairwise_distances(pt.reconstruct())
+    distances = compute_pairwise_distances(pt)
     # Get non-diagonal elements (distances between different atoms)
     non_diag_distances = distances[np.triu_indices_from(distances, k=1)]
     # Keep neighbors where all non-diagonal distances are > 1.4

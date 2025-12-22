@@ -1,11 +1,12 @@
 import pytest
 import tempfile
 
-from cnf.search import instantiate_search, explore_pt
-from cnf.db.setup import setup_cnf_db
+from cnf.search import explore_pt
+from cnf import UnitCell
+from cnf.db.setup import setup_cnf_db, instantiate_search
 from cnf.db.search_store import SearchProcessStore
 from cnf.db.crystal_map_store import CrystalMapStore
-from cnf import UnitCell, CrystalNormalForm
+from cnf.calculation import GraceCalculator
 from cnf.navigation.neighbor_finder import NeighborFinder
 
 
@@ -34,7 +35,8 @@ def test_can_instantiate_search(cnf_db_file, zr_bcc_cnfs, zr_hcp_cnfs):
         "test process",
         zr_bcc_cnfs,
         zr_hcp_cnfs,
-        cnf_db_file
+        cnf_db_file,
+        GraceCalculator()
     )
 
     search_store = SearchProcessStore.from_file(cnf_db_file)

@@ -16,14 +16,6 @@ def point_set():
     return xi, delta, nbs
 
 @pytest.fixture
-def ti_o2_anatase():
-    return helpers.load_specific_cif("TiO2_anatase.cif")
-
-@pytest.fixture
-def ti_o2_rutile():
-    return helpers.load_specific_cif("TiO2_rutile.cif")
-
-@pytest.fixture
 def zr_hcp():
     return helpers.load_specific_cif("Zr_HCP.cif")
 

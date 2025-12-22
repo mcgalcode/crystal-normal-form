@@ -51,14 +51,16 @@ class NeighborFinder():
             tuples = rust_cnf.find_neighbor_tuples_rust(
                 vonorms_i32, coords_i32, self.elements, n_atoms, self.xi, self.delta
             )
-            return list(set([tuple([*pt[0], *pt[1]]) for pt in tuples]))
+            uniq = set([tuple([*pt[0], *pt[1]]) for pt in tuples])
         else:
             # Pure Python path - calls lattice + motif finders separately
 
             lattice_neighbors = self.find_lattice_neighbors(point)
             mnf_neighbors = self.find_motif_neighbors(point)
+            uniq = set(lattice_neighbors + mnf_neighbors)
 
-            return list(set(lattice_neighbors + mnf_neighbors))
+        uniq.discard(point)
+        return list(uniq)
         
 
     def find_neighbors(self, point: Union[tuple, CrystalNormalForm]) -> list[CrystalNormalForm]:

@@ -6,10 +6,7 @@ from cnf.navigation.neighbor_finder import NeighborFinder
 from cnf.navigation.crystal_explorer import CrystalExplorer
 from cnf.navigation.search_objectives import LocateAnyTargetStruct
 from cnf.navigation.score_functions import PDDScorer, NullScore
-from cnf.navigation.utils import get_endpoints_from_unit_cells
 from cnf.navigation.search_filters import VolumeLimitFilter
-from rustworkx import all_shortest_paths
-from itertools import product
 from cnf.navigation.crystal_explorer import CrystalExplorer
 from cnf.viz.trajectory import TrajectoryVisualizer
 

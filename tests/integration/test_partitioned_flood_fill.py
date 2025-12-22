@@ -5,8 +5,9 @@ import os
 import shutil
 from cnf.db.setup import setup_cnf_db
 from cnf.db.partitioned_db import PartitionedDB
-from cnf.search import instantiate_search, continue_search_flood_fill
+from cnf.search import instantiate_search, continue_search_waterfill
 from cnf.navigation.neighbor_finder import NeighborFinder
+from cnf.calculation.constant_calculator import ConstantCalculator
 from cnf import CrystalNormalForm
 
 
@@ -91,9 +92,10 @@ def test_partitioned_flood_fill_integrity(zr_hcp_mp, partitioned_db_dir):
 
     # Run flood-fill search for 10 iterations
     search_id = 1
-    continue_search_flood_fill(
+    continue_search_waterfill(
         search_id,
         partitioned_db_dir,
+        ConstantCalculator(1),
         search_filters=None,
         max_iters=10,
         log_lvl=0  # Suppress logging during test
@@ -216,9 +218,10 @@ def test_partitioned_flood_fill_neighbor_reciprocity(zr_hcp_mp, partitioned_db_d
         instantiate_search("Test reciprocity", [start_cnf], [end_cnf], db_file)
 
     # Run search for more iterations to explore multiple points
-    continue_search_flood_fill(
+    continue_search_waterfill(
         1,
         partitioned_db_dir,
+        ConstantCalculator(1),
         search_filters=None,
         max_iters=50,
         log_lvl=0

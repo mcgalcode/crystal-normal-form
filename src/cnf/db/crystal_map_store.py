@@ -79,6 +79,13 @@ class CrystalMapStore(BaseStore):
         )
         rows = res.fetchall()
         return [self._cnf_pt_from_row(r) for r in rows]
+
+    def get_all_points(self):
+        res = self.cursor.execute(
+            queries.get_all_points
+        )
+        rows = res.fetchall()
+        return [self._cnf_pt_from_row(r) for r in rows]
     
     def get_point_ids(self, points: list[CrystalNormalForm]):
         pts = self.get_points_by_cnfs(points)
@@ -108,6 +115,15 @@ class CrystalMapStore(BaseStore):
             return None
         return cnf_pt_from_row(row, self.metadata.delta, self.metadata.xi, self.metadata.element_list)
 
+    def get_points_by_ids(self, ids: list[int]):
+        res = self.cursor.execute(
+            queries.get_points_batch(ids),
+            (list(ids))
+        )
+        rows = res.fetchall()
+        pts = [self._cnf_pt_from_row(r) for r in rows]
+        pt_lookup = {pt.id: pt for pt in pts}
+        return [pt_lookup[id] for id in ids]
     
     def remove_point(self, point: CrystalNormalForm):
         cnf_str = cnf_to_str(point)
@@ -182,9 +198,9 @@ class CrystalMapStore(BaseStore):
         rows = res.fetchmany()
         return len(rows) > 0
     
-    def get_neighbors(self, pt_id: int) -> list[CNFPoint]:
+    def get_local_neighbors(self, pt_id: int) -> list[CNFPoint]:
         res = self.cursor.execute(
-            queries.select_neighbors,
+            queries.select_local_nbs,
             ([pt_id, pt_id])
         )
         rows = res.fetchall()
@@ -228,31 +244,6 @@ class CrystalMapStore(BaseStore):
         )
         self.conn.commit()
         return pt_id
-    
-    def lock_point(self, pt_id: int) -> bool:
-        """Try to lock a point. Returns True if lock was acquired, False if already locked."""
-        self.cursor.execute(
-            queries.add_lock_for_point,
-            ([pt_id])
-        )
-        self.conn.commit()
-        # Check if a row was actually inserted (rowcount > 0 means successful insert)
-        return self.cursor.rowcount > 0
-    
-    def unlock_point(self, pt_id: int):
-        self.cursor.execute(
-            queries.rm_lock_for_point,
-            ([pt_id])
-        )
-        self.conn.commit()
-    
-    def is_point_locked(self, pt_id: int):
-        res = self.cursor.execute(
-            queries.get_lock_for_point,
-            ([pt_id])
-        )
-        rows = res.fetchall()
-        return len(rows) > 0
     
     def set_point_value(self, pt_id: int, value: float):
         self.cursor.execute(

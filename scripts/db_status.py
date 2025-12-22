@@ -49,10 +49,6 @@ def get_db_stats(db_file, search_id=None):
     stats['global_min_energy'] = result[0]
     stats['global_max_energy'] = result[1]
 
-    # Currently locked points
-    result = cur.execute("SELECT COUNT(*) FROM lock").fetchone()
-    stats['locked_points'] = result[0]
-
     if search_id is not None:
         # Frontier size for specific search
         result = cur.execute(
@@ -173,7 +169,6 @@ def display_stats(stats, search_id=None, rates=None):
     print(f"  Points with Energy:        {stats['points_with_energy']:,}")
     print(f"  Neighbors Found (explored):{stats['explored_points']:,}{explored_rate}")
     print(f"  Total Edges:               {stats['total_edges']:,}{edges_rate}")
-    print(f"  Currently Locked:          {stats['locked_points']:,}")
     print()
 
     print("GLOBAL ENERGY RANGE (all points ever discovered):")
@@ -289,47 +284,6 @@ def watch_mode(db_file, search_id=None, interval=1.0):
         sys.exit(0)
 
 
-def unlock_all_points(db_file, force=False):
-    """Unlock all points in the database."""
-    conn = sqlite3.connect(db_file)
-    cur = conn.cursor()
-
-    # Check how many locks exist
-    result = cur.execute("SELECT COUNT(*) FROM lock").fetchone()
-    lock_count = result[0]
-
-    if lock_count == 0:
-        print("No locks found in database.")
-        conn.close()
-        return
-
-    print(f"Found {lock_count} locked points.")
-
-    if not force:
-        print("\n⚠️  WARNING: Unlocking points while workers are running can cause issues!")
-        print("   Only use this command when all workers have been stopped.")
-        response = input("\nAre you sure you want to unlock all points? (yes/no): ")
-        if response.lower() not in ['yes', 'y']:
-            print("Cancelled.")
-            conn.close()
-            return
-
-    # Try to acquire exclusive lock to ensure no other connections
-    try:
-        cur.execute("BEGIN EXCLUSIVE")
-    except sqlite3.OperationalError:
-        print("\n❌ Error: Database is locked by another process!")
-        print("   Stop all workers before running this command.")
-        conn.close()
-        return
-
-    # Delete all locks
-    cur.execute("DELETE FROM lock")
-    conn.commit()
-
-    print(f"✅ Successfully unlocked {lock_count} points!")
-    conn.close()
-
 
 def main():
     parser = argparse.ArgumentParser(
@@ -341,7 +295,6 @@ Examples:
   %(prog)s test_search_db --watch              # Live updating dashboard
   %(prog)s test_search_db --watch --search 1   # Watch search #1
   %(prog)s test_search_db --search 1           # Show search #1 info
-  %(prog)s test_search_db --unlock-all         # Unlock all points (after stopping workers)
         """
     )
 
@@ -352,10 +305,6 @@ Examples:
                        help='Show/monitor specific search process')
     parser.add_argument('--interval', '-i', type=float, default=1.0,
                        help='Update interval in seconds for watch mode (default: 1.0)')
-    parser.add_argument('--unlock-all', '-u', action='store_true',
-                       help='Unlock all locked points (USE ONLY WHEN WORKERS ARE STOPPED)')
-    parser.add_argument('--force', '-f', action='store_true',
-                       help='Skip confirmation prompt for --unlock-all')
 
     args = parser.parse_args()
 
@@ -364,10 +313,7 @@ Examples:
         print(f"Error: Database file '{args.db_file}' not found")
         sys.exit(1)
 
-    if args.unlock_all:
-        # Unlock all points
-        unlock_all_points(args.db_file, args.force)
-    elif args.watch:
+    if args.watch:
         # Watch mode
         watch_mode(args.db_file, args.search, args.interval)
     elif args.search is not None:

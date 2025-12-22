@@ -6,3 +6,7 @@ class BaseCalculator(ABC):
     @abstractmethod
     def calculate_energy(self, cnf: CrystalNormalForm):
         pass
+
+    @abstractmethod
+    def identifier(self) -> str:
+        pass

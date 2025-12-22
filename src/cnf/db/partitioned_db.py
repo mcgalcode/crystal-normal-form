@@ -1,74 +1,87 @@
 import pathlib
+import os
 import random
 from .search_store import SearchProcessStore
 from .crystal_map_store import CrystalMapStore
+from .meta_store import MetaStore
+from .meta_file import load_meta_file
+from .constants import PARTITION_SUFFIX, META_DB_NAME
 
 from ..crystal_normal_form import CrystalNormalForm
 from .utilities import CNFPoint
         
-DB_PREFIX = "graph_partition"
+def get_partition_number(cnf: CrystalNormalForm, total_num_partitions: int):
+    return hash(cnf) % total_num_partitions
+
+def extact_partition_num_from_db_name(db_fname):
+    return int(db_fname.split(".")[0])
 
 class PartitionedDB():
 
-    def __init__(self, db_dir: str):
+    def __init__(self,
+                 db_dir: str,
+                 search_id: int,
+                 partition_range: list[int] = None):
         self._db_dir = db_dir
+        self.db_metadata = load_meta_file(db_dir)
+        self.search_id = search_id
+        self.search_metadata = [s for s in self.db_metadata.search_processes if s.search_id == search_id][0]
+        
         directory = pathlib.Path(self._db_dir)
 
-        db_files = sorted(list(directory.glob(f"{DB_PREFIX}*.db")))
-        self.num_partitions = len(db_files)
+        partition_files = list(directory.glob(f"*{PARTITION_SUFFIX}"))
+        control_file = os.path.join(db_dir, META_DB_NAME)
+        
+        self.meta_store = MetaStore.from_file(control_file)
+        self.num_partitions = len(partition_files)
 
+        if partition_range is None:
+            partition_range = list(range(self.num_partitions))
+        
+        self.partition_range = partition_range
         self.partition_map = {}
-        for i, f in enumerate(db_files):
-            
+        self._forbidden_partition_map = {}
+
+        for f in partition_files:
+            partition_num = extact_partition_num_from_db_name(f.stem)
             search_store = SearchProcessStore.from_file(f)
             map_store = CrystalMapStore.from_file(f)
-            self.partition_map[i] = {
+            if partition_num in self.partition_range:
+                self.partition_map[partition_num] = {
+                    "search_store": search_store,
+                    "map_store": map_store
+                }
+            self._forbidden_partition_map[partition_num] = {
                 "search_store": search_store,
                 "map_store": map_store
             }
-
-    def get_unsearched_neighbors_and_locks(self, cnf: CrystalNormalForm, search_id: int) -> tuple[list[CNFPoint], dict[int, dict[int, bool]]]:
-        source_partition = self.get_partition_idx(cnf)
-        source_map_store = self.get_map_store_by_idx(source_partition)
-        source_search_store = self.get_search_store_by_idx(source_partition)
-
-        pt_id = source_map_store.get_point_ids([cnf])[0]
-
-        partition_locks = {}
-
-        local_neighbors, local_locks = source_search_store.get_unsearched_neighbors_with_lock_info(search_id, pt_id)
-        for ln in local_neighbors:
-            ln.partition = source_partition
-        partition_locks[source_partition] = local_locks
-
-        all_nbs_with_partitions = local_neighbors
-
-        nonlocal_nb_cnfs = source_map_store.get_nonlocal_neighbor_cnfs(pt_id)
-        partitioned_nbs = self.partition_cnfs(nonlocal_nb_cnfs)
-        for partition_idx, cnfs in partitioned_nbs.items():
-            nb_store = self.get_search_store_by_idx(partition_idx)
-            nb_pts, nb_locks = nb_store.get_unsearched_points_by_cnfs_with_lock_info(search_id, cnfs)
-            for nb_pt in nb_pts:
-                nb_pt.partition = partition_idx
-                all_nbs_with_partitions.append(nb_pt)
-            partition_locks[partition_idx] = nb_locks
-        return all_nbs_with_partitions, partition_locks     
     
-    def partition_cnfs(self, cnfs: list[CrystalNormalForm]):
+    def partition_cnfs(self, cnfs: list[CrystalNormalForm]) -> dict[int, list[CrystalNormalForm]]:
         partitions = { i: [] for i in range(self.num_partitions) }
         for c in cnfs:
             partition = self.get_partition_idx(c)
             partitions[partition].append(c)
         return partitions
 
+    def _validate_partition(self, pt: CrystalNormalForm):
+        pt_partition = self.get_partition_idx(pt)
+        if pt_partition not in self.partition_range:
+            raise RuntimeError("Tried to access partition outside of partition range for forbidden action!")
+
     def add_point(self, pt: CrystalNormalForm):
+        self._validate_partition(pt)
         return self.get_map_store(pt).add_point(pt)
     
+    def bulk_add_incoming_points(self, points: list[CrystalNormalForm], partition_idx: int):
+        foreign_store: SearchProcessStore = self._forbidden_partition_map[partition_idx]["search_store"]
+        foreign_store.bulk_add_incoming_points(self.search_id, points)
+    
     def get_point_by_cnf(self, pt: CrystalNormalForm):
+        self._validate_partition(pt)
         return self.get_map_store(pt).get_point_by_cnf(pt)
 
     def get_partition_idx(self, cnf: CrystalNormalForm):
-        return hash(cnf) % self.num_partitions
+        return get_partition_number(cnf, self.num_partitions)
     
     def get_search_store(self, cnf: CrystalNormalForm) -> SearchProcessStore:
         return self.partition_map[self.get_partition_idx(cnf)]["search_store"]
@@ -83,28 +96,32 @@ class PartitionedDB():
         return self.partition_map[idx]["map_store"]
     
     def get_random_partition_idx(self):
-        return random.randint(0, self.num_partitions - 1)
+        return random.choice(self.partition_range)
 
-    def get_current_water_level(self, search_id: int):
+    def get_current_water_level(self):
         """Get current water level across ALL partitions.
-
-        Queries all partitions for their minimum frontier energy and returns
-        the global minimum. This ensures we have the true lowest energy point
-        on the frontier for proper water-filling behavior.
-
-        Args:
-            search_id: Search process ID
 
         Returns:
             Minimum frontier energy across all partitions, or None if no frontier points
         """
-        min_energy = None
-
-        for idx in range(self.num_partitions):
-            search_store = self.get_search_store_by_idx(idx)
-            partition_min = search_store.get_min_frontier_energy(search_id)
-            if partition_min is not None:
-                min_energy = min(min_energy, partition_min) if min_energy is not None else partition_min
-
-        return min_energy
+        return self.meta_store.get_global_water_level(self.search_id)
+    
+    def is_search_complete(self):
+        return self.meta_store.is_search_complete(self.search_id)
+    
+    def sync_control_water_level(self):
+        for i in self.partition_range:
+            search_store = self.get_search_store_by_idx(i)
+            partition_min = search_store.get_min_frontier_energy(self.search_id)
+            if partition_min is None:
+                partition_min = 1e999
+            self.meta_store.update_min_water_level(self.search_id, i, partition_min)
+    
+    def sync_search_completion_status(self):
+        if self.meta_store.is_search_complete(self.search_id):
+            return
+        for pidx in self.partition_range:
+            found_endpt_ids = self.get_search_store_by_idx(pidx).get_located_endpoint_ids(self.search_id)
+            if len(found_endpt_ids) > 0:
+                self.meta_store.set_search_status(self.search_id, True)
 
