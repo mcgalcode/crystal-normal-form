@@ -9,9 +9,8 @@ from pymatgen.core import Structure
 
 from cnf import UnitCell
 from cnf.cnf_constructor import CNFConstructor
-from cnf.navigation.utils import get_endpoints_from_pmg_structs
-from cnf.navigation.astar import astar_pathfind as astar_pathfind_py, squared_euclidean_heuristic, min_distance_filter
-
+from cnf.navigation.endpoints import get_endpoint_unit_cells
+from cnf.navigation.astar import astar_pathfind as astar_pathfind_py, squared_euclidean_heuristic, min_distance_filter, pdd_heuristic
 
 def pathfind_and_save(start_cif, end_cif, output_json, xi=0.2, delta=30, min_distance=0.0, max_iterations=100000, use_python=False):
     """Run pathfinding between two CIF structures and save result to JSON
@@ -38,7 +37,7 @@ def pathfind_and_save(start_cif, end_cif, output_json, xi=0.2, delta=30, min_dis
     print(f"  Composition: {end_struct.composition}, {len(end_struct)} atoms")
     print(f"  Lattice: a={end_struct.lattice.a:.3f}, b={end_struct.lattice.b:.3f}, c={end_struct.lattice.c:.3f}")
 
-    start_cells, goal_cells = get_endpoints_from_pmg_structs(start_struct, end_struct)
+    start_cells, goal_cells = get_endpoint_unit_cells(start_struct, end_struct)
 
     print(f"\n=== Endpoints ===")
     print(f"Number of start cells: {len(start_cells)}")

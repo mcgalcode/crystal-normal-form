@@ -36,9 +36,10 @@ impl PartialOrd for AStarNode {
 impl Ord for AStarNode {
     fn cmp(&self, other: &Self) -> Ordering {
         // Reverse ordering: smaller f_score has higher priority
+        // NOTE: We do NOT use counter for tie-breaking to match Python's behavior
+        // where dataclass only compares f_score (other fields have compare=False)
         other.f_score.partial_cmp(&self.f_score)
             .unwrap_or(Ordering::Equal)
-            .then_with(|| other.counter.cmp(&self.counter))
     }
 }
 
@@ -161,6 +162,14 @@ pub fn astar_pathfind(
     let mut iterations = 0usize;
     let start_time = std::time::Instant::now();
 
+    // Debug: print goal points at start
+    if verbose {
+        eprintln!("DEBUG: Checking against {} goal states:", goal_points.len());
+        for (i, (gv, gc)) in goal_points.iter().enumerate() {
+            eprintln!("  Goal {}: vonorms={:?}, coords={:?}", i, gv, gc);
+        }
+    }
+
     while let Some(current_node) = open_set.pop() {
         if max_iterations > 0 && iterations >= max_iterations {
             eprintln!("Reached max iterations: {}", max_iterations);
@@ -184,13 +193,23 @@ pub fn astar_pathfind(
         }
 
         // Check if we reached any goal
-        for (goal_vonorms, goal_coords) in goal_points {
+        for (i, (goal_vonorms, goal_coords)) in goal_points.iter().enumerate() {
             if states_equal(&current_node.vonorms, &current_node.coords, goal_vonorms, goal_coords) {
+                eprintln!("DEBUG: GOAL REACHED! Goal index {} at iteration {}", i, iterations);
                 return Some(reconstruct_path(
                     &came_from,
                     &current_node.vonorms,
                     &current_node.coords,
                 ));
+            }
+
+            // Debug: show minimum distance to each goal every 100 iterations
+            if verbose && iterations % 100 == 0 && i == 0 {
+                let min_h = goal_points.iter()
+                    .map(|(gv, gc)| euclidean_heuristic(&current_node.vonorms, &current_node.coords, gv, gc))
+                    .min_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal))
+                    .unwrap_or(f64::INFINITY);
+                eprintln!("  Min distance to any goal: {:.3}", min_h.sqrt());
             }
         }
 

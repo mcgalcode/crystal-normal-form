@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from cnf import CrystalNormalForm
+from ..utils.pdd import pdd_for_cnfs
 from .utils import no_atoms_closer_than
 from .neighbor_finder import NeighborFinder
 
@@ -16,6 +17,7 @@ class AStarNode:
     """Node in the A* search priority queue"""
     f_score: float
     g_score: float = field(compare=False)
+    h_score: float = field(compare=False)
     point: tuple = field(compare=False)
     counter: int = field(compare=False)  # For tie-breaking
 
@@ -24,6 +26,14 @@ class AStarNode:
 HeuristicFunc = Callable[[CrystalNormalForm, List[CrystalNormalForm]], float]
 FilterFunc = Callable[[CrystalNormalForm], bool]
 
+def pdd_heuristic(cnf: tuple, goals: list[CrystalNormalForm]) -> float:
+    xi = goals[0].xi
+    delta = goals[0].delta
+    els = goals[0].elements
+
+    pt = CrystalNormalForm.from_tuple(cnf, els, xi, delta)
+    dists = [pdd_for_cnfs(pt, g, k=20) for g in goals]
+    return 100*min(dists) ** 2
 
 def squared_euclidean_heuristic(cnf: tuple, goals: List[CrystalNormalForm]) -> float:
     """
@@ -141,7 +151,7 @@ def astar_pathfind(
 
     # Use default heuristic if not provided
     if heuristic is None:
-        heuristic = squared_euclidean_heuristic
+        heuristic = pdd_heuristic
 
     # Check if CNF is a goal
     def is_goal(cnf_point: tuple) -> bool:
@@ -170,6 +180,7 @@ def astar_pathfind(
         heapq.heappush(open_set, AStarNode(
             f_score=f,
             g_score=0.0,
+            h_score=h,
             point=start_key,
             counter=counter
         ))
@@ -201,13 +212,13 @@ def astar_pathfind(
                 print(f"Reached max iterations ({max_iterations})")
             return None
 
-        if verbose and iterations % 100 == 0:
+        if verbose and iterations % 5 == 0:
             te = time.perf_counter_ns()
             elapsed = round((te - ts) / 1e9, 3)
             total_instrumented_time = (time_neighbor_finding + time_filtering + time_heuristic +
                                       time_heap_ops + time_closed_check + time_goal_check + time_other)
 
-            print(f"\nStep {iterations}:  open={len(open_set)}, closed={len(closed_set)}, f_score={open_set[0].f_score:.2f} Elapsed: {elapsed:.2f}s")
+            print(f"Step {iterations}:  open={len(open_set)}, closed={len(closed_set)}, f_score={open_set[0].f_score:.2f}, h={open_set[0].h_score:.2f}, Elapsed: {elapsed:.2f}s")
 
             # if iterations >= 100 and total_instrumented_time > 0:
             #     print(f"  Time breakdown:")
@@ -320,6 +331,7 @@ def astar_pathfind(
                 heapq.heappush(open_set, AStarNode(
                     f_score=f,
                     g_score=tentative_g,
+                    h_score=h,
                     point=neighbor_point,
                     counter=counter
                 ))
