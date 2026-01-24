@@ -3,6 +3,7 @@ mod lnf;
 mod mnf;
 mod geometry;
 mod pathfinding;
+mod bidirectional;
 mod neighbors;
 
 use pyo3::prelude::*;
@@ -1204,7 +1205,8 @@ fn reconstruct_structure_from_cnf<'py>(
 ///     delta: Integer discretization factor
 ///     min_distance: Minimum allowed pairwise distance for filtering (e.g., 1.4 Angstroms)
 ///     max_iterations: Maximum iterations (0 for unlimited)
-///     verbose: Print progress every 100 iterations
+///     beam_width: Maximum size of open set (0 for unlimited, beam search)
+///     verbose: Print progress every 5 iterations
 ///
 /// Returns:
 ///     List of flat Vec<i32> (vonorms + coords concatenated) representing the path, or None if no path found
@@ -1219,6 +1221,7 @@ fn astar_pathfind_rust<'py>(
     delta: i32,
     min_distance: f64,
     max_iterations: usize,
+    beam_width: usize,
     verbose: bool,
 ) -> PyResult<Option<Vec<Vec<i32>>>> {
     use crate::pathfinding::astar_pathfind;
@@ -1281,6 +1284,104 @@ fn astar_pathfind_rust<'py>(
         delta,
         min_distance,
         max_iterations,
+        beam_width,
+        verbose,
+    );
+
+    Ok(result)
+}
+
+/// Bidirectional A* pathfinding from multiple start CNFs to multiple goal CNFs (pure Rust implementation)
+///
+/// Args:
+///     start_points: List of (vonorms, coords) tuples for starting CNFs
+///     goal_points: List of (vonorms, coords) tuples for goal CNFs
+///     elements: List of element symbols for all atoms (including origin)
+///     n_atoms: Number of atoms (including origin)
+///     xi: Lattice step size
+///     delta: Integer discretization factor
+///     min_distance: Minimum allowed pairwise distance for filtering (e.g., 1.4 Angstroms)
+///     max_iterations: Maximum iterations (0 for unlimited)
+///     beam_width: Maximum size of each open set (0 for unlimited, beam search)
+///     verbose: Print progress every 5 iterations
+///
+/// Returns:
+///     List of flat Vec<i32> (vonorms + coords concatenated) representing the path, or None if no path found
+#[pyfunction]
+fn bidirectional_astar_pathfind_rust<'py>(
+    _py: Python<'py>,
+    start_points: Vec<(Vec<i32>, Vec<i32>)>,
+    goal_points: Vec<(Vec<i32>, Vec<i32>)>,
+    elements: Vec<String>,
+    n_atoms: usize,
+    xi: f64,
+    delta: i32,
+    min_distance: f64,
+    max_iterations: usize,
+    beam_width: usize,
+    verbose: bool,
+) -> PyResult<Option<Vec<Vec<i32>>>> {
+    use crate::bidirectional::bidirectional_astar_pathfind;
+
+    // Validate inputs (same as astar_pathfind_rust)
+    if start_points.is_empty() {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "start_points cannot be empty"
+        ));
+    }
+    if goal_points.is_empty() {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "goal_points cannot be empty"
+        ));
+    }
+
+    let expected_coords_len = (n_atoms - 1) * 3;
+
+    // Validate all start points
+    for (i, (vonorms, coords)) in start_points.iter().enumerate() {
+        if vonorms.len() != 7 {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                format!("start_points[{}] vonorms must have exactly 7 elements", i)
+            ));
+        }
+        if coords.len() != expected_coords_len {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                format!("start_points[{}] coords must have {} elements ((n_atoms-1) * 3)", i, expected_coords_len)
+            ));
+        }
+    }
+
+    // Validate all goal points
+    for (i, (vonorms, coords)) in goal_points.iter().enumerate() {
+        if vonorms.len() != 7 {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                format!("goal_points[{}] vonorms must have exactly 7 elements", i)
+            ));
+        }
+        if coords.len() != expected_coords_len {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                format!("goal_points[{}] coords must have {} elements ((n_atoms-1) * 3)", i, expected_coords_len)
+            ));
+        }
+    }
+
+    if elements.len() != n_atoms {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            format!("elements must have {} elements (n_atoms)", n_atoms)
+        ));
+    }
+
+    // Call the Rust bidirectional pathfinding function
+    let result = bidirectional_astar_pathfind(
+        &start_points,
+        &goal_points,
+        &elements,
+        n_atoms,
+        xi,
+        delta,
+        min_distance,
+        max_iterations,
+        beam_width,
         verbose,
     );
 
@@ -1361,6 +1462,7 @@ fn rust_cnf(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(find_neighbor_tuples_rust, m)?)?;
     m.add_function(wrap_pyfunction!(reconstruct_structure_from_cnf, m)?)?;
     m.add_function(wrap_pyfunction!(astar_pathfind_rust, m)?)?;
+    m.add_function(wrap_pyfunction!(bidirectional_astar_pathfind_rust, m)?)?;
     m.add_function(wrap_pyfunction!(filter_neighbors_by_min_distance_rust, m)?)?;
     Ok(())
 }
