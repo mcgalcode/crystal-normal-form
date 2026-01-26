@@ -13,14 +13,14 @@ from dataclasses import dataclass, field
 from functools import cache
 
 from cnf import CrystalNormalForm
-from ..utils.pdd import pdd_for_cnfs, pdd_amd_for_cnfs
-from .utils import no_atoms_closer_than
-from .neighbor_finder import NeighborFinder
-from .search_filters import EnergyFilter, FilterSet, MinDistanceFilter
+from ...utils.pdd import pdd_for_cnfs, pdd_amd_for_cnfs
+from ..utils import no_atoms_closer_than
+from ..neighbor_finder import NeighborFinder
+from ..search_filters import EnergyFilter, FilterSet, MinDistanceFilter
 
 from pymatgen.core import Structure
 
-from .endpoints import get_endpoint_unit_cells
+from ..endpoints import get_endpoint_unit_cells
 
 USE_RUST = os.getenv('USE_RUST') == '1'
 
@@ -38,74 +38,147 @@ class AStarNode:
 HeuristicFunc = Callable[[CrystalNormalForm, List[CrystalNormalForm]], float]
 FilterFunc = Callable[[CrystalNormalForm], bool]
 
-def pdd_heuristic(cnf: tuple, goals: list[CrystalNormalForm]) -> float:
-    xi = goals[0].xi
-    delta = goals[0].delta
-    els = goals[0].elements
 
-    pt = CrystalNormalForm.from_tuple(cnf, els, xi, delta)
-    dists = [pdd_for_cnfs(pt, g, k=20) for g in goals]
-    return (min(dists) * 100) ** 3
+@dataclass
+class AStarSearchState:
+    """Complete state of an A* search, for saving/resuming or extracting frontier points"""
+    open_set: list[AStarNode]  # List of AStarNode
+    closed_set: Set[tuple]
+    came_from: dict  # point -> parent point
+    g_score: dict  # point -> cost from start
+    iterations: int
+    path: Optional[List[tuple]]  # The path if found, None otherwise
+    found_goal: bool
+    max_iterations_reached: bool
 
-def squared_euclidean_heuristic(cnf: tuple, goals: List[CrystalNormalForm]) -> float:
-    """
-    Compute squared Euclidean distance heuristic to nearest goal.
+    # Store CNF metadata for reconstructing CNF objects
+    xi: float = field(default=0.2)
+    delta: int = field(default=30)
+    elements: tuple = field(default_factory=tuple)
 
-    This is inadmissible (overestimates) but works well in practice for CNF navigation.
-    Uses sum of squared differences WITHOUT sqrt.
+    def get_top_frontier_points(self, n: int = 10, by: str = 'h_score') -> List[tuple]:
+        """
+        Get the n best points from the open set.
 
-    Args:
-        cnf: Current CNF state as flat tuple (vonorms + coords concatenated)
-        goals: List of goal CNF states
+        Args:
+            n: Number of points to return
+            by: Sort criterion - 'h_score' (closest to goal), 'f_score' (best overall),
+                or 'g_score' (most explored)
 
-    Returns:
-        Minimum squared Euclidean distance to any goal
-    """
-    vonorms = np.array(cnf[:7])
-    coords = np.array(cnf[7:])
+        Returns:
+            List of point tuples (vonorms + coords concatenated)
+        """
+        if not self.open_set:
+            return []
 
-    min_dist_sq = float('inf')
+        if by == 'h_score':
+            sorted_nodes = sorted(self.open_set, key=lambda x: x.h_score)
+        elif by == 'f_score':
+            sorted_nodes = sorted(self.open_set, key=lambda x: x.f_score)
+        elif by == 'g_score':
+            sorted_nodes = sorted(self.open_set, key=lambda x: -x.g_score)  # Higher g = more explored
+        else:
+            raise ValueError(f"Unknown sort criterion: {by}")
 
-    for goal in goals:
-        goal_vonorms = np.array(goal.lattice_normal_form.vonorms.tuple)
-        goal_coords = np.array(goal.motif_normal_form.coord_list)
+        return [node.point for node in sorted_nodes[:n]]
 
-        # Squared distance in vonorm space
-        vonorm_dist_sq = np.sum((vonorms - goal_vonorms) ** 2)
+    def get_top_frontier_cnfs(self, n: int = 10, by: str = 'h_score') -> List['CrystalNormalForm']:
+        """
+        Get the n best points from the open set as CNF objects.
 
-        # Squared distance in coord space
-        coord_dist_sq = np.sum((coords - goal_coords) ** 2)
+        Args:
+            n: Number of CNFs to return
+            by: Sort criterion - 'h_score', 'f_score', or 'g_score'
 
-        # Combined squared distance (no sqrt)
-        dist_sq = vonorm_dist_sq + coord_dist_sq
-        min_dist_sq = min(min_dist_sq, dist_sq)
+        Returns:
+            List of CrystalNormalForm objects
+        """
+        points = self.get_top_frontier_points(n, by)
+        return [
+            CrystalNormalForm.from_tuple(pt, self.elements, self.xi, self.delta)
+            for pt in points
+        ]
 
-    return min_dist_sq
+    def frontier_stats(self) -> dict:
+        """Get statistics about the current frontier (open set)"""
+        if not self.open_set:
+            return {'size': 0}
 
-def manhattan_distance(cnf: tuple, goals: List[CrystalNormalForm]) -> float:
-    """
-    Compute squared Euclidean distance heuristic to nearest goal.
+        h_scores = [n.h_score for n in self.open_set]
+        g_scores = [n.g_score for n in self.open_set]
+        f_scores = [n.f_score for n in self.open_set]
 
-    This is inadmissible (overestimates) but works well in practice for CNF navigation.
-    Uses sum of squared differences WITHOUT sqrt.
+        return {
+            'size': len(self.open_set),
+            'closed_size': len(self.closed_set),
+            'h_min': min(h_scores),
+            'h_max': max(h_scores),
+            'h_mean': sum(h_scores) / len(h_scores),
+            'g_min': min(g_scores),
+            'g_max': max(g_scores),
+            'g_mean': sum(g_scores) / len(g_scores),
+            'f_min': min(f_scores),
+            'f_max': max(f_scores),
+        }
 
-    Args:
-        cnf: Current CNF state as flat tuple (vonorms + coords concatenated)
-        goals: List of goal CNF states
+    def to_dict(self) -> dict:
+        """Serialize the search state to a dictionary for JSON saving"""
+        return {
+            'open_set': [
+                {
+                    'f_score': node.f_score,
+                    'g_score': node.g_score,
+                    'h_score': node.h_score,
+                    'point': list(node.point),
+                    'counter': node.counter
+                }
+                for node in self.open_set
+            ],
+            'closed_set': [list(pt) for pt in self.closed_set],
+            'came_from': {str(list(k)): list(v) for k, v in self.came_from.items()},
+            'g_score': {str(list(k)): v for k, v in self.g_score.items()},
+            'iterations': self.iterations,
+            'path': [list(pt) for pt in self.path] if self.path else None,
+            'found_goal': self.found_goal,
+            'max_iterations_reached': self.max_iterations_reached,
+            'xi': self.xi,
+            'delta': self.delta,
+            'elements': list(self.elements)
+        }
 
-    Returns:
-        Minimum squared Euclidean distance to any goal
-    """
+    @classmethod
+    def from_dict(cls, data: dict) -> 'AStarSearchState':
+        """Deserialize a search state from a dictionary"""
+        open_set = [
+            AStarNode(
+                f_score=node['f_score'],
+                g_score=node['g_score'],
+                h_score=node['h_score'],
+                point=tuple(node['point']),
+                counter=node['counter']
+            )
+            for node in data['open_set']
+        ]
+        heapq.heapify(open_set)
 
-    manhattan_dist = float('inf')
-    current_coords = np.array(cnf)
+        closed_set = {tuple(pt) for pt in data['closed_set']}
+        came_from = {tuple(json.loads(k)): tuple(v) for k, v in data['came_from'].items()}
+        g_score = {tuple(json.loads(k)): v for k, v in data['g_score'].items()}
+        path = [tuple(pt) for pt in data['path']] if data['path'] else None
 
-    for goal in goals:
-        goal_coords = np.array(goal.coords)
-        curr_dist = np.sum(np.abs(current_coords - goal_coords))
-        manhattan_dist = min(manhattan_dist, curr_dist)
-
-    return manhattan_dist * 2
+        return cls(
+            open_set=open_set,
+            closed_set=closed_set,
+            came_from=came_from,
+            g_score=g_score,
+            iterations=data['iterations'],
+            path=path,
+            found_goal=data['found_goal'],
+            max_iterations_reached=data['max_iterations_reached'],
+            xi=data['xi'],
+            delta=data['delta'],
+            elements=tuple(data['elements'])
+        )
 
 
 def astar_pathfind(
@@ -115,8 +188,9 @@ def astar_pathfind(
     filter_set: Optional[FilterSet] = None,
     max_iterations: int = 100000,
     beam_width: Optional[int] = None,
+    greedy: bool = False,
     verbose: bool = False
-) -> Optional[List[CrystalNormalForm]]:
+) -> AStarSearchState:
     """
     A* pathfinding between CNF states with customizable heuristic and filtering.
 
@@ -132,7 +206,12 @@ def astar_pathfind(
         verbose: Print progress every 100 iterations
 
     Returns:
-        List of CNF states forming the path from start to goal, or None if no path found
+        AStarSearchState containing the complete search state:
+        - path: List of point tuples if goal was found, None otherwise
+        - open_set, closed_set, came_from, g_score: Full search state
+        - found_goal: Whether a goal was reached
+        - max_iterations_reached: Whether search stopped due to iteration limit
+        Use state.get_top_frontier_cnfs(n) to get best frontier points for reverse search.
     """
     if not start_cnfs:
         raise ValueError("start_cnfs cannot be empty")
@@ -190,7 +269,19 @@ def astar_pathfind(
         if max_iterations > 0 and iterations > max_iterations:
             if verbose:
                 print(f"Reached max iterations ({max_iterations})")
-            return None
+            return AStarSearchState(
+                open_set=open_set,
+                closed_set=closed_set,
+                came_from=came_from,
+                g_score=g_score,
+                iterations=iterations,
+                path=None,
+                found_goal=False,
+                max_iterations_reached=True,
+                xi=xi,
+                delta=delta,
+                elements=elements
+            )
 
         if verbose and iterations % 5 == 0:
             te = time.perf_counter_ns()
@@ -210,16 +301,26 @@ def astar_pathfind(
         if goal_reached:
             if verbose:
                 print(f"\n✅ Found goal after {iterations} iterations!")
-            return _reconstruct_path(current_point, came_from)
+            path = _reconstruct_path(current_point, came_from)
+            return AStarSearchState(
+                open_set=open_set,
+                closed_set=closed_set,
+                came_from=came_from,
+                g_score=g_score,
+                iterations=iterations,
+                path=path,
+                found_goal=True,
+                max_iterations_reached=False,
+                xi=xi,
+                delta=delta,
+                elements=elements
+            )
 
         # Mark as visited
         closed_set.add(current_point)
 
         # Get neighbors
         neighbors = neighbor_finder.find_neighbor_tuples(current_point)
-
-        if iterations == 1 and verbose:
-            print(f"First iteration: found {len(neighbors)} raw neighbors")
 
         # Apply filter if provided
         if filter_set is not None:
@@ -251,8 +352,10 @@ def astar_pathfind(
                 # Calculate f_score
                 h = heuristic(neighbor_point, goal_cnfs)
 
-                # f = tentative_g + h
-                f = h
+                if greedy:
+                    f = h
+                else:
+                    f = tentative_g + h
 
                 # Add to open set
                 heapq.heappush(open_set, AStarNode(
@@ -274,7 +377,19 @@ def astar_pathfind(
     if verbose:
         print(f"\n❌ No path found after {iterations} iterations")
 
-    return None
+    return AStarSearchState(
+        open_set=open_set,
+        closed_set=closed_set,
+        came_from=came_from,
+        g_score=g_score,
+        iterations=iterations,
+        path=None,
+        found_goal=False,
+        max_iterations_reached=False,
+        xi=xi,
+        delta=delta,
+        elements=elements
+    )
 
 
 def _reconstruct_path(
@@ -437,7 +552,8 @@ def bidirectional_astar_pathfind(
                     meeting_point = current_point
                     if verbose:
                         print(f"\n✅ Found meeting point at iteration {iterations}! Path length: {path_length}")
-                    # Reconstruct and return path immediately
+                    # Reconstruct and return pa
+                    # th immediately
                     return _reconstruct_bidirectional_path(
                         meeting_point, forward_came_from, backward_came_from
                     )
@@ -602,6 +718,25 @@ def _reconstruct_bidirectional_path(
     return complete_path
 
 
+def load_search_state(json_path: str) -> Optional[AStarSearchState]:
+    """
+    Load a saved search state from a JSON file.
+
+    Args:
+        json_path: Path to the JSON file containing the saved state
+
+    Returns:
+        AStarSearchState if the file contains a search_state, None otherwise
+    """
+    with open(json_path, 'r') as f:
+        data = json.load(f)
+
+    if 'search_state' not in data:
+        return None
+
+    return AStarSearchState.from_dict(data['search_state'])
+
+
 def pathfind_and_save(start_cif,
                       end_cif,
                       output_json,
@@ -681,9 +816,11 @@ def pathfind_and_save(start_cif,
     print(f"Start points: {len(start_points)}")
     print(f"Goal points: {len(goal_points)}")
 
+    search_state = None  # Will be set if using Python non-bidirectional A*
+
     if use_python:
         # Use Python A* implementation
-        heuristic = pdd_heuristic
+        heuristic = manhattan_distance
         filter_set = FilterSet([MinDistanceFilter(min_distance)], use_structs = not USE_RUST)
         # filter_set = FilterSet([EnergyFilter.from_cnfs(start_cnfs + goal_cnfs)])
         if bidirectional:
@@ -697,7 +834,7 @@ def pathfind_and_save(start_cif,
                 verbose=True
             )
         else:
-            path = astar_pathfind(
+            search_state = astar_pathfind(
                 start_cnfs,
                 goal_cnfs,
                 heuristic,
@@ -706,6 +843,75 @@ def pathfind_and_save(start_cif,
                 beam_width=beam_width,
                 verbose=True
             )
+            path = search_state.path
+
+            # finished = False
+            # round = 1
+            # # while not finished:
+            # #     print(f"Starting round {round}!")
+            # #     search_state = astar_pathfind(
+            # #         start_cnfs,
+            # #         goal_cnfs,
+            # #         heuristic,
+            # #         filter_set,
+            # #         max_iterations=max_iterations,
+            # #         beam_width=beam_width,
+            # #         verbose=True
+            # #     )
+            # #     if search_state.found_goal:
+            # #         finished = True
+            # #         path = search_state.path
+            # #     round += 1
+            # #     start_cnfs = [heapq.heappop(search_state.open_set).point for _ in range(1)]
+            # #     start_cnfs = [CrystalNormalForm.from_tuple(sc, elements=elements, xi=xi, delta=delta) for sc in start_cnfs]
+            # forward_results = []
+            # backward_results = []
+            # forward_goals = goal_cnfs
+            # forward_starts = start_cnfs
+
+            # while not finished:
+            #     forward_result = astar_pathfind(
+            #         forward_starts,
+            #         forward_goals,
+            #         heuristic,
+            #         filter_set,
+            #         max_iterations=max_iterations,
+            #         beam_width=beam_width,
+            #         greedy=True,
+            #         verbose=True
+            #     )
+            #     forward_results.append(forward_result)
+
+            #     if forward_result.found_goal:
+            #         finished = True
+            #         break
+
+            #     backward_goals = [heapq.heappop(forward_result.open_set).point for _ in range(1)]
+            #     backward_goals = [CrystalNormalForm.from_tuple(bg, elements=elements, xi=xi, delta=delta) for bg in backward_goals]
+            #     backward_starts = forward_goals
+
+            #     print("Beginning backward search!")
+            #     backward_result = astar_pathfind(
+            #         backward_starts,
+            #         backward_goals,
+            #         heuristic,
+            #         filter_set,
+            #         max_iterations=100,
+            #         beam_width=beam_width,
+            #         greedy=True,
+            #         verbose=True
+            #     )
+            #     backward_results.append(backward_result)
+            #     if backward_result.found_goal:
+            #         finished = True
+            #         break
+
+            #     round += 1
+            #     forward_goals = [heapq.heappop(backward_result.open_set).point for _ in range(1)]
+            #     forward_goals = [CrystalNormalForm.from_tuple(fg, elements=elements, xi=xi, delta=delta) for fg in forward_goals]                    
+            #     forward_starts = backward_goals
+                
+        
     else:
         # Use Rust A* implementation (default)
         if bidirectional:
@@ -735,8 +941,35 @@ def pathfind_and_save(start_cif,
                 verbose=True
             )
 
+    # Prepare output metadata
+    output_data = {
+        "metadata": {
+            "xi": xi,
+            "delta": delta,
+            "elements": elements,
+            "n_atoms": n_atoms,
+            "min_distance": min_distance,
+            "start_cif": start_cif,
+            "end_cif": end_cif,
+            "found_goal": path is not None
+        }
+    }
+
+    if search_state is not None:
+        output_data["metadata"]["iterations"] = search_state.iterations
+        output_data["metadata"]["max_iterations_reached"] = search_state.max_iterations_reached
+        # output_data["search_state"] = search_state.to_dict()
+        print(f"\nSearch state: {search_state.frontier_stats()}")
+
     if path is None:
         print("❌ No path found!")
+        output_data["metadata"]["path_length"] = 0
+        output_data["path"] = []
+
+        # Save state even when no path found
+        with open(output_json, 'w') as f:
+            json.dump(output_data, f, indent=2)
+        print(f"\n💾 Search state saved to {output_json}")
         return False
 
     print(f"\n✅ Path found with {len(path)} steps!")
@@ -782,26 +1015,14 @@ def pathfind_and_save(start_cif,
         print(f"❌ Path doesn't end at any goal state!")
         return False
 
-    # Prepare JSON output
-    output_data = {
-        "metadata": {
-            "xi": xi,
-            "delta": delta,
-            "elements": elements,
-            "n_atoms": n_atoms,
-            "min_distance": min_distance,
-            "path_length": len(path),
-            "start_cif": start_cif,
-            "end_cif": end_cif
-        },
-        "path": [
-            {
-                "vonorms": vonorms,
-                "coords": coords
-            }
-            for vonorms, coords in path_split
-        ]
-    }
+    output_data["metadata"]["path_length"] = len(path)
+    output_data["path"] = [
+        {
+            "vonorms": vonorms,
+            "coords": coords
+        }
+        for vonorms, coords in path_split
+    ]
 
     # Save to JSON
     with open(output_json, 'w') as f:
