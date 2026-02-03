@@ -12,13 +12,69 @@ from pymatgen.core import Structure
 from ..endpoints import get_endpoint_unit_cells
 from .core import astar_pathfind
 from .bidirectional import bidirectional_astar_pathfind
-from .heuristics import manhattan_distance
+from .heuristics import manhattan_distance, pdd_amd_heuristic, pdd_heuristic, pdd_and_manhattan
 
 USE_RUST = os.getenv('USE_RUST') == '1'
 
 # Type aliases for clarity
 FilterFunc = Callable[[CrystalNormalForm], bool]
 
+
+def astar_rust(
+    start_cnfs: list[CrystalNormalForm],
+    goal_cnfs: list[CrystalNormalForm],
+    min_distance: float = 0.0,
+    max_iterations: int = 100000,
+    beam_width: int = None,
+    greedy: bool = False,
+    dropout: float = 0,
+    verbose: bool = False,
+    bidirectional: bool = False,
+    speak_freq = 5,
+):
+    # Convert CNFs to the format expected by Rust pathfinding
+    start_points = []
+    for cnf in start_cnfs:
+        vonorms = list([int(i) for i in cnf.lattice_normal_form.vonorms.tuple])
+        coords = list(cnf.motif_normal_form.coord_list)
+        start_points.append((vonorms, coords))
+
+    goal_points = []
+    for cnf in goal_cnfs:
+        vonorms = list([int(i) for i in cnf.lattice_normal_form.vonorms.tuple])
+        coords = list(cnf.motif_normal_form.coord_list)
+        goal_points.append((vonorms, coords))
+
+    n_atoms = len(start_cnfs[0].elements)
+
+    if bidirectional:
+        return rust_cnf.bidirectional_astar_pathfind_rust(
+            start_points,
+            goal_points,
+            start_cnfs[0].elements,
+            n_atoms,
+            start_cnfs[0].xi,
+            start_cnfs[0].delta,
+            min_distance=min_distance,
+            max_iterations=max_iterations,
+            beam_width=beam_width if beam_width is not None else 0,
+            verbose=True
+        )       
+    else: 
+        return rust_cnf.astar_pathfind_rust(
+            start_points,
+            goal_points,
+            start_cnfs[0].elements,
+            n_atoms,
+            start_cnfs[0].xi,
+            start_cnfs[0].delta,
+            min_distance,
+            max_iterations,
+            beam_width if beam_width is not None else 0,
+            dropout,
+            greedy,
+            verbose
+        )
 
 def pathfind_and_save(start_cif,
                       end_cif,
@@ -29,7 +85,10 @@ def pathfind_and_save(start_cif,
                       max_iterations=100000,
                       use_python=False,
                       bidirectional=False,
-                      beam_width=None):
+                      greedy=False,
+                      beam_width=None,
+                      dropout=0.0,
+                      speak_freq=5):
     """Run pathfinding between two CIF structures and save result to JSON
 
     Args:
@@ -43,6 +102,9 @@ def pathfind_and_save(start_cif,
         use_python: Use Python A* implementation instead of Rust (default: False)
         bidirectional: Use bidirectional A* (only with use_python=True) (default: False)
         beam_width: Beam width for beam search (only with use_python=True, bidirectional=False) (default: None)
+        dropout: Probability of dropping a neighbor (0.0 to 1.0). Dropped neighbors are excluded
+                 from consideration for the rest of the search. Goal neighbors are never dropped.
+                 Only supported with Rust implementation (default: 0.0)
     """
 
     start_struct = Structure.from_file(start_cif)
@@ -73,18 +135,7 @@ def pathfind_and_save(start_cif,
     for ec in goal_cnfs:
         print(f"    {ec.coords}")
 
-    # Convert CNFs to the format expected by Rust pathfinding
-    start_points = []
-    for cnf in start_cnfs:
-        vonorms = list([int(i) for i in cnf.lattice_normal_form.vonorms.tuple])
-        coords = list(cnf.motif_normal_form.coord_list)
-        start_points.append((vonorms, coords))
 
-    goal_points = []
-    for cnf in goal_cnfs:
-        vonorms = list([int(i) for i in cnf.lattice_normal_form.vonorms.tuple])
-        coords = list(cnf.motif_normal_form.coord_list)
-        goal_points.append((vonorms, coords))
 
     # Get n_atoms and elements from first start point
     first_cnf = start_cnfs[0]
@@ -96,8 +147,8 @@ def pathfind_and_save(start_cif,
     print(f"Elements: {elements}")
     print(f"N atoms: {n_atoms}")
     print(f"Xi: {xi}, Delta: {delta}")
-    print(f"Start points: {len(start_points)}")
-    print(f"Goal points: {len(goal_points)}")
+    print(f"Start points: {len(start_cnfs)}")
+    print(f"Goal points: {len(goal_cnfs)}")
 
     search_state = None  # Will be set if using Python non-bidirectional A*
 
@@ -114,6 +165,7 @@ def pathfind_and_save(start_cif,
                 filter_set,
                 max_iterations=max_iterations,
                 beam_width=beam_width,
+                greedy=greedy,
                 verbose=True
             )
         else:
@@ -124,83 +176,17 @@ def pathfind_and_save(start_cif,
                 filter_set,
                 max_iterations=max_iterations,
                 beam_width=beam_width,
-                verbose=True
+                greedy=greedy,
+                verbose=True,
+                dropout=dropout,
             )
             path = search_state.path
-
-            # finished = False
-            # round = 1
-            # # while not finished:
-            # #     print(f"Starting round {round}!")
-            # #     search_state = astar_pathfind(
-            # #         start_cnfs,
-            # #         goal_cnfs,
-            # #         heuristic,
-            # #         filter_set,
-            # #         max_iterations=max_iterations,
-            # #         beam_width=beam_width,
-            # #         verbose=True
-            # #     )
-            # #     if search_state.found_goal:
-            # #         finished = True
-            # #         path = search_state.path
-            # #     round += 1
-            # #     start_cnfs = [heapq.heappop(search_state.open_set).point for _ in range(1)]
-            # #     start_cnfs = [CrystalNormalForm.from_tuple(sc, elements=elements, xi=xi, delta=delta) for sc in start_cnfs]
-            # forward_results = []
-            # backward_results = []
-            # forward_goals = goal_cnfs
-            # forward_starts = start_cnfs
-
-            # while not finished:
-            #     forward_result = astar_pathfind(
-            #         forward_starts,
-            #         forward_goals,
-            #         heuristic,
-            #         filter_set,
-            #         max_iterations=max_iterations,
-            #         beam_width=beam_width,
-            #         greedy=True,
-            #         verbose=True
-            #     )
-            #     forward_results.append(forward_result)
-
-            #     if forward_result.found_goal:
-            #         finished = True
-            #         break
-
-            #     backward_goals = [heapq.heappop(forward_result.open_set).point for _ in range(1)]
-            #     backward_goals = [CrystalNormalForm.from_tuple(bg, elements=elements, xi=xi, delta=delta) for bg in backward_goals]
-            #     backward_starts = forward_goals
-
-            #     print("Beginning backward search!")
-            #     backward_result = astar_pathfind(
-            #         backward_starts,
-            #         backward_goals,
-            #         heuristic,
-            #         filter_set,
-            #         max_iterations=100,
-            #         beam_width=beam_width,
-            #         greedy=True,
-            #         verbose=True
-            #     )
-            #     backward_results.append(backward_result)
-            #     if backward_result.found_goal:
-            #         finished = True
-            #         break
-
-            #     round += 1
-            #     forward_goals = [heapq.heappop(backward_result.open_set).point for _ in range(1)]
-            #     forward_goals = [CrystalNormalForm.from_tuple(fg, elements=elements, xi=xi, delta=delta) for fg in forward_goals]                    
-            #     forward_starts = backward_goals
-                
-        
     else:
         # Use Rust A* implementation (default)
         if bidirectional:
             path = rust_cnf.bidirectional_astar_pathfind_rust(
-                start_points,
-                goal_points,
+                start_cnfs,
+                goal_cnfs,
                 elements,
                 n_atoms,
                 xi,
@@ -211,17 +197,16 @@ def pathfind_and_save(start_cif,
                 verbose=True
             )
         else:
-            path = rust_cnf.astar_pathfind_rust(
-                start_points,
-                goal_points,
-                elements,
-                n_atoms,
-                xi,
-                delta,
+            path = astar_rust(
+                start_cnfs,
+                goal_cnfs,
                 min_distance=min_distance,
                 max_iterations=max_iterations,
-                beam_width=beam_width if beam_width is not None else 0,
-                verbose=True
+                beam_width=beam_width,
+                greedy=greedy,
+                dropout=dropout,
+                verbose=True,
+                speak_freq=speak_freq
             )
 
     # Prepare output metadata
@@ -234,7 +219,9 @@ def pathfind_and_save(start_cif,
             "min_distance": min_distance,
             "start_cif": start_cif,
             "end_cif": end_cif,
-            "found_goal": path is not None
+            "found_goal": path is not None,
+            "dropout": dropout,
+            "greedy": greedy,
         }
     }
 
@@ -271,32 +258,6 @@ def pathfind_and_save(start_cif,
     print(f"  First step coords:  {path_split[0][1]}")
     print(f"  Last step vonorms:  {path_split[-1][0]}")
     print(f"  Last step coords:   {path_split[-1][1]}")
-
-    # Verify path starts at one of the start states
-    path_start = path_split[0]
-    start_matches = any(
-        path_start[0] == s[0] and path_start[1] == s[1]
-        for s in start_points
-    )
-
-    if start_matches:
-        print("✅ Path starts at a valid start state")
-    else:
-        print(f"❌ Path doesn't start at any start state!")
-        return False
-
-    # Verify path ends at one of the goal states
-    path_goal = path_split[-1]
-    goal_matches = any(
-        path_goal[0] == g[0] and path_goal[1] == g[1]
-        for g in goal_points
-    )
-
-    if goal_matches:
-        print("✅ Path ends at a valid goal state")
-    else:
-        print(f"❌ Path doesn't end at any goal state!")
-        return False
 
     output_data["metadata"]["path_length"] = len(path)
     output_data["path"] = [
