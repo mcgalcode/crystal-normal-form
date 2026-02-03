@@ -73,7 +73,8 @@ def astar_rust(
             beam_width if beam_width is not None else 0,
             dropout,
             greedy,
-            verbose
+            verbose,
+            speak_freq
         )
 
 def pathfind_and_save(start_cif,
