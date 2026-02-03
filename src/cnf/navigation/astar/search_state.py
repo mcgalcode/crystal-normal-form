@@ -68,6 +68,15 @@ class AStarSearchState:
             CrystalNormalForm.from_tuple(pt, self.elements, self.xi, self.delta)
             for pt in points
         ]
+    
+    def get_cnfs_on_path(self):
+        if self.path is None:
+            return None
+        else:
+            return [
+                CrystalNormalForm.from_tuple(pt, self.elements, self.xi, self.delta)
+                for pt in self.path
+            ]   
 
     def frontier_stats(self) -> dict:
         """Get statistics about the current frontier (open set)"""
