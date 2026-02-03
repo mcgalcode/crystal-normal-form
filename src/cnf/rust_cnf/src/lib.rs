@@ -1206,13 +1206,17 @@ fn reconstruct_structure_from_cnf<'py>(
 ///     min_distance: Minimum allowed pairwise distance for filtering (e.g., 1.4 Angstroms)
 ///     max_iterations: Maximum iterations (0 for unlimited)
 ///     beam_width: Maximum size of open set (0 for unlimited, beam search)
+///     dropout: Probability of dropping a neighbor (0.0 to 1.0). Dropped neighbors are excluded
+///              from consideration for the rest of the search. Goal neighbors are never dropped.
+///     greedy: If true, use greedy best-first search (f = h) instead of A* (f = g + h).
+///             This ignores path cost and only considers heuristic distance to goal.
 ///     verbose: Print progress every 5 iterations
 ///
 /// Returns:
 ///     List of flat Vec<i32> (vonorms + coords concatenated) representing the path, or None if no path found
 #[pyfunction]
 fn astar_pathfind_rust<'py>(
-    _py: Python<'py>,
+    py: Python<'py>,
     start_points: Vec<(Vec<i32>, Vec<i32>)>,
     goal_points: Vec<(Vec<i32>, Vec<i32>)>,
     elements: Vec<String>,
@@ -1222,7 +1226,10 @@ fn astar_pathfind_rust<'py>(
     min_distance: f64,
     max_iterations: usize,
     beam_width: usize,
+    dropout: f64,
+    greedy: bool,
     verbose: bool,
+    speak_freq: usize,
 ) -> PyResult<Option<Vec<Vec<i32>>>> {
     use crate::pathfinding::astar_pathfind;
 
@@ -1285,8 +1292,17 @@ fn astar_pathfind_rust<'py>(
         min_distance,
         max_iterations,
         beam_width,
+        dropout,
+        greedy,
         verbose,
+        speak_freq,
     );
+
+    // Check if we were interrupted - if so, raise KeyboardInterrupt
+    use std::sync::atomic::Ordering as AtomicOrdering;
+    if crate::pathfinding::WAS_INTERRUPTED.swap(false, AtomicOrdering::SeqCst) {
+        return Err(pyo3::exceptions::PyKeyboardInterrupt::new_err("Search interrupted by user"));
+    }
 
     Ok(result)
 }

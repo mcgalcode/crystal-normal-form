@@ -5,9 +5,19 @@
 
 use std::collections::{BinaryHeap, HashMap, HashSet};
 use std::cmp::Ordering;
+use std::sync::atomic::{AtomicBool, Ordering as AtomicOrdering};
+
+use pyo3::Python;
+use rand::Rng;
 
 use crate::neighbors::find_neighbor_tuples;
 use crate::geometry::filter_neighbors_by_min_distance;
+
+/// How often to check for Python interrupts (Ctrl+C)
+const INTERRUPT_CHECK_INTERVAL: usize = 100;
+
+/// Flag to track if search was interrupted (used to propagate KeyboardInterrupt to Python)
+pub static WAS_INTERRUPTED: AtomicBool = AtomicBool::new(false);
 
 /// A node in the A* search, ordered by f_score (lower is better)
 #[derive(Clone)]
@@ -125,6 +135,10 @@ fn states_equal(vonorms1: &[i32], coords1: &[i32], vonorms2: &[i32], coords2: &[
 ///     min_distance: Minimum allowed distance for filtering (e.g., 1.4)
 ///     max_iterations: Maximum iterations (0 for unlimited)
 ///     beam_width: Maximum size of open set (0 for unlimited, beam search)
+///     dropout: Probability of dropping a neighbor (0.0 to 1.0). Dropped neighbors are excluded
+///              from consideration for the rest of the search. Goal neighbors are never dropped.
+///     greedy: If true, use greedy best-first search (f = h) instead of A* (f = g + h).
+///             This ignores path cost and only considers heuristic distance to goal.
 ///     verbose: Print progress every 5 iterations
 ///
 /// Returns:
@@ -139,7 +153,10 @@ pub fn astar_pathfind(
     min_distance: f64,
     max_iterations: usize,
     beam_width: usize,
+    dropout: f64,
+    greedy: bool,
     verbose: bool,
+    speak_freq: usize,
 ) -> Option<Vec<Vec<i32>>> {
     // Check if any start equals any goal
     for (start_vonorms, start_coords) in start_points {
@@ -193,6 +210,16 @@ pub fn astar_pathfind(
     let mut iterations = 0usize;
     let start_time = std::time::Instant::now();
 
+    // Dropout: track dropped neighbor keys (never considered again)
+    let mut dropped: HashSet<Vec<i32>> = HashSet::new();
+    let mut rng = rand::thread_rng();
+
+    // Pre-compute goal keys for fast lookup (never drop goals)
+    let goal_keys: HashSet<Vec<i32>> = goal_points
+        .iter()
+        .map(|(v, c)| make_key(v, c))
+        .collect();
+
     if verbose {
         eprintln!("Starting A* search with {} start states and {} goal states", start_points.len(), goal_points.len());
     }
@@ -207,10 +234,22 @@ pub fn astar_pathfind(
 
         iterations += 1;
 
+        // Check for Python interrupt (Ctrl+C) periodically
+        if iterations % INTERRUPT_CHECK_INTERVAL == 0 {
+            let interrupted = Python::with_gil(|py| py.check_signals().is_err());
+            if interrupted {
+                if verbose {
+                    eprintln!("\n⚠️ Search interrupted by user at iteration {}", iterations);
+                }
+                WAS_INTERRUPTED.store(true, AtomicOrdering::SeqCst);
+                return None;
+            }
+        }
+
         let current_key = make_key(&current_node.vonorms, &current_node.coords);
 
         // Verbose logging - match Python format
-        if verbose && iterations % 5 == 0 {
+        if verbose && iterations % speak_freq == 0 {
             let elapsed = start_time.elapsed();
             eprintln!("Step {}:  open={}, closed={}, f={:.2}, g={:.2}, h={:.6}, Elapsed: {:.2}s",
                      iterations,
@@ -272,6 +311,36 @@ pub fn astar_pathfind(
             a.0.cmp(&b.0).then_with(|| a.1.cmp(&b.1))
         });
 
+        // Apply dropout: filter out previously dropped neighbors and randomly drop new ones
+        let filtered_neighbors: Vec<_> = if dropout > 0.0 {
+            filtered_neighbors
+                .into_iter()
+                .filter(|(v, c)| {
+                    let key = make_key(v, c);
+
+                    // Skip if already dropped
+                    if dropped.contains(&key) {
+                        return false;
+                    }
+
+                    // Never drop goals
+                    if goal_keys.contains(&key) {
+                        return true;
+                    }
+
+                    // Randomly drop with probability `dropout`
+                    if rng.gen::<f64>() < dropout {
+                        dropped.insert(key);
+                        return false;
+                    }
+
+                    true
+                })
+                .collect()
+        } else {
+            filtered_neighbors
+        };
+
         // Explore each neighbor
         for (neighbor_vonorms, neighbor_coords) in filtered_neighbors {
             let neighbor_key = make_key(&neighbor_vonorms, &neighbor_coords);
@@ -297,7 +366,9 @@ pub fn astar_pathfind(
                     .map(|(goal_vonorms, goal_coords)| manhattan_heuristic(&neighbor_vonorms, &neighbor_coords, goal_vonorms, goal_coords))
                     .min_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal))
                     .unwrap_or(0.0);
-                let f = tentative_g + h;
+
+                // In greedy mode, f = h (ignore path cost); otherwise f = g + h (standard A*)
+                let f = if greedy { h } else { tentative_g + h };
 
                 // Add to open set
                 open_set.push(AStarNode {
