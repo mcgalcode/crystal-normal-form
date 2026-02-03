@@ -185,18 +185,23 @@ def test_can_manipulate_incoming_points(search_store: SearchProcessStore,
 
     nbs = find_neighbors(zr_bcc_cnfs[0])
 
-    incoming_pts = search_store.get_and_empty_incoming_points(sp_id)
+    incoming_pts, ids = search_store.get_incoming_points(sp_id)
     assert len(incoming_pts) == 0
 
     for nb in nbs:
         search_store.add_incoming_point(sp_id, nb)
     
-    incoming_pts = search_store.get_and_empty_incoming_points(sp_id)
+    incoming_pts, ids = search_store.get_incoming_points(sp_id)
     assert len(incoming_pts) == len(nbs)
     assert set(incoming_pts) == set(nbs)
 
-    incoming_pts = search_store.get_and_empty_incoming_points(sp_id)
+    incoming_pts, ids = search_store.get_incoming_points(sp_id)
+    assert len(incoming_pts) == len(nbs)
+
+    search_store.delete_incoming_points_by_ids(ids)
+    incoming_pts, ids = search_store.get_incoming_points(sp_id)
     assert len(incoming_pts) == 0
+
 
 def test_can_manipulate_incoming_points_batch(search_store: SearchProcessStore,
                                         zr_bcc_cnfs,
@@ -211,16 +216,17 @@ def test_can_manipulate_incoming_points_batch(search_store: SearchProcessStore,
 
     nbs = find_neighbors(zr_bcc_cnfs[0])
 
-    incoming_pts = search_store.get_and_empty_incoming_points(sp_id)
+    incoming_pts, ids = search_store.get_incoming_points(sp_id)
     assert len(incoming_pts) == 0
 
     search_store.bulk_add_incoming_points(sp_id, nbs)
     
-    incoming_pts = search_store.get_and_empty_incoming_points(sp_id)
+    incoming_pts, ids = search_store.get_incoming_points(sp_id)
     assert len(incoming_pts) == len(nbs)
     assert set(incoming_pts) == set(nbs)
 
-    incoming_pts = search_store.get_and_empty_incoming_points(sp_id)
+    search_store.delete_incoming_points_by_ids(ids)
+    incoming_pts, ids = search_store.get_incoming_points(sp_id)
     assert len(incoming_pts) == 0
 
 def test_intersecting_searched_ids(search_store: SearchProcessStore,

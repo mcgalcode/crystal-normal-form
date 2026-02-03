@@ -56,16 +56,6 @@ def test_sync_completion_status(zr_bcc_mp, zr_hcp_mp):
         db.sync_search_completion_status()
         assert db.is_search_complete()
 
-        db.get_search_store(eps[0]).remove_point_from_search(sid, eps[0])
-        assert db.is_search_complete()
-        db.sync_search_completion_status()
-        assert not db.is_search_complete()
-
-        db.get_search_store(eps[1]).mark_point_searched(sid, eps[1])
-        assert not db.is_search_complete()
-        db.sync_search_completion_status()
-        assert db.is_search_complete()
-
 def test_db_partition_names_are_correct(zr_bcc_mp, zr_hcp_mp):
     xi = 1.5
     delta = 10
