@@ -1,6 +1,8 @@
+import math
+
 from tensorpotential.calculator.foundation_models import grace_fm, GRACEModels
 from ..crystal_normal_form import CrystalNormalForm
-from ..navigation.neighbor_finder import NeighborFinder
+from ..navigation import find_neighbors
 from ase import Atoms
 from .base_calculator import BaseCalculator
 
@@ -13,19 +15,21 @@ class GraceCalculator(BaseCalculator):
         self.model_string = model_string
         self._calc = grace_fm(model_string)
 
-    def calculate_energy(self, cnf: CrystalNormalForm):
+    def calculate_energy(self, cnf: CrystalNormalForm) -> float:
         atoms = cnf.reconstruct().to_ase_atoms()
         self._calc.calculate(atoms, properties = ['energy'])
         return self._calc.results['energy']
     
-    def relax(self, cnf: CrystalNormalForm):
+    def relax(self, cnf: CrystalNormalForm, max_iters = None) -> tuple[CrystalNormalForm, float, int]:
         min_e = self.calculate_energy(cnf)
         min_cnf = cnf
         num_iters = 0
-        nf = NeighborFinder.from_cnf(min_cnf)
-        while True:
+        if max_iters is None:
+            max_iters = math.inf
+
+        while num_iters < max_iters:
             print(f"Energy: {min_e}")
-            nbs = nf.find_neighbors(min_cnf)
+            nbs = find_neighbors(min_cnf)
             nb_es = sorted([(self.calculate_energy(n), n) for n in nbs], key=lambda x: x[0])
             min_nb_e, min_nb = nb_es[0]
             if min_nb_e < min_e:
