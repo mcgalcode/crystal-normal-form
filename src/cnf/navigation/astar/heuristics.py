@@ -31,7 +31,7 @@ def pdd_amd_heuristic(cnf: tuple, goals: list[CrystalNormalForm]) -> float:
 
     pt = CrystalNormalForm.from_tuple(cnf, els, xi, delta)
     dists = [pdd_amd_for_cnfs(pt, g, k=20) for g in goals]
-    return (min(dists) * 100) ** 3    
+    return (min(dists) * 100) ** 3 
 
 
 def manhattan_distance(cnf: tuple, goals: list[CrystalNormalForm]) -> float:
@@ -44,6 +44,9 @@ def manhattan_distance(cnf: tuple, goals: list[CrystalNormalForm]) -> float:
         manhattan_dist = min(manhattan_dist, curr_dist)
 
     return manhattan_dist * 2
+
+def manhattan_dist_cnfs(cnf: CrystalNormalForm, cnf2: CrystalNormalForm) -> float:
+    return np.sum(np.abs(np.array(cnf.coords) - np.array(cnf2.coords)))
 
 def squared_euclidean_heuristic(cnf: tuple, goals: List[CrystalNormalForm]) -> float:
 
