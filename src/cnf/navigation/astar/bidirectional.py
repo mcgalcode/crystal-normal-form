@@ -82,17 +82,17 @@ def bidirectional_astar_pathfind(
     while forward_search_state.open_set and backward_search_state.open_set:
         forward_search_state.iterations += 1
 
-        if max_iterations > 0 and iterations > max_iterations:
+        if max_iterations > 0 and forward_search_state.iterations > max_iterations:
             if verbose:
                 print(f"Reached max iterations ({max_iterations})")
             break
 
-        if verbose and iterations % 5 == 0:
+        if verbose and forward_search_state.iterations % 5 == 0:
             te = time_module.perf_counter_ns()
             elapsed = round((te - ts) / 1e9, 3)
-            print(f"Step {iterations}: "
-                  f"fwd_open={len(forward_open)}, fwd_closed={len(forward_closed)}, fwd_g={last_forward_g:.1f}, fwd_h={last_forward_h:.4f}, "
-                  f"bwd_open={len(backward_open)}, bwd_closed={len(backward_closed)}, bwd_g={last_backward_g:.1f}, bwd_h={last_backward_h:.4f}, "
+            print(f"Step {forward_search_state.iterations}: "
+                  f"fwd_open={len(forward_search_state.open_set)}, fwd_closed={len(forward_search_state.closed_set)}, fwd_g={last_forward_g:.1f}, fwd_h={last_forward_h:.4f}, "
+                  f"bwd_open={len(backward_search_state.open_set)}, bwd_closed={len(backward_search_state.closed_set)}, bwd_g={last_backward_g:.1f}, bwd_h={last_backward_h:.4f}, "
                   f"elapsed={elapsed:.2f}s")
 
         # Expand from forward search
@@ -116,7 +116,7 @@ def bidirectional_astar_pathfind(
                         meeting_point, forward_search_state.came_from, backward_search_state.came_from
                     )
 
-            process_node(current_node, forward_search_state, neighbor_finder, filter_set, heuristic, greedy, beam_width)
+            process_node(current_node, forward_search_state, neighbor_finder, filter_set, heuristic, greedy, beam_width, goal_cnfs)
 
         # Expand from backward search
         if backward_search_state.open_set:
@@ -138,7 +138,7 @@ def bidirectional_astar_pathfind(
                         meeting_point, forward_search_state.came_from, backward_search_state.came_from
                     )
 
-            process_node(current_node, backward_search_state, neighbor_finder, filter_set, heuristic, greedy, beam_width)
+            process_node(current_node, backward_search_state, neighbor_finder, filter_set, heuristic, greedy, beam_width, start_cnfs)
 
 
     if meeting_point:
