@@ -52,6 +52,9 @@ class FilterSet():
             valid_pts, valid_structs = f.filter_nbs(valid_pts, valid_structs)
         return valid_pts, valid_structs
 
+    def add_filter(self, filter: SearchFilter):
+        self.filters.append(filter)
+
 class VolumeLimitFilter(SearchFilter):
     
     @classmethod
@@ -91,7 +94,10 @@ class MinDistanceFilter(SearchFilter):
         return no_atoms_closer_than(pt, self.dist)
     
     def filter_nbs(self, cnfs, structs):
+
         if self._use_rust:
+            if len(cnfs) == 0:
+                return cnfs, []
             import rust_cnf
             pt = cnfs[0]
             n_atoms = len(pt.elements)
