@@ -1213,10 +1213,11 @@ fn reconstruct_structure_from_cnf<'py>(
 ///     verbose: Print progress every 5 iterations
 ///
 /// Returns:
-///     List of flat Vec<i32> (vonorms + coords concatenated) representing the path, or None if no path found
+///     Tuple of (path, iterations) where path is a list of flat Vec<i32> (vonorms + coords concatenated)
+///     or None if no path found, and iterations is the number of iterations performed
 #[pyfunction]
 fn astar_pathfind_rust<'py>(
-    py: Python<'py>,
+    _py: Python<'py>,
     start_points: Vec<(Vec<i32>, Vec<i32>)>,
     goal_points: Vec<(Vec<i32>, Vec<i32>)>,
     elements: Vec<String>,
@@ -1230,7 +1231,7 @@ fn astar_pathfind_rust<'py>(
     greedy: bool,
     verbose: bool,
     speak_freq: usize,
-) -> PyResult<Option<Vec<Vec<i32>>>> {
+) -> PyResult<(Option<Vec<Vec<i32>>>, usize)> {
     use crate::pathfinding::astar_pathfind;
 
     // Validate inputs
@@ -1282,7 +1283,7 @@ fn astar_pathfind_rust<'py>(
     }
 
     // Call the Rust pathfinding function
-    let result = astar_pathfind(
+    let (path, iterations) = astar_pathfind(
         &start_points,
         &goal_points,
         &elements,
@@ -1304,7 +1305,7 @@ fn astar_pathfind_rust<'py>(
         return Err(pyo3::exceptions::PyKeyboardInterrupt::new_err("Search interrupted by user"));
     }
 
-    Ok(result)
+    Ok((path, iterations))
 }
 
 /// Bidirectional A* pathfinding from multiple start CNFs to multiple goal CNFs (pure Rust implementation)

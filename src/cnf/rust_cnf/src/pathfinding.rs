@@ -142,7 +142,8 @@ fn states_equal(vonorms1: &[i32], coords1: &[i32], vonorms2: &[i32], coords2: &[
 ///     verbose: Print progress every 5 iterations
 ///
 /// Returns:
-///     Option containing path as Vec of flat Vec<i32> (vonorms + coords concatenated), or None if no path found
+///     Tuple of (path, iterations) where path is Option containing Vec of flat Vec<i32>
+///     (vonorms + coords concatenated) or None if no path found, and iterations is the count performed
 pub fn astar_pathfind(
     start_points: &[(Vec<i32>, Vec<i32>)],
     goal_points: &[(Vec<i32>, Vec<i32>)],
@@ -157,7 +158,7 @@ pub fn astar_pathfind(
     greedy: bool,
     verbose: bool,
     speak_freq: usize,
-) -> Option<Vec<Vec<i32>>> {
+) -> (Option<Vec<Vec<i32>>>, usize) {
     // Check if any start equals any goal
     for (start_vonorms, start_coords) in start_points {
         for (goal_vonorms, goal_coords) in goal_points {
@@ -165,7 +166,7 @@ pub fn astar_pathfind(
                 // Return flat concatenated format
                 let mut flat = start_vonorms.clone();
                 flat.extend_from_slice(start_coords);
-                return Some(vec![flat]);
+                return (Some(vec![flat]), 0);
             }
         }
     }
@@ -229,7 +230,7 @@ pub fn astar_pathfind(
             if verbose {
                 eprintln!("Reached max iterations ({})", max_iterations);
             }
-            return None;
+            return (None, iterations);
         }
 
         iterations += 1;
@@ -242,7 +243,7 @@ pub fn astar_pathfind(
                     eprintln!("\n⚠️ Search interrupted by user at iteration {}", iterations);
                 }
                 WAS_INTERRUPTED.store(true, AtomicOrdering::SeqCst);
-                return None;
+                return (None, iterations);
             }
         }
 
@@ -267,11 +268,11 @@ pub fn astar_pathfind(
                 if verbose {
                     eprintln!("\n✅ Found goal after {} iterations!", iterations);
                 }
-                return Some(reconstruct_path(
+                return (Some(reconstruct_path(
                     &came_from,
                     &current_node.vonorms,
                     &current_node.coords,
-                ));
+                )), iterations);
             }
         }
 
@@ -402,7 +403,7 @@ pub fn astar_pathfind(
     if verbose {
         eprintln!("\n❌ No path found after {} iterations", iterations);
     }
-    None
+    (None, iterations)
 }
 
 /// Reconstruct the path from start to goal using the came_from map
