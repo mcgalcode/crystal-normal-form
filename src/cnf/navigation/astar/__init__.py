@@ -91,7 +91,8 @@ def pathfind_and_save(start_cif,
                       beam_width=None,
                       dropout=0.0,
                       speak_freq=5,
-                      user_metadata=None):
+                      user_metadata=None,
+                      verbose=False):
     """Run pathfinding between two CIF structures and save result to JSON
 
     Args:
@@ -116,30 +117,24 @@ def pathfind_and_save(start_cif,
     start_struct = Structure.from_file(start_cif)
     end_struct = Structure.from_file(end_cif)
 
-    print(f"\n=== Loading Structures ===")
-    print(f"Starting: {start_cif}")
-    print(f"  Composition: {start_struct.composition}, {len(start_struct)} atoms")
-    print(f"  Lattice: a={start_struct.lattice.a:.3f}, b={start_struct.lattice.b:.3f}, c={start_struct.lattice.c:.3f}")
-    print(f"Ending: {end_cif}")
-    print(f"  Composition: {end_struct.composition}, {len(end_struct)} atoms")
-    print(f"  Lattice: a={end_struct.lattice.a:.3f}, b={end_struct.lattice.b:.3f}, c={end_struct.lattice.c:.3f}")
-
     start_cells, goal_cells = get_endpoint_unit_cells(start_struct, end_struct)
 
-    print(f"\n=== Endpoints ===")
-    print(f"Number of start cells: {len(start_cells)}")
-    print(f"Number of goal cells: {len(goal_cells)}")
+    if verbose:
+        print(f"\n=== Endpoints ===")
+        print(f"Number of start cells: {len(start_cells)}")
+        print(f"Number of goal cells: {len(goal_cells)}")
 
     # Convert unit cells to CNFs and deduplicate
     start_cnfs = list(set([cell.to_cnf(xi=xi, delta=delta) for cell in start_cells]))
     goal_cnfs = list(set([cell.to_cnf(xi=xi, delta=delta) for cell in goal_cells]))
 
-    print(f"Unique start CNFs: {len(start_cnfs)}")
-    for sc in start_cnfs:
-        print(f"    {sc.coords}")
-    print(f"Unique goal CNFs: {len(goal_cnfs)}")
-    for ec in goal_cnfs:
-        print(f"    {ec.coords}")
+    if verbose:
+        print(f"Unique start CNFs: {len(start_cnfs)}")
+        for sc in start_cnfs:
+            print(f"    {sc.coords}")
+        print(f"Unique goal CNFs: {len(goal_cnfs)}")
+        for ec in goal_cnfs:
+            print(f"    {ec.coords}")
 
 
 
@@ -148,13 +143,14 @@ def pathfind_and_save(start_cif,
     elements = first_cnf.motif_normal_form.elements
     n_atoms = len(elements)
 
-    print(f"\n=== Running A* pathfinding ===")
-    print(f"Implementation: {'Python' if use_python else 'Rust'}")
-    print(f"Elements: {elements}")
-    print(f"N atoms: {n_atoms}")
-    print(f"Xi: {xi}, Delta: {delta}")
-    print(f"Start points: {len(start_cnfs)}")
-    print(f"Goal points: {len(goal_cnfs)}")
+    if verbose:
+        print(f"\n=== Running A* pathfinding ===")
+        print(f"Implementation: {'Python' if use_python else 'Rust'}")
+        print(f"Elements: {elements}")
+        print(f"N atoms: {n_atoms}")
+        print(f"Xi: {xi}, Delta: {delta}")
+        print(f"Start points: {len(start_cnfs)}")
+        print(f"Goal points: {len(goal_cnfs)}")
 
     search_state = None  # Will be set if using Python non-bidirectional A*
     max_iterations_reached = None
@@ -213,14 +209,14 @@ def pathfind_and_save(start_cif,
                 beam_width=beam_width,
                 greedy=greedy,
                 dropout=dropout,
-                verbose=True,
+                verbose=verbose,
                 speak_freq=speak_freq
             )
             max_iterations_reached = num_iterations == max_iterations
 
     metadata= {
-        "start_cif": start_cif,
-        "end_cif": end_cif,
+        "start_cif": str(start_cif),
+        "end_cif": str(end_cif),
         "min_distance": min_distance,
         **user_metadata,
     }
@@ -243,16 +239,18 @@ def pathfind_and_save(start_cif,
     ) 
 
 
-    if path is None:
-        print("❌ No path found!")
-    else:
-        print(f"\n✅ Path found with {len(path)} steps!")
+    if verbose:
+        if path is None:
+            print("❌ No path found!")
+        else:
+            print(f"\n✅ Path found with {len(path)} steps!")
 
 
     # Save to JSON
     with open(output_json, 'w') as f:
         json.dump(asdict(result), f, indent=2)
 
-    print(f"\n💾 Path saved to {output_json}")
+    if verbose:
+        print(f"\n💾 Path saved to {output_json}")
 
     return result

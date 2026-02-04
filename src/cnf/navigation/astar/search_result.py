@@ -1,8 +1,7 @@
 import json
 
-from typing import List, Optional, Set
+from typing import Optional, Set
 from dataclasses import dataclass, field
-from .node import AStarNode
 
 from cnf import CrystalNormalForm
 
