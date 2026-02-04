@@ -1,10 +1,12 @@
-"""A* pathfinding for CNF navigation with customizable heuristics and filters"""
+import json
 
 from typing import List, Optional, Set
 from dataclasses import dataclass, field
 from .node import AStarNode
 
 from cnf import CrystalNormalForm
+
+from dataclasses import asdict
 
 @dataclass
 class PathSearchResult:
@@ -26,6 +28,15 @@ class PathSearchResult:
 
     path: Optional[list[list[int]]] = field(default=None) # The path if found, None otherwise
     max_iterations_reached: bool = field(default=False)
+
+    def to_dict(self):
+        return asdict(self)
+    
+    @classmethod
+    def from_json_file(cls, fpath: str):
+        with open(fpath, 'r+') as f:
+            kwargs = json.load(f)
+            return cls(**kwargs)
 
     def get_cnfs_on_path(self):
         if self.path is None:
