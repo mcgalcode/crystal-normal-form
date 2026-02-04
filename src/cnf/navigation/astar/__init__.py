@@ -5,12 +5,14 @@ import json
 import rust_cnf
 
 from typing import Callable
+from dataclasses import asdict
 
 from cnf import CrystalNormalForm
 from ..search_filters import FilterSet, MinDistanceFilter
 from pymatgen.core import Structure
 from ..endpoints import get_endpoint_unit_cells
 from .core import astar_pathfind
+from .search_result import PathSearchResult
 from .bidirectional import bidirectional_astar_pathfind
 from .heuristics import manhattan_distance, pdd_amd_heuristic, pdd_heuristic, pdd_and_manhattan
 
@@ -18,7 +20,6 @@ USE_RUST = os.getenv('USE_RUST') == '1'
 
 # Type aliases for clarity
 FilterFunc = Callable[[CrystalNormalForm], bool]
-
 
 def astar_rust(
     start_cnfs: list[CrystalNormalForm],
@@ -89,7 +90,8 @@ def pathfind_and_save(start_cif,
                       greedy=False,
                       beam_width=None,
                       dropout=0.0,
-                      speak_freq=5):
+                      speak_freq=5,
+                      user_metadata=None):
     """Run pathfinding between two CIF structures and save result to JSON
 
     Args:
@@ -107,6 +109,9 @@ def pathfind_and_save(start_cif,
                  from consideration for the rest of the search. Goal neighbors are never dropped.
                  Only supported with Rust implementation (default: 0.0)
     """
+
+    if user_metadata is None:
+        user_metadata = {}
 
     start_struct = Structure.from_file(start_cif)
     end_struct = Structure.from_file(end_cif)
@@ -152,7 +157,7 @@ def pathfind_and_save(start_cif,
     print(f"Goal points: {len(goal_cnfs)}")
 
     search_state = None  # Will be set if using Python non-bidirectional A*
-
+    max_iterations_reached = None
     if use_python:
         # Use Python A* implementation
         heuristic = manhattan_distance
@@ -182,6 +187,8 @@ def pathfind_and_save(start_cif,
                 dropout=dropout,
             )
             path = search_state.path
+            max_iterations_reached = search_state.max_iterations_reached
+            num_iterations = search_state.iterations
     else:
         # Use Rust A* implementation (default)
         if bidirectional:
@@ -198,7 +205,7 @@ def pathfind_and_save(start_cif,
                 verbose=True
             )
         else:
-            path = astar_rust(
+            path, num_iterations = astar_rust(
                 start_cnfs,
                 goal_cnfs,
                 min_distance=min_distance,
@@ -209,70 +216,43 @@ def pathfind_and_save(start_cif,
                 verbose=True,
                 speak_freq=speak_freq
             )
+            max_iterations_reached = num_iterations == max_iterations
 
-    # Prepare output metadata
-    output_data = {
-        "metadata": {
-            "xi": xi,
-            "delta": delta,
-            "elements": elements,
-            "n_atoms": n_atoms,
-            "min_distance": min_distance,
-            "start_cif": start_cif,
-            "end_cif": end_cif,
-            "found_goal": path is not None,
-            "dropout": dropout,
-            "greedy": greedy,
-        }
+    metadata= {
+        "start_cif": start_cif,
+        "end_cif": end_cif,
+        "min_distance": min_distance,
+        **user_metadata,
     }
 
-    if search_state is not None:
-        output_data["metadata"]["iterations"] = search_state.iterations
-        output_data["metadata"]["max_iterations_reached"] = search_state.max_iterations_reached
-        # output_data["search_state"] = search_state.to_dict()
-        print(f"\nSearch state: {search_state.frontier_stats()}")
+    result = PathSearchResult(
+        path=path,
+        max_iterations_reached=max_iterations_reached,
+        num_iterations=num_iterations,
+        xi=xi,
+        delta=delta,
+        elements=elements,
+        n_atoms=len(elements),
+        
+        greedy=greedy,
+        beam_width=beam_width,
+        dropout=dropout,
+        max_iterations=max_iterations,
+
+        metadata=metadata
+    ) 
+
 
     if path is None:
         print("❌ No path found!")
-        output_data["metadata"]["path_length"] = 0
-        output_data["path"] = []
+    else:
+        print(f"\n✅ Path found with {len(path)} steps!")
 
-        # Save state even when no path found
-        with open(output_json, 'w') as f:
-            json.dump(output_data, f, indent=2)
-        print(f"\n💾 Search state saved to {output_json}")
-        return False
-
-    print(f"\n✅ Path found with {len(path)} steps!")
-
-    # Path from Python A* is flat tuples (vonorms + coords concatenated)
-    # Split them into (vonorms, coords) pairs for validation and output
-    path_split = []
-    for flat_tuple in path:
-        vonorms = list(flat_tuple[:7])
-        coords = list(flat_tuple[7:])
-        path_split.append((vonorms, coords))
-
-    # Show path summary
-    print(f"\nPath summary:")
-    print(f"  First step vonorms: {path_split[0][0]}")
-    print(f"  First step coords:  {path_split[0][1]}")
-    print(f"  Last step vonorms:  {path_split[-1][0]}")
-    print(f"  Last step coords:   {path_split[-1][1]}")
-
-    output_data["metadata"]["path_length"] = len(path)
-    output_data["path"] = [
-        {
-            "vonorms": vonorms,
-            "coords": coords
-        }
-        for vonorms, coords in path_split
-    ]
 
     # Save to JSON
     with open(output_json, 'w') as f:
-        json.dump(output_data, f, indent=2)
+        json.dump(asdict(result), f, indent=2)
 
     print(f"\n💾 Path saved to {output_json}")
 
-    return True
+    return result
