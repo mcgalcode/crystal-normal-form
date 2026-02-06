@@ -216,26 +216,28 @@ class PathSampler():
     def completed_path_results(self):
         return { k: v for k, v in self._path_results.items() if v.path is not None}
 
-    def get_path_max_energies(self):
+    def get_path_max_energies(self, require_num_pts=0):
         r = {}
         for fname, path in self.completed_path_results.items():
             path_keys = [_get_energy_key_str(cnf) for cnf in path.get_cnfs_on_path()]
-            energies = [self._energies.get(k, -math.inf) for k in path_keys]
-            r[fname] = max(energies)
+            energies = [self._energies.get(k) for k in path_keys]
+            energies = [e for e in energies if e is not None]
+            if len(energies) > require_num_pts:
+                r[fname] = max(energies)
         return r
     
-    def refine_paths(self, num_pts_per_path, top_k=10):
+    def refine_paths(self, num_pts_per_path, top_k=10, require_num_pts=0):
         """
         Given the current energy evaluations, identify the `top_k` paths with the
         lowest maximum energies (i.e. the most promising paths for truly having a low
         maximum energy), then refine those paths with new energy computations until they
-        have `num_pts_per_path` computed for them. Designed to be used iteratively. 
+        have `num_pts_per_path` computed for them. Designed to be used iteratively.
         
         :param self: Description
         :param num_pts_per_path: Description
         :param best: Description
         """
-        curr_max_path_energies = self.get_path_max_energies()
+        curr_max_path_energies = self.get_path_max_energies(require_num_pts=require_num_pts)
         sorted_path_files = sorted(curr_max_path_energies.keys(), key=lambda p_file: curr_max_path_energies[p_file])
         top_k_paths = sorted_path_files[:top_k]
         self.compute_path_energies(num_pts_per_path, top_k_paths)
