@@ -102,13 +102,19 @@ def process_cnf_ids_batch(cnf_ids: list[int],
         profile_counts['get_points_by_ids'] += 1
 
     new_frontier_cnfs = [pt.cnf for pt in new_frontier_cnfs]
+
+    energies = []
+    t0 = time.time()
     for id, cnf in zip(new_frontier_ids, new_frontier_cnfs):
-        t0 = time.time()
-        energy = calculator.calculate_energy(cnf)
-        if profile_timings is not None:
-            profile_timings['calculate_energy'] += time.time() - t0
-            profile_counts['calculate_energy'] += 1
+        energies.append(calculator.calculate_energy(cnf))
+    
+    if profile_timings is not None:
+        profile_timings['calculate_energy'] += time.time() - t0
+        profile_counts['calculate_energy'] += len(energies)
+    
+    for id, energy in zip(new_frontier_ids, energies):
         map_store.set_point_value(id, energy)
+        
     return new_frontier_ids
 
 
@@ -313,9 +319,16 @@ def continue_search_waterfill(search_id,
 
             other_time = total_time - accounted_time
             other_pct = (other_time / total_time * 100) if total_time > 0 else 0
+
+            energy_cts = profile_counts['calculate_energy']
+            if energy_cts > 0:
+                time_per_pt_energy_calc = total_time / energy_cts
+
             logger.info(f"  {'Other operations':30s}: {other_time:8.3f}s ({other_pct:5.1f}%)")
             logger.info("-" * 80)
             logger.info(f"  {'TOTAL':30s}: {total_time:8.3f}s (100.0%)")
+            if energy_cts > 0:
+                logger.info(f"  {'Time per point (energy calc)':30s}: {time_per_pt_energy_calc:8.3f}s (100.0%)")
             logger.info("-" * 80)
 
             # Report on partition write statistics
