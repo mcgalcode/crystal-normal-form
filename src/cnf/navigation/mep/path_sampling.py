@@ -3,7 +3,7 @@ import shutil
 import random
 import dataclasses
 import json
-import math
+import multiprocessing as mp
 
 from pathlib import Path
 from typing import Iterable
@@ -157,7 +157,8 @@ class PathSampler():
         print(f"Finished {num_attempts} path-finding attempts!")
         
         if self.parallel:
-            pass
+            with mp.Pool(processes=6) as pool:
+                pool.map(_save_path, parameter_sets)
         else:
             for pset in parameter_sets:
                 _save_path(pset)
@@ -206,7 +207,7 @@ class PathSampler():
                 sampled_path = get_sampled_path(cnfs, num_path_pts)
             else:
                 sampled_path = cnfs
-                
+
             all_reqd_cnfs.extend(sampled_path)
             
         self.compute_new_energies(set(all_reqd_cnfs))
