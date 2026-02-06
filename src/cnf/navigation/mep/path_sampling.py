@@ -71,6 +71,9 @@ def _save_path(inputs: tuple[str, str, str, PathFindingParameters]):
                     speak_freq=1000,
                     verbose=True)
 
+def _get_energy_key_str(cnf: CrystalNormalForm):
+    return f"{cnf.coords.__repr__()}-{cnf.elements.__repr__()}-{cnf.xi}-{cnf.delta}"
+
 class PathSampler():
 
     PATHS_RESULT_DIR = "path_results"
@@ -130,7 +133,7 @@ class PathSampler():
         current_num_paths = len(self._existing_path_files)
 
         if num_attempts is None:
-            num_attempts = max_path_results - current_num_paths
+            num_attempts = max(max_path_results - current_num_paths, 0)
 
         if max_path_results is not None and max_path_results > current_num_paths + num_attempts:
             raise ValueError(f"Incompatible parameters max_path_results and num_attempts: desired number of attempts would overrun max_path_results given current number of results: {current_num_paths}")
@@ -150,6 +153,7 @@ class PathSampler():
             parameter_sets.append(
                 (start, end, output_path, pathfinding_params)
             )
+        print(f"Finished {num_attempts} path-finding attempts!")
         
         if self.parallel:
             pass
@@ -178,11 +182,15 @@ class PathSampler():
             json.dump(new_energies, f)
 
     def compute_new_energies(self, cnfs: Iterable[CrystalNormalForm]):
-        filtered_cnfs = [cnf for cnf in cnfs if cnf.__hash__() not in self._energies]
+        filtered_cnfs = [cnf for cnf in cnfs if _get_energy_key_str(cnf) not in self._energies]
+        
         if len(filtered_cnfs) == 0:
             print(f"Already computed all these energies!")
+            return
+        
         energies = get_energies(filtered_cnfs)
-        new_entries = { hash(cnf): e for e, cnf in zip(energies, filtered_cnfs) }
+        print(f"Finished computing {len(energies)} energies")
+        new_entries = { _get_energy_key_str(cnf): e for e, cnf in zip(energies, filtered_cnfs) }
         self.write_energies(new_entries)
         self.reload_energies()
     
