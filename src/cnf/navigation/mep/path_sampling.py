@@ -2,13 +2,15 @@ import os
 import shutil
 import random
 import dataclasses
-
-from math import lcm
+import json
 
 from pathlib import Path
+from typing import Iterable
 
-from ..endpoints import get_endpoint_cnfs
+from ...crystal_normal_form import CrystalNormalForm
+from .utilities import get_energies
 from ..astar import pathfind_and_save
+from ..astar.search_result import PathSearchResult
 
 # The MEP path sampling algorithm is going to be as follows:
 #
@@ -25,6 +27,16 @@ from ..astar import pathfind_and_save
 
 def random_string():
     return ''.join(random.choices('abcdefghijklmnopqrstuvwxyz0123456789', k=8))
+
+def get_sampled_path(path: list, num_pts: int):
+    total_pts = len(path)
+    num_chunks = num_pts - 1
+    chunk_size = int(total_pts / num_chunks)
+    sampled_path = path[::chunk_size]
+    if (total_pts % chunk_size) / chunk_size > 0.5:
+        sampled_path.append(path[-1])
+    return sampled_path
+
 
 @dataclasses.dataclass
 class PathFindingParameters():
@@ -72,6 +84,9 @@ class PathSampler():
     FW_PATH_PREFIX = "fw_path_"
     BW_PATH_PREFIX = "bw_path_"
 
+    _path_results: list[PathSearchResult]
+    _energies: dict[int, float]
+
     @classmethod
     def setup(cls, working_dir: str, endpt1_cif_path: str, endpt2_cif_path: str):
         working_dir = Path(working_dir)
@@ -95,6 +110,14 @@ class PathSampler():
         self.endpoint_1_path = self.working_dir / self.ENDPOINT_ONE_CIF
         self.endpoint_2_path = self.working_dir / self.ENDPOINT_TWO_CIF
         self.parallel = parallel
+
+        self._energies = {}
+
+        if not os.path.exists(self.energy_manifest_path):
+            self.write_energies({})
+        
+        self.reload_energies()
+        self.reload_paths()
 
     def sample_paths(self,
                      pathfinding_params: PathFindingParameters,
@@ -133,12 +156,43 @@ class PathSampler():
         else:
             for pset in parameter_sets:
                 _save_path(pset)
-        
-
+        self.reload_paths()
 
     @property
     def _existing_path_files(self):
-        return list(self.paths_results_dir.iterdir())
+        return [self.paths_results_dir / fobj.name for fobj in list(self.paths_results_dir.iterdir())]
+    
+    def reload_paths(self):
+        loaded_paths = []
+        for path_file in self._existing_path_files:
+            loaded_paths.append(PathSearchResult.from_json_file(path_file))
+        self._path_results = loaded_paths
+
+    def reload_energies(self):
+        with open(self.energy_manifest_path, 'r+') as f:
+            self._energies = json.load(f)
+        
+    def write_energies(self, energy_map: dict[int, float]):
+        new_energies = { **self._energies, **energy_map }
+        with open(self.energy_manifest_path, 'w+') as f:
+            json.dump(new_energies, f)
+
+    def compute_new_energies(self, cnfs: Iterable[CrystalNormalForm]):
+        filtered_cnfs = [cnf for cnf in cnfs if cnf.__hash__() not in self._energies]
+        if len(filtered_cnfs) == 0:
+            print(f"Already computed all these energies!")
+        energies = get_energies(filtered_cnfs)
+        new_entries = { hash(cnf): e for e, cnf in zip(energies, filtered_cnfs) }
+        self.write_energies(new_entries)
+        self.reload_energies()
+    
+    def compute_path_energies(self, num_path_pts: int):
+        all_reqd_cnfs = []
+        for path in self._path_results:
+            cnfs = path.get_cnfs_on_path()
+            all_reqd_cnfs.extend(get_sampled_path(cnfs, num_path_pts))
+        self.compute_new_energies(set(all_reqd_cnfs))
+
 
 
     

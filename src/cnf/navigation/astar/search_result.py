@@ -28,6 +28,8 @@ class PathSearchResult:
     path: Optional[list[list[int]]] = field(default=None) # The path if found, None otherwise
     max_iterations_reached: bool = field(default=False)
 
+    _loaded_path = None
+
     def to_dict(self):
         return asdict(self)
     
@@ -41,7 +43,11 @@ class PathSearchResult:
         if self.path is None:
             return None
         else:
-            return [
-                CrystalNormalForm.from_tuple(pt, self.elements, self.xi, self.delta)
-                for pt in self.path
-            ]
+            if self._loaded_path is not None:
+                return self._loaded_path
+            else:
+                self._loaded_path = [
+                    CrystalNormalForm.from_tuple(pt, self.elements, self.xi, self.delta)
+                    for pt in self.path
+                ]
+                return self._loaded_path
