@@ -3,6 +3,7 @@ import shutil
 import random
 import dataclasses
 import json
+import math
 
 from pathlib import Path
 from typing import Iterable
@@ -87,8 +88,8 @@ class PathSampler():
     FW_PATH_PREFIX = "fw_path_"
     BW_PATH_PREFIX = "bw_path_"
 
-    _path_results: list[PathSearchResult]
-    _energies: dict[int, float]
+    _path_results: dict[str, PathSearchResult]
+    _energies: dict[str, float]
 
     @classmethod
     def setup(cls, working_dir: str, endpt1_cif_path: str, endpt2_cif_path: str):
@@ -167,9 +168,9 @@ class PathSampler():
         return [self.paths_results_dir / fobj.name for fobj in list(self.paths_results_dir.iterdir())]
     
     def reload_paths(self):
-        loaded_paths = []
+        loaded_paths = {}
         for path_file in self._existing_path_files:
-            loaded_paths.append(PathSearchResult.from_json_file(path_file))
+            loaded_paths[str(path_file)] = PathSearchResult.from_json_file(path_file)
         self._path_results = loaded_paths
 
     def reload_energies(self):
@@ -194,12 +195,49 @@ class PathSampler():
         self.write_energies(new_entries)
         self.reload_energies()
     
-    def compute_path_energies(self, num_path_pts: int):
+    def compute_path_energies(self, num_path_pts: int, specific_path_files: list[str] = None):
         all_reqd_cnfs = []
-        for path in self._path_results:
+        for fname, path in self.completed_path_results.items():
+            if specific_path_files is not None and fname not in specific_path_files:
+                continue
+
             cnfs = path.get_cnfs_on_path()
-            all_reqd_cnfs.extend(get_sampled_path(cnfs, num_path_pts))
+            if num_path_pts is not None:
+                sampled_path = get_sampled_path(cnfs, num_path_pts)
+            else:
+                sampled_path = cnfs
+                
+            all_reqd_cnfs.extend(sampled_path)
+            
         self.compute_new_energies(set(all_reqd_cnfs))
+
+    @property
+    def completed_path_results(self):
+        return { k: v for k, v in self._path_results.items() if v.path is not None}
+
+    def get_path_max_energies(self):
+        r = {}
+        for fname, path in self.completed_path_results.items():
+            path_keys = [_get_energy_key_str(cnf) for cnf in path.get_cnfs_on_path()]
+            energies = [self._energies.get(k, -math.inf) for k in path_keys]
+            r[fname] = max(energies)
+        return r
+    
+    def refine_paths(self, num_pts_per_path, top_k=10):
+        """
+        Given the current energy evaluations, identify the `top_k` paths with the
+        lowest maximum energies (i.e. the most promising paths for truly having a low
+        maximum energy), then refine those paths with new energy computations until they
+        have `num_pts_per_path` computed for them. Designed to be used iteratively. 
+        
+        :param self: Description
+        :param num_pts_per_path: Description
+        :param best: Description
+        """
+        curr_max_path_energies = self.get_path_max_energies()
+        sorted_path_files = sorted(curr_max_path_energies.keys(), key=lambda p_file: curr_max_path_energies[p_file])
+        top_k_paths = sorted_path_files[:top_k]
+        self.compute_path_energies(num_pts_per_path, top_k_paths)
 
 
 
