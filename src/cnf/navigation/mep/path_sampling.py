@@ -154,7 +154,6 @@ class PathSampler():
             parameter_sets.append(
                 (start, end, output_path, pathfinding_params)
             )
-        print(f"Finished {num_attempts} path-finding attempts!")
         
         if self.parallel:
             with mp.Pool(processes=6) as pool:
@@ -162,6 +161,9 @@ class PathSampler():
         else:
             for pset in parameter_sets:
                 _save_path(pset)
+
+        print(f"Finished {num_attempts} path-finding attempts!")
+        
         self.reload_paths()
 
     @property
