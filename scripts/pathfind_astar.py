@@ -26,10 +26,14 @@ def main():
                         help="Use Bidirectional A* implementation - works with both Python and Rust (default: false)")
     parser.add_argument("--greedy", action="store_true",
                         help="Use greedy search implementation - works with both Python and Rust (default: false)")
+    parser.add_argument("--quiet", action="store_true",
+                        help="Suppress logging output (default: false)")
     parser.add_argument("--beam-width", type=int, default=None,
                         help="Beam width for beam search - limits open set size (works with both unidirectional and bidirectional)")
 
     args = parser.parse_args()
+
+    verbose = not args.quiet
 
     success = pathfind_and_save(
         args.start_cif,
@@ -43,7 +47,8 @@ def main():
         bidirectional=args.bidirectional,
         greedy=args.greedy,
         beam_width=args.beam_width,
-        dropout=args.dropout
+        dropout=args.dropout,
+        verbose=verbose,
     )
 
     if success:
