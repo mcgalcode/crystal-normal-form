@@ -1,9 +1,12 @@
 import numpy as np
 import tqdm
+
 from cnf.unit_cell import UnitCell
 from cnf.linalg.unimodular import get_unimodulars_col_max
+from cnf.navigation.mep.paths import align_structure_to_reference, align_path
 from ..crystal_normal_form import CrystalNormalForm
-from pymatgen.core.trajectory import Trajectory, Structure
+from pymatgen.core.trajectory import Trajectory
+from pymatgen.core import Structure
 
 
 class TrajectoryVisualizer():
@@ -11,6 +14,7 @@ class TrajectoryVisualizer():
     def __init__(self, filename, supercell_scaling=None):
         self.filename = filename
         self.supercell_scaling = supercell_scaling
+        self._aligned_structs = None
 
     def save_trajectory_from_cnfs(self, cnfs: list[CrystalNormalForm]):
         structs: list[Structure] = [cnf.reconstruct() for cnf in cnfs]
@@ -20,44 +24,69 @@ class TrajectoryVisualizer():
         if self.supercell_scaling is not None:
             structs = [s.make_supercell(self.supercell_scaling) for s in structs]
 
-        ucs = [UnitCell.from_pymatgen_structure(s) for s in structs]
-        return self.save_trajectory(ucs)
+        aligned = align_path(structs, verbose=True)
+        self._aligned_structs = aligned
 
-    def save_trajectory(self, unit_cells: list[UnitCell]):
-        transformed_structs = [unit_cells[0]]
-
-        def _get_com(unit_cell: UnitCell):
-            cart_coords = unit_cell.motif.compute_cartesian_coords_in_basis(unit_cell.superbasis)
-            pos_sum = np.zeros(3)
-            for row in cart_coords.coord_matrix.T:
-                pos_sum = pos_sum + row
-            return pos_sum / len(unit_cell.motif.atoms)
-
-        for struct in tqdm.tqdm(unit_cells[1:]):
-            prev = transformed_structs[-1]
-            prev_cols = prev.superbasis.generating_vecs().T
-            prev_com = _get_com(prev)
-            prev_inv = np.linalg.inv(prev_cols)
-            min_score = (np.inf, np.inf)
-            selected_cell = prev
-            for m in get_unimodulars_col_max(2):
-                ts = struct.apply_unimodular(m)
-                tcols = ts.superbasis.generating_vecs().T
-                t_com = _get_com(ts)
-                com_dist = round(float(np.linalg.norm(t_com - prev_com)), 6)
-                A = prev_inv @ tcols
-                AtA = A.T @ A
-                D = AtA - np.eye(3)
-                DtD = D.T @ D
-                dtd_tr = round(float(np.trace(DtD)), 6)
-                score = (dtd_tr, com_dist)
-
-                if score < min_score:
-                    min_score = score
-                    selected_cell = ts
-                
-            transformed_structs.append(selected_cell)
-        transformed_structs = [t.to_pymatgen_structure() for t in transformed_structs]
-        t = Trajectory.from_structures(transformed_structs, constant_lattice=False)
+        t = Trajectory.from_structures(aligned, constant_lattice=False)
         t.write_Xdatcar(self.filename)
         return t
+
+    def save_trajectory(self, unit_cells: list[UnitCell]):
+        """Legacy method — converts to Structures and uses new alignment."""
+        structs = [uc.to_pymatgen_structure() for uc in unit_cells]
+        return self.save_trajectory_from_pmg_structs(structs)
+
+    def save_gif(self, gif_filename, structs=None, rotation="10x,-80y",
+                 radii=0.5, scale=50, fps=15):
+        """Render aligned structures to an animated GIF using ASE.
+
+        Args:
+            gif_filename: Output path for the GIF.
+            structs: List of pymatgen Structures (uses cached aligned structs if None).
+            rotation: ASE rotation string for viewing angle.
+            radii: Atom radii for rendering.
+            scale: Pixels per Angstrom.
+            fps: Frames per second in the GIF.
+        """
+        from ase import Atoms
+        from ase.io import write as ase_write
+
+        if structs is None:
+            structs = self._aligned_structs
+        if structs is None:
+            raise ValueError("No aligned structures available. Run save_trajectory_from_* first.")
+
+        atoms_list = []
+        for s in structs:
+            atoms = Atoms(
+                symbols=[str(sp) for sp in s.species],
+                scaled_positions=s.frac_coords,
+                cell=s.lattice.matrix,
+                pbc=True,
+            )
+            atoms_list.append(atoms)
+
+        ase_write(
+            gif_filename, atoms_list,
+            rotation=rotation, radii=radii, scale=scale,
+        )
+        # If ase_write doesn't handle fps for GIF, try with imageio
+        if gif_filename.endswith(".gif"):
+            try:
+                import imageio.v2 as imageio
+                import tempfile, os, glob
+
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    png_files = []
+                    for i, atoms in enumerate(atoms_list):
+                        png_path = os.path.join(tmpdir, f"frame_{i:05d}.png")
+                        ase_write(png_path, atoms, rotation=rotation, radii=radii, scale=scale)
+                        png_files.append(png_path)
+
+                    images = [imageio.imread(f) for f in png_files]
+                    duration = 1.0 / fps
+                    imageio.mimsave(gif_filename, images, duration=duration, loop=0)
+            except ImportError:
+                print("imageio not available — GIF saved via ASE (may not have custom fps)")
+
+        print(f"Saved GIF: {gif_filename} ({len(atoms_list)} frames)")
