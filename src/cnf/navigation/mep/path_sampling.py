@@ -1,4 +1,5 @@
 import os
+import tqdm
 import shutil
 import random
 import dataclasses
@@ -104,7 +105,8 @@ class PathSampler():
 
     def __init__(self,
                  working_dir: str,
-                 parallel: bool = False):
+                 parallel: bool = False,
+                 verbose=True):
         if not os.path.exists(working_dir):
             raise RuntimeError("Can't instantiate path sampler with non-existant working dir.")
         
@@ -114,6 +116,7 @@ class PathSampler():
         self.endpoint_1_path = self.working_dir / self.ENDPOINT_ONE_CIF
         self.endpoint_2_path = self.working_dir / self.ENDPOINT_TWO_CIF
         self.parallel = parallel
+        self.verbose = verbose
 
         self._energies = {}
 
@@ -163,7 +166,7 @@ class PathSampler():
                 _save_path(pset)
 
         print(f"Finished {num_attempts} path-finding attempts!")
-        
+
         self.reload_paths()
 
     @property
@@ -172,7 +175,7 @@ class PathSampler():
     
     def reload_paths(self):
         loaded_paths = {}
-        for path_file in self._existing_path_files:
+        for path_file in tqdm.tqdm(self._existing_path_files, desc="Loading existing paths..."):
             loaded_paths[str(path_file)] = PathSearchResult.from_json_file(path_file)
         self._path_results = loaded_paths
 
@@ -192,7 +195,7 @@ class PathSampler():
             print(f"Already computed all these energies!")
             return
         
-        energies = get_energies(filtered_cnfs)
+        energies = get_energies(filtered_cnfs, prog=self.verbose)
         print(f"Finished computing {len(energies)} energies")
         new_entries = { _get_energy_key_str(cnf): e for e, cnf in zip(energies, filtered_cnfs) }
         self.write_energies(new_entries)
