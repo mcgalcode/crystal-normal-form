@@ -14,7 +14,7 @@ from ..endpoints import get_endpoint_unit_cells
 from .core import astar_pathfind
 from .search_result import PathSearchResult
 from .bidirectional import bidirectional_astar_pathfind
-from .heuristics import manhattan_distance, pdd_amd_heuristic, pdd_heuristic, pdd_and_manhattan
+from .heuristics import manhattan_distance, pdd_amd_heuristic, pdd_heuristic, pdd_and_manhattan, UnimodularManhattanHeuristic
 
 USE_RUST = os.getenv('USE_RUST') == '1'
 
@@ -32,7 +32,40 @@ def astar_rust(
     verbose: bool = False,
     bidirectional: bool = False,
     speak_freq = 5,
+    heuristic_mode: str = "manhattan",
+    heuristic_weight: float = 0.5,
 ):
+    """Run A* pathfinding using the Rust implementation.
+
+    Args:
+        start_cnfs: Starting CNF structures.
+        goal_cnfs: Goal CNF structures.
+        min_distance: Minimum allowed pairwise atomic distance (Angstroms).
+        max_iterations: Maximum search iterations (0 for unlimited).
+        beam_width: Max open-set size for beam search (None for unlimited).
+        greedy: If True, use greedy best-first (f=h) instead of A* (f=g+h).
+        dropout: Probability of permanently dropping a neighbor (0.0-1.0).
+            Goal neighbors are never dropped.
+        verbose: Print progress during search.
+        bidirectional: Use bidirectional A* (ignores heuristic settings).
+        speak_freq: Print progress every N iterations.
+        heuristic_mode: Which heuristic to use. One of:
+            - "manhattan": Plain L1 distance with 10x scaling. Fast but
+              overestimates at Voronoi class boundaries.
+            - "unimodular_light": Pre-computes 168 vonorm-permutation-derived
+              goal variants (one matrix per permutation). Low overhead.
+            - "unimodular_partial": One unimodular matrix per (zero_set,
+              conorm_perm) across all coforms. Good accuracy/speed trade-off.
+            - "unimodular_full": All unimodular matrices across all coforms.
+              Tightest heuristic but slowest precomputation.
+        heuristic_weight: Multiplier on the unimodular heuristic value.
+            Only used when heuristic_mode is not "manhattan". Lower values
+            make the search more exploratory; higher values more greedy.
+
+    Returns:
+        Tuple of (path, iterations) where path is a list of flat coordinate
+        vectors (vonorms + coords) or None, and iterations is the count.
+    """
     # Convert CNFs to the format expected by Rust pathfinding
     start_points = []
     for cnf in start_cnfs:
@@ -61,7 +94,7 @@ def astar_rust(
             beam_width=beam_width if beam_width is not None else 0,
             verbose=True
         )       
-    else: 
+    else:
         return rust_cnf.astar_pathfind_rust(
             start_points,
             goal_points,
@@ -75,7 +108,9 @@ def astar_rust(
             dropout,
             greedy,
             verbose,
-            speak_freq
+            speak_freq,
+            heuristic_mode,
+            heuristic_weight,
         )
 
 def pathfind_and_save(start_cif,
@@ -92,7 +127,10 @@ def pathfind_and_save(start_cif,
                       dropout=0.0,
                       speak_freq=5,
                       user_metadata=None,
-                      verbose=False):
+                      verbose=False,
+                      heuristic=None,
+                      heuristic_mode="manhattan",
+                      heuristic_weight=0.5):
     """Run pathfinding between two CIF structures and save result to JSON
 
     Args:
@@ -155,10 +193,19 @@ def pathfind_and_save(start_cif,
     search_state = None  # Will be set if using Python non-bidirectional A*
     max_iterations_reached = None
     if use_python:
-        # Use Python A* implementation
-        heuristic = manhattan_distance
+
+        if heuristic_mode == "manhattan":
+            heuristic = manhattan_distance
+        elif heuristic_mode == "unimodular_light":
+            heuristic = UnimodularManhattanHeuristic(weight=heuristic_weight, full=False, partial=False)
+        elif heuristic_mode == "unimodular_partial":
+            heuristic = UnimodularManhattanHeuristic(weight=heuristic_weight, full=False, partial=True)
+        elif heuristic_mode == "unimodular_full":
+            heuristic = UnimodularManhattanHeuristic(weight=heuristic_weight, full=True, partial=False)
+        
+
         filter_set = FilterSet([MinDistanceFilter(min_distance)], use_structs = not USE_RUST)
-        # filter_set = FilterSet([EnergyFilter.from_cnfs(start_cnfs + goal_cnfs)])
+        
         if bidirectional:
             path = bidirectional_astar_pathfind(
                 start_cnfs,
@@ -210,7 +257,9 @@ def pathfind_and_save(start_cif,
                 greedy=greedy,
                 dropout=dropout,
                 verbose=verbose,
-                speak_freq=speak_freq
+                speak_freq=speak_freq,
+                heuristic_mode=heuristic_mode,
+                heuristic_weight=heuristic_weight,
             )
             max_iterations_reached = num_iterations == max_iterations
 
