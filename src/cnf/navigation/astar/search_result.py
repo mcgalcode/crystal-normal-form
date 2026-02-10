@@ -39,6 +39,25 @@ class PathSearchResult:
             kwargs = json.load(f)
             return cls(**kwargs)
 
+    def get_step_types(self):
+        """Label each step on the path as 'lattice' or 'motif'.
+
+        A 'lattice' step is one where the vonorms (first 7 coords) changed.
+        A 'motif' step is one where only the motif coords (index 7+) changed.
+        Each neighbor-finding step changes exactly one of these.
+
+        Returns:
+            List of strings, length len(path) - 1. Each entry is
+            'lattice' or 'motif'.
+        """
+        if self.path is None:
+            return None
+        labels = []
+        for i in range(len(self.path) - 1):
+            vonorms_changed = tuple(self.path[i][:7]) != tuple(self.path[i + 1][:7])
+            labels.append('lattice' if vonorms_changed else 'motif')
+        return labels
+
     def get_cnfs_on_path(self):
         if self.path is None:
             return None
