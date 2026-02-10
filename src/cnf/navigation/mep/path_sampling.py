@@ -47,6 +47,8 @@ class PathFindingParameters():
     delta: int
     min_distance: float
     max_iterations: int
+    heuristic_mode: str
+    heuristic_weight: float
 
     beam_width: int = 1000
     greedy: bool = False
@@ -71,7 +73,9 @@ def _save_path(inputs: tuple[str, str, str, PathFindingParameters]):
                     beam_width=params.beam_width,
                     dropout=dropout,
                     speak_freq=1000,
-                    verbose=True)
+                    verbose=True,
+                    heuristic_mode=params.heuristic_mode,
+                    heuristic_weight=params.heuristic_weight)
 
 def _get_energy_key_str(cnf: CrystalNormalForm):
     return f"{cnf.coords.__repr__()}-{cnf.elements.__repr__()}-{cnf.xi}-{cnf.delta}"
