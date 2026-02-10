@@ -30,6 +30,11 @@ def main():
                         help="Suppress logging output (default: false)")
     parser.add_argument("--beam-width", type=int, default=None,
                         help="Beam width for beam search - limits open set size (works with both unidirectional and bidirectional)")
+    parser.add_argument("--heuristic-mode", default=None,
+                        help="The heuristic to use in this search: manhattan, unimodular_light, unimodular_partial, unimodular_full")
+    parser.add_argument("--heuristic-weight", type=float, default=0.5,
+                        help="The prefactor on the heuristic - used to control aggressiveness of search.")
+
 
     args = parser.parse_args()
 
@@ -49,6 +54,8 @@ def main():
         beam_width=args.beam_width,
         dropout=args.dropout,
         verbose=verbose,
+        heuristic_mode=args.heuristic_mode,
+        heuristic_weight=args.heuristic_weight
     )
 
     if success:
