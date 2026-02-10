@@ -146,57 +146,6 @@ def align_cnf_path(cnfs, verbose=True):
     structs = [cnf.reconstruct() for cnf in cnfs]
     return align_path(structs, verbose=verbose)
 
-
-def compute_ssneb_distances(structs, weight=1.0):
-    """Compute pairwise SSNEB-metric distances between consecutive structures.
-
-    Uses the tsase SSNEB distance metric: Jacobian-scaled cell strain +
-    PBC-wrapped fractional coords in Cartesian, combined via Euclidean norm.
-
-    Args:
-        structs: List of pymatgen Structures (should be pre-aligned).
-        weight: Relative weight of cell vs atomic degrees of freedom.
-
-    Returns:
-        List of floats, length len(structs) - 1. distances[i] is the
-        SSNEB distance from structs[i] to structs[i+1].
-    """
-    from tsase.neb.ssneb_utils import (compute_jacobian,
-                                        initialize_image_properties,
-                                        image_distance_vector)
-    from tsase.neb.util import vmag
-    from ase import Atoms
-
-    # Convert to ASE Atoms
-    atoms_list = []
-    for s in structs:
-        a = Atoms(
-            symbols=[str(sp) for sp in s.species],
-            scaled_positions=s.frac_coords,
-            cell=s.lattice.matrix,
-            pbc=True,
-        )
-        atoms_list.append(a)
-
-    # Compute Jacobian from endpoints
-    vol1 = atoms_list[0].get_volume()
-    vol2 = atoms_list[-1].get_volume()
-    natom = len(atoms_list[0])
-    jacobian = compute_jacobian(vol1, vol2, natom, weight)
-
-    # Initialize image properties
-    for a in atoms_list:
-        initialize_image_properties(a, jacobian)
-
-    # Compute consecutive distances
-    distances = []
-    for i in range(len(atoms_list) - 1):
-        dv = image_distance_vector(atoms_list[i], atoms_list[i + 1])
-        distances.append(float(vmag(dv)))
-
-    return distances
-
-
 def resample_path_by_distance(structs, num_images, weight=1.0):
     """Resample an aligned path so images are equally spaced in SSNEB distance.
 
