@@ -5,6 +5,7 @@ mod geometry;
 mod pathfinding;
 mod bidirectional;
 mod neighbors;
+mod heuristics;
 
 use pyo3::prelude::*;
 use numpy::{PyArray1, PyArrayMethods, PyReadonlyArray1};
@@ -1216,6 +1217,7 @@ fn reconstruct_structure_from_cnf<'py>(
 ///     Tuple of (path, iterations) where path is a list of flat Vec<i32> (vonorms + coords concatenated)
 ///     or None if no path found, and iterations is the number of iterations performed
 #[pyfunction]
+#[pyo3(signature = (start_points, goal_points, elements, n_atoms, xi, delta, min_distance, max_iterations, beam_width, dropout, greedy, verbose, speak_freq, heuristic_mode="manhattan", heuristic_weight=0.5))]
 fn astar_pathfind_rust<'py>(
     _py: Python<'py>,
     start_points: Vec<(Vec<i32>, Vec<i32>)>,
@@ -1231,8 +1233,11 @@ fn astar_pathfind_rust<'py>(
     greedy: bool,
     verbose: bool,
     speak_freq: usize,
+    heuristic_mode: &str,
+    heuristic_weight: f64,
 ) -> PyResult<(Option<Vec<Vec<i32>>>, usize)> {
     use crate::pathfinding::astar_pathfind;
+    use crate::heuristics::HeuristicMode;
 
     // Validate inputs
     if start_points.is_empty() {
@@ -1282,6 +1287,9 @@ fn astar_pathfind_rust<'py>(
         ));
     }
 
+    // Parse heuristic mode
+    let mode = HeuristicMode::from_str(heuristic_mode);
+
     // Call the Rust pathfinding function
     let (path, iterations) = astar_pathfind(
         &start_points,
@@ -1297,6 +1305,8 @@ fn astar_pathfind_rust<'py>(
         greedy,
         verbose,
         speak_freq,
+        mode,
+        heuristic_weight,
     );
 
     // Check if we were interrupted - if so, raise KeyboardInterrupt
