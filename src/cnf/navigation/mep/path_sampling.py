@@ -2,16 +2,19 @@ import os
 import tqdm
 import shutil
 import random
-import dataclasses
+import copy
 import json
 import multiprocessing as mp
 
 from pathlib import Path
 from typing import Iterable
+from pymatgen.core.structure import Structure
 
 from ...crystal_normal_form import CrystalNormalForm
 from .utilities import get_energies
 from ..astar import pathfind_and_save
+from ..endpoints import get_endpoint_cnfs
+from ..astar.params import PathFindingParameters
 from ..astar.search_result import PathSearchResult
 
 # The MEP path sampling algorithm is going to be as follows:
@@ -39,43 +42,36 @@ def get_sampled_path(path: list, num_pts: int):
         sampled_path.append(path[-1])
     return sampled_path
 
+def _save_path(inputs: tuple[str, str, str, int, PathFindingParameters]):
+    start_cif, end_cif, output_file, randomly_select_n_endpts, params = inputs
 
-@dataclasses.dataclass
-class PathFindingParameters():
+    start_struct = Structure.from_file(start_cif)
+    end_struct = Structure.from_file(end_cif)
 
-    xi: float
-    delta: int
-    min_distance: float
-    max_iterations: int
-    heuristic_mode: str
-    heuristic_weight: float
+    start_cnfs, goal_cnfs = get_endpoint_cnfs(start_struct,
+                                              end_struct,
+                                              xi=params.xi,
+                                              delta=params.delta,
+                                              min_atoms=params.min_atoms)
 
-    beam_width: int = 1000
-    greedy: bool = False
+    if randomly_select_n_endpts is not None and len(start_cnfs) > randomly_select_n_endpts:
+        start_cnfs = random.sample(start_cnfs, k=randomly_select_n_endpts)
+    
+    if randomly_select_n_endpts is not None and len(goal_cnfs) > randomly_select_n_endpts:
+        goal_cnfs = random.sample(goal_cnfs, k=randomly_select_n_endpts)
 
-def _save_path(inputs: tuple[str, str, str, PathFindingParameters]):
-    start_cif, end_cif, output_file, params = inputs
-    dropout = random.uniform(0, 0.8)
+
     if os.path.exists(output_file):
         print(f"File already exists: {output_file}")
         return
 
-    pathfind_and_save(start_cif,
-                    end_cif,
+    pathfind_and_save(start_cnfs,
+                    goal_cnfs,
                     output_file,
-                    xi=params.xi,
-                    delta=params.delta,
-                    min_distance=params.min_distance,
-                    max_iterations=params.max_iterations,
+                    params=params,
                     use_python=False,
-                    bidirectional=False,
-                    greedy=params.greedy,
-                    beam_width=params.beam_width,
-                    dropout=dropout,
                     speak_freq=1000,
-                    verbose=True,
-                    heuristic_mode=params.heuristic_mode,
-                    heuristic_weight=params.heuristic_weight)
+                    verbose=True,)
 
 def _get_energy_key_str(cnf: CrystalNormalForm):
     return f"{cnf.coords.__repr__()}-{cnf.elements.__repr__()}-{cnf.xi}-{cnf.delta}"
@@ -132,6 +128,7 @@ class PathSampler():
 
     def sample_paths(self,
                      pathfinding_params: PathFindingParameters,
+                     randomly_select_n_endpoints: int = None,
                      num_attempts: int = None,
                      max_path_results: int = None):
         
@@ -148,6 +145,8 @@ class PathSampler():
         
         parameter_sets = []
         for _ in range(num_attempts):
+            param_copy = copy.deepcopy(pathfinding_params)
+            param_copy.dropout = random.uniform(0.5, 0.9)
             if random.random() < 0.5:
                 start = self.endpoint_1_path
                 end = self.endpoint_2_path
@@ -159,7 +158,7 @@ class PathSampler():
             
             output_path = self.paths_results_dir / f"{pref}{random_string()}"
             parameter_sets.append(
-                (start, end, output_path, pathfinding_params)
+                (start, end, output_path, randomly_select_n_endpoints, param_copy)
             )
         
         if self.parallel:
