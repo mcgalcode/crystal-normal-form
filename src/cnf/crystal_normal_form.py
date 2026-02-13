@@ -88,6 +88,9 @@ class CrystalNormalForm:
         with open(fname, 'r') as f:
             d = json.load(f)
             return cls.from_dict(d)
+        
+    def as_str_key(self):
+        return f"{self.coords.__repr__()}-{self.elements.__repr__()}-{self.xi}-{self.delta}"
     
     def to_file(self, fname: str):
         with open(fname, 'w') as f:

@@ -74,7 +74,7 @@ def _save_path(inputs: tuple[str, str, str, int, PathFindingParameters]):
                     verbose=True,)
 
 def _get_energy_key_str(cnf: CrystalNormalForm):
-    return f"{cnf.coords.__repr__()}-{cnf.elements.__repr__()}-{cnf.xi}-{cnf.delta}"
+    return cnf.as_str_key()
 
 class PathSampler():
 
