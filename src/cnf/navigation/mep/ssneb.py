@@ -110,8 +110,8 @@ def prepare_ssneb_image(struct):
         pbc=True,
     )
 
-def get_interpolated_images(endpt1, endpt2, num_images):
-    start_cells, end_cells = get_endpoint_unit_cells(endpt1, endpt2)
+def get_interpolated_images(endpt1, endpt2, num_images, min_atoms=None):
+    start_cells, end_cells = get_endpoint_unit_cells(endpt1, endpt2, min_atoms=min_atoms)
     min_dist = math.inf
     selected_start_struct = None
     selected_end_struct = None
@@ -146,7 +146,8 @@ def _band_to_structures(band):
 
 
 def run_ssneb(images, calc, method='ci', spring_k=5.0, max_iters=1000,
-              force_tol=0.05, ss=True, work_dir=None, xdatcar_file=None):
+              force_tol=0.05, ss=True, work_dir=None, xdatcar_file=None,
+              maxmove=0.1, dt=0.05, dtmax=0.5, optimizer='fire'):
     """Run solid-state NEB using tsase.
 
     Args:
@@ -155,7 +156,7 @@ def run_ssneb(images, calc, method='ci', spring_k=5.0, max_iters=1000,
             images will have calc assigned automatically.
         calc: ASE calculator instance for energy/force evaluation.
         method: NEB method — 'ci' for climbing image, 'normal' otherwise.
-        spring_k: Spring force constant.
+        spring_k: Spring force constant (note: internally multiplied by numImages).
         max_iters: Maximum optimizer iterations.
         force_tol: Force convergence tolerance (eV/Angstrom).
         ss: If True, use solid-state NEB (cell deformation). If False,
@@ -164,6 +165,10 @@ def run_ssneb(images, calc, method='ci', spring_k=5.0, max_iters=1000,
             If None, runs in current directory.
         xdatcar_file: If provided, save the final band as an XDATCAR file
             at this path (absolute or relative to the original directory).
+        maxmove: Optimizer max displacement per step.
+        dt: FIRE optimizer initial timestep.
+        dtmax: FIRE optimizer maximum timestep.
+        optimizer: 'fire' (default) or 'lbfgs'.
 
     Returns:
         Tuple of (energies, structures) where energies is a list of floats
@@ -191,8 +196,12 @@ def run_ssneb(images, calc, method='ci', spring_k=5.0, max_iters=1000,
             band.path[i].set_positions(images[i].get_positions())
             band.path[i].set_calculator(calc)
 
-        opt = neb.fire_ssneb(band, maxmove=0.1, dt=0.05, dtmax=0.5,
-                             trajectory='ssneb.traj')
+        if optimizer == 'lbfgs':
+            opt = neb.lbfgs_ssneb(band, maxmove=maxmove,
+                                  trajectory='ssneb.traj')
+        else:
+            opt = neb.fire_ssneb(band, maxmove=maxmove, dt=dt, dtmax=dtmax,
+                                 trajectory='ssneb.traj')
         opt.minimize(forceConverged=force_tol, maxIterations=max_iters)
 
         energies = []
