@@ -12,6 +12,7 @@ from ..search_filters import FilterSet, MinDistanceFilter
 from pymatgen.core import Structure
 from ..endpoints import get_endpoint_unit_cells
 from .core import astar_pathfind
+from .params import PathFindingParameters
 from .search_result import PathSearchResult
 from .bidirectional import bidirectional_astar_pathfind
 from .heuristics import manhattan_distance, pdd_amd_heuristic, pdd_heuristic, pdd_and_manhattan, UnimodularManhattanHeuristic
@@ -112,25 +113,55 @@ def astar_rust(
             heuristic_mode,
             heuristic_weight,
         )
-
-def pathfind_and_save(start_cif,
-                      end_cif,
-                      output_json,
-                      xi=0.2,
-                      delta=30,
-                      min_distance=0.0,
-                      max_iterations=100000,
+    
+def pathfind_and_save_from_cifs(start_cif: str,
+                      end_cif: str,
+                      output_json: str,
+                      params: PathFindingParameters,
                       use_python=False,
-                      bidirectional=False,
-                      greedy=False,
-                      beam_width=None,
-                      dropout=0.0,
                       speak_freq=5,
                       user_metadata=None,
-                      verbose=False,
-                      heuristic=None,
-                      heuristic_mode="manhattan",
-                      heuristic_weight=0.5):
+                      verbose=False):
+    start_struct = Structure.from_file(start_cif)
+    end_struct = Structure.from_file(end_cif)
+
+    start_cells, goal_cells = get_endpoint_unit_cells(start_struct, end_struct, min_atoms=params.min_atoms)
+
+    if verbose:
+        print(f"\n=== Endpoints ===")
+        print(f"Number of start cells: {len(start_cells)}")
+        print(f"Number of goal cells: {len(goal_cells)}")
+
+    # Convert unit cells to CNFs and deduplicate
+    start_cnfs = list(set([cell.to_cnf(xi=params.xi, delta=params.delta) for cell in start_cells]))
+    goal_cnfs = list(set([cell.to_cnf(xi=params.xi, delta=params.delta) for cell in goal_cells]))
+
+    if user_metadata is None:
+        user_metadata = {}
+
+    user_metadata = {
+        "start_cif": str(start_cif),
+        "end_cif": str(end_cif),
+        **user_metadata
+    }
+    return pathfind_and_save(start_cnfs,
+                             goal_cnfs,
+                             output_json,
+                             params,
+                             use_python=use_python,
+                             speak_freq=speak_freq,
+                             user_metadata=user_metadata,
+                             verbose=verbose)
+    
+
+def pathfind_and_save(start_cnfs: list[CrystalNormalForm],
+                      goal_cnfs: list[CrystalNormalForm],
+                      output_json: str,
+                      params: PathFindingParameters,
+                      use_python=False,
+                      speak_freq=5,
+                      user_metadata=None,
+                      verbose=False,):
     """Run pathfinding between two CIF structures and save result to JSON
 
     Args:
@@ -152,20 +183,6 @@ def pathfind_and_save(start_cif,
     if user_metadata is None:
         user_metadata = {}
 
-    start_struct = Structure.from_file(start_cif)
-    end_struct = Structure.from_file(end_cif)
-
-    start_cells, goal_cells = get_endpoint_unit_cells(start_struct, end_struct)
-
-    if verbose:
-        print(f"\n=== Endpoints ===")
-        print(f"Number of start cells: {len(start_cells)}")
-        print(f"Number of goal cells: {len(goal_cells)}")
-
-    # Convert unit cells to CNFs and deduplicate
-    start_cnfs = list(set([cell.to_cnf(xi=xi, delta=delta) for cell in start_cells]))
-    goal_cnfs = list(set([cell.to_cnf(xi=xi, delta=delta) for cell in goal_cells]))
-
     if verbose:
         print(f"Unique start CNFs: {len(start_cnfs)}")
         for sc in start_cnfs:
@@ -186,7 +203,7 @@ def pathfind_and_save(start_cif,
         print(f"Implementation: {'Python' if use_python else 'Rust'}")
         print(f"Elements: {elements}")
         print(f"N atoms: {n_atoms}")
-        print(f"Xi: {xi}, Delta: {delta}")
+        print(f"Xi: {params.xi}, Delta: {params.delta}")
         print(f"Start points: {len(start_cnfs)}")
         print(f"Goal points: {len(goal_cnfs)}")
 
@@ -194,79 +211,50 @@ def pathfind_and_save(start_cif,
     max_iterations_reached = None
     if use_python:
 
-        if heuristic_mode == "manhattan":
+        if params.heuristic_mode == "manhattan":
             heuristic = manhattan_distance
-        elif heuristic_mode == "unimodular_light":
-            heuristic = UnimodularManhattanHeuristic(weight=heuristic_weight, full=False, partial=False)
-        elif heuristic_mode == "unimodular_partial":
-            heuristic = UnimodularManhattanHeuristic(weight=heuristic_weight, full=False, partial=True)
-        elif heuristic_mode == "unimodular_full":
-            heuristic = UnimodularManhattanHeuristic(weight=heuristic_weight, full=True, partial=False)
+        elif params.heuristic_mode == "unimodular_light":
+            heuristic = UnimodularManhattanHeuristic(weight=params.heuristic_weight, full=False, partial=False)
+        elif params.heuristic_mode == "unimodular_partial":
+            heuristic = UnimodularManhattanHeuristic(weight=params.heuristic_weight, full=False, partial=True)
+        elif params.heuristic_mode == "unimodular_full":
+            heuristic = UnimodularManhattanHeuristic(weight=params.heuristic_weight, full=True, partial=False)
         
 
-        filter_set = FilterSet([MinDistanceFilter(min_distance)], use_structs = not USE_RUST)
+        filter_set = FilterSet([MinDistanceFilter(params.min_distance)], use_structs = not USE_RUST)
         
-        if bidirectional:
-            path = bidirectional_astar_pathfind(
-                start_cnfs,
-                goal_cnfs,
-                heuristic,
-                filter_set,
-                max_iterations=max_iterations,
-                beam_width=beam_width,
-                greedy=greedy,
-                verbose=True
-            )
-        else:
-            search_state = astar_pathfind(
-                start_cnfs,
-                goal_cnfs,
-                heuristic,
-                filter_set,
-                max_iterations=max_iterations,
-                beam_width=beam_width,
-                greedy=greedy,
-                verbose=True,
-                dropout=dropout,
-            )
-            path = search_state.path
-            max_iterations_reached = search_state.max_iterations_reached
-            num_iterations = search_state.iterations
+        search_state = astar_pathfind(
+            start_cnfs,
+            goal_cnfs,
+            heuristic,
+            filter_set,
+            max_iterations=params.max_iterations,
+            beam_width=params.beam_width,
+            greedy=params.greedy,
+            verbose=True,
+            dropout=params.dropout,
+        )
+        path = search_state.path
+        max_iterations_reached = search_state.max_iterations_reached
+        num_iterations = search_state.iterations
     else:
-        # Use Rust A* implementation (default)
-        if bidirectional:
-            path = rust_cnf.bidirectional_astar_pathfind_rust(
-                start_cnfs,
-                goal_cnfs,
-                elements,
-                n_atoms,
-                xi,
-                delta,
-                min_distance=min_distance,
-                max_iterations=max_iterations,
-                beam_width=beam_width if beam_width is not None else 0,
-                verbose=True
-            )
-        else:
-            path, num_iterations = astar_rust(
-                start_cnfs,
-                goal_cnfs,
-                min_distance=min_distance,
-                max_iterations=max_iterations,
-                beam_width=beam_width,
-                greedy=greedy,
-                dropout=dropout,
-                verbose=verbose,
-                speak_freq=speak_freq,
-                heuristic_mode=heuristic_mode,
-                heuristic_weight=heuristic_weight,
-            )
-            max_iterations_reached = num_iterations == max_iterations
+        path, num_iterations = astar_rust(
+            start_cnfs,
+            goal_cnfs,
+            min_distance=params.min_distance,
+            max_iterations=params.max_iterations,
+            beam_width=params.beam_width,
+            greedy=params.greedy,
+            dropout=params.dropout,
+            verbose=verbose,
+            speak_freq=speak_freq,
+            heuristic_mode=params.heuristic_mode,
+            heuristic_weight=params.heuristic_weight,
+        )
+        max_iterations_reached = num_iterations == params.max_iterations
 
     metadata= {
-        "start_cif": str(start_cif),
-        "end_cif": str(end_cif),
-        "min_distance": min_distance,
+        "min_distance": params.min_distance,
         **user_metadata,
     }
 
@@ -274,15 +262,15 @@ def pathfind_and_save(start_cif,
         path=path,
         max_iterations_reached=max_iterations_reached,
         num_iterations=num_iterations,
-        xi=xi,
-        delta=delta,
+        xi=params.xi,
+        delta=params.delta,
         elements=elements,
         n_atoms=len(elements),
         
-        greedy=greedy,
-        beam_width=beam_width,
-        dropout=dropout,
-        max_iterations=max_iterations,
+        greedy=params.greedy,
+        beam_width=params.beam_width,
+        dropout=params.dropout,
+        max_iterations=params.max_iterations,
 
         metadata=metadata
     ) 
