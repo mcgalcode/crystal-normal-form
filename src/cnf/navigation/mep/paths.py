@@ -162,6 +162,7 @@ def resample_path_by_distance(structs, num_images, weight=1.0):
         List of num_images pymatgen Structures, equally spaced in SSNEB
         distance metric.
     """
+    from .ssneb import compute_ssneb_distances
     distances = compute_ssneb_distances(structs, weight=weight)
     cumulative = np.zeros(len(structs))
     for i in range(len(distances)):
@@ -200,3 +201,37 @@ def resample_path_by_distance(structs, num_images, weight=1.0):
         ))
 
     return resampled
+
+
+def make_uniform_path(structs, weight=1.0):
+    """Resample a path to the same number of frames but with uniform SSNEB spacing.
+
+    Equivalent to resample_path_by_distance(structs, len(structs)), but
+    returned as a list that can be cheaply subsampled with integer indexing.
+
+    Args:
+        structs: List of aligned pymatgen Structures.
+        weight: Relative weight of cell vs atomic degrees of freedom.
+
+    Returns:
+        List of len(structs) Structures, equally spaced in SSNEB distance.
+    """
+    return resample_path_by_distance(structs, len(structs), weight=weight)
+
+
+def subsample_uniform_path(uniform_structs, num_images):
+    """Pick num_images frames from a uniformly-spaced path by integer indexing.
+
+    Because uniform_structs is already evenly spaced in SSNEB distance,
+    the subsampled frames are also approximately evenly spaced.
+
+    Args:
+        uniform_structs: List of uniformly-spaced Structures (from make_uniform_path).
+        num_images: Number of output images (including endpoints).
+
+    Returns:
+        List of num_images Structures.
+    """
+    n = len(uniform_structs)
+    indices = np.round(np.linspace(0, n - 1, num_images)).astype(int)
+    return [uniform_structs[i] for i in indices]
