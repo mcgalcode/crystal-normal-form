@@ -129,6 +129,7 @@ def astar_pathfind(
     dropout: float = 0,
     verbose: bool = False,
     speak_freq = 5,
+    log_prefix: str = "      ",
 ) -> AStarSearchState:
     """
     A* pathfinding between CNF states with customizable heuristic and filtering.
@@ -194,7 +195,13 @@ def astar_pathfind(
         if verbose and search_state.iterations % speak_freq == 0:
             te = time.perf_counter_ns()
             elapsed = round((te - ts) / 1e9, 3)
-            print(f"Step {search_state.iterations}:  open={len(search_state.open_set)}, closed={len(search_state.closed_set)}, f={search_state.open_set[0].f_score:.2f}, g={search_state.open_set[0].g_score:.2f}, h={search_state.open_set[0].h_score:.6f}, Elapsed: {elapsed:.2f}s")
+            print(f"{log_prefix}iter {search_state.iterations}: "
+                  f"open={len(search_state.open_set)}, "
+                  f"closed={len(search_state.closed_set)}, "
+                  f"f={search_state.open_set[0].f_score:.2f}, "
+                  f"g={search_state.open_set[0].g_score:.2f}, "
+                  f"h={search_state.open_set[0].h_score:.4f}, "
+                  f"{elapsed:.1f}s", flush=True)
 
         # Pop node with lowest f_score
         current_node = heapq.heappop(search_state.open_set)
