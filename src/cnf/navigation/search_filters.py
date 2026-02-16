@@ -131,9 +131,15 @@ class EnergyFilter(SearchFilter):
         return cls(limit)
 
 
-    def __init__(self, max_energy: float):
+    def __init__(self, max_energy: float, calc=None, cache=None):
+        super().__init__()
+        self.requires_structs = False
         self.max_energy = max_energy
-        self.calc = GraceCalculator()
+        self.calc = calc or GraceCalculator()
+        self._cache = cache if cache is not None else {}
 
     def should_add_pt(self, pt, struct):
-        return self.calc.calculate_energy(pt) < self.max_energy
+        key = pt.coords
+        if key not in self._cache:
+            self._cache[key] = self.calc.calculate_energy(pt)
+        return self._cache[key] < self.max_energy
