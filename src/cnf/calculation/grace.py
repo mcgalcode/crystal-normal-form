@@ -1,13 +1,13 @@
 import math
 
 from tensorpotential.calculator.foundation_models import grace_fm, GRACEModels
+
 from ..crystal_normal_form import CrystalNormalForm
 from ..navigation import find_neighbors
-from ase import Atoms
 from .base_calculator import BaseCalculator
 
 
-DEFAULT_MODEL = GRACEModels.GRACE_1L_OAM
+DEFAULT_MODEL = GRACEModels.GRACE_FS_OAM
 
 class GraceCalculator(BaseCalculator):
 
@@ -17,9 +17,9 @@ class GraceCalculator(BaseCalculator):
 
     def calculate_energy(self, cnf: CrystalNormalForm) -> float:
         atoms = cnf.reconstruct().to_ase_atoms()
-        self._calc.calculate(atoms, properties = ['energy'])
+        self._calc.calculate(atoms, properties=['energy'])
         return self._calc.results['energy']
-    
+
     def relax(self, cnf: CrystalNormalForm, max_iters = None) -> tuple[CrystalNormalForm, float, int]:
         min_e = self.calculate_energy(cnf)
         min_cnf = cnf
@@ -42,5 +42,3 @@ class GraceCalculator(BaseCalculator):
 
     def identifier(self):
         return f"GraceMLIPCalculator(model={self.model_string})"
-            
-    
