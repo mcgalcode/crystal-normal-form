@@ -21,7 +21,7 @@ import os
 import time
 from pathlib import Path
 
-from cnf import CrystalNormalForm
+from cnf import CrystalNormalForm, UnitCell
 from cnf.calculation.base_calculator import BaseCalculator
 from cnf.calculation.grace import GraceCalculator
 from cnf.navigation.astar import astar_rust
@@ -756,7 +756,48 @@ def _calibrate_max_iters(start_cnfs, goal_cnfs, beam_width,
 
 # ── Main function ──
 
-def rising_ceiling_barrier(
+def _relax_unit_cell(uc, calc, fmax=0.01, max_steps=500, verbose=True, label=""):
+    """Relax a UnitCell in continuous space (cell + positions) using ASE FIRE.
+
+    Args:
+        uc: UnitCell to relax.
+        calc: ASE calculator (e.g. from grace_fm()).
+        fmax: Force convergence threshold (eV/A).
+        max_steps: Maximum optimizer steps.
+        verbose: Print before/after energies.
+        label: Label for printing (e.g. "start" or "end").
+
+    Returns:
+        Relaxed UnitCell.
+    """
+    from ase.filters import ExpCellFilter
+    from ase.optimize import FIRE
+    from pymatgen.io.ase import AseAtomsAdaptor
+
+    struct = uc.to_pymatgen_structure()
+    atoms = AseAtomsAdaptor.get_atoms(struct)
+    atoms.calc = calc
+
+    e_before = atoms.get_potential_energy()
+    if verbose:
+        print(f"  [{label}] Before: E = {e_before:.4f} eV, "
+              f"vol = {atoms.get_volume():.2f} A^3")
+
+    ecf = ExpCellFilter(atoms)
+    opt = FIRE(ecf, logfile=None)
+    opt.run(fmax=fmax, steps=max_steps)
+
+    e_after = atoms.get_potential_energy()
+    if verbose:
+        print(f"  [{label}] After:  E = {e_after:.4f} eV, "
+              f"vol = {atoms.get_volume():.2f} A^3 "
+              f"({opt.nsteps} steps)")
+
+    relaxed_struct = AseAtomsAdaptor.get_structure(atoms)
+    return UnitCell.from_pymatgen_structure(relaxed_struct)
+
+
+def ceiling_barrier_search(
     start_uc,
     end_uc,
     energy_calc=None,
@@ -768,7 +809,7 @@ def rising_ceiling_barrier(
     num_ceilings=5,
     attempts_per_ceiling=1,
     max_passes=5,
-    max_rising_rounds=20,
+    max_sweep_rounds=20,
     max_ceiling=None,
     xi_factor=0.8,
     delta_factor=1.2,
@@ -783,21 +824,21 @@ def rising_ceiling_barrier(
     n_workers=0,
     verbose=True,
     output_dir=None,
+    # Endpoint relaxation
+    relax_endpoints=False,
 ):
-    """Rising ceiling barrier search with multi-resolution refinement.
+    """Ceiling barrier search with multi-resolution refinement.
 
     Searches for the minimum energy barrier between two crystal structures
-    using progressively finer discretization.
+    by sweeping A* searches across energy ceilings in parallel, then
+    refining with progressively finer discretization.
 
-    Pass 0 (Rising): Run batches of searches at increasingly high energy
-    ceilings until a path is found, establishing ceiling_top.
+    The sweep range is [base, ceiling_top] where base = max(endpoint_energies).
+    ceiling_top is either given via max_ceiling, or discovered by sweeping
+    upward from base with step_per_atom spacing until a path is found.
 
-    Pass 1+ (Refining): At progressively finer xi/delta, run searches
-    evenly spaced from base to ceiling_top. The lowest successful barrier
-    becomes the new ceiling_top, tightening each pass.
-
-    All searches within a batch run at different ceilings and are
-    independent, enabling parallel execution with n_workers > 1.
+    Each pass refines xi/delta and re-sweeps, tightening ceiling_top to
+    the lowest barrier found.
 
     Args:
         start_uc: Starting UnitCell.
@@ -805,16 +846,18 @@ def rising_ceiling_barrier(
         energy_calc: Energy calculator (default: GraceCalculator).
         xi: Initial lattice discretization parameter.
         delta: Initial motif discretization parameter.
-        step_per_atom: Energy step per atom for rising phase (eV/atom).
-        num_ceilings: Number of ceiling levels per refinement pass.
-            In rising mode, batch size is n_workers instead.
+        step_per_atom: Energy step per atom (eV/atom) for discovering
+            ceiling_top when max_ceiling is not set.
+        num_ceilings: Number of ceiling levels to sweep per pass.
+            When discovering ceiling_top, batch size is n_workers instead.
         attempts_per_ceiling: Searches per ceiling level (default 1). With
             tight energy constraints, 3-5 gives more chances to find paths
             through different dropout randomness.
         max_passes: Number of resolution refinement passes.
-        max_rising_rounds: Safety cap on rising phase batches.
-        max_ceiling: Starting ceiling (eV). When set, skips the rising
-            phase entirely and goes straight to refining from this value.
+        max_sweep_rounds: Safety cap on sweep batches when discovering
+            ceiling_top.
+        max_ceiling: Upper bound of sweep range (eV). When set, ceilings
+            are evenly spaced from base to this value on the first pass.
             Useful for resuming from a previous run's ceiling_top.
         xi_factor: xi multiplied by this each refinement pass.
         delta_factor: delta multiplied by this each refinement pass (rounded).
@@ -829,12 +872,37 @@ def rising_ceiling_barrier(
             creates its own energy calculator.
         verbose: Print progress.
         output_dir: Path to output directory (None = no file output).
+        relax_endpoints: If True, relax both endpoint structures in
+            continuous space (cell + positions) using ASE FIRE + ExpCellFilter
+            before any CNF discretization. This ensures endpoints are at
+            local energy minima, so reported barriers are meaningful.
 
     Returns:
         (barrier, best_path_cnfs, best_path_energies) or (None, None, None)
     """
     if energy_calc is None:
         energy_calc = GraceCalculator()
+
+    # Relax endpoints in continuous space if requested
+    if relax_endpoints:
+        from tensorpotential.calculator.foundation_models import grace_fm
+        ase_calc = grace_fm(energy_calc.model_string)
+
+        if verbose:
+            print("Relaxing endpoints in continuous space...")
+
+        start_uc = _relax_unit_cell(
+            start_uc, ase_calc, verbose=verbose, label="start")
+        end_uc = _relax_unit_cell(
+            end_uc, ase_calc, verbose=verbose, label="end")
+
+        if output_dir is not None:
+            out = Path(output_dir)
+            out.mkdir(parents=True, exist_ok=True)
+            start_uc.to_cif(str(out / "start_relaxed.cif"))
+            end_uc.to_cif(str(out / "end_relaxed.cif"))
+            if verbose:
+                print(f"  Relaxed CIFs saved to {out}")
 
     energy_cache = {}
     total_start = time.perf_counter()
@@ -848,7 +916,7 @@ def rising_ceiling_barrier(
     best_xi = None
     best_delta = None
     total_paths_found = 0
-    ceiling_top = max_ceiling  # None → rising phase; set → skip straight to refining
+    ceiling_top = max_ceiling  # None → discover by sweeping up; set → sweep known range
 
     if output_dir is not None:
         output_dir = Path(output_dir)
@@ -909,7 +977,7 @@ def rising_ceiling_barrier(
             base = max(endpoint_energies) + 1e-6
 
             if verbose:
-                phase = "RISING" if ceiling_top is None else "REFINING"
+                phase = "SWEEP (discovering ceiling)" if ceiling_top is None else "REFINING"
                 print(f"\n{'='*60}")
                 print(f"Pass {pass_num}: {phase} "
                       f"(xi={pass_xi:.2f}, delta={pass_delta})")
@@ -931,19 +999,19 @@ def rising_ceiling_barrier(
             )
 
             if ceiling_top is None:
-                # ── Rising phase: batches of searches, shifting up ──
+                # ── Sweep phase: discover ceiling_top by stepping up ──
                 # Batch size = n_workers (one ceiling per worker); num_ceilings
                 # is only used for refinement passes.
-                rising_batch_size = max(1, n_workers)
-                found_in_rising = False
-                for batch_idx in range(max_rising_rounds):
+                sweep_batch_size = max(1, n_workers)
+                found_in_sweep = False
+                for batch_idx in range(max_sweep_rounds):
                     ceilings = [
-                        base + (batch_idx * rising_batch_size + i) * energy_step
-                        for i in range(rising_batch_size)
+                        base + (batch_idx * sweep_batch_size + i) * energy_step
+                        for i in range(sweep_batch_size)
                     ]
 
                     if verbose:
-                        print(f"\n  Rising batch {batch_idx} "
+                        print(f"\n  Sweep batch {batch_idx} "
                               f"(ceilings: {ceilings[0]:.2f} "
                               f"to {ceilings[-1]:.2f} eV)")
 
@@ -966,7 +1034,7 @@ def rising_ceiling_barrier(
                     if output_dir is not None:
                         _write_round_json(output_dir, round_num, {
                             "round": round_num, "pass": pass_num,
-                            "phase": "rising", "batch_idx": batch_idx,
+                            "phase": "sweep", "batch_idx": batch_idx,
                             "xi": pass_xi, "delta": pass_delta,
                             "ceilings": ceilings,
                             "results": [_serialize_result(r) for r in results],
@@ -984,14 +1052,14 @@ def rising_ceiling_barrier(
                         best_elements = elements
                         best_xi = pass_xi
                         best_delta = pass_delta
-                        found_in_rising = True
+                        found_in_sweep = True
 
                         if verbose:
                             print(f"\n  *** Path found! ceiling_top = "
                                   f"{ceiling_top:.2f} eV")
                         break
 
-                    # Adapt parameters between rising batches
+                    # Adapt parameters between sweep batches
                     successful_iters = [r["iterations"] for r in results
                                         if r["found"]]
                     current_dropout, current_max_iters = _adapt_params(
@@ -1000,10 +1068,10 @@ def rising_ceiling_barrier(
                         current_max_iters, max_iterations_per_path,
                     )
 
-                if not found_in_rising:
+                if not found_in_sweep:
                     if verbose:
                         print(f"\n  No path found after "
-                              f"{max_rising_rounds} rising batches.")
+                              f"{max_sweep_rounds} sweep batches.")
                     break
 
             else:
@@ -1093,13 +1161,13 @@ def rising_ceiling_barrier(
             print("\nNo path found across all passes.")
         if output_dir is not None:
             _write_manifest(output_dir,
-                params=_rising_params_dict(
+                params=_ceiling_params_dict(
                     xi, delta, step_per_atom, num_ceilings,
-                    attempts_per_ceiling, max_passes, max_rising_rounds,
+                    attempts_per_ceiling, max_passes, max_sweep_rounds,
                     xi_factor, delta_factor, dropout, min_dropout,
                     max_iterations_per_path, beam_width,
                     heuristic_mode, heuristic_weight, n_workers,
-                    start_cnfs, goal_cnfs,
+                    start_cnfs, goal_cnfs, relax_endpoints,
                 ),
                 result={"barrier": None, "best_path": None,
                         "best_path_energies": None, "path_length": 0,
@@ -1132,13 +1200,13 @@ def rising_ceiling_barrier(
 
     if output_dir is not None:
         _write_manifest(output_dir,
-            params=_rising_params_dict(
+            params=_ceiling_params_dict(
                 xi, delta, step_per_atom, num_ceilings,
-                attempts_per_ceiling, max_passes, max_rising_rounds,
+                attempts_per_ceiling, max_passes, max_sweep_rounds,
                 xi_factor, delta_factor, dropout, min_dropout,
                 max_iterations_per_path, beam_width,
                 heuristic_mode, heuristic_weight, n_workers,
-                start_cnfs, goal_cnfs,
+                start_cnfs, goal_cnfs, relax_endpoints,
             ),
             result={
                 "barrier": best_barrier,
@@ -1160,23 +1228,23 @@ def rising_ceiling_barrier(
     return best_barrier, best_path_cnfs, best_energies
 
 
-def _rising_params_dict(
+def _ceiling_params_dict(
     xi, delta, step_per_atom, num_ceilings, attempts_per_ceiling,
-    max_passes, max_rising_rounds,
+    max_passes, max_sweep_rounds,
     xi_factor, delta_factor, dropout, min_dropout,
     max_iterations_per_path, beam_width,
     heuristic_mode, heuristic_weight, n_workers,
-    start_cnfs, goal_cnfs,
+    start_cnfs, goal_cnfs, relax_endpoints=False,
 ):
     """Build params dict for manifest.json."""
     return {
-        "algorithm": "rising_ceiling_barrier",
+        "algorithm": "ceiling_barrier_search",
         "xi_initial": xi, "delta_initial": delta,
         "step_per_atom": step_per_atom,
         "num_ceilings": num_ceilings,
         "attempts_per_ceiling": attempts_per_ceiling,
         "max_passes": max_passes,
-        "max_rising_rounds": max_rising_rounds,
+        "max_sweep_rounds": max_sweep_rounds,
         "xi_factor": xi_factor, "delta_factor": delta_factor,
         "dropout": dropout, "min_dropout": min_dropout,
         "max_iterations_per_path": max_iterations_per_path,
@@ -1184,6 +1252,7 @@ def _rising_params_dict(
         "heuristic_mode": heuristic_mode,
         "heuristic_weight": heuristic_weight,
         "n_workers": n_workers,
+        "relax_endpoints": relax_endpoints,
         "elements": start_cnfs[0].elements if start_cnfs else [],
         "start_cnf_coords": [list(c.coords) for c in start_cnfs],
         "goal_cnf_coords": [list(c.coords) for c in goal_cnfs],
