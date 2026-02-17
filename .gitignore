@@ -19,6 +19,7 @@ src/cnf/rust_cnf/target
 src/cnf/rust_cnf/Cargo.lock
 
 experiments
+output/
 
 .envrc
 literature
