@@ -42,6 +42,7 @@ class NeighborFinder():
 
         if use_rust:
             # Pure Rust path - single call does lattice + motif
+            # Self-loop filtering is done in Rust (neighbors.rs)
             import rust_cnf
 
             vonorms_i32 = np.array(point[:7], dtype=np.int32)
@@ -54,12 +55,11 @@ class NeighborFinder():
             uniq = set([tuple([*pt[0], *pt[1]]) for pt in tuples])
         else:
             # Pure Python path - calls lattice + motif finders separately
-
             lattice_neighbors = self.find_lattice_neighbors(point)
             mnf_neighbors = self.find_motif_neighbors(point)
             uniq = set(lattice_neighbors + mnf_neighbors)
+            uniq.discard(point)
 
-        uniq.discard(point)
         return list(uniq)
         
 
