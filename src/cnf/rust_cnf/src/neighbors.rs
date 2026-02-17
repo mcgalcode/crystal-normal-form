@@ -62,8 +62,10 @@ pub(crate) fn find_neighbor_tuples(
     // Step 4: Deduplicate by (vonorms, coords) tuple
     let unique_neighbors: HashSet<(Vec<i32>, Vec<i32>)> = all_neighbors.into_iter().collect();
 
-    // Convert back to Vec and return
-    unique_neighbors.into_iter().collect()
+    // Step 5: Filter self-loops — on high-symmetry lattices, a vonorm step can
+    // produce a permuted representation that canonicalizes back to the original point
+    let original = (vonorms_i32.to_vec(), coords_i32.to_vec());
+    unique_neighbors.into_iter().filter(|n| *n != original).collect()
 }
 
 /// Internal function for finding lattice neighbors
