@@ -937,12 +937,17 @@ def ceiling_barrier_search(
 
     pool = None
     if n_workers > 1:
+        import multiprocessing as mp
         from concurrent.futures import ProcessPoolExecutor
         tf_threads = max(1, total_cores // n_workers)
+        # Use 'spawn' context so each worker gets a fresh process.
+        # With 'fork', a TF runtime initialized in the main process
+        # (e.g. by relax_endpoints) is inherited and cannot be reconfigured.
         pool = ProcessPoolExecutor(
             max_workers=n_workers,
             initializer=_init_search_worker,
             initargs=(tf_threads,),
+            mp_context=mp.get_context('spawn'),
         )
         if verbose:
             print(f"Worker pool: {n_workers} workers, "
