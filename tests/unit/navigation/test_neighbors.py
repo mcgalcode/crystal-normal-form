@@ -10,7 +10,7 @@ from cnf.navigation.neighbor_finder import NeighborFinder
 def cnf_constructor():
     return CNFConstructor(1.5, 10, False)
 
-@helpers.parameterized_by_mp_struct_idxs([10])
+@helpers.parameterized_by_mp_struct_idxs([555])  # mp-2217137
 def test_cnf_neighbors_are_unique(idx, struct, cnf_constructor):
     original_cnf = cnf_constructor.from_pymatgen_structure(struct).cnf
 
@@ -18,7 +18,7 @@ def test_cnf_neighbors_are_unique(idx, struct, cnf_constructor):
 
     assert len(set(neighbs)) == len(neighbs)
 
-@helpers.parameterized_by_mp_struct_idxs([10])
+@helpers.parameterized_by_mp_struct_idxs([555])  # mp-2217137
 def test_self_is_not_neighbor(idx, struct, cnf_constructor):
     original_cnf = cnf_constructor.from_pymatgen_structure(struct).cnf
 
@@ -26,7 +26,7 @@ def test_self_is_not_neighbor(idx, struct, cnf_constructor):
 
     assert original_cnf not in set(neighbs)
 
-@helpers.parameterized_by_mp_struct_idxs([10])
+@helpers.parameterized_by_mp_struct_idxs([555])  # mp-2217137
 def test_neighbors_are_reciproical(idx, struct, cnf_constructor):
     original_cnf = cnf_constructor.from_pymatgen_structure(struct).cnf
 
@@ -37,7 +37,7 @@ def test_neighbors_are_reciproical(idx, struct, cnf_constructor):
         n2s = nf.find_neighbors(n)
         assert original_cnf in n2s
 
-@helpers.parameterized_by_mp_struct_idxs([10])
+@helpers.parameterized_by_mp_struct_idxs([555])  # mp-2217137
 def test_lattice_neighbs_neighbors_are_close(idx, struct, cnf_constructor):
 
     original_cnf = cnf_constructor.from_pymatgen_structure(struct).cnf

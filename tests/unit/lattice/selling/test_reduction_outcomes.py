@@ -163,7 +163,7 @@ def test_selling_reductions_equivalent(lattice):
     assert vl_reduction_result.reduced_object.is_superbasis()
     assert sb_reduction_result.reduced_object.compute_vonorms().has_same_members(vl_reduction_result.reduced_object)
 
-@helpers.parameterized_by_mp_struct_idxs([446])
+@helpers.parameterized_by_mp_struct_idxs([69])  # mp-1078268
 def test_steps_maintain_structure(idx, struct):
     uc = UnitCell.from_pymatgen_structure(struct)
     helpers.assert_identical_by_pdd_distance(struct, uc.to_pymatgen_structure(), 0.000001)

@@ -14,7 +14,7 @@ def load_specific_cif(cif_name: str):
 
 all_mp_cif_dir = Path(__file__).parent / ".." / "data" / "mp_cifs"
 _ALL_MP_STRUCTURES = []
-for cif_path in all_mp_cif_dir.iterdir():
+for cif_path in sorted(all_mp_cif_dir.iterdir()):
     _ALL_MP_STRUCTURES.append(Structure.from_file(cif_path))
 
 def mp_structs_with_voronoi_class(vclass):

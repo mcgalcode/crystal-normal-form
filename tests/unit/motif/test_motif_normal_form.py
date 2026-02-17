@@ -70,7 +70,7 @@ def test_can_convert_coord_mats_to_mnf_lists():
     assert_mnf_tup_sets_eq(mnfs1, mnfs2)
 
 
-@helpers.parameterized_by_mp_struct_idxs([0])
+@helpers.parameterized_by_mp_struct_idxs([537])  # mp-1977794
 def test_vectorized_stabilizers(idx, struct):
     motif = FractionalMotif.from_pymatgen_structure(struct)
     stab_mats = get_unimodulars_col_max(2)[:2]
@@ -89,7 +89,7 @@ def test_vectorized_stabilizers(idx, struct):
     mnfs = mnfc.get_mnf_strs_from_coord_mats(motif_coord_mats)
     assert_mnf_tup_sets_eq(mnfs, manual_mnfs)
 
-@helpers.parameterized_by_mp_struct_idxs([3])
+@helpers.parameterized_by_mp_struct_idxs([980])  # mp-9577, needs num_origin_atoms > 2
 def test_get_shifted_coord_mats(idx, struct):
     motif = FractionalMotif.from_pymatgen_structure(struct)
     assert motif.num_origin_atoms > 2
@@ -101,7 +101,7 @@ def test_get_shifted_coord_mats(idx, struct):
     motif_mnfs = [sm.to_mnf_list() for sm in shifted_motifs]
     assert_mnf_tup_sets_eq(shifted_mnfs, motif_mnfs)
 
-@helpers.parameterized_by_mp_struct_idxs([3])
+@helpers.parameterized_by_mp_struct_idxs([980])  # mp-9577, needs num_origin_atoms > 2
 def test_can_sort_motif_coord_matrix(idx, struct):
     motif = FractionalMotif.from_pymatgen_structure(struct)
     print(motif.atoms)
