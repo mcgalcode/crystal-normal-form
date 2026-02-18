@@ -640,7 +640,8 @@ def _serialize_result(r):
 
 
 def _adapt_params(found, total, successful_iters,
-                  current_dropout, min_dropout, current_max_iters, max_iters):
+                  current_dropout, min_dropout, current_max_iters,
+                  max_iters=float('inf')):
     """Adapt dropout and max_iters based on batch success rate."""
     rate = found / total if total > 0 else 0
 
@@ -682,8 +683,7 @@ def _min_bond_length(cnfs):
 
 
 def _calibrate_max_iters(start_cnfs, goal_cnfs, beam_width,
-                         heuristic_mode, heuristic_weight,
-                         max_iterations_per_path, verbose):
+                         heuristic_mode, heuristic_weight, verbose):
     """Run diagnostic Rust A* searches to calibrate max_iters for this resolution.
 
     Uses a min-distance filter based on 75% of the shortest bond length in
@@ -816,7 +816,6 @@ def ceiling_barrier_search(
     # A* parameters
     dropout=0.1,
     min_dropout=0.0,
-    max_iterations_per_path=1000,
     beam_width=1000,
     heuristic_mode="manhattan",
     heuristic_weight=0.5,
@@ -863,7 +862,6 @@ def ceiling_barrier_search(
         delta_factor: delta multiplied by this each refinement pass (rounded).
         dropout: Neighbor dropout probability.
         min_dropout: Minimum dropout for adaptive adjustment.
-        max_iterations_per_path: Max A* iterations per search.
         beam_width: Max open-set size for beam search.
         heuristic_mode: Heuristic for A*.
         heuristic_weight: Weight for unimodular heuristics.
@@ -918,6 +916,35 @@ def ceiling_barrier_search(
     total_paths_found = 0
     ceiling_top = max_ceiling  # None → discover by sweeping up; set → sweep known range
 
+    # Pre-build params dict for manifest (endpoint CNFs filled per-pass)
+    manifest_params = _ceiling_params_dict(
+        xi, delta, step_per_atom, num_ceilings,
+        attempts_per_ceiling, max_passes, max_sweep_rounds,
+        xi_factor, delta_factor, dropout, min_dropout,
+        beam_width, heuristic_mode, heuristic_weight, n_workers,
+        [], [], relax_endpoints,
+    )
+
+    def _update_manifest():
+        """Write manifest.json with current best result (called after each round)."""
+        if output_dir is None:
+            return
+        elapsed = time.perf_counter() - total_start
+        result = {
+            "barrier": best_barrier,
+            "best_path": [list(pt) for pt in best_path] if best_path else None,
+            "best_path_energies": best_energies,
+            "path_length": len(best_path) if best_path else 0,
+            "total_paths_found": total_paths_found,
+            "total_rounds": round_num,
+            "best_xi": best_xi,
+            "best_delta": best_delta,
+            "ceiling_top": ceiling_top,
+            "energy_cache_size": len(energy_cache),
+        }
+        _write_manifest(output_dir, manifest_params, result,
+                        {"total_seconds": elapsed, "round_seconds": round_times})
+
     if output_dir is not None:
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -971,6 +998,11 @@ def ceiling_barrier_search(
             n_atoms = len(elements)
             energy_step = step_per_atom * n_atoms
 
+            if pass_num == 0:
+                manifest_params["elements"] = elements
+                manifest_params["start_cnf_coords"] = [list(c.coords) for c in start_cnfs]
+                manifest_params["goal_cnf_coords"] = [list(c.coords) for c in goal_cnfs]
+
             # Evaluate endpoint energies
             for cnf in start_cnfs + goal_cnfs:
                 if cnf.coords not in energy_cache:
@@ -999,8 +1031,7 @@ def ceiling_barrier_search(
             current_dropout = dropout
             current_max_iters = _calibrate_max_iters(
                 start_cnfs, goal_cnfs, beam_width,
-                heuristic_mode, heuristic_weight,
-                max_iterations_per_path, verbose,
+                heuristic_mode, heuristic_weight, verbose,
             )
 
             if ceiling_top is None:
@@ -1062,7 +1093,10 @@ def ceiling_barrier_search(
                         if verbose:
                             print(f"\n  *** Path found! ceiling_top = "
                                   f"{ceiling_top:.2f} eV")
+                        _update_manifest()
                         break
+
+                    _update_manifest()
 
                     # Adapt parameters between sweep batches
                     successful_iters = [r["iterations"] for r in results
@@ -1070,7 +1104,7 @@ def ceiling_barrier_search(
                     current_dropout, current_max_iters = _adapt_params(
                         len(successes), len(results), successful_iters,
                         current_dropout, min_dropout,
-                        current_max_iters, max_iterations_per_path,
+                        current_max_iters,
                     )
 
                 if not found_in_sweep:
@@ -1149,6 +1183,8 @@ def ceiling_barrier_search(
                     if verbose:
                         print(f"\n  No paths found at this resolution")
 
+                _update_manifest()
+
             if verbose:
                 print(f"\n  Pass {pass_num} done: "
                       f"cache={len(energy_cache)} pts")
@@ -1159,29 +1195,11 @@ def ceiling_barrier_search(
         if pool is not None:
             pool.shutdown(wait=True)
 
-    total_elapsed = time.perf_counter() - total_start
-
     if best_path is None:
         if verbose:
             print("\nNo path found across all passes.")
+        _update_manifest()
         if output_dir is not None:
-            _write_manifest(output_dir,
-                params=_ceiling_params_dict(
-                    xi, delta, step_per_atom, num_ceilings,
-                    attempts_per_ceiling, max_passes, max_sweep_rounds,
-                    xi_factor, delta_factor, dropout, min_dropout,
-                    max_iterations_per_path, beam_width,
-                    heuristic_mode, heuristic_weight, n_workers,
-                    start_cnfs, goal_cnfs, relax_endpoints,
-                ),
-                result={"barrier": None, "best_path": None,
-                        "best_path_energies": None, "path_length": 0,
-                        "total_paths_found": total_paths_found,
-                        "total_rounds": round_num,
-                        "energy_cache_size": len(energy_cache)},
-                timing={"total_seconds": total_elapsed,
-                        "round_seconds": round_times},
-            )
             _write_energy_cache(output_dir, energy_cache)
         return None, None, None
 
@@ -1192,6 +1210,7 @@ def ceiling_barrier_search(
     ]
 
     if verbose:
+        total_elapsed = time.perf_counter() - total_start
         print(f"\n{'='*60}")
         print(f"Final result:")
         print(f"  Barrier: {best_barrier:.4f} eV")
@@ -1203,31 +1222,8 @@ def ceiling_barrier_search(
         print(f"  Total time: {total_elapsed:.1f}s")
         print(f"{'='*60}")
 
+    _update_manifest()
     if output_dir is not None:
-        _write_manifest(output_dir,
-            params=_ceiling_params_dict(
-                xi, delta, step_per_atom, num_ceilings,
-                attempts_per_ceiling, max_passes, max_sweep_rounds,
-                xi_factor, delta_factor, dropout, min_dropout,
-                max_iterations_per_path, beam_width,
-                heuristic_mode, heuristic_weight, n_workers,
-                start_cnfs, goal_cnfs, relax_endpoints,
-            ),
-            result={
-                "barrier": best_barrier,
-                "best_path": [list(pt) for pt in best_path],
-                "best_path_energies": best_energies,
-                "path_length": len(best_path),
-                "total_paths_found": total_paths_found,
-                "total_rounds": round_num,
-                "best_xi": best_xi,
-                "best_delta": best_delta,
-                "ceiling_top": ceiling_top,
-                "energy_cache_size": len(energy_cache),
-            },
-            timing={"total_seconds": total_elapsed,
-                    "round_seconds": round_times},
-        )
         _write_energy_cache(output_dir, energy_cache)
 
     return best_barrier, best_path_cnfs, best_energies
@@ -1237,8 +1233,7 @@ def _ceiling_params_dict(
     xi, delta, step_per_atom, num_ceilings, attempts_per_ceiling,
     max_passes, max_sweep_rounds,
     xi_factor, delta_factor, dropout, min_dropout,
-    max_iterations_per_path, beam_width,
-    heuristic_mode, heuristic_weight, n_workers,
+    beam_width, heuristic_mode, heuristic_weight, n_workers,
     start_cnfs, goal_cnfs, relax_endpoints=False,
 ):
     """Build params dict for manifest.json."""
@@ -1252,7 +1247,6 @@ def _ceiling_params_dict(
         "max_sweep_rounds": max_sweep_rounds,
         "xi_factor": xi_factor, "delta_factor": delta_factor,
         "dropout": dropout, "min_dropout": min_dropout,
-        "max_iterations_per_path": max_iterations_per_path,
         "beam_width": beam_width,
         "heuristic_mode": heuristic_mode,
         "heuristic_weight": heuristic_weight,
