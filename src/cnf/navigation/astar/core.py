@@ -177,7 +177,7 @@ def astar_pathfind(
     add_start_points(start_cnfs, goal_cnfs, heuristic, search_state)
 
     if verbose:
-        print(f"Starting A* search with {len(start_cnfs)} start states and {len(goal_cnfs)} goal states")
+        print(f"{log_prefix}Starting A* search with {len(start_cnfs)} start states and {len(goal_cnfs)} goal states", flush=True)
 
     ts = time.perf_counter_ns()
 
@@ -189,7 +189,7 @@ def astar_pathfind(
         if max_iterations > 0 and search_state.iterations > max_iterations:
             search_state.max_iterations_reached = True
             if verbose:
-                print(f"Reached max iterations ({max_iterations})")
+                print(f"{log_prefix}Reached max iterations ({max_iterations})", flush=True)
             return search_state
 
         if verbose and search_state.iterations % speak_freq == 0:
@@ -210,7 +210,7 @@ def astar_pathfind(
 
         if goal_reached:
             if verbose:
-                print(f"\n✅ Found goal after {search_state.iterations} iterations!")
+                print(f"\n{log_prefix}Found goal after {search_state.iterations} iterations!", flush=True)
             path = _reconstruct_path(current_point, search_state.came_from)
             search_state.found_goal = True
             search_state.path = path
@@ -220,7 +220,7 @@ def astar_pathfind(
         
 
     if verbose:
-        print(f"\n❌ No path found after {search_state.iterations} iterations")
+        print(f"\n{log_prefix}No path found after {search_state.iterations} iterations", flush=True)
 
     return search_state
 
