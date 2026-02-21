@@ -231,6 +231,29 @@ def _precompute_goal_variants_full(goal: CrystalNormalForm, partial: bool = Fals
     return np.unique(np.array(variants, dtype=np.int64), axis=0)
 
 
+def make_heuristic(mode: str, weight: float = 0.5):
+    """Factory function for A* heuristics.
+
+    Args:
+        mode: One of "manhattan", "unimodular_light", "unimodular_partial",
+            "unimodular_full".
+        weight: Weight for unimodular heuristics.
+
+    Returns:
+        A callable heuristic function.
+    """
+    if mode == "manhattan":
+        return manhattan_distance
+    elif mode == "unimodular_light":
+        return UnimodularManhattanHeuristic(weight=weight, full=False, partial=False)
+    elif mode == "unimodular_partial":
+        return UnimodularManhattanHeuristic(weight=weight, full=False, partial=True)
+    elif mode == "unimodular_full":
+        return UnimodularManhattanHeuristic(weight=weight, full=True, partial=False)
+    else:
+        raise ValueError(f"Unknown heuristic mode: {mode}")
+
+
 class UnimodularManhattanHeuristic:
     """Manhattan heuristic that accounts for vonorm reorderings.
 

@@ -1,0 +1,60 @@
+"""Worker pool support for parallel A* searches."""
+
+from cnf import CrystalNormalForm
+from cnf.calculation.grace import GraceCalculator
+
+from ._search import retry_search
+
+
+# Worker process globals
+_worker_calc = None
+_worker_cache = None
+_worker_pass_id = None
+
+
+def init_search_worker(tf_threads=None):
+    """Initialize a worker process with its own energy calculator and cache.
+
+    Args:
+        tf_threads: Max TF threads per worker. Prevents CPU contention
+            when multiple workers run in parallel.
+    """
+    if tf_threads is not None:
+        import tensorflow as tf
+        tf.config.threading.set_inter_op_parallelism_threads(tf_threads)
+        tf.config.threading.set_intra_op_parallelism_threads(tf_threads)
+    global _worker_calc, _worker_cache, _worker_pass_id
+    _worker_calc = GraceCalculator()
+    _worker_cache = {}
+    _worker_pass_id = None
+
+
+def worker_search_with_attempts(args):
+    """Worker wrapper: deserialize inputs, manage worker state, then run retry search."""
+    global _worker_calc, _worker_cache, _worker_pass_id
+    (ceiling, start_coord_lists, goal_coord_lists, elements, xi, delta,
+     dropout, max_iters, beam_width, heuristic_mode, heuristic_weight,
+     seed_cache_items, attempts, worker_label, pass_id) = args
+
+    # Clear cache when xi/delta changes between passes — same integer
+    # coords map to different physical structures at different resolutions
+    if pass_id != _worker_pass_id:
+        _worker_cache = {}
+        _worker_pass_id = pass_id
+
+    for k, v in seed_cache_items:
+        if k not in _worker_cache:
+            _worker_cache[k] = v
+
+    start_cnfs = [CrystalNormalForm.from_tuple(tuple(c), elements, xi, delta)
+                  for c in start_coord_lists]
+    goal_cnfs = [CrystalNormalForm.from_tuple(tuple(c), elements, xi, delta)
+                 for c in goal_coord_lists]
+
+    return retry_search(
+        ceiling, start_cnfs, goal_cnfs, elements, xi, delta,
+        _worker_calc, _worker_cache, dropout, max_iters, beam_width,
+        heuristic_mode, heuristic_weight, attempts,
+        max_iters_scale=1.0,  # Workers don't bump max_iters
+        log_prefix=f"    [{worker_label}] ",
+    )
