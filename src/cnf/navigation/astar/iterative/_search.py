@@ -59,17 +59,19 @@ def search_at_ceiling(ceiling, start_cnfs, goal_cnfs, elements, xi, delta,
 def retry_search(ceiling, start_cnfs, goal_cnfs, elements, xi, delta,
                  calc, cache, dropout, max_iters, beam_width,
                  heuristic_mode, heuristic_weight, attempts,
-                 max_iters_scale=1.5, log_prefix="    "):
+                 max_iters_scale=1.5, log_prefix="    ", verbose=True):
     """Core retry loop: run up to `attempts` A* searches at a single ceiling.
 
     Bumps max_iters by max_iters_scale after each failed attempt.
     Returns result dict from first successful attempt, or last attempt's result.
     """
     current_max_iters = max_iters
+    r = None
     for a in range(attempts):
-        attempt_str = f" #{a+1}" if attempts > 1 else ""
-        print(f"{log_prefix}starting (ceiling={ceiling:.2f} eV{attempt_str}, "
-              f"max_iters={current_max_iters})...", flush=True)
+        if verbose:
+            attempt_str = f" #{a+1}" if attempts > 1 else ""
+            print(f"{log_prefix}starting (ceiling={ceiling:.2f} eV{attempt_str}, "
+                  f"max_iters={current_max_iters})...", flush=True)
 
         t0 = time.perf_counter()
         r = search_at_ceiling(
@@ -79,16 +81,19 @@ def retry_search(ceiling, start_cnfs, goal_cnfs, elements, xi, delta,
         )
         elapsed = time.perf_counter() - t0
 
-        evals = r.get('energy_evals', '?')
+        if verbose:
+            evals = r.get('energy_evals', '?')
+            if r["found"]:
+                print(f"{log_prefix}path found! len={r['path_length']}, "
+                      f"barrier={r['barrier']:.2f} eV, "
+                      f"iters={r['iterations']}, evals={evals}, {elapsed:.1f}s",
+                      flush=True)
+            else:
+                print(f"{log_prefix}no path ({r['iterations']} iters, "
+                      f"{evals} evals, {elapsed:.1f}s)", flush=True)
+
         if r["found"]:
-            print(f"{log_prefix}path found! len={r['path_length']}, "
-                  f"barrier={r['barrier']:.2f} eV, "
-                  f"iters={r['iterations']}, evals={evals}, {elapsed:.1f}s",
-                  flush=True)
             return r
-        else:
-            print(f"{log_prefix}no path ({r['iterations']} iters, "
-                  f"{evals} evals, {elapsed:.1f}s)", flush=True)
 
         current_max_iters = int(current_max_iters * max_iters_scale)
 
@@ -100,16 +105,9 @@ def search_ceiling_with_attempts(ceiling, start_cnfs, goal_cnfs, elements,
                                  beam_width, heuristic_mode, heuristic_weight,
                                  attempts, verbose):
     """Run up to `attempts` A* searches at a single ceiling, stop on first success."""
-    if not verbose:
-        # Silent mode: single attempt, no logging
-        return search_at_ceiling(
-            ceiling, start_cnfs, goal_cnfs, elements, xi, delta,
-            calc, cache, dropout, max_iters, beam_width,
-            heuristic_mode, heuristic_weight,
-        )
     return retry_search(
         ceiling, start_cnfs, goal_cnfs, elements, xi, delta,
         calc, cache, dropout, max_iters, beam_width,
         heuristic_mode, heuristic_weight, attempts,
-        max_iters_scale=1.5, log_prefix="    ",
+        max_iters_scale=1.5, log_prefix="    ", verbose=verbose,
     )
