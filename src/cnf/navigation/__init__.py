@@ -1,3 +1,4 @@
 from .lattice_neighbor_finder import LatticeNeighborFinder
 from .neighbor_finder import NeighborFinder, find_neighbors
 from .motif_neighbor_finder import MotifNeighborFinder
+from .utils import compute_delta_for_step_size, min_bond_length

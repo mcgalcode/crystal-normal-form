@@ -63,6 +63,44 @@ def no_atoms_closer_than(pt: CrystalNormalForm, min_dist: float):
     return (non_diag_distances > min_dist).all()
 
 
+def compute_delta_for_step_size(
+    structure: Union[Structure, CrystalNormalForm, UnitCell],
+    target_step: float,
+) -> int:
+    """Compute delta needed to achieve a target physical step size.
+
+    CNF's delta parameter divides fractional coordinates into delta intervals,
+    so physical step size = lattice_param / delta. Different cell sizes with
+    the same delta get different physical resolutions.
+
+    This function computes delta = ceil(max_lattice_param / target_step),
+    which ensures the physical step is at most target_step for all axes.
+
+    Args:
+        structure: A structure (pymatgen Structure, CNF, or UnitCell) to get
+            lattice parameters from.
+        target_step: Target physical step size in Angstroms. Smaller values
+            give finer resolution but larger search spaces.
+
+    Returns:
+        Integer delta value that achieves step <= target_step.
+
+    Example:
+        >>> # For a cell with max lattice param 9.2 Å and target step 0.3 Å:
+        >>> delta = compute_delta_for_step_size(structure, 0.3)
+        >>> # delta = ceil(9.2 / 0.3) = 31
+        >>> # Actual step = 9.2 / 31 ≈ 0.297 Å
+    """
+    if isinstance(structure, CrystalNormalForm):
+        structure = structure.reconstruct()
+    elif isinstance(structure, UnitCell):
+        structure = structure.to_pymatgen_structure()
+
+    lattice = structure.lattice
+    max_param = max(lattice.a, lattice.b, lattice.c)
+    return int(np.ceil(max_param / target_step))
+
+
 def min_bond_length(structures: list[Union[Structure, CrystalNormalForm, UnitCell]]) -> float:
     """Compute minimum pairwise atomic distance across one or more structures.
 
