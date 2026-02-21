@@ -1,12 +1,10 @@
 import pytest
 import helpers
 import tempfile
-import os
 import shutil
-from cnf.db.setup import setup_cnf_db
+from cnf.db.setup_partitions import setup_search_dir
 from cnf.db.partitioned_db import PartitionedDB
 from cnf.navigation.waterfill import continue_search_waterfill
-from cnf.db.setup import instantiate_search
 from cnf.navigation.neighbor_finder import NeighborFinder
 from cnf.calculation.constant_calculator import ConstantCalculator
 from cnf import CrystalNormalForm
@@ -27,17 +25,6 @@ def partitioned_db_dir():
     shutil.rmtree(temp_dir)
 
 
-def setup_partitioned_search(db_dir, xi, delta, elements, num_partitions=4):
-    """Set up a partitioned database with search process."""
-    # Create partition databases
-    print("setting up!")
-    for i in range(num_partitions):
-        db_file = os.path.join(db_dir, f"graph_partition_{i}.db")
-        setup_cnf_db(db_file, xi, delta, elements)
-    print("Done setting up!")
-    return PartitionedDB(db_dir)
-
-
 def test_partitioned_flood_fill_integrity(zr_hcp_mp, partitioned_db_dir):
     """
     Integration test for partitioned flood-fill search.
@@ -49,28 +36,20 @@ def test_partitioned_flood_fill_integrity(zr_hcp_mp, partitioned_db_dir):
     """
     xi = 1.5
     delta = 5
-    print("runnin test!")
+    num_partitions = 4
+
     # Create start and end points
     zr_hcp_cnf = CrystalNormalForm.from_pmg_struct(zr_hcp_mp, xi, delta)
-    elements = zr_hcp_cnf.elements
-
-    # Set up partitioned database
-    db = setup_partitioned_search(partitioned_db_dir, xi, delta, elements, num_partitions=4)
-
-    # Create start point and endpoint 3 rings away
     start_cnf = zr_hcp_cnf
 
     # Find neighbors 3 rings out
     nf = NeighborFinder.from_cnf(start_cnf)
     ring_1 = set(nf.find_neighbors(start_cnf))
-    print(f"Found {len(ring_1)} first neighbs!")
     ring_2 = set()
-    for i, nb in enumerate(list(ring_1)[:10]):
+    for nb in list(ring_1)[:10]:
         ring_2.update(nf.find_neighbors(nb))
-        print(f"{i} Found Second neighbs!")
     ring_2 = ring_2 - ring_1 - {start_cnf}
 
-    print(f"Found {len(ring_2)} new second neighbs!")
     ring_3 = set()
     for nb in list(ring_2)[:10]:
         ring_3.update(nf.find_neighbors(nb))
@@ -78,29 +57,28 @@ def test_partitioned_flood_fill_integrity(zr_hcp_mp, partitioned_db_dir):
 
     end_cnf = list(ring_3)[0]  # Pick first point from ring 3
 
-    print(f"\nStart point: {start_cnf.coords}")
-    print(f"End point (3 rings away): {end_cnf.coords}")
-
-    # Initialize search across all partitions
-    for i in range(db.num_partitions):
-        db_file = os.path.join(partitioned_db_dir, f"graph_partition_{i}.db")
-        instantiate_search(
-            "Test search",
-            [start_cnf],
-            [end_cnf],
-            db_file
-        )
+    # Set up partitioned database with search
+    calculator = ConstantCalculator(1)
+    search_id = setup_search_dir(
+        partitioned_db_dir,
+        "Test search",
+        num_partitions,
+        [start_cnf],
+        [end_cnf],
+        calculator
+    )
 
     # Run flood-fill search for 10 iterations
-    search_id = 1
     continue_search_waterfill(
         search_id,
         partitioned_db_dir,
-        ConstantCalculator(1),
-        search_filters=None,
+        calculator,
         max_iters=10,
-        log_lvl=0  # Suppress logging during test
+        log_lvl=0
     )
+
+    # Create PartitionedDB for assertions
+    db = PartitionedDB(partitioned_db_dir, search_id)
 
     # ========================================
     # Test 1: All points are unique (except start/end which are in all partitions)
@@ -196,16 +174,12 @@ def test_partitioned_flood_fill_neighbor_reciprocity(zr_hcp_mp, partitioned_db_d
     """
     xi = 1.5
     delta = 5
+    num_partitions = 4
 
     zr_hcp_cnf = CrystalNormalForm.from_pmg_struct(zr_hcp_mp, xi, delta)
-    elements = zr_hcp_cnf.elements
-
-    # Set up partitioned database
-    db = setup_partitioned_search(partitioned_db_dir, xi, delta, elements, num_partitions=4)
-    
-    # Create search with endpoint a couple rings away
     start_cnf = zr_hcp_cnf
 
+    # Create search with endpoint a couple rings away
     nf = NeighborFinder.from_cnf(start_cnf)
     neighbors = nf.find_neighbors(start_cnf)
     ring_2 = set()
@@ -214,19 +188,28 @@ def test_partitioned_flood_fill_neighbor_reciprocity(zr_hcp_mp, partitioned_db_d
     ring_2 = ring_2 - set(neighbors) - {start_cnf}
     end_cnf = list(ring_2)[0]
 
-    for i in range(db.num_partitions):
-        db_file = os.path.join(partitioned_db_dir, f"graph_partition_{i}.db")
-        instantiate_search("Test reciprocity", [start_cnf], [end_cnf], db_file)
+    # Set up partitioned database with search
+    calculator = ConstantCalculator(1)
+    search_id = setup_search_dir(
+        partitioned_db_dir,
+        "Test reciprocity",
+        num_partitions,
+        [start_cnf],
+        [end_cnf],
+        calculator
+    )
 
     # Run search for more iterations to explore multiple points
     continue_search_waterfill(
-        1,
+        search_id,
         partitioned_db_dir,
-        ConstantCalculator(1),
-        search_filters=None,
+        calculator,
         max_iters=50,
         log_lvl=0
     )
+
+    # Create PartitionedDB for assertions
+    db = PartitionedDB(partitioned_db_dir, search_id)
 
     # ========================================
     # Test 1: Every explored point has EXACTLY the neighbors from NeighborFinder
