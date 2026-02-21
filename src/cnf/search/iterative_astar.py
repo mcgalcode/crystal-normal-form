@@ -666,20 +666,6 @@ _DIAG_RUNS = 3
 _DIAG_DROPOUT = 0.6
 _DIAG_SAFETY_FACTOR = 2
 _DIAG_MAX_ATTEMPTS = 4  # doubling max_iters each attempt
-_DIAG_MIN_DIST_RATIO = 0.75  # fraction of shortest bond length
-
-
-def _min_bond_length(cnfs):
-    """Compute minimum pairwise atomic distance across endpoint structures."""
-    min_dist = float('inf')
-    for cnf in cnfs:
-        struct = cnf.reconstruct()
-        for i in range(len(struct)):
-            for j in range(i + 1, len(struct)):
-                d = struct.get_distance(i, j)
-                if d < min_dist:
-                    min_dist = d
-    return min_dist
 
 
 def _calibrate_max_iters(start_cnfs, goal_cnfs, beam_width,
@@ -695,8 +681,11 @@ def _calibrate_max_iters(start_cnfs, goal_cnfs, beam_width,
     path is found. Returns calibrated max_iters (average * safety factor).
     """
     # Compute min-distance filter from endpoint bond lengths
-    shortest_bond = _min_bond_length(start_cnfs + goal_cnfs)
-    diag_min_dist = shortest_bond * _DIAG_MIN_DIST_RATIO
+    from cnf.navigation.utils import min_bond_length
+    from cnf.navigation.search_filters import MinDistanceFilter
+
+    shortest_bond = min_bond_length(start_cnfs + goal_cnfs)
+    diag_min_dist = shortest_bond * MinDistanceFilter.DEFAULT_BOND_RATIO
 
     if verbose:
         print(f"\n  Shortest endpoint bond: {shortest_bond:.3f} A, "

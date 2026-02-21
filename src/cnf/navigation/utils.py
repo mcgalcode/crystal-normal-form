@@ -61,3 +61,30 @@ def no_atoms_closer_than(pt: CrystalNormalForm, min_dist: float):
     non_diag_distances = distances[np.triu_indices_from(distances, k=1)]
     # Keep neighbors where all non-diagonal distances are > 1.4
     return (non_diag_distances > min_dist).all()
+
+
+def min_bond_length(structures: list[Union[Structure, CrystalNormalForm, UnitCell]]) -> float:
+    """Compute minimum pairwise atomic distance across one or more structures.
+
+    This is useful for determining a safe minimum distance filter that avoids
+    unphysical atomic overlaps while still allowing the structures to be reached.
+
+    Args:
+        structures: List of structures (pymatgen Structure, CNF, or UnitCell).
+            Can also pass a single structure (will be wrapped in a list).
+
+    Returns:
+        Minimum interatomic distance in Angstroms across all structures.
+    """
+    if not isinstance(structures, list):
+        structures = [structures]
+
+    min_dist = float('inf')
+    for struct in structures:
+        distances = compute_pairwise_distances(struct)
+        # Get non-diagonal elements (distances between different atoms)
+        non_diag = distances[np.triu_indices_from(distances, k=1)]
+        if len(non_diag) > 0:
+            min_dist = min(min_dist, non_diag.min())
+
+    return min_dist

@@ -85,6 +85,35 @@ class VolumeLimitFilter(SearchFilter):
     
 class MinDistanceFilter(SearchFilter):
 
+    # Default ratio of shortest bond length to use as min_dist filter
+    DEFAULT_BOND_RATIO = 0.75
+
+    @classmethod
+    def from_structures(cls, structures, ratio=None):
+        """Create a MinDistanceFilter based on the shortest bond in the structures.
+
+        Computes the minimum interatomic distance across all provided structures
+        and uses a fraction of it as the filter threshold. This ensures the filter
+        allows the endpoint structures while rejecting unphysical configurations
+        with severe atomic overlap.
+
+        Args:
+            structures: List of structures (pymatgen Structure, CNF, or UnitCell).
+            ratio: Fraction of shortest bond to use (default: 0.75).
+                Lower values are more permissive.
+
+        Returns:
+            MinDistanceFilter configured with auto-computed min_dist.
+        """
+        from .utils import min_bond_length
+
+        if ratio is None:
+            ratio = cls.DEFAULT_BOND_RATIO
+
+        shortest_bond = min_bond_length(structures)
+        min_dist = shortest_bond * ratio
+        return cls(min_dist)
+
     def __init__(self, min_dist):
         self.dist = min_dist
         self._use_rust = os.getenv('USE_RUST') == '1'
