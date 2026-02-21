@@ -2,7 +2,7 @@ import tempfile
 
 from cnf import CrystalNormalForm
 from cnf.calculation import GraceCalculator
-from cnf.search.waterfill import process_cnf_batch, explore_pt_partition, waterfill_step, continue_search_waterfill
+from cnf.navigation.waterfill import process_cnf_batch, explore_pt_partition, waterfill_step, continue_search_waterfill
 from cnf.db.setup_partitions import setup_search_dir
 from cnf.navigation.endpoints import get_endpoint_cnfs
 from cnf.navigation import find_neighbors

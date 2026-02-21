@@ -1,7 +1,7 @@
-from ..crystal_normal_form import CrystalNormalForm
-from ..calculation.base_calculator import BaseCalculator
-from ..calculation.grace import GraceCalculator
-from ..navigation import find_neighbors
+from ...crystal_normal_form import CrystalNormalForm
+from ...calculation.base_calculator import BaseCalculator
+from ...calculation.grace import GraceCalculator
+from .. import find_neighbors
 
 from dataclasses import dataclass
 import heapq

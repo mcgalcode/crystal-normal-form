@@ -10,7 +10,7 @@ Usage:
 import argparse
 import multiprocessing as mp
 import math
-from cnf.search.waterfill import continue_search_waterfill
+from cnf.navigation.waterfill import continue_search_waterfill
 from cnf.db.partitioned_db import PartitionedDB
 from cnf.calculation.grace import GraceCalculator
 

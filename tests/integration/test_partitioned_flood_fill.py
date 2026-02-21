@@ -5,7 +5,8 @@ import os
 import shutil
 from cnf.db.setup import setup_cnf_db
 from cnf.db.partitioned_db import PartitionedDB
-from cnf.search import instantiate_search, continue_search_waterfill
+from cnf.navigation.waterfill import continue_search_waterfill
+from cnf.db.setup import instantiate_search
 from cnf.navigation.neighbor_finder import NeighborFinder
 from cnf.calculation.constant_calculator import ConstantCalculator
 from cnf import CrystalNormalForm

@@ -1,7 +1,7 @@
 import pytest
 import tempfile
 
-from cnf.search import explore_pt
+from cnf.navigation.waterfill import explore_pt
 from cnf import UnitCell
 from cnf.db.setup import setup_cnf_db, instantiate_search
 from cnf.db.search_store import SearchProcessStore

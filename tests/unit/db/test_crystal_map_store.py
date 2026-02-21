@@ -1,7 +1,7 @@
 import pytest
 from cnf.db.crystal_map_store import CrystalMapStore
 from cnf.db.setup import setup_cnf_db
-from cnf.search import explore_pt
+from cnf.navigation.waterfill import explore_pt
 from cnf import CrystalNormalForm
 from cnf.navigation.neighbor_finder import NeighborFinder, find_neighbors
 import tempfile

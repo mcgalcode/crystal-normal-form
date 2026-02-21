@@ -6,7 +6,7 @@ from cnf import UnitCell
 from cnf.db.crystal_map_store import CrystalMapStore
 from cnf.db.search_store import SearchProcessStore
 from cnf.db.setup import setup_cnf_db, instantiate_search
-from cnf.search import explore_pt
+from cnf.navigation.waterfill import explore_pt
 from cnf.navigation.neighbor_finder import find_neighbors
 from cnf.calculation.grace import GraceCalculator
 
