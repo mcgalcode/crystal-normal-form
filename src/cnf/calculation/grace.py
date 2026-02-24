@@ -1,5 +1,7 @@
 import math
+from pathlib import Path
 
+from tensorpotential.calculator import TPCalculator
 from tensorpotential.calculator.foundation_models import grace_fm, GRACEModels
 
 from ..crystal_normal_form import CrystalNormalForm
@@ -11,9 +13,13 @@ DEFAULT_MODEL = GRACEModels.GRACE_FS_OAM
 
 class GraceCalculator(BaseCalculator):
 
-    def __init__(self, model_string: str = DEFAULT_MODEL):
-        self.model_string = model_string
-        self._calc = grace_fm(model_string)
+    def __init__(self, model_string: str = DEFAULT_MODEL, model_path: str = None):
+        if model_path is not None:
+            self.model_string = str(model_path)
+            self._calc = TPCalculator(model_path)
+        else:
+            self.model_string = model_string
+            self._calc = grace_fm(model_string)
 
     def calculate_energy(self, cnf: CrystalNormalForm) -> float:
         atoms = cnf.reconstruct().to_ase_atoms()
