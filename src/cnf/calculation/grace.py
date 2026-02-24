@@ -1,3 +1,4 @@
+import logging
 import math
 from pathlib import Path
 
@@ -8,6 +9,7 @@ from ..crystal_normal_form import CrystalNormalForm
 from ..navigation import find_neighbors
 from .base_calculator import BaseCalculator
 
+logger = logging.getLogger(__name__)
 
 DEFAULT_MODEL = GRACEModels.GRACE_FS_OAM
 
@@ -16,9 +18,11 @@ class GraceCalculator(BaseCalculator):
     def __init__(self, model_string: str = DEFAULT_MODEL, model_path: str = None):
         if model_path is not None:
             self.model_string = str(model_path)
+            logger.info(f"Loading GRACE model from path: {model_path}")
             self._calc = TPCalculator(model_path)
         else:
             self.model_string = model_string
+            logger.info(f"Loading GRACE foundation model: {model_string}")
             self._calc = grace_fm(model_string)
 
     def calculate_energy(self, cnf: CrystalNormalForm) -> float:
