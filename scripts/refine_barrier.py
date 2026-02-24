@@ -3,12 +3,6 @@
 import argparse
 import sys
 from pathlib import Path
-from pymatgen.core import Structure
-
-from cnf import UnitCell
-from cnf.calculation.grace import GraceCalculator
-from cnf.navigation import compute_delta_for_step_size
-from cnf.navigation.astar.iterative import iterative_astar_barrier
 
 
 def main():
@@ -25,6 +19,13 @@ def main():
     p.add_argument("--min-dropout", type=float, default=0.1)
     p.add_argument("--beam-width", type=int, default=1000)
     args = p.parse_args()
+
+    # Deferred imports to keep --help fast
+    from pymatgen.core import Structure
+    from cnf import UnitCell
+    from cnf.calculation.grace import GraceCalculator
+    from cnf.navigation import compute_delta_for_step_size
+    from cnf.navigation.astar.iterative import iterative_astar_barrier
 
     calc = GraceCalculator(model_path=args.model_path) if args.model_path else GraceCalculator()
 
