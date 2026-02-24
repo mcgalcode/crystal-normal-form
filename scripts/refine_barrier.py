@@ -13,6 +13,7 @@ def main():
     p.add_argument("-o", "--output-dir", type=Path, default=Path("output"))
     p.add_argument("--model-path", help="Path to fine-tuned GRACE model")
     p.add_argument("--atom-step-length", type=float, default=0.3, help="Target step length in Å")
+    p.add_argument("--min-delta", type=int, default=0, help="Minimum delta (from ceiling search)")
     p.add_argument("--xi", type=float, default=1.5, help="Lattice discretization parameter")
     p.add_argument("--paths-per-round", type=int, default=10)
     p.add_argument("--max-rounds", type=int, default=20)
@@ -35,7 +36,8 @@ def main():
     end = UnitCell.from_pymatgen_structure(Structure.from_file(args.end))
 
     delta = max(compute_delta_for_step_size(start.to_pymatgen_structure(), args.atom_step_length),
-                compute_delta_for_step_size(end.to_pymatgen_structure(), args.atom_step_length))
+                compute_delta_for_step_size(end.to_pymatgen_structure(), args.atom_step_length),
+                args.min_delta)
 
     start_cnfs, end_cnfs = get_endpoint_cnfs(start, end, xi=args.xi, delta=delta)
     n_atoms = len(start_cnfs[0].elements)
