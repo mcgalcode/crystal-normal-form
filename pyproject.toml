@@ -28,6 +28,8 @@ cnf-astar = "scripts.pathfind_astar:main"
 cnf-pathfind-waterfill = "scripts.pathfind_waterfill:main"
 cnf-db-status = "scripts.db_status_partitioned:main"
 cnf-check-completion = "scripts.check_search_completion:main"
+cnf-ceiling-search = "scripts.ceiling_search:main"
+cnf-refine-barrier = "scripts.refine_barrier:main"
 
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
