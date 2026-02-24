@@ -157,3 +157,27 @@ class PartitionedDB():
         self.search_metadata = [s for s in self.db_metadata.search_processes if s.search_id == self.search_id][0]
         return self.search_metadata.frontier_width
 
+    def close(self):
+        """Close all database connections."""
+        # Close stores in partition_map
+        for partition_data in self.partition_map.values():
+            partition_data["search_store"].close()
+            partition_data["map_store"].close()
+
+        # Close stores in _forbidden_partition_map that aren't also in partition_map
+        for partition_num, partition_data in self._forbidden_partition_map.items():
+            if partition_num not in self.partition_map:
+                partition_data["search_store"].close()
+                partition_data["map_store"].close()
+
+        # Close meta store
+        if self.meta_store:
+            self.meta_store.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        return False
+

@@ -54,14 +54,18 @@ def setup_cnf_db(dbfname: str, xi: float, delta: int, element_list: list[str]):
 
 def setup_meta_db(dbfname: str):
     conn = sqlite3.connect(dbfname)
-    cur = conn.cursor()
+    try:
+        cur = conn.cursor()
 
-    # Enable WAL mode for better concurrent write performance
-    cur.execute("PRAGMA journal_mode=WAL")
+        # Enable WAL mode for better concurrent write performance
+        cur.execute("PRAGMA journal_mode=WAL")
 
-    # Create tables
-    cur.execute(meta_queries.create_partition_status_table)
-    cur.execute(meta_queries.create_search_status_table)
+        # Create tables
+        cur.execute(meta_queries.create_partition_status_table)
+        cur.execute(meta_queries.create_search_status_table)
+        conn.commit()
+    finally:
+        conn.close()
     return MetaStore.from_file(dbfname)
 
 def instantiate_search(search_description: str,
@@ -75,7 +79,7 @@ def instantiate_search(search_description: str,
     xis = [cnf.xi for cnf in all_cnfs]
     if len(set(xis)) > 1:
         raise ValueError("Tried to instantiate search with CNFs having different xi values!")
-    
+
     deltas = [cnf.delta for cnf in all_cnfs]
     if len(set(deltas)) > 1:
         raise ValueError("Tried to instantiate search with CNFs having different delta values!")
@@ -85,31 +89,36 @@ def instantiate_search(search_description: str,
         for cnf in all_cnfs:
             if cnf.elements != element_list:
                 raise ValueError("Tried to instantiate search with CNFs having different element lists!")
-        
+
     crystal_map_store = CrystalMapStore.from_file(store_file)
-
-    if start_energies is None:
-        start_energies = [calculator.calculate_energy(c) for c in start_cnfs]
-    
-    if end_energies is None:
-        end_energies = [calculator.calculate_energy(c) for c in end_cnfs]
-    
-    all_energies = start_energies + end_energies
-        
-    for cnf, energy in zip(all_cnfs, all_energies):
-        pt_id = crystal_map_store.add_point(cnf)
-        crystal_map_store.set_point_value(pt_id, value=energy)
-
     search_store = SearchProcessStore.from_file(store_file)
-    search_id = search_store.create_search_process(search_description)
 
-    start_point_ids = crystal_map_store.get_point_ids(start_cnfs)
-    end_point_ids = crystal_map_store.get_point_ids(end_cnfs)
+    try:
+        if start_energies is None:
+            start_energies = [calculator.calculate_energy(c) for c in start_cnfs]
 
-    for sid in start_point_ids:
-        search_store.add_search_start_point(search_id, sid)
-        search_store.add_to_search_frontier_by_id(search_id, sid)
-    
-    for eid in end_point_ids:
-        search_store.add_search_end_point(search_id, eid)
-    return search_id
+        if end_energies is None:
+            end_energies = [calculator.calculate_energy(c) for c in end_cnfs]
+
+        all_energies = start_energies + end_energies
+
+        for cnf, energy in zip(all_cnfs, all_energies):
+            pt_id = crystal_map_store.add_point(cnf)
+            crystal_map_store.set_point_value(pt_id, value=energy)
+
+        search_id = search_store.create_search_process(search_description)
+
+        start_point_ids = crystal_map_store.get_point_ids(start_cnfs)
+        end_point_ids = crystal_map_store.get_point_ids(end_cnfs)
+
+        for sid in start_point_ids:
+            search_store.add_search_start_point(search_id, sid)
+            search_store.add_to_search_frontier_by_id(search_id, sid)
+
+        for eid in end_point_ids:
+            search_store.add_search_end_point(search_id, eid)
+
+        return search_id
+    finally:
+        crystal_map_store.close()
+        search_store.close()

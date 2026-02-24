@@ -33,12 +33,15 @@ def store_file(zr_hcp_cnfs):
 
 @pytest.fixture
 def crystal_map_store(store_file, zr_bcc_cnfs, zr_hcp_cnfs):
-    store = CrystalMapStore.from_file(store_file)  
-    return store
+    store = CrystalMapStore.from_file(store_file)
+    yield store
+    store.close()
 
 @pytest.fixture(scope='function')
 def search_store(crystal_map_store):
-    return SearchProcessStore.from_file(crystal_map_store.db_filename)
+    store = SearchProcessStore.from_file(crystal_map_store.db_filename)
+    yield store
+    store.close()
 
 
 def test_can_add_and_rm_pt_from_frontier(search_store, zr_bcc_cnfs, zr_hcp_cnfs):
