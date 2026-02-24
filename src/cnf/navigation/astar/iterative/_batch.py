@@ -32,7 +32,7 @@ def run_batch(ceilings, start_cnfs, goal_cnfs, elements, xi, delta,
             args = (c, start_coords, goal_coords, elements, xi, delta,
                     dropout, max_iters, beam_width, heuristic_mode,
                     heuristic_weight, seed_cache_items,
-                    attempts_per_ceiling, f"c={c:.2f}", pass_id)
+                    attempts_per_ceiling, f"c={c:.2f} eV", pass_id)
             f = pool.submit(worker_search_with_attempts, args)
             futures[f] = c
 
@@ -49,8 +49,8 @@ def run_batch(ceilings, start_cnfs, goal_cnfs, elements, xi, delta,
                     if other_c > best_found_ceiling and not other_f.done():
                         cancelled = other_f.cancel()
                         if cancelled and verbose:
-                            print(f"    [c={other_c:.2f}] cancelled "
-                                  f"(path found at {best_found_ceiling:.2f})",
+                            print(f"    [c={other_c:.2f} eV] cancelled "
+                                  f"(path found at {best_found_ceiling:.2f} eV)",
                                   flush=True)
 
         results.sort(key=lambda r: r["ceiling"])
