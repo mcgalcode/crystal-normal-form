@@ -11,7 +11,6 @@ dependencies = [
     "ase>=3.26.0",
     "average-minimum-distance>=1.6.0",
     "line-profiler>=5.0.0",
-    "maturin>=1.10.2",
     "mp-api>=0.45.8",
     "numpy<2",
     "pymatgen>=2025.6.14",
@@ -32,12 +31,20 @@ cnf-ceiling-search = "scripts.ceiling_search:main"
 cnf-refine-barrier = "scripts.refine_barrier:main"
 
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["maturin>=1.4,<2.0"]
+build-backend = "maturin"
 
-[tool.setuptools.packages.find]
-where = ["src", "."]
-include = ["cnf*", "scripts*"]
+[tool.maturin]
+# Path to the Rust crate
+manifest-path = "src/cnf/rust_cnf/Cargo.toml"
+# Where Python source code lives
+python-source = "src"
+# The resulting module will be importable as cnf.rust_cnf
+module-name = "cnf.rust_cnf"
+# Include Python packages not just the Rust extension
+python-packages = ["cnf", "scripts"]
+# Features to enable (if any)
+features = ["pyo3/extension-module"]
 
 [dependency-groups]
 dev = [
