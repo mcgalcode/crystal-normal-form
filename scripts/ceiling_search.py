@@ -53,7 +53,9 @@ def main():
     )
 
     if barrier is not None:
-        print(f"\nBarrier: {barrier:.4f} eV ({barrier/n_atoms:.4f} eV/atom), path length: {len(path_cnfs)}")
+        min_endpoint = min(path_energies[0], path_energies[-1])
+        barrier_height = barrier - min_endpoint
+        print(f"\nBarrier: {barrier:.4f} eV (height: {barrier_height:.4f} eV, {barrier_height/n_atoms:.4f} eV/atom), path length: {len(path_cnfs)}")
         sys.exit(0)
     else:
         print("\nNo path found.")
