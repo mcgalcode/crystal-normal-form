@@ -427,8 +427,7 @@ def ceiling_barrier_search(
 
     # Relax endpoints in continuous space if requested
     if relax_endpoints:
-        from tensorpotential.calculator.foundation_models import grace_fm
-        ase_calc = grace_fm(energy_calc.model_string)
+        ase_calc = energy_calc._calc
 
         if verbose:
             print("Relaxing endpoints in continuous space...")
