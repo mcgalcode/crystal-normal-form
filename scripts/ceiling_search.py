@@ -32,31 +32,24 @@ def main():
 
     start = UnitCell.from_pymatgen_structure(Structure.from_file(args.start))
     end = UnitCell.from_pymatgen_structure(Structure.from_file(args.end))
-    n_atoms = len(start.atoms)
+    n_atoms = len(start)
 
-    delta = max(compute_delta_for_step_size(start.to_pymatgen(), args.atom_step_length),
-                compute_delta_for_step_size(end.to_pymatgen(), args.atom_step_length))
-
-    e_start = calc.calculate_energy(start.to_cnf(delta)) / n_atoms
-    e_end = calc.calculate_energy(end.to_cnf(delta)) / n_atoms
-    e_max = max(e_start, e_end)
-
-    ceiling_step = args.ceiling_step_per_atom * n_atoms
-    max_ceiling = args.max_ceiling if args.max_ceiling else e_max + ceiling_step * args.num_ceilings
+    delta = max(compute_delta_for_step_size(start.to_pymatgen_structure(), args.atom_step_length),
+                compute_delta_for_step_size(end.to_pymatgen_structure(), args.atom_step_length))
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
     barrier, path_cnfs, path_energies = ceiling_barrier_search(
         start, end, calc,
-        output_dir=args.output_dir,
-        initial_delta=delta,
-        max_ceiling=max_ceiling,
-        ceiling_step=ceiling_step,
+        delta=delta,
+        step_per_atom=args.ceiling_step_per_atom,
         num_ceilings=args.num_ceilings,
         attempts_per_ceiling=args.attempts_per_ceiling,
         max_passes=args.max_passes,
         max_sweep_rounds=args.max_sweep_rounds,
+        max_ceiling=args.max_ceiling,
         relax_endpoints=args.relax_endpoints,
+        output_dir=args.output_dir,
     )
 
     if barrier is not None:

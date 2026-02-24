@@ -115,6 +115,7 @@ def iterative_astar_barrier(
     round_times = []
     total_start = time.perf_counter()
     start_round = 1 if initial_ceiling is not None else 0
+    end_round = max_rounds + 1  # max_rounds means refinement rounds, round 0 is discovery
 
     if initial_ceiling is not None and verbose:
         print(f"\nSkipping Round 0, using initial ceiling={initial_ceiling:.4f} eV")
@@ -123,7 +124,7 @@ def iterative_astar_barrier(
     current_dropout = dropout
     current_max_iters = min(max_iterations_per_path, 500)
 
-    for round_num in range(start_round, max_rounds):
+    for round_num in range(start_round, end_round):
         round_start = time.perf_counter()
         ceiling_at_start = ceiling
         round_ceiling = ceiling  # fixed for this round
