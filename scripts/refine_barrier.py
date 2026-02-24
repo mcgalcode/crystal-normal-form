@@ -29,8 +29,8 @@ def main():
 
     calc = GraceCalculator(model_path=args.model_path) if args.model_path else GraceCalculator()
 
-    start = UnitCell.from_pymatgen(Structure.from_file(args.start))
-    end = UnitCell.from_pymatgen(Structure.from_file(args.end))
+    start = UnitCell.from_pymatgen_structure(Structure.from_file(args.start))
+    end = UnitCell.from_pymatgen_structure(Structure.from_file(args.end))
     n_atoms = len(start.atoms)
 
     delta = max(compute_delta_for_step_size(start.to_pymatgen(), args.atom_step_length),
