@@ -19,6 +19,7 @@ def main():
     p.add_argument("--max-passes", type=int, default=3)
     p.add_argument("--max-sweep-rounds", type=int, default=10)
     p.add_argument("--relax-endpoints", action="store_true")
+    p.add_argument("--min-atoms", type=int, help="Minimum atoms (will create supercells if needed)")
     args = p.parse_args()
 
     # Deferred imports to keep --help fast
@@ -26,12 +27,19 @@ def main():
     from cnf import UnitCell
     from cnf.calculation.grace import GraceCalculator
     from cnf.navigation import compute_delta_for_step_size
+    from cnf.navigation.endpoints import get_endpoint_unit_cells
     from cnf.navigation.astar.iterative import ceiling_barrier_search
 
     calc = GraceCalculator(model_path=args.model_path) if args.model_path else GraceCalculator()
 
     start = UnitCell.from_pymatgen_structure(Structure.from_file(args.start))
     end = UnitCell.from_pymatgen_structure(Structure.from_file(args.end))
+
+    # Apply min_atoms constraint via supercells if specified
+    if args.min_atoms:
+        start_cells, end_cells = get_endpoint_unit_cells(start, end, min_atoms=args.min_atoms)
+        start, end = start_cells[0], end_cells[0]
+
     n_atoms = len(start)
 
     delta = max(compute_delta_for_step_size(start.to_pymatgen_structure(), args.atom_step_length),
