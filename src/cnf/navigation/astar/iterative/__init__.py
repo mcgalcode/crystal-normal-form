@@ -493,6 +493,7 @@ def ceiling_barrier_search(
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
         (output_dir / "rounds").mkdir(exist_ok=True)
+        _update_manifest()  # Write initial manifest to confirm job started
 
     # Set up worker pool for parallel execution
     import multiprocessing
