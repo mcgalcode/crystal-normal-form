@@ -20,6 +20,7 @@ def main():
     p.add_argument("--dropout", type=float, default=0.3)
     p.add_argument("--min-dropout", type=float, default=0.1)
     p.add_argument("--beam-width", type=int, default=1000)
+    p.add_argument("--min-atoms", type=int, help="Minimum atoms (will create supercells if needed)")
     args = p.parse_args()
 
     # Deferred imports to keep --help fast
@@ -39,7 +40,7 @@ def main():
                 compute_delta_for_step_size(end.to_pymatgen_structure(), args.atom_step_length),
                 args.min_delta)
 
-    start_cnfs, end_cnfs = get_endpoint_cnfs(start, end, xi=args.xi, delta=delta)
+    start_cnfs, end_cnfs = get_endpoint_cnfs(start, end, xi=args.xi, delta=delta, min_atoms=args.min_atoms)
     n_atoms = len(start_cnfs[0].elements)
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
