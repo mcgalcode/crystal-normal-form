@@ -90,6 +90,7 @@ def sample_job(
     dropout_range: tuple[float, float] = (0.3, 0.7),
     max_iterations: int = 5_000,
     beam_width: int = 1000,
+    grace_model_path: str | None = None,
     output_dir: str | None = None,
 ) -> SearchResult:
     """Phase 2: Sample diverse paths to discover initial energy ceiling.
@@ -104,6 +105,7 @@ def sample_job(
         dropout_range: (min, max) dropout probability range.
         max_iterations: Max A* iterations per attempt.
         beam_width: Max open-set size for beam search.
+        grace_model_path: Path to local GRACE model (uses foundation model if None).
         output_dir: Directory for output files.
 
     Returns:
@@ -121,7 +123,7 @@ def sample_job(
     return sample(
         start_cnfs=start_cnfs,
         goal_cnfs=goal_cnfs,
-        energy_calc=GraceCalculator(),
+        energy_calc=GraceCalculator(model_path=grace_model_path),
         num_samples=num_samples,
         dropout_range=dropout_range,
         min_distance=min_distance,
@@ -146,6 +148,7 @@ def sweep_job(
     delta_factor: float = 1.1,
     dropout: float = 0.1,
     beam_width: int = 1000,
+    grace_model_path: str | None = None,
     output_dir: str | None = None,
 ) -> CeilingSweepResult:
     """Phase 3: Parallel ceiling sweep with multi-resolution refinement.
@@ -163,6 +166,7 @@ def sweep_job(
         delta_factor: delta multiplied by this each refinement pass.
         dropout: Neighbor dropout probability.
         beam_width: Max open-set size for beam search.
+        grace_model_path: Path to local GRACE model (uses foundation model if None).
         output_dir: Directory for output files.
 
     Returns:
@@ -178,7 +182,7 @@ def sweep_job(
         start_uc=start_uc,
         end_uc=end_uc,
         max_ceiling=max_ceiling,
-        energy_calc=GraceCalculator(),
+        energy_calc=GraceCalculator(model_path=grace_model_path),
         xi=xi,
         delta=delta,
         num_ceilings=num_ceilings,
@@ -207,6 +211,7 @@ def ratchet_job(
     min_dropout: float = 0.1,
     max_iterations: int = 100_000,
     beam_width: int = 1000,
+    grace_model_path: str | None = None,
     output_dir: str | None = None,
 ) -> RefinementResult:
     """Phase 4: Serial barrier refinement with ratcheting ceiling.
@@ -223,6 +228,7 @@ def ratchet_job(
         min_dropout: Minimum dropout for adaptive adjustment.
         max_iterations: Max A* iterations per search.
         beam_width: Max open-set size for beam search.
+        grace_model_path: Path to local GRACE model (uses foundation model if None).
         output_dir: Directory for output files.
 
     Returns:
@@ -241,7 +247,7 @@ def ratchet_job(
         start_cnfs=start_cnfs,
         goal_cnfs=goal_cnfs,
         initial_ceiling=initial_ceiling,
-        energy_calc=GraceCalculator(),
+        energy_calc=GraceCalculator(model_path=grace_model_path),
         paths_per_round=paths_per_round,
         max_rounds=max_rounds,
         dropout=dropout,
@@ -279,6 +285,7 @@ class BarrierSearchMaker(Maker):
         num_ceilings: Number of ceiling levels in Phase 3.
         max_rounds: Maximum refinement rounds in Phase 4.
         beam_width: Beam width for all searches.
+        grace_model_path: Path to local GRACE model (uses foundation model if None).
         output_dir: Base directory for outputs.
     """
 
@@ -290,6 +297,7 @@ class BarrierSearchMaker(Maker):
     num_ceilings: int = 5
     max_rounds: int = 20
     beam_width: int = 1000
+    grace_model_path: str | None = None
     output_dir: str | None = None
 
     @job
@@ -340,6 +348,7 @@ class BarrierSearchMaker(Maker):
             min_distance=min_distance,
             num_samples=self.num_samples,
             beam_width=self.beam_width,
+            grace_model_path=self.grace_model_path,
             output_dir=phase2_dir,
         )
         phase2.name = f"{self.name} - Phase 2 Sample"
@@ -355,6 +364,7 @@ class BarrierSearchMaker(Maker):
             delta=delta,
             num_ceilings=self.num_ceilings,
             beam_width=self.beam_width,
+            grace_model_path=self.grace_model_path,
             output_dir=phase3_dir,
         )
         phase3.name = f"{self.name} - Phase 3 Sweep"
@@ -370,6 +380,7 @@ class BarrierSearchMaker(Maker):
             delta=delta,
             max_rounds=self.max_rounds,
             beam_width=self.beam_width,
+            grace_model_path=self.grace_model_path,
             output_dir=phase4_dir,
         )
         phase4.name = f"{self.name} - Phase 4 Ratchet"
