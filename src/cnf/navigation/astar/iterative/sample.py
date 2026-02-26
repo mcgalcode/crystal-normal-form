@@ -95,6 +95,23 @@ def sample(
     total_start = time.perf_counter()
     attempts = []
 
+    def _save_intermediate():
+        if output_dir is None:
+            return
+        intermediate = SearchResult(
+            context=context,
+            parameters=base_params,
+            attempts=attempts,
+            metadata={
+                "num_samples": num_samples,
+                "dropout_range": list(dropout_range),
+                "bidirectional": bidirectional,
+                "completed_attempts": len(attempts),
+                "in_progress": True,
+            }
+        )
+        intermediate.to_json(str(output_dir / "sample_result.json"))
+
     if verbosity >= 1:
         print(f"\nPath sampling: {num_samples} attempts "
               f"(dropout {dropout_range[0]:.1f}-{dropout_range[1]:.1f})")
@@ -139,6 +156,9 @@ def sample(
                 elapsed_seconds=attempt_elapsed,
                 metadata={"dropout": attempt_dropout, "direction": direction},
             ))
+            # Save every 10 attempts
+            if len(attempts) % 10 == 0:
+                _save_intermediate()
             continue
 
         if direction == "backward":
@@ -166,6 +186,10 @@ def sample(
             elapsed_seconds=attempt_elapsed,
             metadata={"dropout": attempt_dropout, "direction": direction},
         ))
+
+        # Save every 10 attempts
+        if len(attempts) % 10 == 0:
+            _save_intermediate()
 
     total_elapsed = time.perf_counter() - total_start
 
