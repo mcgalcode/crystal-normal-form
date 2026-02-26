@@ -21,6 +21,9 @@ dependencies = [
     "tensorpotential>=0.4.5",
 ]
 
+[project.optional-dependencies]
+jobs = ["jobflow>=0.1.18"]
+
 [project.scripts]
 cnf-setup-search = "cnf.scripts.setup_search_db:main"
 cnf-astar = "cnf.scripts.pathfind_astar:main"
