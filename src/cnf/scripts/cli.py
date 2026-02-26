@@ -94,7 +94,7 @@ def sample_command(args):
     from cnf import UnitCell
     from cnf.navigation.astar.iterative import sample
     from cnf.navigation.endpoints import get_endpoint_cnfs
-    from cnf.calculation.grace import GraceCalculator
+    from cnf.calculation.grace import GraceCalcProvider
 
     # Load parameters from previous result if --from is specified
     if args.from_result:
@@ -122,17 +122,18 @@ def sample_command(args):
 
     start_cnfs, goal_cnfs = get_endpoint_cnfs(start_uc, end_uc, xi=xi, delta=delta)
 
-    calc = GraceCalculator(model_path=args.model) if args.model else GraceCalculator()
+    calc_provider = GraceCalcProvider(model_path=args.model)
 
     result = sample(
         start_cnfs=start_cnfs,
         goal_cnfs=goal_cnfs,
-        energy_calc=calc,
+        calc_provider=calc_provider,
         num_samples=args.num_samples,
         dropout_range=(args.dropout_min, args.dropout_max),
         min_distance=min_distance,
         max_iterations=args.max_iters,
         beam_width=args.beam_width,
+        n_workers=args.workers,
         verbosity=get_verbosity(args),
         output_dir=args.output,
     )
@@ -195,6 +196,7 @@ def sweep_command(args):
         xi_factor=args.xi_factor,
         delta_factor=args.delta_factor,
         dropout=args.dropout,
+        max_iterations=args.max_iters,
         beam_width=args.beam_width,
         n_workers=args.workers,
         verbosity=get_verbosity(args),
@@ -295,7 +297,7 @@ def find_barrier_command(args):
     from cnf import UnitCell
     from cnf.navigation.astar.iterative import search, sample, sweep, ratchet
     from cnf.navigation.endpoints import get_endpoint_cnfs
-    from cnf.calculation.grace import GraceCalculator
+    from cnf.calculation.grace import GraceCalculator, GraceCalcProvider
 
     start = Structure.from_file(args.start)
     end = Structure.from_file(args.end)
@@ -307,7 +309,10 @@ def find_barrier_command(args):
     if output_dir:
         output_dir.mkdir(parents=True, exist_ok=True)
 
-    calc = GraceCalculator(model_path=args.model) if args.model else GraceCalculator()
+    # For phases that support parallel execution, use provider
+    calc_provider = GraceCalcProvider(model_path=args.model)
+    # For phases that don't support parallel yet, use calculator instance
+    calc = calc_provider()
 
     # Parse xi/atom-steps if provided
     xi_values = [float(x) for x in args.xi.split(',')] if args.xi else None
@@ -327,6 +332,7 @@ def find_barrier_command(args):
         max_iterations=args.max_iters,
         beam_width=args.beam_width,
         dropout=args.dropout,
+        n_workers=args.workers,
         verbosity=verbosity,
         output_dir=str(output_dir / "phase1_search") if output_dir else None,
     )
@@ -351,12 +357,13 @@ def find_barrier_command(args):
     sample_result = sample(
         start_cnfs=start_cnfs,
         goal_cnfs=goal_cnfs,
-        energy_calc=calc,
+        calc_provider=calc_provider,
         num_samples=args.num_samples,
         dropout_range=(args.dropout_min, args.dropout_max),
         min_distance=min_distance,
         max_iterations=args.max_iters,
         beam_width=args.beam_width,
+        n_workers=args.workers,
         verbosity=verbosity,
         output_dir=str(output_dir / "phase2_sample") if output_dir else None,
     )
@@ -385,7 +392,9 @@ def find_barrier_command(args):
         attempts_per_ceiling=args.attempts,
         max_passes=args.max_passes,
         dropout=args.sweep_dropout,
+        max_iterations=args.max_iters,
         beam_width=args.beam_width,
+        n_workers=args.workers,
         verbosity=verbosity,
         output_dir=str(output_dir / "phase3_sweep") if output_dir else None,
     )
@@ -468,7 +477,7 @@ def main():
     add_common_args(search_parser)
     search_parser.add_argument('--xi', help='Comma-separated xi values (default: 1.5,1.25,1.0,0.75)')
     search_parser.add_argument('--atom-steps', help='Comma-separated atom step lengths in Angstrom (default: 0.4,0.3,0.2,0.1)')
-    search_parser.add_argument('--dropout', type=float, default=0.3, help='Dropout probability (default: 0.3)')
+    search_parser.add_argument('--dropout', type=float, default=0.0, help='Dropout probability (default: 0.0)')
     search_parser.add_argument('--workers', type=int, default=0, help='Number of parallel workers (default: 0 = auto)')
     search_parser.set_defaults(func=search_command)
 
@@ -479,9 +488,10 @@ def main():
     add_energy_args(sample_parser)
     add_from_arg(sample_parser, 'Load xi/delta/min_distance from search result JSON')
     sample_parser.add_argument('--num-samples', type=int, default=20, help='Number of samples (default: 20)')
-    sample_parser.add_argument('--dropout-min', type=float, default=0.3, help='Min dropout (default: 0.3)')
-    sample_parser.add_argument('--dropout-max', type=float, default=0.7, help='Max dropout (default: 0.7)')
+    sample_parser.add_argument('--dropout-min', type=float, default=0.05, help='Min dropout (default: 0.05)')
+    sample_parser.add_argument('--dropout-max', type=float, default=0.1, help='Max dropout (default: 0.1)')
     sample_parser.add_argument('--min-distance', type=float, help='Minimum interatomic distance filter')
+    sample_parser.add_argument('--workers', type=int, default=1, help='Number of parallel workers (default: 1, 0=auto)')
     sample_parser.set_defaults(func=sample_command)
 
     # sweep
@@ -492,7 +502,7 @@ def main():
     add_from_arg(sweep_parser, 'Load xi/delta/ceiling from sample result JSON')
     sweep_parser.add_argument('--ceiling', type=float, help='Max energy ceiling (eV)')
     sweep_parser.add_argument('--num-ceilings', type=int, default=5, help='Number of ceiling levels (default: 5)')
-    sweep_parser.add_argument('--attempts', type=int, default=1, help='Attempts per ceiling (default: 1)')
+    sweep_parser.add_argument('--attempts', type=int, default=3, help='Sweep: A* searches per ceiling level for path diversity (default: 3)')
     sweep_parser.add_argument('--max-passes', type=int, default=3, help='Max refinement passes (default: 3)')
     sweep_parser.add_argument('--xi-factor', type=float, default=0.9, help='Xi reduction factor (default: 0.9)')
     sweep_parser.add_argument('--delta-factor', type=float, default=1.1, help='Delta increase factor (default: 1.1)')
@@ -509,7 +519,7 @@ def main():
     ratchet_parser.add_argument('--ceiling', type=float, help='Initial energy ceiling (eV)')
     ratchet_parser.add_argument('--paths-per-round', type=int, default=10, help='Paths per round (default: 10)')
     ratchet_parser.add_argument('--max-rounds', type=int, default=20, help='Max rounds (default: 20)')
-    ratchet_parser.add_argument('--dropout', type=float, default=0.3, help='Initial dropout (default: 0.3)')
+    ratchet_parser.add_argument('--dropout', type=float, default=0.1, help='Initial dropout (default: 0.1)')
     ratchet_parser.add_argument('--min-dropout', type=float, default=0.1, help='Minimum dropout (default: 0.1)')
     ratchet_parser.set_defaults(func=ratchet_command)
 
@@ -521,26 +531,27 @@ def main():
     fb_parser.add_argument('-v', '--verbose', action='count', default=0,
                            help='Increase verbosity (-v for A* progress, -vv for more)')
     fb_parser.add_argument('-q', '--quiet', action='store_true', help='Silent mode')
-    fb_parser.add_argument('--model', help='Path to local GRACE model')
+    fb_parser.add_argument('--model', help='Sample/Sweep/Ratchet: Path to local GRACE model')
     # Phase 1 args
-    fb_parser.add_argument('--xi', help='Comma-separated xi values for search (default: 1.5,1.25,1.0,0.75)')
-    fb_parser.add_argument('--atom-steps', help='Comma-separated atom step lengths (default: 0.4,0.3,0.2,0.1)')
+    fb_parser.add_argument('--xi', help='Search: Comma-separated xi values (default: 1.5,1.25,1.0,0.75)')
+    fb_parser.add_argument('--atom-steps', help='Search: Comma-separated atom step lengths in Å (default: 0.4,0.3,0.2,0.1)')
     # Common search args
-    fb_parser.add_argument('--beam-width', type=int, default=1000, help='Beam width (default: 1000)')
-    fb_parser.add_argument('--max-iters', type=int, default=5000, help='Max iterations (default: 5000)')
-    fb_parser.add_argument('--dropout', type=float, default=0.3, help='Dropout for search/ratchet (default: 0.3)')
+    fb_parser.add_argument('--beam-width', type=int, default=1000, help='All phases: Max open-set size (default: 1000)')
+    fb_parser.add_argument('--max-iters', type=int, default=5000, help='All phases: Max A* iterations (default: 5000)')
+    fb_parser.add_argument('--dropout', type=float, default=0.1, help='Search/Ratchet: Dropout probability (default: 0.1)')
+    fb_parser.add_argument('--workers', type=int, default=0, help='Phases 1-3: Number of parallel workers (default: 0=auto)')
     # Phase 2 args
-    fb_parser.add_argument('--num-samples', type=int, default=20, help='Number of samples in Phase 2 (default: 20)')
-    fb_parser.add_argument('--dropout-min', type=float, default=0.3, help='Min dropout for sampling (default: 0.3)')
-    fb_parser.add_argument('--dropout-max', type=float, default=0.7, help='Max dropout for sampling (default: 0.7)')
+    fb_parser.add_argument('--num-samples', type=int, default=20, help='Sample: Number of path samples (default: 20)')
+    fb_parser.add_argument('--dropout-min', type=float, default=0.05, help='Sample: Min dropout (default: 0.05)')
+    fb_parser.add_argument('--dropout-max', type=float, default=0.1, help='Sample: Max dropout (default: 0.1)')
     # Phase 3 args
-    fb_parser.add_argument('--num-ceilings', type=int, default=5, help='Number of ceiling levels (default: 5)')
-    fb_parser.add_argument('--attempts', type=int, default=1, help='Attempts per ceiling (default: 1)')
-    fb_parser.add_argument('--max-passes', type=int, default=3, help='Max refinement passes (default: 3)')
-    fb_parser.add_argument('--sweep-dropout', type=float, default=0.1, help='Dropout for sweep (default: 0.1)')
+    fb_parser.add_argument('--num-ceilings', type=int, default=5, help='Sweep: Number of ceiling levels (default: 5)')
+    fb_parser.add_argument('--attempts', type=int, default=3, help='Sweep: A* searches per ceiling for diversity (default: 3)')
+    fb_parser.add_argument('--max-passes', type=int, default=3, help='Sweep: Resolution refinement passes (default: 3)')
+    fb_parser.add_argument('--sweep-dropout', type=float, default=0.1, help='Sweep: Dropout probability (default: 0.1)')
     # Phase 4 args
-    fb_parser.add_argument('--paths-per-round', type=int, default=10, help='Paths per round (default: 10)')
-    fb_parser.add_argument('--max-rounds', type=int, default=20, help='Max rounds (default: 20)')
+    fb_parser.add_argument('--paths-per-round', type=int, default=10, help='Ratchet: A* searches per round (default: 10)')
+    fb_parser.add_argument('--max-rounds', type=int, default=20, help='Ratchet: Max refinement rounds (default: 20)')
     fb_parser.set_defaults(func=find_barrier_command)
 
     args = parser.parse_args()

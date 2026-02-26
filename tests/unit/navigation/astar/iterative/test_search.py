@@ -135,7 +135,7 @@ class TestRetrySearch:
             max_iters=1000,
             beam_width=500,
             attempts=3,
-            verbose=False,
+            verbosity=0,
         )
 
         assert result["found"] is True
@@ -166,7 +166,7 @@ class TestRetrySearch:
             max_iters=1000,
             beam_width=500,
             attempts=3,
-            verbose=False,
+            verbosity=0,
         )
 
         assert result["found"] is False
@@ -198,7 +198,7 @@ class TestRetrySearch:
             beam_width=500,
             attempts=3,
             max_iters_scale=2.0,
-            verbose=False,
+            verbosity=0,
         )
 
         # Check max_iters in each call: 100, 200, 400
@@ -237,7 +237,7 @@ class TestRetrySearch:
             max_iters=100,
             beam_width=500,
             attempts=5,
-            verbose=False,
+            verbosity=0,
         )
 
         assert result["found"] is True
@@ -272,7 +272,7 @@ class TestRetrySearch:
             max_iters=100,
             beam_width=500,
             attempts=1,
-            verbose=True,
+            verbosity=1,
         )
 
         captured = capsys.readouterr()
@@ -281,7 +281,7 @@ class TestRetrySearch:
 
     @patch('cnf.navigation.astar.iterative._search.search_at_ceiling')
     def test_silent_mode_no_print(self, mock_search, capsys):
-        """Silent mode (verbose=False) should not print."""
+        """Silent mode (verbosity=0) should not print."""
         from cnf.navigation.astar.iterative._search import retry_search
 
         mock_search.return_value = {
@@ -308,7 +308,7 @@ class TestRetrySearch:
             max_iters=100,
             beam_width=500,
             attempts=1,
-            verbose=False,
+            verbosity=0,
         )
 
         captured = capsys.readouterr()
@@ -341,18 +341,18 @@ class TestSearchCeilingWithAttempts:
             max_iters=1000,
             beam_width=500,
             attempts=5,
-            verbose=True,
+            verbosity=1,
         )
 
         mock_retry.assert_called_once()
-        # attempts is positional arg at index 11, verbose is kwarg
+        # attempts is positional arg at index 11, verbosity is kwarg
         call_args = mock_retry.call_args
         assert call_args[0][11] == 5  # attempts
-        assert call_args.kwargs['verbose'] is True
+        assert call_args.kwargs['verbosity'] == 1
 
     @patch('cnf.navigation.astar.iterative._search.retry_search')
-    def test_passes_verbose_false(self, mock_retry):
-        """Should pass verbose=False to retry_search."""
+    def test_passes_verbosity_zero(self, mock_retry):
+        """Should pass verbosity=0 to retry_search."""
         from cnf.navigation.astar.iterative._search import search_ceiling_with_attempts
 
         mock_retry.return_value = {"found": False}
@@ -370,15 +370,15 @@ class TestSearchCeilingWithAttempts:
             max_iters=1000,
             beam_width=500,
             attempts=3,
-            verbose=False,
+            verbosity=0,
         )
 
         call_kwargs = mock_retry.call_args.kwargs
-        assert call_kwargs.get('verbose') is False
+        assert call_kwargs.get('verbosity') == 0
 
     @patch('cnf.navigation.astar.iterative._search.retry_search')
     def test_respects_attempts_in_silent_mode(self, mock_retry):
-        """Should respect attempts parameter even when verbose=False."""
+        """Should respect attempts parameter even when verbosity=0."""
         from cnf.navigation.astar.iterative._search import search_ceiling_with_attempts
 
         mock_retry.return_value = {"found": False}
@@ -396,11 +396,11 @@ class TestSearchCeilingWithAttempts:
             max_iters=1000,
             beam_width=500,
             attempts=7,
-            verbose=False,
+            verbosity=0,
         )
 
         # Verify attempts=7 was passed (this was the bug - before it would
-        # ignore attempts when verbose=False)
+        # ignore attempts when verbosity=0)
         # attempts is positional arg at index 11
         call_args = mock_retry.call_args
         assert call_args[0][11] == 7

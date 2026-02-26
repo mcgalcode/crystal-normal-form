@@ -195,7 +195,7 @@ def search(
     tolerance: float = 0.05,
     max_iterations: int = 5_000,
     beam_width: int = 1000,
-    dropout: float = 0.3,
+    dropout: float = 0.0,
     n_workers: int = 0,
     verbosity: int = 1,
     output_dir: PathlibPath | str | None = None,

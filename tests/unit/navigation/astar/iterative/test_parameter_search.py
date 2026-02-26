@@ -43,7 +43,7 @@ class TestBinarySearchMinDistance:
             beam_width=500,
             dropout=0.3,
             tolerance=0.05,
-            verbose=False,
+            verbosity=0,
         )
 
         # Should converge to just below 1.0
@@ -69,7 +69,7 @@ class TestBinarySearchMinDistance:
             beam_width=500,
             dropout=0.3,
             tolerance=0.05,
-            verbose=False,
+            verbosity=0,
         )
 
         assert best_dist is None
@@ -104,7 +104,7 @@ class TestSearchAtResolution:
             beam_width=500,
             dropout=0.3,
             tolerance=0.05,
-            verbose=False,
+            verbosity=0,
         )
 
         # Should call compute_delta_for_step_size
@@ -144,7 +144,7 @@ class TestSearchAtResolution:
             beam_width=500,
             dropout=0.3,
             tolerance=0.05,
-            verbose=False,
+            verbosity=0,
         )
 
         assert result["found"] is False
@@ -175,7 +175,7 @@ class TestSearch:
             xi_values=[1.5, 1.0],
             atom_step_lengths=[0.4, 0.2],
             n_workers=1,
-            verbose=False,
+            verbosity=0,
         )
 
         # Should call _search_at_resolution for each resolution
@@ -196,7 +196,7 @@ class TestSearch:
                 xi_values=[1.5, 1.0, 0.75],
                 atom_step_lengths=[0.4, 0.2],
                 n_workers=1,
-                verbose=False,
+                verbosity=0,
             )
 
     @patch('cnf.navigation.astar.iterative.search._search_at_resolution')
@@ -223,7 +223,7 @@ class TestSearch:
             xi_values=[1.5, 1.25, 1.0],
             atom_step_lengths=[0.4, 0.3, 0.2],
             n_workers=1,
-            verbose=False,
+            verbosity=0,
         )
 
         # Should recommend the finest successful: xi=1.0, delta=15
@@ -255,7 +255,7 @@ class TestSearch:
             xi_values=[1.5],
             atom_step_lengths=[0.4],
             n_workers=1,
-            verbose=False,
+            verbosity=0,
         )
 
         assert result.success is False
@@ -284,7 +284,7 @@ class TestSearch:
             start_uc=start_uc,
             end_uc=end_uc,
             n_workers=1,
-            verbose=False,
+            verbosity=0,
         )
 
         # Should iterate through all defaults
@@ -314,7 +314,7 @@ class TestSearch:
                 xi_values=[1.5],
                 atom_step_lengths=[0.4],
                 n_workers=1,
-                verbose=False,
+                verbosity=0,
                 output_dir=tmpdir,
             )
 
