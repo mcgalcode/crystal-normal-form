@@ -2,7 +2,7 @@
 
 import sys
 import argparse
-from cnf.navigation.astar import pathfind_and_save
+
 
 def main():
     """Main entry point for the cnf-pathfind script"""

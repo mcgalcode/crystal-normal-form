@@ -18,6 +18,7 @@ def main():
     p.add_argument("--max-ceiling", type=float, help="Max ceiling in eV (warm start)")
     p.add_argument("--max-passes", type=int, default=3)
     p.add_argument("--max-sweep-rounds", type=int, default=10)
+    p.add_argument("--dropout", type=float, default=0.1, help="Dropout rate (0.0-1.0)")
     p.add_argument("--relax-endpoints", action="store_true")
     p.add_argument("--min-atoms", type=int, help="Minimum atoms (will create supercells if needed)")
     args = p.parse_args()
@@ -56,6 +57,7 @@ def main():
         max_passes=args.max_passes,
         max_sweep_rounds=args.max_sweep_rounds,
         max_ceiling=args.max_ceiling,
+        dropout=args.dropout,
         relax_endpoints=args.relax_endpoints,
         output_dir=args.output_dir,
     )
