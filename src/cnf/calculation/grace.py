@@ -7,11 +7,32 @@ from tensorpotential.calculator.foundation_models import grace_fm, GRACEModels
 
 from ..crystal_normal_form import CrystalNormalForm
 from ..navigation import find_neighbors
-from .base_calculator import BaseCalculator
+from .base_calculator import BaseCalculator, CalcProvider
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_MODEL = GRACEModels.GRACE_FS_OAM
+
+
+class GraceCalcProvider(CalcProvider):
+    """Picklable factory for GraceCalculator.
+
+    Stores only the model configuration (strings), not the loaded model.
+    Each call creates a fresh GraceCalculator with a newly loaded model.
+    """
+
+    def __init__(self, model_path: str = None, model_string: str = DEFAULT_MODEL):
+        self.model_path = model_path
+        self.model_string = model_string
+
+    def __call__(self) -> "GraceCalculator":
+        return GraceCalculator(model_string=self.model_string, model_path=self.model_path)
+
+    def identifier(self) -> str:
+        if self.model_path:
+            return f"GraceCalcProvider(model_path={self.model_path})"
+        return f"GraceCalcProvider(model_string={self.model_string})"
+
 
 class GraceCalculator(BaseCalculator):
 
