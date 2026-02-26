@@ -6,18 +6,19 @@ from pathlib import Path
 
 
 def main():
-    p = argparse.ArgumentParser()
+    p = argparse.ArgumentParser(
+        description="Ceiling sweep barrier search. Requires --max-ceiling (use path sampling to discover it first)."
+    )
     p.add_argument("start", help="Starting structure CIF")
     p.add_argument("end", help="Ending structure CIF")
+    p.add_argument("--max-ceiling", type=float, required=True,
+                   help="Max ceiling in eV (required, from Phase 2 path sampling)")
     p.add_argument("-o", "--output-dir", type=Path, default=Path("output"))
     p.add_argument("--model-path", help="Path to fine-tuned GRACE model")
     p.add_argument("--atom-step-length", type=float, default=0.3, help="Target step length in Å")
-    p.add_argument("--ceiling-step-per-atom", type=float, default=0.1, help="Ceiling increment in eV/atom")
     p.add_argument("--num-ceilings", type=int, default=8)
     p.add_argument("--attempts-per-ceiling", type=int, default=2)
-    p.add_argument("--max-ceiling", type=float, help="Max ceiling in eV (warm start)")
     p.add_argument("--max-passes", type=int, default=3)
-    p.add_argument("--max-sweep-rounds", type=int, default=10)
     p.add_argument("--dropout", type=float, default=0.1, help="Dropout rate (0.0-1.0)")
     p.add_argument("--relax-endpoints", action="store_true")
     p.add_argument("--min-atoms", type=int, help="Minimum atoms (will create supercells if needed)")
@@ -29,7 +30,7 @@ def main():
     from cnf.calculation.grace import GraceCalculator
     from cnf.navigation import compute_delta_for_step_size
     from cnf.navigation.endpoints import get_endpoint_unit_cells
-    from cnf.navigation.astar.iterative import ceiling_barrier_search
+    from cnf.navigation.astar.iterative import sweep
 
     calc = GraceCalculator(model_path=args.model_path) if args.model_path else GraceCalculator()
 
@@ -48,24 +49,26 @@ def main():
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
-    barrier, path_cnfs, path_energies = ceiling_barrier_search(
-        start, end, calc,
+    result = sweep(
+        start, end,
+        max_ceiling=args.max_ceiling,
+        energy_calc=calc,
         delta=delta,
-        step_per_atom=args.ceiling_step_per_atom,
         num_ceilings=args.num_ceilings,
         attempts_per_ceiling=args.attempts_per_ceiling,
         max_passes=args.max_passes,
-        max_sweep_rounds=args.max_sweep_rounds,
-        max_ceiling=args.max_ceiling,
         dropout=args.dropout,
         relax_endpoints=args.relax_endpoints,
         output_dir=args.output_dir,
     )
 
-    if barrier is not None:
-        min_endpoint = min(path_energies[0], path_energies[-1])
+    best = result.best_path
+    if best is not None:
+        barrier = best.barrier
+        energies = best.energies
+        min_endpoint = min(energies[0], energies[-1])
         barrier_height = barrier - min_endpoint
-        print(f"\nBarrier: {barrier:.4f} eV (height: {barrier_height:.4f} eV, {barrier_height/n_atoms:.4f} eV/atom), path length: {len(path_cnfs)}")
+        print(f"\nBarrier: {barrier:.4f} eV (height: {barrier_height:.4f} eV, {barrier_height/n_atoms:.4f} eV/atom), path length: {len(best)}")
         sys.exit(0)
     else:
         print("\nNo path found.")

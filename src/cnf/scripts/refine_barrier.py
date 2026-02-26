@@ -6,7 +6,9 @@ from pathlib import Path
 
 
 def main():
-    p = argparse.ArgumentParser()
+    p = argparse.ArgumentParser(
+        description="Iterative A* barrier refinement with ratcheting ceiling."
+    )
     p.add_argument("start", help="Starting structure CIF")
     p.add_argument("end", help="Ending structure CIF")
     p.add_argument("--initial-ceiling", type=float, required=True, help="Starting ceiling in eV")
@@ -29,7 +31,7 @@ def main():
     from cnf.calculation.grace import GraceCalculator
     from cnf.navigation import compute_delta_for_step_size
     from cnf.navigation.endpoints import get_endpoint_cnfs
-    from cnf.navigation.astar.iterative import iterative_astar_barrier
+    from cnf.navigation.astar.iterative import ratchet
 
     calc = GraceCalculator(model_path=args.model_path) if args.model_path else GraceCalculator()
 
@@ -45,9 +47,10 @@ def main():
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
-    barrier, path_cnfs, path_energies = iterative_astar_barrier(
-        start_cnfs, end_cnfs, calc,
+    result = ratchet(
+        start_cnfs, end_cnfs,
         initial_ceiling=args.initial_ceiling,
+        energy_calc=calc,
         paths_per_round=args.paths_per_round,
         max_rounds=args.max_rounds,
         dropout=args.dropout,
@@ -56,10 +59,13 @@ def main():
         output_dir=args.output_dir,
     )
 
-    if barrier is not None:
-        min_endpoint = min(path_energies[0], path_energies[-1])
+    best = result.best_path
+    if best is not None:
+        barrier = best.barrier
+        energies = best.energies
+        min_endpoint = min(energies[0], energies[-1])
         barrier_height = barrier - min_endpoint
-        print(f"\nBarrier: {barrier:.4f} eV (height: {barrier_height:.4f} eV, {barrier_height/n_atoms:.4f} eV/atom), path length: {len(path_cnfs)}")
+        print(f"\nBarrier: {barrier:.4f} eV (height: {barrier_height:.4f} eV, {barrier_height/n_atoms:.4f} eV/atom), path length: {len(best)}")
         sys.exit(0)
     else:
         print("\nNo path found.")
