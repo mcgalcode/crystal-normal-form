@@ -15,7 +15,6 @@ from cnf.navigation.astar.models import (
 )
 from cnf.navigation.endpoints import get_endpoint_cnfs
 
-from ._params import calibrate_max_iters
 from ._batch import run_batch
 from ._workers import init_search_worker
 
@@ -34,6 +33,7 @@ def sweep(
     delta_factor=1.2,
     dropout=0.1,
     min_dropout=0.0,
+    max_iterations=5000,
     beam_width=1000,
     n_workers=0,
     verbosity: int = 1,
@@ -60,6 +60,7 @@ def sweep(
         delta_factor: delta multiplied by this each refinement pass.
         dropout: Neighbor dropout probability.
         min_dropout: Minimum dropout for adaptive adjustment.
+        max_iterations: Max A* iterations per search.
         beam_width: Max open-set size for beam search.
         n_workers: Parallel worker processes. 0 = auto.
         verbose: Print progress.
@@ -193,9 +194,7 @@ def sweep(
                 continue
 
             current_dropout = dropout
-            current_max_iters = calibrate_max_iters(
-                start_cnfs, goal_cnfs, beam_width, verbosity >= 1,
-            )
+            current_max_iters = max_iterations
 
             N = num_ceilings
             if N > 1:
