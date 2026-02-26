@@ -1217,7 +1217,7 @@ fn reconstruct_structure_from_cnf<'py>(
 ///     Tuple of (path, iterations) where path is a list of flat Vec<i32> (vonorms + coords concatenated)
 ///     or None if no path found, and iterations is the number of iterations performed
 #[pyfunction]
-#[pyo3(signature = (start_points, goal_points, elements, n_atoms, xi, delta, min_distance, max_iterations, beam_width, dropout, greedy, verbose, speak_freq, heuristic_mode="manhattan", heuristic_weight=0.5))]
+#[pyo3(signature = (start_points, goal_points, elements, n_atoms, xi, delta, min_distance, max_iterations, beam_width, dropout, greedy, verbose, speak_freq, heuristic_mode="manhattan", heuristic_weight=0.5, log_prefix=""))]
 fn astar_pathfind_rust<'py>(
     _py: Python<'py>,
     start_points: Vec<(Vec<i32>, Vec<i32>)>,
@@ -1235,6 +1235,7 @@ fn astar_pathfind_rust<'py>(
     speak_freq: usize,
     heuristic_mode: &str,
     heuristic_weight: f64,
+    log_prefix: &str,
 ) -> PyResult<(Option<Vec<Vec<i32>>>, usize)> {
     use crate::pathfinding::astar_pathfind;
     use crate::heuristics::HeuristicMode;
@@ -1307,6 +1308,7 @@ fn astar_pathfind_rust<'py>(
         speak_freq,
         mode,
         heuristic_weight,
+        log_prefix,
     );
 
     // Check if we were interrupted - if so, raise KeyboardInterrupt

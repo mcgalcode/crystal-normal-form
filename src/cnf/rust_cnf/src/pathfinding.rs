@@ -160,6 +160,7 @@ fn compute_h(
 ///     greedy: If true, use greedy best-first search (f = h) instead of A* (f = g + h).
 ///             This ignores path cost and only considers heuristic distance to goal.
 ///     verbose: Print progress every 5 iterations
+///     log_prefix: String to prepend to all log output (e.g., "[xi=1.5] ")
 ///
 /// Returns:
 ///     Tuple of (path, iterations) where path is Option containing Vec of flat Vec<i32>
@@ -180,6 +181,7 @@ pub fn astar_pathfind(
     speak_freq: usize,
     heuristic_mode: HeuristicMode,
     heuristic_weight: f64,
+    log_prefix: &str,
 ) -> (Option<Vec<Vec<i32>>>, usize) {
     // Pre-compute goal variants for unimodular heuristic modes
     let goal_variants: Option<GoalVariants> = match heuristic_mode {
@@ -247,13 +249,13 @@ pub fn astar_pathfind(
         .collect();
 
     if verbose {
-        eprintln!("Starting A* search with {} start states and {} goal states", start_points.len(), goal_points.len());
+        eprintln!("{}Starting A* search with {} start states and {} goal states", log_prefix, start_points.len(), goal_points.len());
     }
 
     while let Some(current_node) = open_set.pop() {
         if max_iterations > 0 && iterations >= max_iterations {
             if verbose {
-                eprintln!("Reached max iterations ({})", max_iterations);
+                eprintln!("{}Reached max iterations ({})", log_prefix, max_iterations);
             }
             return (None, iterations);
         }
@@ -265,7 +267,7 @@ pub fn astar_pathfind(
             let interrupted = Python::with_gil(|py| py.check_signals().is_err());
             if interrupted {
                 if verbose {
-                    eprintln!("\n⚠️ Search interrupted by user at iteration {}", iterations);
+                    eprintln!("\n{}⚠️ Search interrupted by user at iteration {}", log_prefix, iterations);
                 }
                 WAS_INTERRUPTED.store(true, AtomicOrdering::SeqCst);
                 return (None, iterations);
@@ -277,7 +279,7 @@ pub fn astar_pathfind(
         // Verbose logging - match Python format
         if verbose && iterations % speak_freq == 0 {
             let elapsed = start_time.elapsed();
-            eprintln!("Step {}:  open={}, closed={}, f={:.2}, g={:.2}, h={:.6}, Elapsed: {:.2}s",
+            eprintln!("{}Step {}:  open={}, closed={}, f={:.2}, g={:.2}, h={:.6}, Elapsed: {:.2}s", log_prefix,
                      iterations,
                      open_set.len() + 1,  // +1 because we just popped current_node
                      closed_set.len(),
@@ -291,7 +293,7 @@ pub fn astar_pathfind(
         for (goal_vonorms, goal_coords) in goal_points.iter() {
             if states_equal(&current_node.vonorms, &current_node.coords, goal_vonorms, goal_coords) {
                 if verbose {
-                    eprintln!("\n✅ Found goal after {} iterations!", iterations);
+                    eprintln!("\n{}✅ Found goal after {} iterations!", log_prefix, iterations);
                 }
                 return (Some(reconstruct_path(
                     &came_from,
@@ -319,7 +321,7 @@ pub fn astar_pathfind(
         );
 
         if iterations == 1 && verbose {
-            eprintln!("First iteration: found {} raw neighbors", neighbor_tuples.len());
+            eprintln!("{}First iteration: found {} raw neighbors", log_prefix, neighbor_tuples.len());
         }
 
         // Filter by minimum distance
@@ -423,7 +425,7 @@ pub fn astar_pathfind(
 
     // No path found
     if verbose {
-        eprintln!("\n❌ No path found after {} iterations", iterations);
+        eprintln!("\n{}❌ No path found after {} iterations", log_prefix, iterations);
     }
     (None, iterations)
 }

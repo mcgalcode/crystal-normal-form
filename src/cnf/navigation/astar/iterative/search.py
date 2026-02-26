@@ -61,7 +61,8 @@ def _binary_search_min_distance(
             max_iterations=max_iterations,
             beam_width=beam_width,
             dropout=dropout,
-            verbose=False,
+            verbose=(verbosity >= 2),
+            log_prefix=log_prefix,
         )
 
         if result is not None:
@@ -169,7 +170,7 @@ def _worker_search_at_resolution(args):
     """Worker function for parallel resolution search."""
     (start_struct_dict, end_struct_dict, xi, atom_step_length,
      min_dist_low, min_dist_high, max_iterations, beam_width,
-     dropout, tolerance) = args
+     dropout, tolerance, verbosity, log_prefix) = args
 
     from pymatgen.core import Structure
     start_struct = Structure.from_dict(start_struct_dict)
@@ -180,7 +181,7 @@ def _worker_search_at_resolution(args):
     return _search_at_resolution(
         start_uc, end_uc, xi, atom_step_length,
         min_dist_low, min_dist_high, max_iterations, beam_width,
-        dropout, tolerance, verbosity=0,
+        dropout, tolerance, verbosity, log_prefix,
     )
 
 
@@ -267,7 +268,7 @@ def search(
         args_list = [
             (start_struct_dict, end_struct_dict, xi, atom_step,
              min_dist_low, min_dist_high, max_iterations, beam_width,
-             dropout, tolerance)
+             dropout, tolerance, verbosity, f"[xi={xi}] ")
             for xi, atom_step in resolutions
         ]
 

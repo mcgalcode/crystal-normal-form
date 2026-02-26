@@ -24,6 +24,7 @@ def astar_rust(
     dropout: float = 0,
     verbose: bool = False,
     speak_freq=5,
+    log_prefix: str = "",
 ):
     """Run A* pathfinding using the Rust implementation.
 
@@ -37,6 +38,7 @@ def astar_rust(
         dropout: Probability of permanently dropping a neighbor (0.0-1.0).
         verbose: Print progress during search.
         speak_freq: Print progress every N iterations.
+        log_prefix: String to prepend to all log output (e.g., "[xi=1.5] ").
 
     Returns:
         Tuple of (path, iterations) where path is a list of flat coordinate
@@ -72,6 +74,7 @@ def astar_rust(
         speak_freq,
         "manhattan",
         1.0,
+        log_prefix,
     )
 
 

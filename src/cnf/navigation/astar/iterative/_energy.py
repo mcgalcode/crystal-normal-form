@@ -27,7 +27,7 @@ def evaluate_path_energies(path_tuples, elements, xi, delta, calc, cache, verbos
         energies.append(cache[pt_tup])
 
     if verbose:
-        print(f"      Done: {n_computed} computed, {n_cached} cached", flush=True)
+        print(f"      Done: {n_computed} computed, {n_cached} from cache", flush=True)
 
     return energies
 
