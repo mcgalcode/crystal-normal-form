@@ -6,13 +6,16 @@ from ._workers import worker_search_with_attempts
 
 def run_batch(ceilings, start_cnfs, goal_cnfs, elements, xi, delta,
               calc, cache, dropout, max_iters, beam_width,
-              n_workers, pool, verbose,
+              n_workers, pool, verbosity,
               attempts_per_ceiling=1, pass_id=0):
     """Run A* searches across ceilings, with multiple attempts per ceiling.
 
     Each ceiling gets up to `attempts_per_ceiling` searches (stopping on
     first success). Parallelism is across ceilings (one worker per ceiling),
     not across attempts within a ceiling.
+
+    Args:
+        verbosity: 0=silent, 1=phase output, 2+=A* iteration progress.
 
     Returns list of result dicts (one per ceiling that was searched).
     """
@@ -43,7 +46,7 @@ def run_batch(ceilings, start_cnfs, goal_cnfs, elements, xi, delta,
                 for other_f, other_c in list(futures.items()):
                     if other_c > best_found_ceiling and not other_f.done():
                         cancelled = other_f.cancel()
-                        if cancelled and verbose:
+                        if cancelled and verbosity >= 1:
                             print(f"    [c={other_c:.2f} eV] cancelled "
                                   f"(path found at {best_found_ceiling:.2f} eV)",
                                   flush=True)
@@ -55,11 +58,11 @@ def run_batch(ceilings, start_cnfs, goal_cnfs, elements, xi, delta,
             r = search_ceiling_with_attempts(
                 c, start_cnfs, goal_cnfs, elements, xi, delta,
                 calc, cache, dropout, max_iters, beam_width,
-                attempts_per_ceiling, verbose,
+                attempts_per_ceiling, verbosity,
             )
             results.append(r)
             if r["found"]:
-                if verbose and i < len(ceilings) - 1:
+                if verbosity >= 1 and i < len(ceilings) - 1:
                     print(f"    Skipping {len(ceilings) - i - 1} "
                           f"higher ceilings")
                 break

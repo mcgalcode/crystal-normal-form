@@ -14,8 +14,12 @@ USE_RUST = os.getenv('USE_RUST') == '1'
 
 def search_at_ceiling(ceiling, start_cnfs, goal_cnfs, elements, xi, delta,
                       calc, cache, dropout, max_iters, beam_width,
-                      log_prefix="      "):
-    """Run a single A* search at the given energy ceiling."""
+                      log_prefix="      ", verbosity=1):
+    """Run a single A* search at the given energy ceiling.
+
+    Args:
+        verbosity: 0=silent, 1=phase output, 2+=A* iteration progress.
+    """
     energy_filter = EnergyFilter(ceiling, calc=calc, cache=cache)
     filter_set = FilterSet([energy_filter], use_structs=not USE_RUST)
 
@@ -25,7 +29,7 @@ def search_at_ceiling(ceiling, start_cnfs, goal_cnfs, elements, xi, delta,
         start_cnfs, goal_cnfs,
         heuristic=manhattan_distance, filter_set=filter_set,
         max_iterations=max_iters, beam_width=beam_width,
-        dropout=dropout, verbose=True, speak_freq=speak_freq,
+        dropout=dropout, verbose=(verbosity >= 2), speak_freq=speak_freq,
         log_prefix=log_prefix,
     )
     energy_evals = len(cache) - cache_before
@@ -53,12 +57,16 @@ def search_at_ceiling(ceiling, start_cnfs, goal_cnfs, elements, xi, delta,
 
 def retry_search(ceiling, start_cnfs, goal_cnfs, elements, xi, delta,
                  calc, cache, dropout, max_iters, beam_width, attempts,
-                 max_iters_scale=1.5, log_prefix="    ", verbose=True):
-    """Core retry loop: run up to `attempts` A* searches at a single ceiling."""
+                 max_iters_scale=1.5, log_prefix="    ", verbosity=1):
+    """Core retry loop: run up to `attempts` A* searches at a single ceiling.
+
+    Args:
+        verbosity: 0=silent, 1=phase output, 2+=A* iteration progress.
+    """
     current_max_iters = max_iters
     r = None
     for a in range(attempts):
-        if verbose:
+        if verbosity >= 1:
             attempt_str = f" #{a+1}" if attempts > 1 else ""
             print(f"{log_prefix}starting (ceiling={ceiling:.2f} eV{attempt_str}, "
                   f"max_iters={current_max_iters})...", flush=True)
@@ -67,11 +75,11 @@ def retry_search(ceiling, start_cnfs, goal_cnfs, elements, xi, delta,
         r = search_at_ceiling(
             ceiling, start_cnfs, goal_cnfs, elements, xi, delta,
             calc, cache, dropout, current_max_iters, beam_width,
-            log_prefix=log_prefix,
+            log_prefix=log_prefix, verbosity=verbosity,
         )
         elapsed = time.perf_counter() - t0
 
-        if verbose:
+        if verbosity >= 1:
             evals = r.get('energy_evals', '?')
             if r["found"]:
                 print(f"{log_prefix}path found! len={r['path_length']}, "
@@ -92,10 +100,14 @@ def retry_search(ceiling, start_cnfs, goal_cnfs, elements, xi, delta,
 
 def search_ceiling_with_attempts(ceiling, start_cnfs, goal_cnfs, elements,
                                  xi, delta, calc, cache, dropout, max_iters,
-                                 beam_width, attempts, verbose):
-    """Run up to `attempts` A* searches at a single ceiling, stop on first success."""
+                                 beam_width, attempts, verbosity):
+    """Run up to `attempts` A* searches at a single ceiling, stop on first success.
+
+    Args:
+        verbosity: 0=silent, 1=phase output, 2+=A* iteration progress.
+    """
     return retry_search(
         ceiling, start_cnfs, goal_cnfs, elements, xi, delta,
         calc, cache, dropout, max_iters, beam_width, attempts,
-        max_iters_scale=1.5, log_prefix="    ", verbose=verbose,
+        max_iters_scale=1.5, log_prefix="    ", verbosity=verbosity,
     )

@@ -32,10 +32,13 @@ def _binary_search_min_distance(
     beam_width: int,
     dropout: float,
     tolerance: float,
-    verbose: bool,
+    verbosity: int,
     log_prefix: str = "",
 ) -> tuple[float | None, int | None]:
     """Binary search for the maximum min_distance that allows a path.
+
+    Args:
+        verbosity: 0=silent, 1+=progress output.
 
     Returns:
         (best_min_distance, iterations) or (None, None) if no path found even at low bound.
@@ -49,7 +52,7 @@ def _binary_search_min_distance(
     while high - low > tolerance:
         mid = (low + high) / 2
 
-        if verbose:
+        if verbosity >= 1:
             print(f"{log_prefix}trying min_distance={mid:.3f} Å...", end=" ", flush=True)
 
         result, num_iters = astar_rust(
@@ -62,13 +65,13 @@ def _binary_search_min_distance(
         )
 
         if result is not None:
-            if verbose:
+            if verbosity >= 1:
                 print(f"path found ({num_iters} iters)")
             best_min_dist = mid
             best_iters = num_iters
             low = mid
         else:
-            if verbose:
+            if verbosity >= 1:
                 print("no path")
             high = mid
 
@@ -86,10 +89,13 @@ def _search_at_resolution(
     beam_width: int,
     dropout: float,
     tolerance: float,
-    verbose: bool,
+    verbosity: int,
     log_prefix: str = "",
 ) -> dict:
     """Search for optimal min_distance at a single resolution.
+
+    Args:
+        verbosity: 0=silent, 1+=progress output.
 
     Returns a dict with resolution info and search result.
     """
@@ -101,13 +107,13 @@ def _search_at_resolution(
         compute_delta_for_step_size(end_struct, atom_step_length),
     )
 
-    if verbose:
+    if verbosity >= 1:
         print(f"{log_prefix}Resolution: xi={xi}, atom_step={atom_step_length} Å -> delta={delta}")
 
     start_cnfs, goal_cnfs = get_endpoint_cnfs(start_uc, end_uc, xi=xi, delta=delta)
     elements = start_cnfs[0].elements
 
-    if verbose:
+    if verbosity >= 1:
         print(f"{log_prefix}  {len(start_cnfs)} start CNFs, {len(goal_cnfs)} goal CNFs")
         print(f"{log_prefix}  Binary search for min_distance in [{min_dist_low:.2f}, {min_dist_high:.2f}]")
 
@@ -115,7 +121,7 @@ def _search_at_resolution(
         start_cnfs, goal_cnfs,
         min_dist_low, min_dist_high,
         max_iterations, beam_width, dropout, tolerance,
-        verbose, log_prefix=f"{log_prefix}    ",
+        verbosity, log_prefix=f"{log_prefix}    ",
     )
 
     context = PathContext(xi=xi, delta=delta, elements=elements)
@@ -174,7 +180,7 @@ def _worker_search_at_resolution(args):
     return _search_at_resolution(
         start_uc, end_uc, xi, atom_step_length,
         min_dist_low, min_dist_high, max_iterations, beam_width,
-        dropout, tolerance, verbose=False,
+        dropout, tolerance, verbosity=0,
     )
 
 
@@ -190,7 +196,7 @@ def search(
     beam_width: int = 1000,
     dropout: float = 0.3,
     n_workers: int = 0,
-    verbose: bool = True,
+    verbosity: int = 1,
     output_dir: PathlibPath | str | None = None,
 ) -> ParameterSearchResult:
     """Search for optimal discretization and filter parameters.
@@ -212,7 +218,7 @@ def search(
         beam_width: Max open-set size for beam search.
         dropout: Neighbor dropout probability.
         n_workers: Parallel workers. 0 = auto, 1 = serial.
-        verbose: Print progress.
+        verbosity: 0=silent, 1=phase output, 2+=detailed output.
         output_dir: Path to output directory.
 
     Returns:
@@ -236,7 +242,7 @@ def search(
     total_start = time.perf_counter()
     resolutions = list(zip(xi_values, atom_step_lengths))
 
-    if verbose:
+    if verbosity >= 1:
         print(f"\nParameter search: {len(resolutions)} resolution levels")
         print(f"  xi values: {xi_values}")
         print(f"  atom step lengths: {atom_step_lengths}")
@@ -245,15 +251,15 @@ def search(
     total_cores = mp.cpu_count()
     if n_workers == 0:
         n_workers = max(1, total_cores // 4)
-        if verbose:
+        if verbosity >= 1:
             print(f"  Auto workers: {n_workers}")
 
     results = []
     successful_params = []
 
     if n_workers > 1 and len(resolutions) > 1:
-        if verbose:
-            print(f"\n  Running {len(resolutions)} resolutions in parallel...")
+        if verbosity >= 1:
+            print(f"\n  Running {len(resolutions)} resolutions with {n_workers} workers...")
 
         start_struct_dict = start_uc.to_pymatgen_structure().as_dict()
         end_struct_dict = end_uc.to_pymatgen_structure().as_dict()
@@ -274,21 +280,21 @@ def search(
                 results.append(r)
                 if r["found"]:
                     successful_params.append((r["xi"], r["delta"], r["min_distance"]))
-                    if verbose:
+                    if verbosity >= 1:
                         print(f"  [xi={r['xi']}, delta={r['delta']}] "
                               f"min_distance={r['min_distance']:.3f} Å")
                 else:
-                    if verbose:
+                    if verbosity >= 1:
                         print(f"  [xi={r['xi']}, delta={r['delta']}] no path found")
     else:
         for i, (xi, atom_step) in enumerate(resolutions):
-            if verbose:
+            if verbosity >= 1:
                 print(f"\n[{i+1}/{len(resolutions)}] ", end="")
 
             r = _search_at_resolution(
                 start_uc, end_uc, xi, atom_step,
                 min_dist_low, min_dist_high, max_iterations, beam_width,
-                dropout, tolerance, verbose,
+                dropout, tolerance, verbosity,
             )
             results.append(r)
 
@@ -322,7 +328,7 @@ def search(
         }
     )
 
-    if verbose:
+    if verbosity >= 1:
         print(f"\n{'='*60}")
         print(f"Parameter search complete:")
         print(f"  Successful resolutions: {len(successful_params)}/{len(resolutions)}")

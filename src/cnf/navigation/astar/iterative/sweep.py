@@ -36,7 +36,7 @@ def sweep(
     min_dropout=0.0,
     beam_width=1000,
     n_workers=0,
-    verbose=True,
+    verbosity: int = 1,
     output_dir=None,
     relax_endpoints=False,
 ) -> CeilingSweepResult:
@@ -75,20 +75,20 @@ def sweep(
     if relax_endpoints:
         ase_calc = energy_calc._calc
 
-        if verbose:
+        if verbosity >= 1:
             print("Relaxing endpoints in continuous space...")
 
         start_uc = relax_unit_cell(
-            start_uc, ase_calc, verbose=verbose, label="start")
+            start_uc, ase_calc, verbose=(verbosity >= 1), label="start")
         end_uc = relax_unit_cell(
-            end_uc, ase_calc, verbose=verbose, label="end")
+            end_uc, ase_calc, verbose=(verbosity >= 1), label="end")
 
         if output_dir is not None:
             out = PathlibPath(output_dir)
             out.mkdir(parents=True, exist_ok=True)
             start_uc.to_cif(str(out / "start_relaxed.cif"))
             end_uc.to_cif(str(out / "end_relaxed.cif"))
-            if verbose:
+            if verbosity >= 1:
                 print(f"  Relaxed CIFs saved to {out}")
 
     energy_cache = {}
@@ -125,7 +125,7 @@ def sweep(
 
     if n_workers == 0:
         n_workers = max(1, (total_cores - 1) // _TF_THREADS_PER_WORKER)
-        if verbose:
+        if verbosity >= 1:
             print(f"Auto workers: {n_workers} "
                   f"({total_cores} cores, {_TF_THREADS_PER_WORKER} threads/worker)")
 
@@ -140,11 +140,11 @@ def sweep(
             initargs=(tf_threads,),
             mp_context=mp.get_context('spawn'),
         )
-        if verbose:
+        if verbosity >= 1:
             print(f"Worker pool: {n_workers} workers, "
                   f"{tf_threads} TF threads each")
 
-    if verbose:
+    if verbosity >= 1:
         print(f"\nStarting ceiling sweep with max_ceiling={max_ceiling:.4f} eV")
 
     try:
@@ -175,7 +175,7 @@ def sweep(
             ]
             base = max(endpoint_energies) + 1e-6
 
-            if verbose:
+            if verbosity >= 1:
                 print(f"\n{'='*60}")
                 print(f"Pass {pass_num} (xi={pass_xi:.2f}, delta={pass_delta})")
                 print(f"  {len(start_cnfs)} start CNFs, "
@@ -187,14 +187,14 @@ def sweep(
                 print(f"{'='*60}")
 
             if base >= ceiling_top:
-                if verbose:
+                if verbosity >= 1:
                     print(f"\n  Base ({base:.2f}) >= ceiling_top "
                           f"({ceiling_top:.2f}), skipping pass")
                 continue
 
             current_dropout = dropout
             current_max_iters = calibrate_max_iters(
-                start_cnfs, goal_cnfs, beam_width, verbose,
+                start_cnfs, goal_cnfs, beam_width, verbosity >= 1,
             )
 
             N = num_ceilings
@@ -207,7 +207,7 @@ def sweep(
                 ceilings = [ceiling_top]
 
             spacing = (ceiling_top - base) / max(N - 1, 1)
-            if verbose:
+            if verbosity >= 1:
                 print(f"\n  {N} ceilings from {base:.2f} to "
                       f"{ceiling_top:.2f} eV "
                       f"(spacing={spacing:.2f} eV)")
@@ -217,7 +217,7 @@ def sweep(
                 ceilings, start_cnfs, goal_cnfs, elements,
                 pass_xi, pass_delta, energy_calc, energy_cache,
                 current_dropout, current_max_iters, beam_width,
-                n_workers, pool, verbose,
+                n_workers, pool, verbosity,
                 attempts_per_ceiling=attempts_per_ceiling,
                 pass_id=pass_num,
             )
@@ -273,13 +273,13 @@ def sweep(
             if successes:
                 best_result = min(successes, key=lambda r: r["barrier"])
                 ceiling_top = best_result["barrier"]
-                if verbose:
+                if verbosity >= 1:
                     print(f"\n  *** ceiling_top tightened to "
                           f"{ceiling_top:.2f} eV")
 
             result.metadata["current_ceiling_top"] = ceiling_top
 
-            if verbose:
+            if verbosity >= 1:
                 print(f"\n  Pass {pass_num} done: "
                       f"{len(successes)}/{len(batch_results)} paths found, "
                       f"cache={len(energy_cache)} pts, "
@@ -298,7 +298,7 @@ def sweep(
     result.metadata["final_ceiling_top"] = ceiling_top
     result.metadata["energy_cache_size"] = len(energy_cache)
 
-    if verbose:
+    if verbosity >= 1:
         best = result.best_path
         print(f"\n{'='*60}")
         print(f"Final result:")

@@ -41,7 +41,7 @@ def ratchet(
     min_dropout: float = 0.1,
     max_iterations: int = 100_000,
     beam_width: int = 1000,
-    verbose: bool = True,
+    verbosity: int = 1,
     output_dir: PathlibPath | str | None = None,
 ) -> RefinementResult:
     """Serial barrier refinement with ratcheting ceiling.
@@ -61,7 +61,7 @@ def ratchet(
         min_dropout: Minimum dropout for adaptive adjustment.
         max_iterations: Max A* iterations (absolute cap).
         beam_width: Max open-set size for beam search.
-        verbose: Print progress.
+        verbosity: 0=silent, 1=phase output, 2+=A* iteration progress.
         output_dir: Path to output directory. If set, writes refinement_result.json
             after each round (overwriting) for crash resilience.
 
@@ -105,7 +105,7 @@ def ratchet(
         if output_dir is not None:
             result.to_json(str(output_dir / "refinement_result.json"))
 
-    if verbose:
+    if verbosity >= 1:
         print(f"\nStarting refinement with ceiling={initial_ceiling:.4f} eV")
 
     current_dropout = dropout
@@ -117,7 +117,7 @@ def ratchet(
         improved = False
         round_successful_iters = []
 
-        if verbose:
+        if verbosity >= 1:
             print(f"\n{'='*60}")
             print(f"Round {round_num} (ceiling={round_ceiling:.4f} eV, "
                   f"dropout={current_dropout:.2f}, max_iters={current_max_iters})")
@@ -135,7 +135,7 @@ def ratchet(
         attempts = []
 
         for path_idx in range(paths_per_round):
-            if verbose:
+            if verbosity >= 1:
                 print(f"  Path {path_idx+1}/{paths_per_round}...", end=" ", flush=True)
 
             attempt_start = time.perf_counter()
@@ -153,14 +153,14 @@ def ratchet(
                 max_iterations=current_max_iters,
                 beam_width=beam_width,
                 dropout=current_dropout,
-                verbose=False,
+                verbose=(verbosity >= 2),
             )
 
             attempt_elapsed = time.perf_counter() - attempt_start
             num_iters = search_state.iterations
 
             if search_state.path is None:
-                if verbose:
+                if verbosity >= 1:
                     print("no path found")
                 attempts.append(Attempt(
                     path=None,
@@ -178,7 +178,7 @@ def ratchet(
             )
             barrier = path_barrier(energies)
 
-            if verbose:
+            if verbosity >= 1:
                 print(f"len={len(path_tuples)}, barrier={barrier:.4f} eV, iters={num_iters}")
 
             path_obj = Path(
@@ -216,7 +216,7 @@ def ratchet(
 
         success_rate = round_result.success_rate
 
-        if verbose:
+        if verbosity >= 1:
             cache_size = len(energy_cache)
             print(f"  Round {round_num} summary: {len(round_result.paths)}/{paths_per_round} paths found "
                   f"({success_rate:.0%}), ceiling={ceiling:.4f} eV, cache={cache_size} pts, "
@@ -234,12 +234,12 @@ def ratchet(
             at_limits = (current_dropout <= min_dropout and
                          current_max_iters >= max_iterations)
             if at_limits:
-                if verbose:
+                if verbosity >= 1:
                     print(f"\n  Converged! No improvement with parameters at limits.")
                 result.metadata["converged"] = True
                 break
             else:
-                if verbose:
+                if verbosity >= 1:
                     print(f"  No improvement — adapting parameters "
                           f"(dropout={current_dropout:.2f}, max_iters={current_max_iters})")
 
@@ -247,7 +247,7 @@ def ratchet(
     result.metadata["total_elapsed_seconds"] = total_elapsed
     result.metadata["final_ceiling"] = ceiling
 
-    if verbose:
+    if verbosity >= 1:
         best = result.best_path
         print(f"\n{'='*60}")
         print(f"Final result:")

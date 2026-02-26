@@ -11,12 +11,10 @@ from pathlib import Path as PathlibPath
 
 from cnf import CrystalNormalForm
 from cnf.calculation.grace import GraceCalculator
-from cnf.navigation.astar.core import astar_pathfind
-from cnf.navigation.astar.heuristics import manhattan_distance
+from cnf.navigation.astar import astar_rust
 from cnf.navigation.astar.models import (
     PathContext, Path, Attempt, SearchParameters, SearchResult
 )
-from cnf.navigation.search_filters import FilterSet, MinDistanceFilter
 
 from ._energy import evaluate_path_energies, path_barrier
 
@@ -30,8 +28,8 @@ def sample(
     min_distance: float | None = None,
     max_iterations: int = 5_000,
     beam_width: int = 1000,
-    bidirectional: bool = True,
-    verbose: bool = True,
+    bidirectional: bool = False,
+    verbosity: int = 1,
     output_dir: PathlibPath | str | None = None,
 ) -> SearchResult:
     """Sample diverse paths to discover initial energy ceiling.
@@ -51,8 +49,9 @@ def sample(
         max_iterations: Max A* iterations per attempt.
         beam_width: Max open-set size for beam search.
         bidirectional: If True, randomly swap start/goal for ~half the attempts
-            to explore paths in both directions.
-        verbose: Print progress.
+            to explore paths in both directions. Default False since min_distance
+            from Phase 1 is calibrated for start→goal direction only.
+        verbosity: 0=silent, 1=phase output, 2+=A* iteration progress.
         output_dir: Path to output directory. If set, writes sample_result.json
             after completion.
 
@@ -96,7 +95,7 @@ def sample(
     total_start = time.perf_counter()
     attempts = []
 
-    if verbose:
+    if verbosity >= 1:
         print(f"\nPath sampling: {num_samples} attempts "
               f"(dropout {dropout_range[0]:.1f}-{dropout_range[1]:.1f})")
         if min_distance is not None:
@@ -112,33 +111,26 @@ def sample(
             attempt_starts, attempt_goals = start_cnfs, goal_cnfs
             direction = "forward"
 
-        if verbose:
+        if verbosity >= 1:
             print(f"  [{attempt_idx+1}/{num_samples}] "
                   f"dropout={attempt_dropout:.2f} {direction}...", end=" ", flush=True)
 
         attempt_start = time.perf_counter()
 
-        filter_list = []
-        if min_distance is not None:
-            filter_list.append(MinDistanceFilter(min_distance))
-        filter_set = FilterSet(filter_list) if filter_list else None
-
-        search_state = astar_pathfind(
+        path_tuples, num_iters = astar_rust(
             attempt_starts,
             attempt_goals,
-            heuristic=manhattan_distance,
-            filter_set=filter_set,
+            min_distance=min_distance or 0.0,
             max_iterations=max_iterations,
             beam_width=beam_width,
             dropout=attempt_dropout,
-            verbose=False,
+            verbose=(verbosity >= 2),
         )
 
         attempt_elapsed = time.perf_counter() - attempt_start
-        num_iters = search_state.iterations
 
-        if search_state.path is None:
-            if verbose:
+        if path_tuples is None:
+            if verbosity >= 1:
                 print("no path")
             attempts.append(Attempt(
                 path=None,
@@ -149,17 +141,16 @@ def sample(
             ))
             continue
 
-        path_tuples = search_state.path
-
         if direction == "backward":
             path_tuples = list(reversed(path_tuples))
 
         energies = evaluate_path_energies(
-            path_tuples, elements, xi, delta, energy_calc, energy_cache
+            path_tuples, elements, xi, delta, energy_calc, energy_cache,
+            verbose=(verbosity >= 1),
         )
         barrier = path_barrier(energies)
 
-        if verbose:
+        if verbosity >= 1:
             print(f"len={len(path_tuples)}, barrier={barrier:.4f} eV, iters={num_iters}")
 
         path_obj = Path(
@@ -191,7 +182,7 @@ def sample(
         }
     )
 
-    if verbose:
+    if verbosity >= 1:
         print(f"\n{'='*60}")
         print(f"Sampling complete:")
         print(f"  Paths found: {len(result.paths)}/{num_samples}")
