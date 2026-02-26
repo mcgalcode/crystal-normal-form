@@ -4,11 +4,13 @@ from dataclasses import dataclass, field, asdict
 from typing import Any
 import json
 
+from monty.json import MSONable
+
 from cnf import CrystalNormalForm
 
 
 @dataclass
-class PathContext:
+class PathContext(MSONable):
     """Immutable CNF context shared across paths."""
 
     xi: float
@@ -22,12 +24,18 @@ class PathContext:
     def to_dict(self) -> dict:
         """Serialize to a JSON-compatible dictionary."""
         return {
+            '@module': self.__class__.__module__,
+            '@class': self.__class__.__name__,
             'xi': self.xi,
             'delta': self.delta,
             'elements': list(self.elements),
             'start_structure': self.start_structure,
             'end_structure': self.end_structure,
         }
+
+    def as_dict(self) -> dict:
+        """Alias for to_dict() for MSONable compatibility."""
+        return self.to_dict()
 
     @classmethod
     def from_dict(cls, d: dict) -> 'PathContext':
@@ -42,7 +50,7 @@ class PathContext:
 
 
 @dataclass
-class Path:
+class Path(MSONable):
     """A single path through CNF space - lightweight, no context embedded."""
 
     coords: list[tuple[int, ...]]
@@ -101,11 +109,17 @@ class Path:
     def to_dict(self) -> dict:
         """Serialize to a JSON-compatible dictionary."""
         return {
+            '@module': self.__class__.__module__,
+            '@class': self.__class__.__name__,
             'coords': [[int(x) for x in c] for c in self.coords],
             'energies': self.energies,
             'barrier': float(self.barrier) if self.barrier is not None else None,
             'metadata': self.metadata,
         }
+
+    def as_dict(self) -> dict:
+        """Alias for to_dict() for MSONable compatibility."""
+        return self.to_dict()
 
     @classmethod
     def from_dict(cls, d: dict) -> 'Path':
@@ -119,7 +133,7 @@ class Path:
 
 
 @dataclass
-class Attempt:
+class Attempt(MSONable):
     """A single search attempt."""
 
     path: Path | None
@@ -131,12 +145,18 @@ class Attempt:
     def to_dict(self) -> dict:
         """Serialize to a JSON-compatible dictionary."""
         return {
+            '@module': self.__class__.__module__,
+            '@class': self.__class__.__name__,
             'path': self.path.to_dict() if self.path else None,
             'found': self.found,
             'iterations': self.iterations,
             'elapsed_seconds': self.elapsed_seconds,
             'metadata': self.metadata,
         }
+
+    def as_dict(self) -> dict:
+        """Alias for to_dict() for MSONable compatibility."""
+        return self.to_dict()
 
     @classmethod
     def from_dict(cls, d: dict) -> 'Attempt':
@@ -151,7 +171,7 @@ class Attempt:
 
 
 @dataclass
-class SearchParameters:
+class SearchParameters(MSONable):
     """Fully specified parameters for a search."""
 
     max_iterations: int = 100_000
@@ -189,6 +209,8 @@ class SearchParameters:
     def to_dict(self) -> dict:
         """Serialize to a JSON-compatible dictionary."""
         return {
+            '@module': self.__class__.__module__,
+            '@class': self.__class__.__name__,
             'max_iterations': self.max_iterations,
             'beam_width': self.beam_width,
             'dropout': self.dropout,
@@ -196,6 +218,10 @@ class SearchParameters:
             'heuristic': self.heuristic,
             'filters': self.filters,
         }
+
+    def as_dict(self) -> dict:
+        """Alias for to_dict() for MSONable compatibility."""
+        return self.to_dict()
 
     @classmethod
     def from_dict(cls, d: dict) -> 'SearchParameters':
@@ -211,7 +237,7 @@ class SearchParameters:
 
 
 @dataclass
-class SearchResult:
+class SearchResult(MSONable):
     """Result of one or more attempts with IDENTICAL parameters."""
 
     context: PathContext
@@ -255,11 +281,17 @@ class SearchResult:
     def to_dict(self) -> dict:
         """Serialize to a JSON-compatible dictionary."""
         return {
+            '@module': self.__class__.__module__,
+            '@class': self.__class__.__name__,
             'context': self.context.to_dict(),
             'parameters': self.parameters.to_dict(),
             'attempts': [a.to_dict() for a in self.attempts],
             'metadata': self.metadata,
         }
+
+    def as_dict(self) -> dict:
+        """Alias for to_dict() for MSONable compatibility."""
+        return self.to_dict()
 
     @classmethod
     def from_dict(cls, d: dict) -> 'SearchResult':
@@ -289,7 +321,7 @@ class SearchResult:
 
 
 @dataclass
-class CeilingSweepResult:
+class CeilingSweepResult(MSONable):
     """Phase 3: Multiple searches at different ceiling levels."""
 
     results: list[SearchResult]  # one per ceiling
@@ -325,9 +357,15 @@ class CeilingSweepResult:
     def to_dict(self) -> dict:
         """Serialize to a JSON-compatible dictionary."""
         return {
+            '@module': self.__class__.__module__,
+            '@class': self.__class__.__name__,
             'results': [r.to_dict() for r in self.results],
             'metadata': self.metadata,
         }
+
+    def as_dict(self) -> dict:
+        """Alias for to_dict() for MSONable compatibility."""
+        return self.to_dict()
 
     @classmethod
     def from_dict(cls, d: dict) -> 'CeilingSweepResult':
@@ -350,7 +388,7 @@ class CeilingSweepResult:
 
 
 @dataclass
-class ParameterSearchResult:
+class ParameterSearchResult(MSONable):
     """Phase 1: Parameter search to find optimal xi/delta/min_distance."""
 
     # List of (xi, delta, min_distance) tuples that successfully found paths
@@ -374,6 +412,8 @@ class ParameterSearchResult:
     def to_dict(self) -> dict:
         """Serialize to a JSON-compatible dictionary."""
         return {
+            '@module': self.__class__.__module__,
+            '@class': self.__class__.__name__,
             'successful_params': [list(p) for p in self.successful_params],
             'results': [r.to_dict() for r in self.results],
             'recommended_xi': self.recommended_xi,
@@ -381,6 +421,10 @@ class ParameterSearchResult:
             'recommended_min_distance': self.recommended_min_distance,
             'metadata': self.metadata,
         }
+
+    def as_dict(self) -> dict:
+        """Alias for to_dict() for MSONable compatibility."""
+        return self.to_dict()
 
     @classmethod
     def from_dict(cls, d: dict) -> 'ParameterSearchResult':
@@ -407,7 +451,7 @@ class ParameterSearchResult:
 
 
 @dataclass
-class RefinementResult:
+class RefinementResult(MSONable):
     """Phase 4: Serial refinement with ratcheting ceiling."""
 
     results: list[SearchResult]  # one per round
@@ -450,9 +494,15 @@ class RefinementResult:
     def to_dict(self) -> dict:
         """Serialize to a JSON-compatible dictionary."""
         return {
+            '@module': self.__class__.__module__,
+            '@class': self.__class__.__name__,
             'results': [r.to_dict() for r in self.results],
             'metadata': self.metadata,
         }
+
+    def as_dict(self) -> dict:
+        """Alias for to_dict() for MSONable compatibility."""
+        return self.to_dict()
 
     @classmethod
     def from_dict(cls, d: dict) -> 'RefinementResult':

@@ -5,6 +5,8 @@ import json
 import tempfile
 from pathlib import Path
 
+from monty.json import jsanitize, MontyDecoder
+
 from cnf.navigation.astar.models import (
     PathContext,
     Path as PathModel,
@@ -320,3 +322,185 @@ class TestRefinementResult:
 
         refine = RefinementResult(results=[r1, r2])
         assert refine.final_ceiling == -8.5
+
+
+class TestMSONableCompatibility:
+    """Test MSONable serialization for jobflow compatibility."""
+
+    def test_path_context_msonable(self):
+        ctx = PathContext(xi=1.5, delta=10, elements=("Zr", "O"))
+        d = ctx.as_dict()
+
+        assert d["@module"] == "cnf.navigation.astar.models"
+        assert d["@class"] == "PathContext"
+
+        # Round-trip through MontyDecoder
+        decoded = MontyDecoder().process_decoded(d)
+        assert isinstance(decoded, PathContext)
+        assert decoded.xi == ctx.xi
+        assert decoded.elements == ctx.elements
+
+    def test_path_msonable(self):
+        path = PathModel(coords=[(1, 2, 3), (4, 5, 6)], energies=[-10.0, -9.5], barrier=-9.5)
+        d = path.as_dict()
+
+        assert d["@module"] == "cnf.navigation.astar.models"
+        assert d["@class"] == "Path"
+
+        decoded = MontyDecoder().process_decoded(d)
+        assert isinstance(decoded, PathModel)
+        assert decoded.coords == path.coords
+        assert decoded.barrier == path.barrier
+
+    def test_attempt_msonable(self):
+        attempt = Attempt(
+            path=PathModel(coords=[(1,)], barrier=-9.0),
+            found=True,
+            iterations=100,
+        )
+        d = attempt.as_dict()
+
+        assert d["@module"] == "cnf.navigation.astar.models"
+        assert d["@class"] == "Attempt"
+
+        decoded = MontyDecoder().process_decoded(d)
+        assert isinstance(decoded, Attempt)
+        assert decoded.found is True
+        assert decoded.iterations == 100
+
+    def test_search_parameters_msonable(self):
+        params = SearchParameters(
+            max_iterations=50000,
+            beam_width=500,
+            filters=[{"type": "min_distance", "value": 0.8}],
+        )
+        d = params.as_dict()
+
+        assert d["@module"] == "cnf.navigation.astar.models"
+        assert d["@class"] == "SearchParameters"
+
+        decoded = MontyDecoder().process_decoded(d)
+        assert isinstance(decoded, SearchParameters)
+        assert decoded.max_iterations == 50000
+        assert decoded.min_distance == 0.8
+
+    def test_search_result_msonable(self):
+        ctx = PathContext(xi=1.5, delta=10, elements=("Zr",))
+        params = SearchParameters()
+        result = SearchResult(
+            context=ctx,
+            parameters=params,
+            attempts=[Attempt(path=PathModel(coords=[(1,)], barrier=-9.0), found=True, iterations=50)],
+        )
+        d = result.as_dict()
+
+        assert d["@module"] == "cnf.navigation.astar.models"
+        assert d["@class"] == "SearchResult"
+
+        decoded = MontyDecoder().process_decoded(d)
+        assert isinstance(decoded, SearchResult)
+        assert decoded.context.xi == 1.5
+        assert len(decoded.attempts) == 1
+
+    def test_parameter_search_result_msonable(self):
+        result = ParameterSearchResult(
+            successful_params=[(1.5, 10, 0.8)],
+            results=[],
+            recommended_xi=1.5,
+            recommended_delta=10,
+            recommended_min_distance=0.8,
+        )
+        d = result.as_dict()
+
+        assert d["@module"] == "cnf.navigation.astar.models"
+        assert d["@class"] == "ParameterSearchResult"
+
+        decoded = MontyDecoder().process_decoded(d)
+        assert isinstance(decoded, ParameterSearchResult)
+        assert decoded.recommended_xi == 1.5
+        assert decoded.success is True
+
+    def test_ceiling_sweep_result_msonable(self):
+        ctx = PathContext(xi=1.5, delta=10, elements=("Zr",))
+        params = SearchParameters()
+        r1 = SearchResult(context=ctx, parameters=params, attempts=[])
+
+        sweep = CeilingSweepResult(results=[r1])
+        d = sweep.as_dict()
+
+        assert d["@module"] == "cnf.navigation.astar.models"
+        assert d["@class"] == "CeilingSweepResult"
+
+        decoded = MontyDecoder().process_decoded(d)
+        assert isinstance(decoded, CeilingSweepResult)
+        assert len(decoded.results) == 1
+
+    def test_refinement_result_msonable(self):
+        ctx = PathContext(xi=1.5, delta=10, elements=("Zr",))
+        params = SearchParameters(filters=[{"type": "energy_ceiling", "value": -8.0}])
+        r1 = SearchResult(context=ctx, parameters=params, attempts=[])
+
+        refine = RefinementResult(results=[r1])
+        d = refine.as_dict()
+
+        assert d["@module"] == "cnf.navigation.astar.models"
+        assert d["@class"] == "RefinementResult"
+
+        decoded = MontyDecoder().process_decoded(d)
+        assert isinstance(decoded, RefinementResult)
+        assert decoded.final_ceiling == -8.0
+
+    def test_jsanitize_works(self):
+        """Test that jsanitize (used by jobflow) works on all models."""
+        result = ParameterSearchResult(
+            successful_params=[(1.5, 10, 0.8)],
+            results=[],
+            recommended_xi=1.5,
+            recommended_delta=10,
+            recommended_min_distance=0.8,
+        )
+
+        # This is what jobflow uses internally
+        sanitized = jsanitize(result, strict=True, allow_bson=True)
+        assert sanitized is not None
+        assert sanitized["@class"] == "ParameterSearchResult"
+
+    def test_nested_msonable_roundtrip(self):
+        """Test complex nested structure round-trips correctly."""
+        ctx = PathContext(xi=1.5, delta=10, elements=("Ni", "Ti"))
+        params = SearchParameters(
+            max_iterations=5000,
+            beam_width=500,
+            dropout=0.3,
+            filters=[
+                {"type": "min_distance", "value": 0.5},
+                {"type": "energy_ceiling", "value": -8.0},
+            ],
+        )
+        path = PathModel(
+            coords=[(1, 2, 3, 4, 5, 6, 7, 0, 0, 0), (1, 2, 3, 4, 5, 6, 7, 1, 0, 0)],
+            energies=[-10.0, -9.5],
+            barrier=-9.5,
+            metadata={"source": "test"},
+        )
+        attempt = Attempt(path=path, found=True, iterations=100, elapsed_seconds=1.5)
+        result = SearchResult(
+            context=ctx,
+            parameters=params,
+            attempts=[attempt],
+            metadata={"ceiling": -8.0},
+        )
+
+        # Full round-trip
+        d = result.as_dict()
+        decoded = MontyDecoder().process_decoded(d)
+
+        assert isinstance(decoded, SearchResult)
+        assert decoded.context.xi == 1.5
+        assert decoded.context.elements == ("Ni", "Ti")
+        assert decoded.parameters.max_iterations == 5000
+        assert decoded.parameters.min_distance == 0.5
+        assert len(decoded.attempts) == 1
+        assert decoded.attempts[0].path.barrier == -9.5
+        assert decoded.attempts[0].path.metadata == {"source": "test"}
+        assert decoded.metadata == {"ceiling": -8.0}
