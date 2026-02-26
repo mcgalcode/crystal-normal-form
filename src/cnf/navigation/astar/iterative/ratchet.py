@@ -37,7 +37,7 @@ def ratchet(
     energy_calc=None,
     paths_per_round: int = 10,
     max_rounds: int = 20,
-    dropout: float = 0.3,
+    dropout: float = 0.1,
     min_dropout: float = 0.1,
     max_iterations: int = 100_000,
     beam_width: int = 1000,
