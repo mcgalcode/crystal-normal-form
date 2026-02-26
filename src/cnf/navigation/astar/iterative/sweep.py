@@ -185,6 +185,7 @@ def sweep(
                       f"{[f'{e:.2f}' for e in endpoint_energies]}")
                 print(f"  Base ceiling: {base:.2f} eV")
                 print(f"  Ceiling top: {ceiling_top:.2f} eV")
+                print(f"  max_iters: {max_iterations}")
                 print(f"{'='*60}")
 
             if base >= ceiling_top:

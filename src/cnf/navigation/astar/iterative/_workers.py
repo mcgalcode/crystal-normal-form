@@ -28,7 +28,7 @@ def worker_search_with_attempts(args):
     global _worker_calc, _worker_cache, _worker_pass_id
     (ceiling, start_coord_lists, goal_coord_lists, elements, xi, delta,
      dropout, max_iters, beam_width,
-     seed_cache_items, attempts, worker_label, pass_id) = args
+     seed_cache_items, attempts, worker_label, pass_id, verbosity) = args
 
     if pass_id != _worker_pass_id:
         _worker_cache = {}
@@ -48,4 +48,5 @@ def worker_search_with_attempts(args):
         _worker_calc, _worker_cache, dropout, max_iters, beam_width, attempts,
         max_iters_scale=1.0,
         log_prefix=f"    [{worker_label}] ",
+        verbosity=verbosity,
     )

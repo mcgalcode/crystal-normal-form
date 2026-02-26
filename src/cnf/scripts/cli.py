@@ -318,18 +318,25 @@ def find_barrier_command(args):
     xi_values = [float(x) for x in args.xi.split(',')] if args.xi else None
     atom_steps = [float(x) for x in args.atom_steps.split(',')] if args.atom_steps else None
 
+    # Determine max_iters for early phases (use default if not specified)
+    # Later phases will use learned estimates, optionally capped by user's max_iters
+    DEFAULT_EARLY_MAX_ITERS = 5000
+    early_max_iters = args.max_iters if args.max_iters is not None else DEFAULT_EARLY_MAX_ITERS
+    user_cap = args.max_iters  # None means no cap
+
     # Phase 1: Parameter search
     print("=" * 60)
     print("PHASE 1: Parameter Search")
     print("=" * 60)
     verbosity = get_verbosity(args)
+    print(f"  max_iters={early_max_iters}" + (" (default)" if user_cap is None else ""))
 
     search_result = search(
         start_uc=start_uc,
         end_uc=end_uc,
         xi_values=xi_values,
         atom_step_lengths=atom_steps,
-        max_iterations=args.max_iters,
+        max_iterations=early_max_iters,
         beam_width=args.beam_width,
         dropout=args.dropout,
         n_workers=args.workers,
@@ -352,6 +359,7 @@ def find_barrier_command(args):
     print("\n" + "=" * 60)
     print("PHASE 2: Path Sampling")
     print("=" * 60)
+    print(f"  max_iters={early_max_iters}" + (" (default)" if user_cap is None else ""))
     start_cnfs, goal_cnfs = get_endpoint_cnfs(start_uc, end_uc, xi=xi, delta=delta)
 
     sample_result = sample(
@@ -361,7 +369,7 @@ def find_barrier_command(args):
         num_samples=args.num_samples,
         dropout_range=(args.dropout_min, args.dropout_max),
         min_distance=min_distance,
-        max_iterations=args.max_iters,
+        max_iterations=early_max_iters,
         beam_width=args.beam_width,
         n_workers=args.workers,
         verbosity=verbosity,
@@ -377,10 +385,39 @@ def find_barrier_command(args):
     if output_dir:
         sample_result.to_json(str(output_dir / "sample_result.json"))
 
+    # Compute informed max_iters for later phases based on Phase 2 results
+    # Use max iterations from successful attempts with headroom
+    sample_max_iters = sample_result.max_successful_iterations
+    if sample_max_iters:
+        # Base estimate: max observed * 1.5 headroom, but at least 500
+        baseline_max_iters = max(500, int(sample_max_iters * 1.5))
+        # Sweep uses finer resolution, so paths are longer
+        # Scale by resolution change: xi_factor=0.9 means 1/0.9 ≈ 1.11x longer paths
+        resolution_scale = 1.0 / args.xi_factor  # ~1.11 for default
+        sweep_max_iters_computed = int(baseline_max_iters * resolution_scale)
+
+        # Apply user cap if specified
+        if user_cap is not None and sweep_max_iters_computed > user_cap:
+            sweep_max_iters = user_cap
+            print(f"  max_iters update: sample_max={sample_max_iters} → "
+                  f"baseline={baseline_max_iters} → computed={sweep_max_iters_computed} "
+                  f"(scale={resolution_scale:.2f})")
+            print(f"  WARNING: computed estimate {sweep_max_iters_computed} exceeds "
+                  f"--max-iters cap {user_cap}")
+        else:
+            sweep_max_iters = sweep_max_iters_computed
+            print(f"  max_iters update: sample_max={sample_max_iters} → "
+                  f"baseline={baseline_max_iters} → sweep={sweep_max_iters} "
+                  f"(scale={resolution_scale:.2f})")
+    else:
+        sweep_max_iters = early_max_iters
+        print(f"  max_iters: using default {sweep_max_iters} (no successful samples)")
+
     # Phase 3: Ceiling sweep
     print("\n" + "=" * 60)
     print("PHASE 3: Ceiling Sweep")
     print("=" * 60)
+    print(f"  max_iters={sweep_max_iters}")
     sweep_result = sweep(
         start_uc=start_uc,
         end_uc=end_uc,
@@ -391,8 +428,9 @@ def find_barrier_command(args):
         num_ceilings=args.num_ceilings,
         attempts_per_ceiling=args.attempts,
         max_passes=args.max_passes,
+        xi_factor=args.xi_factor,
         dropout=args.sweep_dropout,
-        max_iterations=args.max_iters,
+        max_iterations=sweep_max_iters,
         beam_width=args.beam_width,
         n_workers=args.workers,
         verbosity=verbosity,
@@ -405,10 +443,37 @@ def find_barrier_command(args):
     if output_dir:
         sweep_result.to_json(str(output_dir / "sweep_result.json"))
 
+    # Compute informed max_iters for ratchet based on sweep results
+    # Collect iteration stats from all successful sweep attempts
+    sweep_successful_iters = []
+    for sr in sweep_result.results:
+        sweep_successful_iters.extend(sr.successful_iterations)
+    if sweep_successful_iters:
+        # Ratchet starts from sweep's max with headroom
+        sweep_max_observed = max(sweep_successful_iters)
+        ratchet_max_iters_computed = max(500, int(sweep_max_observed * 1.5))
+
+        # Apply user cap if specified
+        if user_cap is not None and ratchet_max_iters_computed > user_cap:
+            ratchet_max_iters = user_cap
+            print(f"  max_iters update: sweep_max={sweep_max_observed} → "
+                  f"computed={ratchet_max_iters_computed}")
+            print(f"  WARNING: computed estimate {ratchet_max_iters_computed} exceeds "
+                  f"--max-iters cap {user_cap}")
+        else:
+            ratchet_max_iters = ratchet_max_iters_computed
+            print(f"  max_iters update: sweep_max={sweep_max_observed} → "
+                  f"ratchet={ratchet_max_iters}")
+    else:
+        # Fall back to sweep estimate or user max
+        ratchet_max_iters = sweep_max_iters
+        print(f"  max_iters: using sweep value {ratchet_max_iters} (no successful sweeps)")
+
     # Phase 4: Ratchet refinement
     print("\n" + "=" * 60)
     print("PHASE 4: Ratchet Refinement")
     print("=" * 60)
+    print(f"  max_iters={ratchet_max_iters} (adaptive scaling enabled)")
     start_cnfs, goal_cnfs = get_endpoint_cnfs(start_uc, end_uc, xi=xi, delta=delta)
 
     ratchet_result = ratchet(
@@ -419,7 +484,7 @@ def find_barrier_command(args):
         paths_per_round=args.paths_per_round,
         max_rounds=args.max_rounds,
         dropout=args.dropout,
-        max_iterations=args.max_iters,
+        max_iterations=ratchet_max_iters,
         beam_width=args.beam_width,
         verbosity=verbosity,
         output_dir=str(output_dir / "phase4_ratchet") if output_dir else None,
@@ -537,7 +602,7 @@ def main():
     fb_parser.add_argument('--atom-steps', help='Search: Comma-separated atom step lengths in Å (default: 0.4,0.3,0.2,0.1)')
     # Common search args
     fb_parser.add_argument('--beam-width', type=int, default=1000, help='All phases: Max open-set size (default: 1000)')
-    fb_parser.add_argument('--max-iters', type=int, default=5000, help='All phases: Max A* iterations (default: 5000)')
+    fb_parser.add_argument('--max-iters', type=int, default=None, help='All phases: Max A* iterations cap (default: no cap, uses learned estimates)')
     fb_parser.add_argument('--dropout', type=float, default=0.1, help='Search/Ratchet: Dropout probability (default: 0.1)')
     fb_parser.add_argument('--workers', type=int, default=0, help='Phases 1-3: Number of parallel workers (default: 0=auto)')
     # Phase 2 args
@@ -549,6 +614,7 @@ def main():
     fb_parser.add_argument('--attempts', type=int, default=3, help='Sweep: A* searches per ceiling for diversity (default: 3)')
     fb_parser.add_argument('--max-passes', type=int, default=3, help='Sweep: Resolution refinement passes (default: 3)')
     fb_parser.add_argument('--sweep-dropout', type=float, default=0.1, help='Sweep: Dropout probability (default: 0.1)')
+    fb_parser.add_argument('--xi-factor', type=float, default=0.9, help='Sweep: Xi reduction per pass (default: 0.9)')
     # Phase 4 args
     fb_parser.add_argument('--paths-per-round', type=int, default=10, help='Ratchet: A* searches per round (default: 10)')
     fb_parser.add_argument('--max-rounds', type=int, default=20, help='Ratchet: Max refinement rounds (default: 20)')

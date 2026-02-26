@@ -31,7 +31,7 @@ def run_batch(ceilings, start_cnfs, goal_cnfs, elements, xi, delta,
             args = (c, start_coords, goal_coords, elements, xi, delta,
                     dropout, max_iters, beam_width,
                     seed_cache_items, attempts_per_ceiling,
-                    f"c={c:.2f} eV", pass_id)
+                    f"c={c:.2f} eV", pass_id, verbosity)
             f = pool.submit(worker_search_with_attempts, args)
             futures[f] = c
 

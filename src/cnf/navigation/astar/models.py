@@ -272,6 +272,28 @@ class SearchResult(MSONable):
             return 0.0
         return len(self.paths) / len(self.attempts)
 
+    @property
+    def successful_iterations(self) -> list[int]:
+        """Get iteration counts from all successful attempts."""
+        return [a.iterations for a in self.attempts if a.found]
+
+    @property
+    def max_successful_iterations(self) -> int | None:
+        """Get the maximum iterations used by any successful attempt."""
+        iters = self.successful_iterations
+        return max(iters) if iters else None
+
+    @property
+    def median_successful_iterations(self) -> int | None:
+        """Get the median iterations used by successful attempts."""
+        iters = sorted(self.successful_iterations)
+        if not iters:
+            return None
+        mid = len(iters) // 2
+        if len(iters) % 2 == 0:
+            return (iters[mid - 1] + iters[mid]) // 2
+        return iters[mid]
+
     def get_cnfs(self, path_index: int = 0) -> list[CrystalNormalForm] | None:
         """Get CNFs for a path by index (default: first successful path)."""
         if path_index >= len(self.paths):

@@ -224,11 +224,15 @@ def ratchet(
 
         _save_result()
 
+        prev_max_iters = current_max_iters
         current_dropout, current_max_iters = adapt_params(
             len(round_result.paths), paths_per_round, round_successful_iters,
             current_dropout, min_dropout, current_max_iters,
             max_iters=max_iterations,
         )
+
+        if verbosity >= 1 and current_max_iters != prev_max_iters:
+            print(f"  max_iters: {prev_max_iters} → {current_max_iters}")
 
         if not improved:
             at_limits = (current_dropout <= min_dropout and

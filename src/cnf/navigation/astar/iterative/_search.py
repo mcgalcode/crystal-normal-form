@@ -24,7 +24,7 @@ def search_at_ceiling(ceiling, start_cnfs, goal_cnfs, elements, xi, delta,
     filter_set = FilterSet([energy_filter], use_structs=not USE_RUST)
 
     cache_before = len(cache)
-    speak_freq = max(1, max_iters // 10)
+    speak_freq = 20  # Print progress every 20 iterations
     search_state = astar_pathfind(
         start_cnfs, goal_cnfs,
         heuristic=manhattan_distance, filter_set=filter_set,

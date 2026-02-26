@@ -228,6 +228,7 @@ def sample(
         mode = f"parallel ({n_workers} workers)" if use_parallel else "serial"
         print(f"\nPath sampling: {num_samples} attempts "
               f"(dropout {dropout_range[0]:.2f}-{dropout_range[1]:.2f}, {mode})")
+        print(f"  max_iters: {max_iterations}")
         if min_distance is not None:
             print(f"  Min distance filter: {min_distance:.2f} Å")
 
