@@ -1,40 +1,29 @@
-"""A* pathfinding for CNF navigation with customizable heuristics and filters"""
+"""A* pathfinding for CNF navigation"""
 
 import os
-import json
 from cnf import rust_cnf
-
-from typing import Callable
-from dataclasses import asdict
 
 from cnf import CrystalNormalForm
 from ..search_filters import FilterSet, MinDistanceFilter
 from pymatgen.core import Structure
 from ..endpoints import get_endpoint_unit_cells
 from .core import astar_pathfind
-from .params import PathFindingParameters
-from .search_result import PathSearchResult
-from .bidirectional import bidirectional_astar_pathfind
-from .heuristics import manhattan_distance, pdd_amd_heuristic, pdd_heuristic, pdd_and_manhattan, UnimodularManhattanHeuristic
+from .models import PathContext, Path, Attempt, SearchParameters, SearchResult
+from .heuristics import manhattan_distance
 
 USE_RUST = os.getenv('USE_RUST') == '1'
 
-# Type aliases for clarity
-FilterFunc = Callable[[CrystalNormalForm], bool]
 
 def astar_rust(
     start_cnfs: list[CrystalNormalForm],
     goal_cnfs: list[CrystalNormalForm],
     min_distance: float = 0.0,
-    max_iterations: int = 100000,
+    max_iterations: int = 10000,
     beam_width: int = None,
     greedy: bool = False,
     dropout: float = 0,
     verbose: bool = False,
-    bidirectional: bool = False,
-    speak_freq = 5,
-    heuristic_mode: str = "manhattan",
-    heuristic_weight: float = 0.5,
+    speak_freq=5,
 ):
     """Run A* pathfinding using the Rust implementation.
 
@@ -46,28 +35,13 @@ def astar_rust(
         beam_width: Max open-set size for beam search (None for unlimited).
         greedy: If True, use greedy best-first (f=h) instead of A* (f=g+h).
         dropout: Probability of permanently dropping a neighbor (0.0-1.0).
-            Goal neighbors are never dropped.
         verbose: Print progress during search.
-        bidirectional: Use bidirectional A* (ignores heuristic settings).
         speak_freq: Print progress every N iterations.
-        heuristic_mode: Which heuristic to use. One of:
-            - "manhattan": Plain L1 distance with 10x scaling. Fast but
-              overestimates at Voronoi class boundaries.
-            - "unimodular_light": Pre-computes 168 vonorm-permutation-derived
-              goal variants (one matrix per permutation). Low overhead.
-            - "unimodular_partial": One unimodular matrix per (zero_set,
-              conorm_perm) across all coforms. Good accuracy/speed trade-off.
-            - "unimodular_full": All unimodular matrices across all coforms.
-              Tightest heuristic but slowest precomputation.
-        heuristic_weight: Multiplier on the unimodular heuristic value.
-            Only used when heuristic_mode is not "manhattan". Lower values
-            make the search more exploratory; higher values more greedy.
 
     Returns:
         Tuple of (path, iterations) where path is a list of flat coordinate
         vectors (vonorms + coords) or None, and iterations is the count.
     """
-    # Convert CNFs to the format expected by Rust pathfinding
     start_points = []
     for cnf in start_cnfs:
         vonorms = list([int(i) for i in cnf.lattice_normal_form.vonorms.tuple])
@@ -82,212 +56,176 @@ def astar_rust(
 
     n_atoms = len(start_cnfs[0].elements)
 
-    if bidirectional:
-        return rust_cnf.bidirectional_astar_pathfind_rust(
-            start_points,
-            goal_points,
-            start_cnfs[0].elements,
-            n_atoms,
-            start_cnfs[0].xi,
-            start_cnfs[0].delta,
-            min_distance=min_distance,
-            max_iterations=max_iterations,
-            beam_width=beam_width if beam_width is not None else 0,
-            verbose=True
-        )       
-    else:
-        return rust_cnf.astar_pathfind_rust(
-            start_points,
-            goal_points,
-            start_cnfs[0].elements,
-            n_atoms,
-            start_cnfs[0].xi,
-            start_cnfs[0].delta,
-            min_distance,
-            max_iterations,
-            beam_width if beam_width is not None else 0,
-            dropout,
-            greedy,
-            verbose,
-            speak_freq,
-            heuristic_mode,
-            heuristic_weight,
-        )
-    
-def pathfind_and_save_from_cifs(start_cif: str,
-                      end_cif: str,
-                      output_json: str,
-                      params: PathFindingParameters,
-                      use_python=False,
-                      speak_freq=5,
-                      user_metadata=None,
-                      verbose=False):
-    start_struct = Structure.from_file(start_cif)
-    end_struct = Structure.from_file(end_cif)
+    return rust_cnf.astar_pathfind_rust(
+        start_points,
+        goal_points,
+        start_cnfs[0].elements,
+        n_atoms,
+        start_cnfs[0].xi,
+        start_cnfs[0].delta,
+        min_distance,
+        max_iterations,
+        beam_width if beam_width is not None else 0,
+        dropout,
+        greedy,
+        verbose,
+        speak_freq,
+        "manhattan",
+        1.0,
+    )
 
-    start_cells, goal_cells = get_endpoint_unit_cells(start_struct, end_struct, min_atoms=params.min_atoms)
 
-    if verbose:
-        print(f"\n=== Endpoints ===")
-        print(f"Number of start cells: {len(start_cells)}")
-        print(f"Number of goal cells: {len(goal_cells)}")
-
-    # Convert unit cells to CNFs and deduplicate
-    start_cnfs = list(set([cell.to_cnf(xi=params.xi, delta=params.delta) for cell in start_cells]))
-    goal_cnfs = list(set([cell.to_cnf(xi=params.xi, delta=params.delta) for cell in goal_cells]))
-
-    if user_metadata is None:
-        user_metadata = {}
-
-    user_metadata = {
-        "start_cif": str(start_cif),
-        "end_cif": str(end_cif),
-        **user_metadata
-    }
-    return pathfind_and_save(start_cnfs,
-                             goal_cnfs,
-                             output_json,
-                             params,
-                             use_python=use_python,
-                             speak_freq=speak_freq,
-                             user_metadata=user_metadata,
-                             verbose=verbose)
-    
-
-def pathfind_and_save(start_cnfs: list[CrystalNormalForm],
-                      goal_cnfs: list[CrystalNormalForm],
-                      output_json: str,
-                      params: PathFindingParameters,
-                      use_python=False,
-                      speak_freq=5,
-                      user_metadata=None,
-                      verbose=False,):
-    """Run pathfinding between two CIF structures and save result to JSON
+def pathfind(
+    start_cnfs: list[CrystalNormalForm],
+    goal_cnfs: list[CrystalNormalForm],
+    min_distance: float = 0.0,
+    max_iterations: int = 10000,
+    beam_width: int = 1000,
+    greedy: bool = False,
+    dropout: float = 0.0,
+    use_python: bool = False,
+    verbose: bool = True,
+) -> SearchResult:
+    """Run A* pathfinding and return a SearchResult.
 
     Args:
-        start_cif: Path to starting structure CIF file
-        end_cif: Path to ending structure CIF file
-        output_json: Path to output JSON file
-        xi: Lattice step size (default: 0.2)
-        delta: Integer discretization factor (default: 30)
-        min_distance: Minimum allowed pairwise distance for filtering (default: 0.0)
-        max_iterations: Maximum pathfinding iterations (default: 100000)
-        use_python: Use Python A* implementation instead of Rust (default: False)
-        bidirectional: Use bidirectional A* (only with use_python=True) (default: False)
-        beam_width: Beam width for beam search (only with use_python=True, bidirectional=False) (default: None)
-        dropout: Probability of dropping a neighbor (0.0 to 1.0). Dropped neighbors are excluded
-                 from consideration for the rest of the search. Goal neighbors are never dropped.
-                 Only supported with Rust implementation (default: 0.0)
+        start_cnfs: Starting CNF structures.
+        goal_cnfs: Goal CNF structures.
+        min_distance: Minimum allowed pairwise atomic distance (Angstroms).
+        max_iterations: Maximum search iterations.
+        beam_width: Max open-set size for beam search.
+        greedy: If True, use greedy best-first (f=h) instead of A* (f=g+h).
+        dropout: Probability of dropping a neighbor (0.0-1.0).
+        use_python: Use Python implementation instead of Rust.
+        verbose: Print progress during search.
+
+    Returns:
+        SearchResult containing a single Attempt.
     """
-
-    if user_metadata is None:
-        user_metadata = {}
-
-    if verbose:
-        print(f"Unique start CNFs: {len(start_cnfs)}")
-        for sc in start_cnfs:
-            print(f"    {sc.coords}")
-        print(f"Unique goal CNFs: {len(goal_cnfs)}")
-        for ec in goal_cnfs:
-            print(f"    {ec.coords}")
-
-
-
-    # Get n_atoms and elements from first start point
     first_cnf = start_cnfs[0]
-    elements = first_cnf.motif_normal_form.elements
-    n_atoms = len(elements)
+    elements = first_cnf.elements
+    xi = first_cnf.xi
+    delta = first_cnf.delta
+
+    context = PathContext(xi=xi, delta=delta, elements=elements)
+
+    filters = []
+    if min_distance > 0:
+        filters.append({"type": "min_distance", "value": min_distance})
+
+    params = SearchParameters(
+        max_iterations=max_iterations,
+        beam_width=beam_width,
+        dropout=dropout,
+        greedy=greedy,
+        heuristic="manhattan",
+        filters=filters,
+    )
 
     if verbose:
-        print(f"\n=== Running A* pathfinding ===")
-        print(f"Implementation: {'Python' if use_python else 'Rust'}")
-        print(f"Elements: {elements}")
-        print(f"N atoms: {n_atoms}")
-        print(f"Xi: {params.xi}, Delta: {params.delta}")
-        print(f"Start points: {len(start_cnfs)}")
-        print(f"Goal points: {len(goal_cnfs)}")
+        print(f"A* pathfinding: {'Python' if use_python else 'Rust'}")
+        print(f"  Elements: {elements}")
+        print(f"  xi={xi}, delta={delta}")
+        print(f"  {len(start_cnfs)} start CNFs, {len(goal_cnfs)} goal CNFs")
 
-    search_state = None  # Will be set if using Python non-bidirectional A*
-    max_iterations_reached = None
     if use_python:
+        filter_set = FilterSet([MinDistanceFilter(min_distance)], use_structs=not USE_RUST)
 
-        if params.heuristic_mode == "manhattan":
-            heuristic = manhattan_distance
-        elif params.heuristic_mode == "unimodular_light":
-            heuristic = UnimodularManhattanHeuristic(weight=params.heuristic_weight, full=False, partial=False)
-        elif params.heuristic_mode == "unimodular_partial":
-            heuristic = UnimodularManhattanHeuristic(weight=params.heuristic_weight, full=False, partial=True)
-        elif params.heuristic_mode == "unimodular_full":
-            heuristic = UnimodularManhattanHeuristic(weight=params.heuristic_weight, full=True, partial=False)
-        
-
-        filter_set = FilterSet([MinDistanceFilter(params.min_distance)], use_structs = not USE_RUST)
-        
         search_state = astar_pathfind(
             start_cnfs,
             goal_cnfs,
-            heuristic,
+            manhattan_distance,
             filter_set,
-            max_iterations=params.max_iterations,
-            beam_width=params.beam_width,
-            greedy=params.greedy,
-            verbose=True,
-            dropout=params.dropout,
+            max_iterations=max_iterations,
+            beam_width=beam_width,
+            greedy=greedy,
+            verbose=verbose,
+            dropout=dropout,
         )
-        path = search_state.path
-        max_iterations_reached = search_state.max_iterations_reached
+        path_tuples = search_state.path
         num_iterations = search_state.iterations
     else:
-        path, num_iterations = astar_rust(
+        path_tuples, num_iterations = astar_rust(
             start_cnfs,
             goal_cnfs,
-            min_distance=params.min_distance,
-            max_iterations=params.max_iterations,
-            beam_width=params.beam_width,
-            greedy=params.greedy,
-            dropout=params.dropout,
+            min_distance=min_distance,
+            max_iterations=max_iterations,
+            beam_width=beam_width,
+            greedy=greedy,
+            dropout=dropout,
             verbose=verbose,
-            speak_freq=speak_freq,
-            heuristic_mode=params.heuristic_mode,
-            heuristic_weight=params.heuristic_weight,
         )
-        max_iterations_reached = num_iterations == params.max_iterations
 
-    metadata= {
-        "min_distance": params.min_distance,
-        **user_metadata,
-    }
+    if path_tuples is None:
+        attempt = Attempt(path=None, found=False, iterations=num_iterations)
+        if verbose:
+            print("No path found")
+    else:
+        path_obj = Path(coords=[tuple(pt) for pt in path_tuples])
+        attempt = Attempt(path=path_obj, found=True, iterations=num_iterations)
+        if verbose:
+            print(f"Path found: {len(path_tuples)} steps, {num_iterations} iterations")
 
-    result = PathSearchResult(
-        path=path,
-        max_iterations_reached=max_iterations_reached,
-        num_iterations=num_iterations,
-        xi=params.xi,
-        delta=params.delta,
-        elements=elements,
-        n_atoms=len(elements),
-        
-        greedy=params.greedy,
-        beam_width=params.beam_width,
-        dropout=params.dropout,
-        max_iterations=params.max_iterations,
+    return SearchResult(context=context, parameters=params, attempts=[attempt])
 
-        metadata=metadata
-    ) 
 
+def pathfind_from_cifs(
+    start_cif: str,
+    end_cif: str,
+    xi: float = 0.2,
+    delta: int = 30,
+    min_distance: float = 0.0,
+    max_iterations: int = 100_000,
+    beam_width: int = 1000,
+    greedy: bool = False,
+    dropout: float = 0.0,
+    min_atoms: int | None = None,
+    use_python: bool = False,
+    verbose: bool = True,
+) -> SearchResult:
+    """Run A* pathfinding between two CIF structures.
+
+    Args:
+        start_cif: Path to starting structure CIF file.
+        end_cif: Path to ending structure CIF file.
+        xi: Lattice discretization parameter.
+        delta: Motif discretization parameter.
+        min_distance: Minimum allowed pairwise atomic distance (Angstroms).
+        max_iterations: Maximum search iterations.
+        beam_width: Max open-set size for beam search.
+        greedy: If True, use greedy best-first search.
+        dropout: Probability of dropping a neighbor (0.0-1.0).
+        min_atoms: Minimum atoms (will create supercells if needed).
+        use_python: Use Python implementation instead of Rust.
+        verbose: Print progress.
+
+    Returns:
+        SearchResult containing a single Attempt.
+    """
+    start_struct = Structure.from_file(start_cif)
+    end_struct = Structure.from_file(end_cif)
+
+    start_cells, goal_cells = get_endpoint_unit_cells(start_struct, end_struct, min_atoms=min_atoms)
 
     if verbose:
-        if path is None:
-            print("❌ No path found!")
-        else:
-            print(f"\n✅ Path found with {len(path)} steps!")
+        print(f"Endpoints: {len(start_cells)} start cells, {len(goal_cells)} goal cells")
 
+    start_cnfs = list(set([cell.to_cnf(xi=xi, delta=delta) for cell in start_cells]))
+    goal_cnfs = list(set([cell.to_cnf(xi=xi, delta=delta) for cell in goal_cells]))
 
-    # Save to JSON
-    with open(output_json, 'w') as f:
-        json.dump(asdict(result), f, indent=2)
+    result = pathfind(
+        start_cnfs,
+        goal_cnfs,
+        min_distance=min_distance,
+        max_iterations=max_iterations,
+        beam_width=beam_width,
+        greedy=greedy,
+        dropout=dropout,
+        use_python=use_python,
+        verbose=verbose,
+    )
 
-    if verbose:
-        print(f"\n💾 Path saved to {output_json}")
+    result.metadata["start_cif"] = str(start_cif)
+    result.metadata["end_cif"] = str(end_cif)
 
     return result

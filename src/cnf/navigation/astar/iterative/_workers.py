@@ -6,19 +6,13 @@ from cnf.calculation.grace import GraceCalculator
 from ._search import retry_search
 
 
-# Worker process globals
 _worker_calc = None
 _worker_cache = None
 _worker_pass_id = None
 
 
 def init_search_worker(tf_threads=None):
-    """Initialize a worker process with its own energy calculator and cache.
-
-    Args:
-        tf_threads: Max TF threads per worker. Prevents CPU contention
-            when multiple workers run in parallel.
-    """
+    """Initialize a worker process with its own energy calculator and cache."""
     if tf_threads is not None:
         import tensorflow as tf
         tf.config.threading.set_inter_op_parallelism_threads(tf_threads)
@@ -33,11 +27,9 @@ def worker_search_with_attempts(args):
     """Worker wrapper: deserialize inputs, manage worker state, then run retry search."""
     global _worker_calc, _worker_cache, _worker_pass_id
     (ceiling, start_coord_lists, goal_coord_lists, elements, xi, delta,
-     dropout, max_iters, beam_width, heuristic_mode, heuristic_weight,
+     dropout, max_iters, beam_width,
      seed_cache_items, attempts, worker_label, pass_id) = args
 
-    # Clear cache when xi/delta changes between passes — same integer
-    # coords map to different physical structures at different resolutions
     if pass_id != _worker_pass_id:
         _worker_cache = {}
         _worker_pass_id = pass_id
@@ -53,8 +45,7 @@ def worker_search_with_attempts(args):
 
     return retry_search(
         ceiling, start_cnfs, goal_cnfs, elements, xi, delta,
-        _worker_calc, _worker_cache, dropout, max_iters, beam_width,
-        heuristic_mode, heuristic_weight, attempts,
-        max_iters_scale=1.0,  # Workers don't bump max_iters
+        _worker_calc, _worker_cache, dropout, max_iters, beam_width, attempts,
+        max_iters_scale=1.0,
         log_prefix=f"    [{worker_label}] ",
     )

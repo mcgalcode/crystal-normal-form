@@ -4,7 +4,6 @@ from cnf.navigation.astar import astar_rust
 from cnf.navigation.search_filters import MinDistanceFilter
 
 
-# Diagnostic calibration constants
 _DIAG_RUNS = 3
 _DIAG_DROPOUT = 0.6
 _DIAG_SAFETY_FACTOR = 2
@@ -31,19 +30,8 @@ def adapt_params(found, total, successful_iters,
     return new_dropout, new_max_iters
 
 
-def calibrate_max_iters(start_cnfs, goal_cnfs, beam_width,
-                        heuristic_mode, heuristic_weight, verbose):
-    """Run diagnostic Rust A* searches to calibrate max_iters for this resolution.
-
-    Uses a min-distance filter based on 75% of the shortest bond length in
-    the endpoint structures, so diagnostic paths avoid unphysical regions
-    where atoms overlap.
-
-    Runs _DIAG_RUNS fast Rust A* searches (high dropout) per attempt.
-    If no paths found, doubles max_iters and retries until at least one
-    path is found. Returns calibrated max_iters (average * safety factor).
-    """
-    # Use MinDistanceFilter's constructor to compute threshold from endpoint bonds
+def calibrate_max_iters(start_cnfs, goal_cnfs, beam_width, verbose):
+    """Run diagnostic Rust A* searches to calibrate max_iters for this resolution."""
     min_dist_filter = MinDistanceFilter.from_structures(start_cnfs + goal_cnfs)
     diag_min_dist = min_dist_filter.dist
 
@@ -67,8 +55,6 @@ def calibrate_max_iters(start_cnfs, goal_cnfs, beam_width,
                 beam_width=beam_width,
                 dropout=_DIAG_DROPOUT,
                 verbose=False,
-                heuristic_mode=heuristic_mode,
-                heuristic_weight=heuristic_weight,
             )
             if result is not None:
                 successful_iters.append(num_iters)
@@ -83,7 +69,6 @@ def calibrate_max_iters(start_cnfs, goal_cnfs, beam_width,
         if successful_iters:
             avg_iters = sum(successful_iters) / len(successful_iters)
             calibrated = int(avg_iters * _DIAG_SAFETY_FACTOR)
-            # Ensure at least as large as the max observed
             calibrated = max(calibrated, max(successful_iters))
             if verbose:
                 print(f"  Calibrated max_iters={calibrated} "
@@ -92,7 +77,6 @@ def calibrate_max_iters(start_cnfs, goal_cnfs, beam_width,
                       f"safety={_DIAG_SAFETY_FACTOR}x)", flush=True)
             return calibrated
 
-        # No paths found — double and retry
         trial_max_iters *= 2
         if verbose:
             print(f"  No diagnostic paths found, "

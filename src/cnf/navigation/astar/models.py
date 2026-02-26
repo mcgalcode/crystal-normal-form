@@ -101,9 +101,9 @@ class Path:
     def to_dict(self) -> dict:
         """Serialize to a JSON-compatible dictionary."""
         return {
-            'coords': [list(c) for c in self.coords],
+            'coords': [[int(x) for x in c] for c in self.coords],
             'energies': self.energies,
-            'barrier': self.barrier,
+            'barrier': float(self.barrier) if self.barrier is not None else None,
             'metadata': self.metadata,
         }
 
@@ -344,6 +344,63 @@ class CeilingSweepResult:
 
     @classmethod
     def from_json(cls, path: str) -> 'CeilingSweepResult':
+        """Load from a JSON file."""
+        with open(path, 'r') as f:
+            return cls.from_dict(json.load(f))
+
+
+@dataclass
+class ParameterSearchResult:
+    """Phase 1: Parameter search to find optimal xi/delta/min_distance."""
+
+    # List of (xi, delta, min_distance) tuples that successfully found paths
+    successful_params: list[tuple[float, int, float]]
+
+    # Results for each resolution tried (including failures)
+    results: list[SearchResult]
+
+    # The recommended parameters (finest resolution that worked)
+    recommended_xi: float | None = None
+    recommended_delta: int | None = None
+    recommended_min_distance: float | None = None
+
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def success(self) -> bool:
+        """Whether any parameters successfully found a path."""
+        return len(self.successful_params) > 0
+
+    def to_dict(self) -> dict:
+        """Serialize to a JSON-compatible dictionary."""
+        return {
+            'successful_params': [list(p) for p in self.successful_params],
+            'results': [r.to_dict() for r in self.results],
+            'recommended_xi': self.recommended_xi,
+            'recommended_delta': self.recommended_delta,
+            'recommended_min_distance': self.recommended_min_distance,
+            'metadata': self.metadata,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> 'ParameterSearchResult':
+        """Deserialize from a dictionary."""
+        return cls(
+            successful_params=[tuple(p) for p in d['successful_params']],
+            results=[SearchResult.from_dict(r) for r in d['results']],
+            recommended_xi=d.get('recommended_xi'),
+            recommended_delta=d.get('recommended_delta'),
+            recommended_min_distance=d.get('recommended_min_distance'),
+            metadata=d.get('metadata', {}),
+        )
+
+    def to_json(self, path: str) -> None:
+        """Write to a JSON file."""
+        with open(path, 'w') as f:
+            json.dump(self.to_dict(), f, indent=2)
+
+    @classmethod
+    def from_json(cls, path: str) -> 'ParameterSearchResult':
         """Load from a JSON file."""
         with open(path, 'r') as f:
             return cls.from_dict(json.load(f))

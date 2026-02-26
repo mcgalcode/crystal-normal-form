@@ -18,7 +18,7 @@ from pathlib import Path as PathlibPath
 from cnf import CrystalNormalForm
 from cnf.calculation.grace import GraceCalculator
 from cnf.navigation.astar.core import astar_pathfind
-from cnf.navigation.astar.heuristics import make_heuristic
+from cnf.navigation.astar.heuristics import manhattan_distance
 from cnf.navigation.astar.models import (
     PathContext, Path, Attempt, SearchParameters, SearchResult, RefinementResult
 )
@@ -41,8 +41,6 @@ def ratchet(
     min_dropout: float = 0.1,
     max_iterations: int = 100_000,
     beam_width: int = 1000,
-    heuristic_mode: str = "manhattan",
-    heuristic_weight: float = 0.5,
     verbose: bool = True,
     output_dir: PathlibPath | str | None = None,
 ) -> RefinementResult:
@@ -63,8 +61,6 @@ def ratchet(
         min_dropout: Minimum dropout for adaptive adjustment.
         max_iterations: Max A* iterations (absolute cap).
         beam_width: Max open-set size for beam search.
-        heuristic_mode: Heuristic for A* ("manhattan", "unimodular_light", etc.).
-        heuristic_weight: Weight for unimodular heuristics.
         verbose: Print progress.
         output_dir: Path to output directory. If set, writes refinement_result.json
             after each round (overwriting) for crash resilience.
@@ -79,30 +75,21 @@ def ratchet(
     xi = start_cnfs[0].xi
     delta = start_cnfs[0].delta
 
-    # Build the shared context
     context = PathContext(xi=xi, delta=delta, elements=elements)
 
-    energy_cache = {}  # shared across all rounds
+    energy_cache = {}
 
-    # Evaluate endpoint energies and seed the cache
     for cnf in start_cnfs + goal_cnfs:
         if cnf.coords not in energy_cache:
             energy_cache[cnf.coords] = energy_calc.calculate_energy(cnf)
 
-    # Set up output directory
     if output_dir is not None:
         output_dir = PathlibPath(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Build the heuristic string for metadata
-    heuristic_str = heuristic_mode
-    if heuristic_weight != 1.0:
-        heuristic_str = f"{heuristic_mode}:{heuristic_weight}"
-
     ceiling = initial_ceiling
     total_start = time.perf_counter()
 
-    # Initialize result structure
     result = RefinementResult(
         results=[],
         metadata={
@@ -115,20 +102,18 @@ def ratchet(
     )
 
     def _save_result():
-        """Save current result to disk (overwrites each round)."""
         if output_dir is not None:
             result.to_json(str(output_dir / "refinement_result.json"))
 
     if verbose:
         print(f"\nStarting refinement with ceiling={initial_ceiling:.4f} eV")
 
-    # Adaptive parameters
     current_dropout = dropout
     current_max_iters = min(max_iterations, 500)
 
     for round_num in range(max_rounds):
         round_start = time.perf_counter()
-        round_ceiling = ceiling  # fixed for this round
+        round_ceiling = ceiling
         improved = False
         round_successful_iters = []
 
@@ -138,13 +123,12 @@ def ratchet(
                   f"dropout={current_dropout:.2f}, max_iters={current_max_iters})")
             print(f"{'='*60}")
 
-        # Build parameters for this round
         round_params = SearchParameters(
             max_iterations=current_max_iters,
             beam_width=beam_width,
             dropout=current_dropout,
             greedy=False,
-            heuristic=heuristic_str,
+            heuristic="manhattan",
             filters=[{"type": "energy_ceiling", "value": round_ceiling}],
         )
 
@@ -156,8 +140,6 @@ def ratchet(
 
             attempt_start = time.perf_counter()
 
-            # Run A* with energy filter
-            heuristic = make_heuristic(heuristic_mode, heuristic_weight)
             energy_filter = EnergyFilter(
                 round_ceiling, calc=energy_calc, cache=energy_cache
             )
@@ -166,7 +148,7 @@ def ratchet(
             search_state = astar_pathfind(
                 start_cnfs,
                 goal_cnfs,
-                heuristic=heuristic,
+                heuristic=manhattan_distance,
                 filter_set=filter_set,
                 max_iterations=current_max_iters,
                 beam_width=beam_width,
@@ -191,7 +173,6 @@ def ratchet(
             path_tuples = search_state.path
             round_successful_iters.append(num_iters)
 
-            # Evaluate energies along path
             energies = evaluate_path_energies(
                 path_tuples, elements, xi, delta, energy_calc, energy_cache
             )
@@ -200,7 +181,6 @@ def ratchet(
             if verbose:
                 print(f"len={len(path_tuples)}, barrier={barrier:.4f} eV, iters={num_iters}")
 
-            # Create Path object
             path_obj = Path(
                 coords=[tuple(pt) for pt in path_tuples],
                 energies=energies,
@@ -214,14 +194,12 @@ def ratchet(
                 elapsed_seconds=attempt_elapsed,
             ))
 
-            # Track best and update ceiling for next round
             if barrier < ceiling:
                 ceiling = barrier
                 improved = True
 
         round_elapsed = time.perf_counter() - round_start
 
-        # Build SearchResult for this round
         round_result = SearchResult(
             context=context,
             parameters=round_params,
@@ -244,17 +222,14 @@ def ratchet(
                   f"({success_rate:.0%}), ceiling={ceiling:.4f} eV, cache={cache_size} pts, "
                   f"elapsed={round_elapsed:.1f}s")
 
-        # Save after each round for crash resilience
         _save_result()
 
-        # Adaptive parameter adjustment
         current_dropout, current_max_iters = adapt_params(
             len(round_result.paths), paths_per_round, round_successful_iters,
             current_dropout, min_dropout, current_max_iters,
             max_iters=max_iterations,
         )
 
-        # Convergence: only if no improvement AND parameters at limits
         if not improved:
             at_limits = (current_dropout <= min_dropout and
                          current_max_iters >= max_iterations)
@@ -286,7 +261,6 @@ def ratchet(
         print(f"  Total time: {total_elapsed:.1f}s")
         print(f"{'='*60}")
 
-    # Final save
     _save_result()
 
     return result

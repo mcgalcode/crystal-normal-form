@@ -4,7 +4,7 @@ import os
 import time
 
 from cnf.navigation.astar.core import astar_pathfind
-from cnf.navigation.astar.heuristics import make_heuristic
+from cnf.navigation.astar.heuristics import manhattan_distance
 from cnf.navigation.search_filters import FilterSet, EnergyFilter
 
 from ._energy import evaluate_path_energies, path_barrier
@@ -14,13 +14,8 @@ USE_RUST = os.getenv('USE_RUST') == '1'
 
 def search_at_ceiling(ceiling, start_cnfs, goal_cnfs, elements, xi, delta,
                       calc, cache, dropout, max_iters, beam_width,
-                      heuristic_mode, heuristic_weight, log_prefix="      "):
-    """Run a single A* search at the given energy ceiling.
-
-    Returns dict with keys: ceiling, found, iterations, and if found:
-    barrier, path, energies, path_length.
-    """
-    heuristic = make_heuristic(heuristic_mode, heuristic_weight)
+                      log_prefix="      "):
+    """Run a single A* search at the given energy ceiling."""
     energy_filter = EnergyFilter(ceiling, calc=calc, cache=cache)
     filter_set = FilterSet([energy_filter], use_structs=not USE_RUST)
 
@@ -28,7 +23,7 @@ def search_at_ceiling(ceiling, start_cnfs, goal_cnfs, elements, xi, delta,
     speak_freq = max(1, max_iters // 10)
     search_state = astar_pathfind(
         start_cnfs, goal_cnfs,
-        heuristic=heuristic, filter_set=filter_set,
+        heuristic=manhattan_distance, filter_set=filter_set,
         max_iterations=max_iters, beam_width=beam_width,
         dropout=dropout, verbose=True, speak_freq=speak_freq,
         log_prefix=log_prefix,
@@ -44,7 +39,7 @@ def search_at_ceiling(ceiling, start_cnfs, goal_cnfs, elements, xi, delta,
     energies = evaluate_path_energies(
         path_tuples, elements, xi, delta, calc, cache
     )
-    energy_evals = len(cache) - cache_before  # include path evaluation
+    energy_evals = len(cache) - cache_before
     barrier = path_barrier(energies)
 
     return {
@@ -57,14 +52,9 @@ def search_at_ceiling(ceiling, start_cnfs, goal_cnfs, elements, xi, delta,
 
 
 def retry_search(ceiling, start_cnfs, goal_cnfs, elements, xi, delta,
-                 calc, cache, dropout, max_iters, beam_width,
-                 heuristic_mode, heuristic_weight, attempts,
+                 calc, cache, dropout, max_iters, beam_width, attempts,
                  max_iters_scale=1.5, log_prefix="    ", verbose=True):
-    """Core retry loop: run up to `attempts` A* searches at a single ceiling.
-
-    Bumps max_iters by max_iters_scale after each failed attempt.
-    Returns result dict from first successful attempt, or last attempt's result.
-    """
+    """Core retry loop: run up to `attempts` A* searches at a single ceiling."""
     current_max_iters = max_iters
     r = None
     for a in range(attempts):
@@ -77,7 +67,7 @@ def retry_search(ceiling, start_cnfs, goal_cnfs, elements, xi, delta,
         r = search_at_ceiling(
             ceiling, start_cnfs, goal_cnfs, elements, xi, delta,
             calc, cache, dropout, current_max_iters, beam_width,
-            heuristic_mode, heuristic_weight, log_prefix=log_prefix,
+            log_prefix=log_prefix,
         )
         elapsed = time.perf_counter() - t0
 
@@ -97,17 +87,15 @@ def retry_search(ceiling, start_cnfs, goal_cnfs, elements, xi, delta,
 
         current_max_iters = int(current_max_iters * max_iters_scale)
 
-    return r  # last attempt's result (not found)
+    return r
 
 
 def search_ceiling_with_attempts(ceiling, start_cnfs, goal_cnfs, elements,
                                  xi, delta, calc, cache, dropout, max_iters,
-                                 beam_width, heuristic_mode, heuristic_weight,
-                                 attempts, verbose):
+                                 beam_width, attempts, verbose):
     """Run up to `attempts` A* searches at a single ceiling, stop on first success."""
     return retry_search(
         ceiling, start_cnfs, goal_cnfs, elements, xi, delta,
-        calc, cache, dropout, max_iters, beam_width,
-        heuristic_mode, heuristic_weight, attempts,
+        calc, cache, dropout, max_iters, beam_width, attempts,
         max_iters_scale=1.5, log_prefix="    ", verbose=verbose,
     )

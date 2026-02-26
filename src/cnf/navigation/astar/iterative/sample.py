@@ -12,7 +12,7 @@ from pathlib import Path as PathlibPath
 from cnf import CrystalNormalForm
 from cnf.calculation.grace import GraceCalculator
 from cnf.navigation.astar.core import astar_pathfind
-from cnf.navigation.astar.heuristics import make_heuristic
+from cnf.navigation.astar.heuristics import manhattan_distance
 from cnf.navigation.astar.models import (
     PathContext, Path, Attempt, SearchParameters, SearchResult
 )
@@ -30,8 +30,6 @@ def sample(
     min_distance: float | None = None,
     max_iterations: int = 5_000,
     beam_width: int = 1000,
-    heuristic_mode: str = "manhattan",
-    heuristic_weight: float = 0.5,
     bidirectional: bool = True,
     verbose: bool = True,
     output_dir: PathlibPath | str | None = None,
@@ -52,8 +50,6 @@ def sample(
         min_distance: Optional minimum interatomic distance filter.
         max_iterations: Max A* iterations per attempt.
         beam_width: Max open-set size for beam search.
-        heuristic_mode: Heuristic for A* ("manhattan", "unimodular_light", etc.).
-        heuristic_weight: Weight for unimodular heuristics.
         bidirectional: If True, randomly swap start/goal for ~half the attempts
             to explore paths in both directions.
         verbose: Print progress.
@@ -71,38 +67,29 @@ def sample(
     xi = start_cnfs[0].xi
     delta = start_cnfs[0].delta
 
-    # Build the shared context
     context = PathContext(xi=xi, delta=delta, elements=elements)
 
-    energy_cache = {}  # shared across all attempts
+    energy_cache = {}
 
     # Evaluate endpoint energies and seed the cache
     for cnf in start_cnfs + goal_cnfs:
         if cnf.coords not in energy_cache:
             energy_cache[cnf.coords] = energy_calc.calculate_energy(cnf)
 
-    # Set up output directory
     if output_dir is not None:
         output_dir = PathlibPath(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Build the heuristic string for metadata
-    heuristic_str = heuristic_mode
-    if heuristic_weight != 1.0:
-        heuristic_str = f"{heuristic_mode}:{heuristic_weight}"
-
-    # Build filter list
     filters = []
     if min_distance is not None:
         filters.append({"type": "min_distance", "value": min_distance})
 
-    # Build parameters (dropout will vary per attempt, stored in attempt metadata)
     base_params = SearchParameters(
         max_iterations=max_iterations,
         beam_width=beam_width,
-        dropout=0.0,  # placeholder, actual dropout varies
+        dropout=0.0,  # placeholder, actual dropout varies per attempt
         greedy=False,
-        heuristic=heuristic_str,
+        heuristic="manhattan",
         filters=filters,
     )
 
@@ -116,10 +103,8 @@ def sample(
             print(f"  Min distance filter: {min_distance:.2f} Å")
 
     for attempt_idx in range(num_samples):
-        # Random dropout for this attempt
         attempt_dropout = random.uniform(dropout_range[0], dropout_range[1])
 
-        # Optionally swap direction
         if bidirectional and random.random() < 0.5:
             attempt_starts, attempt_goals = goal_cnfs, start_cnfs
             direction = "backward"
@@ -133,18 +118,15 @@ def sample(
 
         attempt_start = time.perf_counter()
 
-        # Build filter set
         filter_list = []
         if min_distance is not None:
             filter_list.append(MinDistanceFilter(min_distance))
         filter_set = FilterSet(filter_list) if filter_list else None
 
-        # Run A*
-        heuristic = make_heuristic(heuristic_mode, heuristic_weight)
         search_state = astar_pathfind(
             attempt_starts,
             attempt_goals,
-            heuristic=heuristic,
+            heuristic=manhattan_distance,
             filter_set=filter_set,
             max_iterations=max_iterations,
             beam_width=beam_width,
@@ -169,11 +151,9 @@ def sample(
 
         path_tuples = search_state.path
 
-        # Reverse path if we went backward so energies are start→goal order
         if direction == "backward":
             path_tuples = list(reversed(path_tuples))
 
-        # Evaluate energies along path
         energies = evaluate_path_energies(
             path_tuples, elements, xi, delta, energy_calc, energy_cache
         )
@@ -182,7 +162,6 @@ def sample(
         if verbose:
             print(f"len={len(path_tuples)}, barrier={barrier:.4f} eV, iters={num_iters}")
 
-        # Create Path object
         path_obj = Path(
             coords=[tuple(pt) for pt in path_tuples],
             energies=energies,
@@ -199,7 +178,6 @@ def sample(
 
     total_elapsed = time.perf_counter() - total_start
 
-    # Build result
     result = SearchResult(
         context=context,
         parameters=base_params,
@@ -227,7 +205,6 @@ def sample(
         print(f"  Total time: {total_elapsed:.1f}s")
         print(f"{'='*60}")
 
-    # Save result
     if output_dir is not None:
         result.to_json(str(output_dir / "sample_result.json"))
 

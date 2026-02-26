@@ -8,7 +8,6 @@ refining with progressively finer discretization.
 import time
 from pathlib import Path as PathlibPath
 
-from cnf import CrystalNormalForm
 from cnf.calculation.grace import GraceCalculator
 from cnf.calculation.relaxation import relax_unit_cell
 from cnf.navigation.astar.models import (
@@ -26,26 +25,19 @@ def sweep(
     end_uc,
     max_ceiling: float,
     energy_calc=None,
-    # Discretization (initial values, refined each pass)
     xi=1.5,
     delta=10,
-    # Search parameters
     num_ceilings=5,
     attempts_per_ceiling=1,
     max_passes=5,
     xi_factor=0.8,
     delta_factor=1.2,
-    # A* parameters
     dropout=0.1,
     min_dropout=0.0,
     beam_width=1000,
-    heuristic_mode="manhattan",
-    heuristic_weight=0.5,
-    # Parallelism
     n_workers=0,
     verbose=True,
     output_dir=None,
-    # Endpoint relaxation
     relax_endpoints=False,
 ) -> CeilingSweepResult:
     """Parallel ceiling sweep with multi-resolution refinement.
@@ -54,44 +46,25 @@ def sweep(
     by sweeping A* searches across energy ceilings in parallel, then
     refining with progressively finer discretization.
 
-    The sweep range is [base, ceiling_top] where base = max(endpoint_energies).
-    max_ceiling is required and sets the initial ceiling_top. Use Phase 2
-    path sampling to discover an appropriate starting ceiling before calling
-    this function.
-
-    Each pass refines xi/delta and re-sweeps, tightening ceiling_top to
-    the lowest barrier found.
-
     Args:
         start_uc: Starting UnitCell.
         end_uc: Ending UnitCell.
-        max_ceiling: Upper bound of sweep range (eV). Required. Ceilings
-            are evenly spaced from base to this value on the first pass.
+        max_ceiling: Upper bound of sweep range (eV). Required.
         energy_calc: Energy calculator (default: GraceCalculator).
         xi: Initial lattice discretization parameter.
         delta: Initial motif discretization parameter.
         num_ceilings: Number of ceiling levels to sweep per pass.
-        attempts_per_ceiling: Searches per ceiling level (default 1). With
-            tight energy constraints, 3-5 gives more chances to find paths
-            through different dropout randomness.
+        attempts_per_ceiling: Searches per ceiling level.
         max_passes: Number of resolution refinement passes.
         xi_factor: xi multiplied by this each refinement pass.
-        delta_factor: delta multiplied by this each refinement pass (rounded).
+        delta_factor: delta multiplied by this each refinement pass.
         dropout: Neighbor dropout probability.
         min_dropout: Minimum dropout for adaptive adjustment.
         beam_width: Max open-set size for beam search.
-        heuristic_mode: Heuristic for A*.
-        heuristic_weight: Weight for unimodular heuristics.
-        n_workers: Parallel worker processes. 0 = auto (cores // 4 workers,
-            targeting 4 TF threads each). 1 = sequential. Each worker
-            creates its own energy calculator.
+        n_workers: Parallel worker processes. 0 = auto.
         verbose: Print progress.
-        output_dir: Path to output directory. If set, writes
-            ceiling_sweep_result.json after each pass (overwriting).
-        relax_endpoints: If True, relax both endpoint structures in
-            continuous space (cell + positions) using ASE FIRE + ExpCellFilter
-            before any CNF discretization. This ensures endpoints are at
-            local energy minima, so reported barriers are meaningful.
+        output_dir: Path to output directory.
+        relax_endpoints: If True, relax endpoint structures before discretization.
 
     Returns:
         CeilingSweepResult containing all passes and their attempts.
@@ -99,7 +72,6 @@ def sweep(
     if energy_calc is None:
         energy_calc = GraceCalculator()
 
-    # Relax endpoints in continuous space if requested
     if relax_endpoints:
         ase_calc = energy_calc._calc
 
@@ -124,12 +96,6 @@ def sweep(
 
     ceiling_top = max_ceiling
 
-    # Build the heuristic string for metadata
-    heuristic_str = heuristic_mode
-    if heuristic_weight != 1.0:
-        heuristic_str = f"{heuristic_mode}:{heuristic_weight}"
-
-    # Initialize result structure
     result = CeilingSweepResult(
         results=[],
         metadata={
@@ -145,23 +111,19 @@ def sweep(
         }
     )
 
-    # Set up output directory
     if output_dir is not None:
         output_dir = PathlibPath(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
     def _save_result():
-        """Save current result to disk (overwrites each pass)."""
         if output_dir is not None:
             result.to_json(str(output_dir / "ceiling_sweep_result.json"))
 
-    # Set up worker pool for parallel execution
     import multiprocessing
     total_cores = multiprocessing.cpu_count()
     _TF_THREADS_PER_WORKER = 4
 
     if n_workers == 0:
-        # Auto: target 4 TF threads per worker, leave 1 core for main process
         n_workers = max(1, (total_cores - 1) // _TF_THREADS_PER_WORKER)
         if verbose:
             print(f"Auto workers: {n_workers} "
@@ -172,9 +134,6 @@ def sweep(
         import multiprocessing as mp
         from concurrent.futures import ProcessPoolExecutor
         tf_threads = max(1, total_cores // n_workers)
-        # Use 'spawn' context so each worker gets a fresh process.
-        # With 'fork', a TF runtime initialized in the main process
-        # (e.g. by relax_endpoints) is inherited and cannot be reconfigured.
         pool = ProcessPoolExecutor(
             max_workers=n_workers,
             initializer=init_search_worker,
@@ -190,21 +149,16 @@ def sweep(
 
     try:
         for pass_num in range(max_passes):
-            # Compute discretization for this pass
             pass_xi = xi * (xi_factor ** pass_num)
             pass_delta = round(delta * (delta_factor ** pass_num))
 
-            # Clear energy cache — same integer coords map to different
-            # physical structures at different xi/delta
             energy_cache.clear()
 
-            # Get endpoint CNFs at this resolution
             start_cnfs, goal_cnfs = get_endpoint_cnfs(
                 start_uc, end_uc, xi=pass_xi, delta=pass_delta
             )
             elements = start_cnfs[0].elements
 
-            # Build the shared context for this pass
             context = PathContext(xi=pass_xi, delta=pass_delta, elements=elements)
 
             if pass_num == 0:
@@ -212,7 +166,6 @@ def sweep(
                 result.metadata["start_cnf_coords"] = [list(c.coords) for c in start_cnfs]
                 result.metadata["goal_cnf_coords"] = [list(c.coords) for c in goal_cnfs]
 
-            # Evaluate endpoint energies
             for cnf in start_cnfs + goal_cnfs:
                 if cnf.coords not in energy_cache:
                     energy_cache[cnf.coords] = energy_calc.calculate_energy(cnf)
@@ -233,21 +186,17 @@ def sweep(
                 print(f"  Ceiling top: {ceiling_top:.2f} eV")
                 print(f"{'='*60}")
 
-            # Skip if base >= ceiling_top (can't improve)
             if base >= ceiling_top:
                 if verbose:
                     print(f"\n  Base ({base:.2f}) >= ceiling_top "
                           f"({ceiling_top:.2f}), skipping pass")
                 continue
 
-            # Calibrate max_iters via diagnostic Rust A* runs (no energy filter)
             current_dropout = dropout
             current_max_iters = calibrate_max_iters(
-                start_cnfs, goal_cnfs, beam_width,
-                heuristic_mode, heuristic_weight, verbose,
+                start_cnfs, goal_cnfs, beam_width, verbose,
             )
 
-            # Evenly spaced ceilings from base to ceiling_top
             N = num_ceilings
             if N > 1:
                 ceilings = [
@@ -268,15 +217,12 @@ def sweep(
                 ceilings, start_cnfs, goal_cnfs, elements,
                 pass_xi, pass_delta, energy_calc, energy_cache,
                 current_dropout, current_max_iters, beam_width,
-                heuristic_mode, heuristic_weight,
                 n_workers, pool, verbose,
                 attempts_per_ceiling=attempts_per_ceiling,
                 pass_id=pass_num,
             )
             pass_elapsed = time.perf_counter() - pass_start
 
-            # Convert batch results to Attempt/SearchResult objects
-            # Group by ceiling for SearchResult objects
             ceiling_to_attempts = {}
             for r in batch_results:
                 ceil = r["ceiling"]
@@ -302,7 +248,6 @@ def sweep(
                     )
                 ceiling_to_attempts[ceil].append(attempt)
 
-            # Create SearchResult for each ceiling
             for ceil in sorted(ceiling_to_attempts.keys()):
                 attempts = ceiling_to_attempts[ceil]
                 search_params = SearchParameters(
@@ -310,7 +255,7 @@ def sweep(
                     beam_width=beam_width,
                     dropout=current_dropout,
                     greedy=False,
-                    heuristic=heuristic_str,
+                    heuristic="manhattan",
                     filters=[{"type": "energy_ceiling", "value": ceil}],
                 )
                 search_result = SearchResult(
@@ -324,7 +269,6 @@ def sweep(
                 )
                 result.results.append(search_result)
 
-            # Update ceiling_top if we found better paths
             successes = [r for r in batch_results if r["found"]]
             if successes:
                 best_result = min(successes, key=lambda r: r["barrier"])
@@ -343,7 +287,6 @@ def sweep(
                 if result.best_barrier is not None:
                     print(f"  Best barrier: {result.best_barrier:.4f} eV")
 
-            # Save after each pass for crash resilience
             _save_result()
 
     finally:
@@ -371,7 +314,6 @@ def sweep(
         print(f"  Total time: {total_elapsed:.1f}s")
         print(f"{'='*60}")
 
-    # Final save
     _save_result()
 
     return result

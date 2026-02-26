@@ -34,13 +34,11 @@ class MockCalculator:
 
 class TestSearchAtCeiling:
     @patch('cnf.navigation.astar.iterative._search.astar_pathfind')
-    @patch('cnf.navigation.astar.iterative._search.make_heuristic')
-    def test_returns_not_found_when_no_path(self, mock_heuristic, mock_astar):
+    def test_returns_not_found_when_no_path(self, mock_astar):
         """Should return found=False when A* finds no path."""
         from cnf.navigation.astar.iterative._search import search_at_ceiling
 
         mock_astar.return_value = MockSearchState(path=None, iterations=500)
-        mock_heuristic.return_value = lambda x, y: 0
 
         start_cnfs = [MockCNF((1, 2, 3))]
         goal_cnfs = [MockCNF((4, 5, 6))]
@@ -59,8 +57,6 @@ class TestSearchAtCeiling:
             dropout=0.1,
             max_iters=1000,
             beam_width=500,
-            heuristic_mode="manhattan",
-            heuristic_weight=0.5,
         )
 
         assert result["ceiling"] == -10.0
@@ -68,18 +64,16 @@ class TestSearchAtCeiling:
         assert result["iterations"] == 500
 
     @patch('cnf.navigation.astar.iterative._search.astar_pathfind')
-    @patch('cnf.navigation.astar.iterative._search.make_heuristic')
     @patch('cnf.navigation.astar.iterative._search.evaluate_path_energies')
     @patch('cnf.navigation.astar.iterative._search.path_barrier')
     def test_returns_found_with_path_data(
-        self, mock_barrier, mock_eval, mock_heuristic, mock_astar
+        self, mock_barrier, mock_eval, mock_astar
     ):
         """Should return path data when A* finds a path."""
         from cnf.navigation.astar.iterative._search import search_at_ceiling
 
         path = [(1, 2, 3), (4, 5, 6)]
         mock_astar.return_value = MockSearchState(path=path, iterations=250)
-        mock_heuristic.return_value = lambda x, y: 0
         mock_eval.return_value = [-10.0, -9.5]
         mock_barrier.return_value = -9.5
 
@@ -100,8 +94,6 @@ class TestSearchAtCeiling:
             dropout=0.1,
             max_iters=1000,
             beam_width=500,
-            heuristic_mode="manhattan",
-            heuristic_weight=0.5,
         )
 
         assert result["ceiling"] == -10.0
@@ -142,8 +134,6 @@ class TestRetrySearch:
             dropout=0.1,
             max_iters=1000,
             beam_width=500,
-            heuristic_mode="manhattan",
-            heuristic_weight=0.5,
             attempts=3,
             verbose=False,
         )
@@ -175,8 +165,6 @@ class TestRetrySearch:
             dropout=0.1,
             max_iters=1000,
             beam_width=500,
-            heuristic_mode="manhattan",
-            heuristic_weight=0.5,
             attempts=3,
             verbose=False,
         )
@@ -208,8 +196,6 @@ class TestRetrySearch:
             dropout=0.1,
             max_iters=100,
             beam_width=500,
-            heuristic_mode="manhattan",
-            heuristic_weight=0.5,
             attempts=3,
             max_iters_scale=2.0,
             verbose=False,
@@ -250,8 +236,6 @@ class TestRetrySearch:
             dropout=0.1,
             max_iters=100,
             beam_width=500,
-            heuristic_mode="manhattan",
-            heuristic_weight=0.5,
             attempts=5,
             verbose=False,
         )
@@ -287,8 +271,6 @@ class TestRetrySearch:
             dropout=0.1,
             max_iters=100,
             beam_width=500,
-            heuristic_mode="manhattan",
-            heuristic_weight=0.5,
             attempts=1,
             verbose=True,
         )
@@ -325,8 +307,6 @@ class TestRetrySearch:
             dropout=0.1,
             max_iters=100,
             beam_width=500,
-            heuristic_mode="manhattan",
-            heuristic_weight=0.5,
             attempts=1,
             verbose=False,
         )
@@ -360,16 +340,14 @@ class TestSearchCeilingWithAttempts:
             dropout=0.1,
             max_iters=1000,
             beam_width=500,
-            heuristic_mode="manhattan",
-            heuristic_weight=0.5,
             attempts=5,
             verbose=True,
         )
 
         mock_retry.assert_called_once()
-        # attempts is positional arg at index 13, verbose is kwarg
+        # attempts is positional arg at index 11, verbose is kwarg
         call_args = mock_retry.call_args
-        assert call_args[0][13] == 5  # attempts
+        assert call_args[0][11] == 5  # attempts
         assert call_args.kwargs['verbose'] is True
 
     @patch('cnf.navigation.astar.iterative._search.retry_search')
@@ -391,8 +369,6 @@ class TestSearchCeilingWithAttempts:
             dropout=0.1,
             max_iters=1000,
             beam_width=500,
-            heuristic_mode="manhattan",
-            heuristic_weight=0.5,
             attempts=3,
             verbose=False,
         )
@@ -419,14 +395,12 @@ class TestSearchCeilingWithAttempts:
             dropout=0.1,
             max_iters=1000,
             beam_width=500,
-            heuristic_mode="manhattan",
-            heuristic_weight=0.5,
             attempts=7,
             verbose=False,
         )
 
         # Verify attempts=7 was passed (this was the bug - before it would
         # ignore attempts when verbose=False)
-        # attempts is positional arg at index 13
+        # attempts is positional arg at index 11
         call_args = mock_retry.call_args
-        assert call_args[0][13] == 7
+        assert call_args[0][11] == 7
