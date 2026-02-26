@@ -2,7 +2,7 @@
 
 import os
 import json
-import rust_cnf
+from cnf import rust_cnf
 
 from typing import Callable
 from dataclasses import asdict
