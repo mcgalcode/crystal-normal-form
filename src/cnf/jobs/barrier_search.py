@@ -9,11 +9,9 @@ This module provides jobflow-compatible jobs for the 4-phase barrier search:
 These can be run individually or combined using BarrierSearchMaker.
 """
 
-from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
 
-from jobflow import Flow, Maker, job, Response
+from jobflow import job
 from pymatgen.core import Structure
 
 from cnf import UnitCell
@@ -37,6 +35,7 @@ def search_job(
     max_iterations: int = 5_000,
     beam_width: int = 1000,
     dropout: float = 0.3,
+    n_workers: int = 0,
     output_dir: str | None = None,
 ) -> ParameterSearchResult:
     """Phase 1: Search for optimal discretization parameters.
@@ -52,6 +51,7 @@ def search_job(
         max_iterations: Max A* iterations per search.
         beam_width: Max open-set size for beam search.
         dropout: Neighbor dropout probability.
+        n_workers: Number of parallel workers (0=auto, uses CPU count).
         output_dir: Directory for output files.
 
     Returns:
@@ -73,8 +73,8 @@ def search_job(
         max_iterations=max_iterations,
         beam_width=beam_width,
         dropout=dropout,
-        n_workers=1,  # HPC handles parallelism
-        verbose=True,
+        n_workers=n_workers,
+        verbosity=1,
         output_dir=output_dir,
     )
 
@@ -90,6 +90,7 @@ def sample_job(
     dropout_range: tuple[float, float] = (0.3, 0.7),
     max_iterations: int = 5_000,
     beam_width: int = 1000,
+    n_workers: int = 0,
     grace_model_path: str | None = None,
     output_dir: str | None = None,
 ) -> SearchResult:
@@ -105,6 +106,7 @@ def sample_job(
         dropout_range: (min, max) dropout probability range.
         max_iterations: Max A* iterations per attempt.
         beam_width: Max open-set size for beam search.
+        n_workers: Number of parallel workers (0=auto, uses CPU count).
         grace_model_path: Path to local GRACE model (uses foundation model if None).
         output_dir: Directory for output files.
 
@@ -113,7 +115,7 @@ def sample_job(
     """
     from cnf.navigation.astar.iterative import sample
     from cnf.navigation.endpoints import get_endpoint_cnfs
-    from cnf.calculation.grace import GraceCalculator
+    from cnf.calculation.grace import GraceCalcProvider
 
     start_uc = UnitCell.from_pymatgen_structure(start_structure)
     end_uc = UnitCell.from_pymatgen_structure(end_structure)
@@ -123,13 +125,14 @@ def sample_job(
     return sample(
         start_cnfs=start_cnfs,
         goal_cnfs=goal_cnfs,
-        energy_calc=GraceCalculator(model_path=grace_model_path),
+        calc_provider=GraceCalcProvider(model_path=grace_model_path),
         num_samples=num_samples,
         dropout_range=dropout_range,
         min_distance=min_distance,
         max_iterations=max_iterations,
         beam_width=beam_width,
-        verbose=True,
+        n_workers=n_workers,
+        verbosity=1,
         output_dir=output_dir,
     )
 
@@ -148,6 +151,7 @@ def sweep_job(
     delta_factor: float = 1.1,
     dropout: float = 0.1,
     beam_width: int = 1000,
+    n_workers: int = 0,
     grace_model_path: str | None = None,
     output_dir: str | None = None,
 ) -> CeilingSweepResult:
@@ -166,6 +170,7 @@ def sweep_job(
         delta_factor: delta multiplied by this each refinement pass.
         dropout: Neighbor dropout probability.
         beam_width: Max open-set size for beam search.
+        n_workers: Number of parallel workers (0=auto, uses CPU count).
         grace_model_path: Path to local GRACE model (uses foundation model if None).
         output_dir: Directory for output files.
 
@@ -192,8 +197,8 @@ def sweep_job(
         delta_factor=delta_factor,
         dropout=dropout,
         beam_width=beam_width,
-        n_workers=1,  # HPC handles parallelism
-        verbose=True,
+        n_workers=n_workers,
+        verbosity=1,
         output_dir=output_dir,
     )
 
@@ -254,7 +259,7 @@ def ratchet_job(
         min_dropout=min_dropout,
         max_iterations=max_iterations,
         beam_width=beam_width,
-        verbose=True,
+        verbosity=1,
         output_dir=output_dir,
     )
 
@@ -266,125 +271,168 @@ SweepJob = sweep_job
 RatchetJob = ratchet_job
 
 
-@dataclass
-class BarrierSearchMaker(Maker):
-    """Maker for the full 4-phase barrier search workflow.
+@job
+def barrier_search_job(
+    start_structure: Structure,
+    end_structure: Structure,
+    xi: float | None = None,
+    delta: int | None = None,
+    min_distance: float | None = None,
+    num_samples: int = 20,
+    num_ceilings: int | None = None,
+    max_rounds: int = 20,
+    beam_width: int = 1000,
+    n_workers: int = 0,
+    grace_model_path: str | None = None,
+    output_dir: str | None = None,
+) -> RefinementResult:
+    """Full 4-phase barrier search as a single job.
 
-    This creates a jobflow Flow that runs:
-    1. Parameter search (optional, if xi/delta not provided)
+    Runs all phases sequentially in a single HPC job:
+    1. Parameter search (if xi/delta not provided)
     2. Path sampling to find initial ceiling
     3. Ceiling sweep to find good paths
     4. Ratchet refinement to optimize barrier
 
-    Attributes:
-        name: Name for the flow.
+    Each phase writes results to disk in output_dir, so progress is preserved
+    even if the job is interrupted.
+
+    Args:
+        start_structure: Starting crystal structure.
+        end_structure: Ending crystal structure.
         xi: Lattice discretization (if None, runs parameter search).
         delta: Motif discretization (if None, runs parameter search).
         min_distance: Minimum interatomic distance filter.
         num_samples: Number of paths to sample in Phase 2.
-        num_ceilings: Number of ceiling levels in Phase 3.
+        num_ceilings: Number of ceiling levels in Phase 3 (defaults to n_workers).
         max_rounds: Maximum refinement rounds in Phase 4.
         beam_width: Beam width for all searches.
+        n_workers: Number of parallel workers (0=auto, uses CPU count).
         grace_model_path: Path to local GRACE model (uses foundation model if None).
         output_dir: Base directory for outputs.
+
+    Returns:
+        RefinementResult from Phase 4 containing the final optimized barrier.
     """
+    import os
+    from cnf.navigation.astar.iterative import search, sample, sweep, ratchet
+    from cnf.navigation.endpoints import get_endpoint_cnfs
+    from cnf.calculation.grace import GraceCalculator, GraceCalcProvider
 
-    name: str = "barrier_search"
-    xi: float | None = None
-    delta: int | None = None
-    min_distance: float | None = None
-    num_samples: int = 20
-    num_ceilings: int = 5
-    max_rounds: int = 20
-    beam_width: int = 1000
-    grace_model_path: str | None = None
-    output_dir: str | None = None
+    start_uc = UnitCell.from_pymatgen_structure(start_structure)
+    end_uc = UnitCell.from_pymatgen_structure(end_structure)
 
-    @job
-    def make(
-        self,
-        start_structure: Structure,
-        end_structure: Structure,
-    ) -> Response:
-        """Create the barrier search flow.
+    output_base = Path(output_dir) if output_dir else None
 
-        Args:
-            start_structure: Starting crystal structure.
-            end_structure: Ending crystal structure.
+    # Resolve n_workers
+    if n_workers == 0:
+        n_workers = os.cpu_count() or 1
 
-        Returns:
-            Response with detour to the barrier search flow.
-        """
-        jobs = []
-        output_base = Path(self.output_dir) if self.output_dir else None
+    # Default num_ceilings to n_workers
+    if num_ceilings is None:
+        num_ceilings = n_workers
 
-        # Phase 1: Parameter search (if needed)
-        if self.xi is None or self.delta is None:
-            phase1_dir = str(output_base / "phase1_search") if output_base else None
-            phase1 = search_job(
-                start_structure=start_structure,
-                end_structure=end_structure,
-                output_dir=phase1_dir,
-            )
-            phase1.name = f"{self.name} - Phase 1 Search"
-            jobs.append(phase1)
+    # Phase 1: Parameter search (if needed)
+    if xi is None or delta is None:
+        print("="*60)
+        print("Phase 1: Parameter Search")
+        print("="*60)
 
-            # Extract parameters from Phase 1
-            xi = phase1.output.recommended_xi
-            delta = phase1.output.recommended_delta
-            min_distance = phase1.output.recommended_min_distance
-        else:
-            xi = self.xi
-            delta = self.delta
-            min_distance = self.min_distance
-
-        # Phase 2: Sampling
-        phase2_dir = str(output_base / "phase2_sample") if output_base else None
-        phase2 = sample_job(
-            start_structure=start_structure,
-            end_structure=end_structure,
-            xi=xi,
-            delta=delta,
-            min_distance=min_distance,
-            num_samples=self.num_samples,
-            beam_width=self.beam_width,
-            grace_model_path=self.grace_model_path,
-            output_dir=phase2_dir,
+        phase1_dir = str(output_base / "phase1_search") if output_base else None
+        search_result = search(
+            start_uc=start_uc,
+            end_uc=end_uc,
+            n_workers=n_workers,
+            verbosity=1,
+            output_dir=phase1_dir,
         )
-        phase2.name = f"{self.name} - Phase 2 Sample"
-        jobs.append(phase2)
+        xi = search_result.recommended_xi
+        delta = search_result.recommended_delta
+        min_distance = search_result.recommended_min_distance
 
-        # Phase 3: Sweep (use best barrier from Phase 2 as ceiling)
-        phase3_dir = str(output_base / "phase3_sweep") if output_base else None
-        phase3 = sweep_job(
-            start_structure=start_structure,
-            end_structure=end_structure,
-            max_ceiling=phase2.output.best_barrier,
-            xi=xi,
-            delta=delta,
-            num_ceilings=self.num_ceilings,
-            beam_width=self.beam_width,
-            grace_model_path=self.grace_model_path,
-            output_dir=phase3_dir,
-        )
-        phase3.name = f"{self.name} - Phase 3 Sweep"
-        jobs.append(phase3)
+        print(f"Recommended: xi={xi}, delta={delta}, min_distance={min_distance}")
 
-        # Phase 4: Ratchet (use best barrier from Phase 3 as initial ceiling)
-        phase4_dir = str(output_base / "phase4_ratchet") if output_base else None
-        phase4 = ratchet_job(
-            start_structure=start_structure,
-            end_structure=end_structure,
-            initial_ceiling=phase3.output.best_barrier,
-            xi=xi,
-            delta=delta,
-            max_rounds=self.max_rounds,
-            beam_width=self.beam_width,
-            grace_model_path=self.grace_model_path,
-            output_dir=phase4_dir,
-        )
-        phase4.name = f"{self.name} - Phase 4 Ratchet"
-        jobs.append(phase4)
+    # Get endpoint CNFs for phases 2-4
+    start_cnfs, goal_cnfs = get_endpoint_cnfs(start_uc, end_uc, xi=xi, delta=delta)
 
-        flow = Flow(jobs, output=phase4.output, name=self.name)
-        return Response(detour=flow)
+    # Phase 2: Sampling
+    print("\n" + "="*60)
+    print("Phase 2: Path Sampling")
+    print("="*60)
+
+    phase2_dir = str(output_base / "phase2_sample") if output_base else None
+    sample_result = sample(
+        start_cnfs=start_cnfs,
+        goal_cnfs=goal_cnfs,
+        calc_provider=GraceCalcProvider(model_path=grace_model_path),
+        num_samples=num_samples,
+        min_distance=min_distance,
+        beam_width=beam_width,
+        n_workers=n_workers,
+        verbosity=1,
+        output_dir=phase2_dir,
+    )
+
+    if sample_result.best_barrier is None:
+        raise RuntimeError("Phase 2 failed: no paths found during sampling")
+
+    initial_ceiling = sample_result.best_barrier
+    print(f"Initial ceiling from sampling: {initial_ceiling:.4f} eV")
+
+    # Phase 3: Sweep
+    print("\n" + "="*60)
+    print("Phase 3: Ceiling Sweep")
+    print("="*60)
+
+    phase3_dir = str(output_base / "phase3_sweep") if output_base else None
+    sweep_result = sweep(
+        start_uc=start_uc,
+        end_uc=end_uc,
+        max_ceiling=initial_ceiling,
+        energy_calc=GraceCalculator(model_path=grace_model_path),
+        xi=xi,
+        delta=delta,
+        num_ceilings=num_ceilings,
+        beam_width=beam_width,
+        n_workers=n_workers,
+        verbosity=1,
+        output_dir=phase3_dir,
+    )
+
+    if sweep_result.best_barrier is None:
+        raise RuntimeError("Phase 3 failed: no paths found during sweep")
+
+    sweep_ceiling = sweep_result.best_barrier
+    print(f"Ceiling after sweep: {sweep_ceiling:.4f} eV")
+
+    # Phase 4: Ratchet
+    print("\n" + "="*60)
+    print("Phase 4: Ratchet Refinement")
+    print("="*60)
+
+    phase4_dir = str(output_base / "phase4_ratchet") if output_base else None
+    ratchet_result = ratchet(
+        start_cnfs=start_cnfs,
+        goal_cnfs=goal_cnfs,
+        initial_ceiling=sweep_ceiling,
+        energy_calc=GraceCalculator(model_path=grace_model_path),
+        paths_per_round=10,
+        max_rounds=max_rounds,
+        beam_width=beam_width,
+        verbosity=1,
+        output_dir=phase4_dir,
+    )
+
+    print("\n" + "="*60)
+    print("Barrier Search Complete")
+    print("="*60)
+    if ratchet_result.best_barrier is not None:
+        print(f"Final barrier: {ratchet_result.best_barrier:.4f} eV")
+    else:
+        print("Warning: No paths found in final refinement")
+
+    return ratchet_result
+
+
+# Convenience alias
+BarrierSearchJob = barrier_search_job

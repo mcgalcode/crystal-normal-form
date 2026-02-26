@@ -5,7 +5,8 @@ from cnf.jobs.barrier_search import (
     SampleJob,
     SweepJob,
     RatchetJob,
-    BarrierSearchMaker,
+    BarrierSearchJob,
+    barrier_search_job,
 )
 
 __all__ = [
@@ -13,5 +14,6 @@ __all__ = [
     "SampleJob",
     "SweepJob",
     "RatchetJob",
-    "BarrierSearchMaker",
+    "BarrierSearchJob",
+    "barrier_search_job",
 ]
