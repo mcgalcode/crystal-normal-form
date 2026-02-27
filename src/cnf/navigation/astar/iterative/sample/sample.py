@@ -31,12 +31,15 @@ _worker_delta = None
 
 def _init_sample_worker(elements, xi, delta, calc_provider):
     """Initialize a sample worker with its own calculator."""
+    import time
+    start_time = time.perf_counter()
     global _worker_calc, _worker_elements, _worker_xi, _worker_delta
     _worker_calc = calc_provider()
     _worker_elements = elements
     _worker_xi = xi
     _worker_delta = delta
-    print(f"  [Worker PID {os.getpid()}] Calculator initialized: {_worker_calc.identifier()}")
+    elapsed = time.perf_counter() - start_time
+    print(f"  [Sample Worker PID {os.getpid()}] Ready in {elapsed:.1f}s - {_worker_calc.identifier()}")
 
 
 def _sample_worker(args):
