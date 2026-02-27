@@ -17,7 +17,6 @@ from cnf.navigation.astar.models import (
 from cnf.navigation.endpoints import get_endpoint_cnfs
 from cnf.navigation.utils import compute_delta_for_step_size
 
-from ._workers import init_search_worker
 
 
 _DEFAULT_XI_VALUES = [1.5, 1.25, 1.0, 0.75]
@@ -274,7 +273,6 @@ def search(
 
         with ProcessPoolExecutor(
             max_workers=n_workers,
-            initializer=init_search_worker,
             mp_context=mp.get_context('spawn'),
         ) as pool:
             for r in pool.map(_worker_search_at_resolution, args_list):

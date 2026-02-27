@@ -8,7 +8,6 @@ refining with progressively finer discretization.
 import time
 from pathlib import Path as PathlibPath
 
-from cnf.calculation.grace import GraceCalculator
 from cnf.calculation.relaxation import relax_unit_cell
 from cnf.navigation.astar.models import (
     PathContext, Path, Attempt, SearchParameters, SearchResult, CeilingSweepResult
@@ -23,7 +22,7 @@ def sweep(
     start_uc,
     end_uc,
     max_ceiling: float,
-    energy_calc=None,
+    calc_provider,
     xi=1.5,
     delta=10,
     num_ceilings=5,
@@ -50,7 +49,7 @@ def sweep(
         start_uc: Starting UnitCell.
         end_uc: Ending UnitCell.
         max_ceiling: Upper bound of sweep range (eV). Required.
-        energy_calc: Energy calculator (default: GraceCalculator).
+        calc_provider: Callable returning energy calculator (required).
         xi: Initial lattice discretization parameter.
         delta: Initial motif discretization parameter.
         num_ceilings: Number of ceiling levels to sweep per pass.
@@ -70,8 +69,7 @@ def sweep(
     Returns:
         CeilingSweepResult containing all passes and their attempts.
     """
-    if energy_calc is None:
-        energy_calc = GraceCalculator()
+    energy_calc = calc_provider()
 
     if relax_endpoints:
         ase_calc = energy_calc._calc
@@ -138,7 +136,7 @@ def sweep(
         pool = ProcessPoolExecutor(
             max_workers=n_workers,
             initializer=init_search_worker,
-            initargs=(tf_threads,),
+            initargs=(calc_provider, tf_threads),
             mp_context=mp.get_context('spawn'),
         )
         if verbosity >= 1:

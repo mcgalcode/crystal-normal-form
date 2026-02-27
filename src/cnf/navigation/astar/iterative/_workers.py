@@ -1,7 +1,6 @@
 """Worker pool support for parallel A* searches."""
 
 from cnf import CrystalNormalForm
-from cnf.calculation.grace import GraceCalculator
 
 from ._search import retry_search
 
@@ -11,14 +10,20 @@ _worker_cache = None
 _worker_pass_id = None
 
 
-def init_search_worker(tf_threads=None):
-    """Initialize a worker process with its own energy calculator and cache."""
+def init_search_worker(calc_provider, tf_threads=None):
+    """Initialize a worker process with its own energy calculator and cache.
+
+    Args:
+        calc_provider: Callable that returns a calculator instance.
+            Must be picklable (use GraceCalcProvider, not a lambda).
+        tf_threads: Number of TensorFlow threads per worker.
+    """
     if tf_threads is not None:
         import tensorflow as tf
         tf.config.threading.set_inter_op_parallelism_threads(tf_threads)
         tf.config.threading.set_intra_op_parallelism_threads(tf_threads)
     global _worker_calc, _worker_cache, _worker_pass_id
-    _worker_calc = GraceCalculator()
+    _worker_calc = calc_provider()
     _worker_cache = {}
     _worker_pass_id = None
 

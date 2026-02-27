@@ -149,7 +149,7 @@ def sweep_command(args):
     from pymatgen.core import Structure
     from cnf import UnitCell
     from cnf.navigation.astar.iterative import sweep
-    from cnf.calculation.grace import GraceCalculator
+    from cnf.calculation.grace import GraceCalcProvider
 
     # Load parameters from previous result if --from is specified
     if args.from_result:
@@ -181,13 +181,13 @@ def sweep_command(args):
     start_uc = UnitCell.from_pymatgen_structure(start)
     end_uc = UnitCell.from_pymatgen_structure(end)
 
-    calc = GraceCalculator(model_path=args.model) if args.model else GraceCalculator()
+    calc_provider = GraceCalcProvider(model_path=args.model)
 
     result = sweep(
         start_uc=start_uc,
         end_uc=end_uc,
         max_ceiling=ceiling,
-        energy_calc=calc,
+        calc_provider=calc_provider,
         xi=xi,
         delta=delta,
         num_ceilings=args.num_ceilings,
@@ -422,7 +422,7 @@ def find_barrier_command(args):
         start_uc=start_uc,
         end_uc=end_uc,
         max_ceiling=ceiling,
-        energy_calc=calc,
+        calc_provider=calc_provider,
         xi=xi,
         delta=delta,
         num_ceilings=args.num_ceilings,

@@ -178,7 +178,7 @@ def sweep_job(
         CeilingSweepResult containing all sweep results.
     """
     from cnf.navigation.astar.iterative import sweep
-    from cnf.calculation.grace import GraceCalculator
+    from cnf.calculation.grace import GraceCalcProvider
 
     start_uc = UnitCell.from_pymatgen_structure(start_structure)
     end_uc = UnitCell.from_pymatgen_structure(end_structure)
@@ -187,7 +187,7 @@ def sweep_job(
         start_uc=start_uc,
         end_uc=end_uc,
         max_ceiling=max_ceiling,
-        energy_calc=GraceCalculator(model_path=grace_model_path),
+        calc_provider=GraceCalcProvider(model_path=grace_model_path),
         xi=xi,
         delta=delta,
         num_ceilings=num_ceilings,
@@ -355,6 +355,9 @@ def barrier_search_job(
     # Get endpoint CNFs for phases 2-4
     start_cnfs, goal_cnfs = get_endpoint_cnfs(start_uc, end_uc, xi=xi, delta=delta)
 
+    # Create calc_provider for all phases
+    calc_provider = GraceCalcProvider(model_path=grace_model_path)
+
     # Phase 2: Sampling
     print("\n" + "="*60)
     print("Phase 2: Path Sampling")
@@ -364,7 +367,7 @@ def barrier_search_job(
     sample_result = sample(
         start_cnfs=start_cnfs,
         goal_cnfs=goal_cnfs,
-        calc_provider=GraceCalcProvider(model_path=grace_model_path),
+        calc_provider=calc_provider,
         num_samples=num_samples,
         min_distance=min_distance,
         beam_width=beam_width,
@@ -389,7 +392,7 @@ def barrier_search_job(
         start_uc=start_uc,
         end_uc=end_uc,
         max_ceiling=initial_ceiling,
-        energy_calc=GraceCalculator(model_path=grace_model_path),
+        calc_provider=calc_provider,
         xi=xi,
         delta=delta,
         num_ceilings=num_ceilings,

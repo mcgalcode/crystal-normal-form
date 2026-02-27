@@ -27,12 +27,12 @@ def main():
     # Deferred imports to keep --help fast
     from pymatgen.core import Structure
     from cnf import UnitCell
-    from cnf.calculation.grace import GraceCalculator
+    from cnf.calculation.grace import GraceCalcProvider
     from cnf.navigation import compute_delta_for_step_size
     from cnf.navigation.endpoints import get_endpoint_unit_cells
     from cnf.navigation.astar.iterative import sweep
 
-    calc = GraceCalculator(model_path=args.model_path) if args.model_path else GraceCalculator()
+    calc_provider = GraceCalcProvider(model_path=args.model_path)
 
     start = UnitCell.from_pymatgen_structure(Structure.from_file(args.start))
     end = UnitCell.from_pymatgen_structure(Structure.from_file(args.end))
@@ -52,7 +52,7 @@ def main():
     result = sweep(
         start, end,
         max_ceiling=args.max_ceiling,
-        energy_calc=calc,
+        calc_provider=calc_provider,
         delta=delta,
         num_ceilings=args.num_ceilings,
         attempts_per_ceiling=args.attempts_per_ceiling,
