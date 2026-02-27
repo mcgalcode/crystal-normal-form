@@ -27,7 +27,7 @@ def sweep(
     xi=1.5,
     delta=10,
     num_ceilings=5,
-    attempts_per_ceiling=1,
+    attempts_per_ceiling=3,
     max_passes=5,
     xi_factor=0.8,
     delta_factor=1.2,
