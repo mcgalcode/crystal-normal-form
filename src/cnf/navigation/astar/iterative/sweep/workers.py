@@ -18,6 +18,7 @@ def init_search_worker(calc_provider, tf_threads=None):
             Must be picklable (use GraceCalcProvider, not a lambda).
         tf_threads: Number of TensorFlow threads per worker.
     """
+    import os
     if tf_threads is not None:
         import tensorflow as tf
         tf.config.threading.set_inter_op_parallelism_threads(tf_threads)
@@ -26,6 +27,7 @@ def init_search_worker(calc_provider, tf_threads=None):
     _worker_calc = calc_provider()
     _worker_cache = {}
     _worker_pass_id = None
+    print(f"  [Worker PID {os.getpid()}] Calculator initialized: {_worker_calc.identifier()}")
 
 
 def worker_search_with_attempts(args):

@@ -93,7 +93,9 @@ def sweep(
 
     def _save_result():
         if output_dir is not None:
-            result.to_json(str(output_dir / "ceiling_sweep_result.json"))
+            outpath = str(output_dir / "ceiling_sweep_result.json")
+            result.to_json(outpath)
+            print(f"  [Sweep] Saved: {outpath}")
 
     import multiprocessing
     total_cores = multiprocessing.cpu_count()

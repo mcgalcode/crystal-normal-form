@@ -103,7 +103,9 @@ def ratchet(
 
     def _save_result():
         if output_dir is not None:
-            result.to_json(str(output_dir / "refinement_result.json"))
+            outpath = str(output_dir / "refinement_result.json")
+            result.to_json(outpath)
+            print(f"  [Ratchet] Saved: {outpath}")
 
     if verbosity >= 1:
         print(f"\nStarting refinement with ceiling={initial_ceiling:.4f} eV")

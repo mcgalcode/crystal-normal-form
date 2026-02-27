@@ -36,6 +36,7 @@ def _init_sample_worker(elements, xi, delta, calc_provider):
     _worker_elements = elements
     _worker_xi = xi
     _worker_delta = delta
+    print(f"  [Worker PID {os.getpid()}] Calculator initialized: {_worker_calc.identifier()}")
 
 
 def _sample_worker(args):
@@ -222,7 +223,9 @@ def sample(
                 "in_progress": True,
             }
         )
-        intermediate.to_json(str(output_dir / "sample_result.json"))
+        outpath = str(output_dir / "sample_result.json")
+        intermediate.to_json(outpath)
+        print(f"  [Sample] Saved: {outpath} (intermediate, {len(attempts)} attempts)")
 
     if verbosity >= 1:
         mode = f"parallel ({n_workers} workers)" if use_parallel else "serial"
@@ -314,7 +317,9 @@ def sample(
         print(f"{'='*60}")
 
     if output_dir is not None:
-        result.to_json(str(output_dir / "sample_result.json"))
+        outpath = str(output_dir / "sample_result.json")
+        result.to_json(outpath)
+        print(f"  [Sample] Saved: {outpath}")
 
     return result
 

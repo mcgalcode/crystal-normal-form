@@ -340,6 +340,8 @@ def search(
         print(f"{'='*60}")
 
     if output_dir is not None:
-        result.to_json(str(output_dir / "parameter_search_result.json"))
+        outpath = str(output_dir / "parameter_search_result.json")
+        result.to_json(outpath)
+        print(f"  [Search] Saved: {outpath}")
 
     return result
