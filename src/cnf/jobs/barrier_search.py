@@ -318,11 +318,25 @@ def barrier_search_job(
     from cnf.navigation.astar.iterative import search, sample, sweep, ratchet
     from cnf.navigation.endpoints import get_endpoint_cnfs
     from cnf.calculation.grace import GraceCalculator, GraceCalcProvider
+    from cnf.calculation.relaxation import relax_unit_cell
 
     start_uc = UnitCell.from_pymatgen_structure(start_structure)
     end_uc = UnitCell.from_pymatgen_structure(end_structure)
 
     output_base = Path(output_dir) if output_dir else None
+
+    # Relax endpoints before discretization
+    print("="*60)
+    print("Preprocessing: Relaxing Endpoints")
+    print("="*60)
+    calc = GraceCalculator(model_path=grace_model_path)
+    start_uc = relax_unit_cell(start_uc, calc._calc, verbose=True, label="start")
+    end_uc = relax_unit_cell(end_uc, calc._calc, verbose=True, label="end")
+    if output_base:
+        output_base.mkdir(parents=True, exist_ok=True)
+        start_uc.to_cif(str(output_base / "start_relaxed.cif"))
+        end_uc.to_cif(str(output_base / "end_relaxed.cif"))
+        print(f"  Relaxed CIFs saved to {output_base}")
 
     # Resolve n_workers
     if n_workers == 0:

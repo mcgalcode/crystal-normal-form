@@ -28,6 +28,7 @@ def main():
     from pymatgen.core import Structure
     from cnf import UnitCell
     from cnf.calculation.grace import GraceCalcProvider
+    from cnf.calculation.relaxation import relax_unit_cell
     from cnf.navigation import compute_delta_for_step_size
     from cnf.navigation.endpoints import get_endpoint_unit_cells
     from cnf.navigation.astar.iterative import sweep
@@ -41,6 +42,17 @@ def main():
     if args.min_atoms:
         start_cells, end_cells = get_endpoint_unit_cells(start, end, min_atoms=args.min_atoms)
         start, end = start_cells[0], end_cells[0]
+
+    # Relax endpoints if requested
+    if args.relax_endpoints:
+        print("Relaxing endpoints in continuous space...")
+        calc = calc_provider()
+        start = relax_unit_cell(start, calc._calc, verbose=True, label="start")
+        end = relax_unit_cell(end, calc._calc, verbose=True, label="end")
+        args.output_dir.mkdir(parents=True, exist_ok=True)
+        start.to_cif(str(args.output_dir / "start_relaxed.cif"))
+        end.to_cif(str(args.output_dir / "end_relaxed.cif"))
+        print(f"  Relaxed CIFs saved to {args.output_dir}")
 
     n_atoms = len(start)
 
@@ -58,7 +70,6 @@ def main():
         attempts_per_ceiling=args.attempts_per_ceiling,
         max_passes=args.max_passes,
         dropout=args.dropout,
-        relax_endpoints=args.relax_endpoints,
         output_dir=args.output_dir,
     )
 

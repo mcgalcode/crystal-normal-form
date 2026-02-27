@@ -8,7 +8,6 @@ refining with progressively finer discretization.
 import time
 from pathlib import Path as PathlibPath
 
-from cnf.calculation.relaxation import relax_unit_cell
 from cnf.navigation.astar.models import (
     PathContext, Path, Attempt, SearchParameters, SearchResult, CeilingSweepResult
 )
@@ -37,7 +36,6 @@ def sweep(
     n_workers=0,
     verbosity: int = 1,
     output_dir=None,
-    relax_endpoints=False,
 ) -> CeilingSweepResult:
     """Parallel ceiling sweep with multi-resolution refinement.
 
@@ -64,31 +62,11 @@ def sweep(
         n_workers: Parallel worker processes. 0 = auto.
         verbose: Print progress.
         output_dir: Path to output directory.
-        relax_endpoints: If True, relax endpoint structures before discretization.
 
     Returns:
         CeilingSweepResult containing all passes and their attempts.
     """
     energy_calc = calc_provider()
-
-    if relax_endpoints:
-        ase_calc = energy_calc._calc
-
-        if verbosity >= 1:
-            print("Relaxing endpoints in continuous space...")
-
-        start_uc = relax_unit_cell(
-            start_uc, ase_calc, verbose=(verbosity >= 1), label="start")
-        end_uc = relax_unit_cell(
-            end_uc, ase_calc, verbose=(verbosity >= 1), label="end")
-
-        if output_dir is not None:
-            out = PathlibPath(output_dir)
-            out.mkdir(parents=True, exist_ok=True)
-            start_uc.to_cif(str(out / "start_relaxed.cif"))
-            end_uc.to_cif(str(out / "end_relaxed.cif"))
-            if verbosity >= 1:
-                print(f"  Relaxed CIFs saved to {out}")
 
     energy_cache = {}
     total_start = time.perf_counter()
@@ -106,7 +84,6 @@ def sweep(
             "max_passes": max_passes,
             "xi_factor": xi_factor,
             "delta_factor": delta_factor,
-            "relax_endpoints": relax_endpoints,
         }
     )
 
