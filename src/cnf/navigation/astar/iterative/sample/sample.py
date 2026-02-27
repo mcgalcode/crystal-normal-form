@@ -20,30 +20,7 @@ from cnf.navigation.astar.models import (
 )
 
 from ..core import evaluate_path_energies, path_barrier
-
-
-# Worker process globals
-_worker_calc = None
-_worker_elements = None
-_worker_xi = None
-_worker_delta = None
-
-
-def _init_sample_worker(elements, xi, delta, calc_provider, tf_threads=None):
-    """Initialize a sample worker with its own calculator."""
-    import time
-    start_time = time.perf_counter()
-    if tf_threads is not None:
-        import tensorflow as tf
-        tf.config.threading.set_inter_op_parallelism_threads(tf_threads)
-        tf.config.threading.set_intra_op_parallelism_threads(tf_threads)
-    global _worker_calc, _worker_elements, _worker_xi, _worker_delta
-    _worker_calc = calc_provider()
-    _worker_elements = elements
-    _worker_xi = xi
-    _worker_delta = delta
-    elapsed = time.perf_counter() - start_time
-    print(f"  [Sample Worker PID {os.getpid()}] Ready in {elapsed:.1f}s - {_worker_calc.identifier()}")
+from ..core import worker as core_worker
 
 
 def _sample_worker(args):
@@ -52,16 +29,15 @@ def _sample_worker(args):
     Returns (attempt_idx, Attempt, cache_items) where cache_items
     is a list of (tuple_key, energy) pairs for merging.
     """
-    global _worker_calc, _worker_elements, _worker_xi, _worker_delta
-
     (attempt_idx, attempt_dropout, direction,
      start_coord_lists, goal_coord_lists,
+     elements, xi, delta,
      min_distance, max_iterations, beam_width, verbosity, log_prefix) = args
 
     # Reconstruct CNFs from coord lists
-    start_cnfs = [CrystalNormalForm.from_tuple(tuple(c), _worker_elements, _worker_xi, _worker_delta)
+    start_cnfs = [CrystalNormalForm.from_tuple(tuple(c), elements, xi, delta)
                   for c in start_coord_lists]
-    goal_cnfs = [CrystalNormalForm.from_tuple(tuple(c), _worker_elements, _worker_xi, _worker_delta)
+    goal_cnfs = [CrystalNormalForm.from_tuple(tuple(c), elements, xi, delta)
                  for c in goal_coord_lists]
 
     if direction == "backward":
@@ -99,8 +75,8 @@ def _sample_worker(args):
     # Evaluate energies with a local cache
     local_cache = {}
     energies = evaluate_path_energies(
-        path_tuples, _worker_elements, _worker_xi, _worker_delta,
-        _worker_calc, local_cache, verbose=False,
+        path_tuples, elements, xi, delta,
+        core_worker.worker_calc, local_cache, verbose=False,
     )
     barrier = path_barrier(energies)
 
@@ -439,7 +415,7 @@ def _sample_parallel(
     """Run sampling attempts in parallel using ProcessPoolExecutor."""
     num_samples = len(work_items)
 
-    # Build args for each worker task
+    # Build args for each worker task - include elements, xi, delta in each task
     worker_args = []
     for attempt_idx, attempt_dropout, direction in work_items:
         log_prefix = f"[{attempt_idx+1}/{num_samples}]" if verbosity >= 2 else ""
@@ -449,6 +425,9 @@ def _sample_parallel(
             direction,
             start_coord_lists,
             goal_coord_lists,
+            elements,
+            xi,
+            delta,
             min_distance,
             max_iterations,
             beam_width,
@@ -465,10 +444,14 @@ def _sample_parallel(
     total_cores = multiprocessing.cpu_count()
     tf_threads = max(1, total_cores // n_workers)
 
+    # Use functools.partial to pass phase_name to init_worker
+    from functools import partial
+    init_fn = partial(core_worker.init_worker, phase_name="Sample")
+
     with ProcessPoolExecutor(
         max_workers=n_workers,
-        initializer=_init_sample_worker,
-        initargs=(elements, xi, delta, calc_provider, tf_threads),
+        initializer=init_fn,
+        initargs=(calc_provider, tf_threads),
     ) as executor:
         futures = {executor.submit(_sample_worker, args): args[0] for args in worker_args}
 

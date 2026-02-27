@@ -3,50 +3,34 @@
 from cnf import CrystalNormalForm
 
 from .search import retry_search
+from ..core import worker as core_worker
 
 
-_worker_calc = None
-_worker_cache = None
+# Sweep-specific: track pass_id for cache invalidation between passes
 _worker_pass_id = None
 
 
 def init_search_worker(calc_provider, tf_threads=None):
-    """Initialize a worker process with its own energy calculator and cache.
-
-    Args:
-        calc_provider: Callable that returns a calculator instance.
-            Must be picklable (use GraceCalcProvider, not a lambda).
-        tf_threads: Number of TensorFlow threads per worker.
-    """
-    import os
-    import time
-    start_time = time.perf_counter()
-    if tf_threads is not None:
-        import tensorflow as tf
-        tf.config.threading.set_inter_op_parallelism_threads(tf_threads)
-        tf.config.threading.set_intra_op_parallelism_threads(tf_threads)
-    global _worker_calc, _worker_cache, _worker_pass_id
-    _worker_calc = calc_provider()
-    _worker_cache = {}
+    """Initialize a sweep worker. Wraps core init_worker with phase name."""
+    global _worker_pass_id
     _worker_pass_id = None
-    elapsed = time.perf_counter() - start_time
-    print(f"  [Sweep Worker PID {os.getpid()}] Ready in {elapsed:.1f}s - {_worker_calc.identifier()}")
+    core_worker.init_worker(calc_provider, tf_threads, phase_name="Sweep")
 
 
 def worker_search_with_attempts(args):
     """Worker wrapper: deserialize inputs, manage worker state, then run retry search."""
-    global _worker_calc, _worker_cache, _worker_pass_id
+    global _worker_pass_id
     (ceiling, start_coord_lists, goal_coord_lists, elements, xi, delta,
      dropout, max_iters, beam_width,
      seed_cache_items, attempts, worker_label, pass_id, verbosity) = args
 
     if pass_id != _worker_pass_id:
-        _worker_cache = {}
+        core_worker.worker_cache = {}
         _worker_pass_id = pass_id
 
     for k, v in seed_cache_items:
-        if k not in _worker_cache:
-            _worker_cache[k] = v
+        if k not in core_worker.worker_cache:
+            core_worker.worker_cache[k] = v
 
     start_cnfs = [CrystalNormalForm.from_tuple(tuple(c), elements, xi, delta)
                   for c in start_coord_lists]
@@ -55,7 +39,7 @@ def worker_search_with_attempts(args):
 
     return retry_search(
         ceiling, start_cnfs, goal_cnfs, elements, xi, delta,
-        _worker_calc, _worker_cache, dropout, max_iters, beam_width, attempts,
+        core_worker.worker_calc, core_worker.worker_cache, dropout, max_iters, beam_width, attempts,
         max_iters_scale=1.0,
         log_prefix=f"    [{worker_label}] ",
         verbosity=verbosity,

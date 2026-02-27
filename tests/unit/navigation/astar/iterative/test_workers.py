@@ -9,7 +9,7 @@ class TestWorkerCalculatorPropagation:
 
     def test_init_search_worker_uses_provided_calc_provider(self):
         """Worker init should use the provided calc_provider."""
-        from cnf.navigation.astar.iterative.sweep import workers
+        from cnf.navigation.astar.iterative.core import worker as core_worker
         from cnf.navigation.astar.iterative.sweep.workers import init_search_worker
 
         # Create a custom calculator that we want workers to use
@@ -23,5 +23,5 @@ class TestWorkerCalculatorPropagation:
         # Verify our provider was called
         calc_provider.assert_called_once()
 
-        # Verify the worker's calculator is our custom one
-        assert workers._worker_calc is custom_calc
+        # Verify the worker's calculator is our custom one (stored in core_worker)
+        assert core_worker.worker_calc is custom_calc
