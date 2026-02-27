@@ -2,7 +2,7 @@
 
 from cnf import CrystalNormalForm
 
-from ._search import retry_search
+from .search import retry_search
 
 
 _worker_calc = None

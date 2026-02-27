@@ -2,7 +2,7 @@
 
 import pytest
 
-from cnf.navigation.astar.iterative._params import adapt_params
+from cnf.navigation.astar.iterative.ratchet.params import adapt_params
 
 
 class TestAdaptParams:

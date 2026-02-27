@@ -19,7 +19,7 @@ from cnf.navigation.astar.models import (
     PathContext, Path, Attempt, SearchParameters, SearchResult
 )
 
-from ._energy import evaluate_path_energies, path_barrier
+from ..core import evaluate_path_energies, path_barrier
 
 
 # Worker process globals

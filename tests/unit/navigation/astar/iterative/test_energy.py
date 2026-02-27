@@ -2,7 +2,7 @@
 
 import pytest
 
-from cnf.navigation.astar.iterative._energy import (
+from cnf.navigation.astar.iterative.core.energy import (
     evaluate_path_energies,
     path_barrier,
 )
@@ -61,7 +61,7 @@ class TestPathBarrier:
 class TestEvaluatePathEnergies:
     def test_evaluates_all_points(self, monkeypatch):
         # Patch CrystalNormalForm.from_tuple
-        import cnf.navigation.astar.iterative._energy as energy_module
+        import cnf.navigation.astar.iterative.core.energy as energy_module
         monkeypatch.setattr(energy_module, "CrystalNormalForm", MockCNF)
 
         path_tuples = [(1, 2, 3), (4, 5, 6), (7, 8, 9)]
@@ -81,7 +81,7 @@ class TestEvaluatePathEnergies:
         assert calc.call_count == 3
 
     def test_uses_cache(self, monkeypatch):
-        import cnf.navigation.astar.iterative._energy as energy_module
+        import cnf.navigation.astar.iterative.core.energy as energy_module
         monkeypatch.setattr(energy_module, "CrystalNormalForm", MockCNF)
 
         path_tuples = [(1, 2, 3), (4, 5, 6), (1, 2, 3)]  # First point repeated
@@ -101,7 +101,7 @@ class TestEvaluatePathEnergies:
         assert calc.call_count == 2
 
     def test_populates_cache(self, monkeypatch):
-        import cnf.navigation.astar.iterative._energy as energy_module
+        import cnf.navigation.astar.iterative.core.energy as energy_module
         monkeypatch.setattr(energy_module, "CrystalNormalForm", MockCNF)
 
         path_tuples = [(1, 2, 3), (4, 5, 6)]
@@ -118,7 +118,7 @@ class TestEvaluatePathEnergies:
         assert cache[(4, 5, 6)] == -8.0
 
     def test_uses_pre_populated_cache(self, monkeypatch):
-        import cnf.navigation.astar.iterative._energy as energy_module
+        import cnf.navigation.astar.iterative.core.energy as energy_module
         monkeypatch.setattr(energy_module, "CrystalNormalForm", MockCNF)
 
         path_tuples = [(1, 2, 3), (4, 5, 6)]
@@ -136,7 +136,7 @@ class TestEvaluatePathEnergies:
         assert calc.call_count == 0  # No calls needed
 
     def test_empty_path(self, monkeypatch):
-        import cnf.navigation.astar.iterative._energy as energy_module
+        import cnf.navigation.astar.iterative.core.energy as energy_module
         monkeypatch.setattr(energy_module, "CrystalNormalForm", MockCNF)
 
         calc = MockCalculator()

@@ -19,10 +19,10 @@ class MockUnitCell:
 
 
 class TestBinarySearchMinDistance:
-    @patch('cnf.navigation.astar.iterative.search.astar_rust')
+    @patch('cnf.navigation.astar.iterative.search.search.astar_rust')
     def test_finds_max_min_distance(self, mock_astar):
         """Should binary search to find the maximum working min_distance."""
-        from cnf.navigation.astar.iterative.search import _binary_search_min_distance
+        from cnf.navigation.astar.iterative.search.search import _binary_search_min_distance
 
         # Paths work below 1.0, fail at or above 1.0
         def astar_side_effect(start, goal, min_distance, **kwargs):
@@ -50,10 +50,10 @@ class TestBinarySearchMinDistance:
         assert best_dist is not None
         assert 0.9 < best_dist < 1.0
 
-    @patch('cnf.navigation.astar.iterative.search.astar_rust')
+    @patch('cnf.navigation.astar.iterative.search.search.astar_rust')
     def test_returns_none_when_no_path_at_low_bound(self, mock_astar):
         """Should return None if no path found even at lowest min_distance."""
-        from cnf.navigation.astar.iterative.search import _binary_search_min_distance
+        from cnf.navigation.astar.iterative.search.search import _binary_search_min_distance
 
         # No paths work at any min_distance
         mock_astar.return_value = (None, 500)
@@ -77,12 +77,12 @@ class TestBinarySearchMinDistance:
 
 
 class TestSearchAtResolution:
-    @patch('cnf.navigation.astar.iterative.search._binary_search_min_distance')
-    @patch('cnf.navigation.astar.iterative.search.get_endpoint_cnfs')
-    @patch('cnf.navigation.astar.iterative.search.compute_delta_for_step_size')
+    @patch('cnf.navigation.astar.iterative.search.search._binary_search_min_distance')
+    @patch('cnf.navigation.astar.iterative.search.search.get_endpoint_cnfs')
+    @patch('cnf.navigation.astar.iterative.search.search.compute_delta_for_step_size')
     def test_computes_delta_from_atom_step(self, mock_delta, mock_endpoints, mock_binary):
         """Should compute delta from atom step length and structure."""
-        from cnf.navigation.astar.iterative.search import _search_at_resolution
+        from cnf.navigation.astar.iterative.search.search import _search_at_resolution
 
         mock_delta.return_value = 12
         mock_cnf = MagicMock()
@@ -115,14 +115,14 @@ class TestSearchAtResolution:
         assert result["min_distance"] == 0.8
         assert result["found"] is True
 
-    @patch('cnf.navigation.astar.iterative.search._binary_search_min_distance')
-    @patch('cnf.navigation.astar.iterative.search.get_endpoint_cnfs')
-    @patch('cnf.navigation.astar.iterative.search.compute_delta_for_step_size')
+    @patch('cnf.navigation.astar.iterative.search.search._binary_search_min_distance')
+    @patch('cnf.navigation.astar.iterative.search.search.get_endpoint_cnfs')
+    @patch('cnf.navigation.astar.iterative.search.search.compute_delta_for_step_size')
     def test_returns_not_found_when_binary_search_fails(
         self, mock_delta, mock_endpoints, mock_binary
     ):
         """Should mark as not found when binary search returns None."""
-        from cnf.navigation.astar.iterative.search import _search_at_resolution
+        from cnf.navigation.astar.iterative.search.search import _search_at_resolution
 
         mock_delta.return_value = 10
         mock_cnf = MagicMock()
@@ -152,10 +152,10 @@ class TestSearchAtResolution:
 
 
 class TestSearch:
-    @patch('cnf.navigation.astar.iterative.search._search_at_resolution')
+    @patch('cnf.navigation.astar.iterative.search.search._search_at_resolution')
     def test_iterates_through_resolutions(self, mock_search_res):
         """Should iterate through all xi/atom_step pairs."""
-        from cnf.navigation.astar.iterative.search import search
+        from cnf.navigation.astar.iterative.search.search import search
 
         mock_search_res.return_value = {
             "xi": 1.5,
@@ -181,10 +181,10 @@ class TestSearch:
         # Should call _search_at_resolution for each resolution
         assert mock_search_res.call_count == 2
 
-    @patch('cnf.navigation.astar.iterative.search._search_at_resolution')
+    @patch('cnf.navigation.astar.iterative.search.search._search_at_resolution')
     def test_raises_on_mismatched_lengths(self, mock_search_res):
         """Should raise ValueError if xi_values and atom_step_lengths differ in length."""
-        from cnf.navigation.astar.iterative.search import search
+        from cnf.navigation.astar.iterative.search.search import search
 
         start_uc = MockUnitCell()
         end_uc = MockUnitCell()
@@ -199,10 +199,10 @@ class TestSearch:
                 verbosity=0,
             )
 
-    @patch('cnf.navigation.astar.iterative.search._search_at_resolution')
+    @patch('cnf.navigation.astar.iterative.search.search._search_at_resolution')
     def test_recommends_finest_successful_resolution(self, mock_search_res):
         """Should recommend the finest (last) successful resolution."""
-        from cnf.navigation.astar.iterative.search import search
+        from cnf.navigation.astar.iterative.search.search import search
 
         # First resolution succeeds, second fails, third succeeds
         mock_search_res.side_effect = [
@@ -232,10 +232,10 @@ class TestSearch:
         assert result.recommended_min_distance == 0.6
         assert len(result.successful_params) == 2
 
-    @patch('cnf.navigation.astar.iterative.search._search_at_resolution')
+    @patch('cnf.navigation.astar.iterative.search.search._search_at_resolution')
     def test_returns_partial_results_on_all_failures(self, mock_search_res):
         """Should return partial results if no resolution succeeds."""
-        from cnf.navigation.astar.iterative.search import search
+        from cnf.navigation.astar.iterative.search.search import search
 
         mock_search_res.return_value = {
             "xi": 1.5,
@@ -263,10 +263,10 @@ class TestSearch:
         assert len(result.successful_params) == 0
         assert len(result.results) == 1
 
-    @patch('cnf.navigation.astar.iterative.search._search_at_resolution')
+    @patch('cnf.navigation.astar.iterative.search.search._search_at_resolution')
     def test_uses_default_values(self, mock_search_res):
         """Should use default xi_values and atom_step_lengths if not provided."""
-        from cnf.navigation.astar.iterative.search import search, _DEFAULT_XI_VALUES, _DEFAULT_ATOM_STEP_LENGTHS
+        from cnf.navigation.astar.iterative.search.search import search, _DEFAULT_XI_VALUES, _DEFAULT_ATOM_STEP_LENGTHS
 
         mock_search_res.return_value = {
             "xi": 1.5,
@@ -290,10 +290,10 @@ class TestSearch:
         # Should iterate through all defaults
         assert mock_search_res.call_count == len(_DEFAULT_XI_VALUES)
 
-    @patch('cnf.navigation.astar.iterative.search._search_at_resolution')
+    @patch('cnf.navigation.astar.iterative.search.search._search_at_resolution')
     def test_writes_output_file(self, mock_search_res):
         """Should write results to output_dir if provided."""
-        from cnf.navigation.astar.iterative.search import search
+        from cnf.navigation.astar.iterative.search.search import search
 
         mock_search_res.return_value = {
             "xi": 1.5,

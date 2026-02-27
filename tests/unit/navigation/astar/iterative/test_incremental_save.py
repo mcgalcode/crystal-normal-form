@@ -11,7 +11,7 @@ from pymatgen.core import Structure
 from cnf import UnitCell
 from cnf.calculation.constant_calculator import ConstantCalcProvider
 from cnf.navigation.astar.iterative import sweep
-from cnf.navigation.astar.iterative._batch import run_batch
+from cnf.navigation.astar.iterative.sweep.batch import run_batch
 
 
 class MockCNF:
@@ -26,7 +26,7 @@ class MockCNF:
 class TestRunBatchOnResult:
     """Unit tests for run_batch on_result callback."""
 
-    @patch('cnf.navigation.astar.iterative._batch.search_ceiling_with_attempts')
+    @patch('cnf.navigation.astar.iterative.sweep.batch.search_ceiling_with_attempts')
     def test_on_result_called_for_each_ceiling(self, mock_search):
         """on_result should be called once per ceiling."""
         mock_search.side_effect = [
@@ -58,7 +58,7 @@ class TestRunBatchOnResult:
         assert len(callback_results) == 3
         assert [r["ceiling"] for r in callback_results] == [-10.0, -9.0, -8.0]
 
-    @patch('cnf.navigation.astar.iterative._batch.search_ceiling_with_attempts')
+    @patch('cnf.navigation.astar.iterative.sweep.batch.search_ceiling_with_attempts')
     def test_on_result_called_before_early_exit(self, mock_search):
         """on_result should be called even when search succeeds and exits early."""
         mock_search.side_effect = [
@@ -95,7 +95,7 @@ class TestRunBatchOnResult:
         assert callback_results[0]["found"] is False
         assert callback_results[1]["found"] is True
 
-    @patch('cnf.navigation.astar.iterative._batch.search_ceiling_with_attempts')
+    @patch('cnf.navigation.astar.iterative.sweep.batch.search_ceiling_with_attempts')
     def test_on_result_none_does_not_error(self, mock_search):
         """Should not error when on_result is None."""
         mock_search.return_value = {"ceiling": -10.0, "found": False, "iterations": 100}

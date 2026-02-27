@@ -7,7 +7,7 @@ from cnf.navigation.astar.core import astar_pathfind
 from cnf.navigation.astar.heuristics import manhattan_distance
 from cnf.navigation.search_filters import FilterSet, EnergyFilter
 
-from ._energy import evaluate_path_energies, path_barrier
+from ..core import evaluate_path_energies, path_barrier
 
 USE_RUST = os.getenv('USE_RUST') == '1'
 

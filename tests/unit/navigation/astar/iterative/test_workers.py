@@ -9,8 +9,8 @@ class TestWorkerCalculatorPropagation:
 
     def test_init_search_worker_uses_provided_calc_provider(self):
         """Worker init should use the provided calc_provider."""
-        from cnf.navigation.astar.iterative import _workers
-        from cnf.navigation.astar.iterative._workers import init_search_worker
+        from cnf.navigation.astar.iterative.sweep import workers
+        from cnf.navigation.astar.iterative.sweep.workers import init_search_worker
 
         # Create a custom calculator that we want workers to use
         custom_calc = MagicMock()
@@ -24,4 +24,4 @@ class TestWorkerCalculatorPropagation:
         calc_provider.assert_called_once()
 
         # Verify the worker's calculator is our custom one
-        assert _workers._worker_calc is custom_calc
+        assert workers._worker_calc is custom_calc

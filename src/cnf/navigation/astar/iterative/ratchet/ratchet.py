@@ -24,8 +24,8 @@ from cnf.navigation.astar.models import (
 )
 from cnf.navigation.search_filters import FilterSet, EnergyFilter
 
-from ._energy import evaluate_path_energies, path_barrier
-from ._params import adapt_params
+from ..core import evaluate_path_energies, path_barrier
+from .params import adapt_params
 
 USE_RUST = os.getenv('USE_RUST') == '1'
 

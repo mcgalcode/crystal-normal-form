@@ -13,8 +13,8 @@ from cnf.navigation.astar.models import (
 )
 from cnf.navigation.endpoints import get_endpoint_cnfs
 
-from ._batch import run_batch
-from ._workers import init_search_worker
+from .batch import run_batch
+from .workers import init_search_worker
 
 
 def sweep(

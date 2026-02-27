@@ -33,10 +33,10 @@ class MockCalculator:
 
 
 class TestSearchAtCeiling:
-    @patch('cnf.navigation.astar.iterative._search.astar_pathfind')
+    @patch('cnf.navigation.astar.iterative.sweep.search.astar_pathfind')
     def test_returns_not_found_when_no_path(self, mock_astar):
         """Should return found=False when A* finds no path."""
-        from cnf.navigation.astar.iterative._search import search_at_ceiling
+        from cnf.navigation.astar.iterative.sweep.search import search_at_ceiling
 
         mock_astar.return_value = MockSearchState(path=None, iterations=500)
 
@@ -63,14 +63,14 @@ class TestSearchAtCeiling:
         assert result["found"] is False
         assert result["iterations"] == 500
 
-    @patch('cnf.navigation.astar.iterative._search.astar_pathfind')
-    @patch('cnf.navigation.astar.iterative._search.evaluate_path_energies')
-    @patch('cnf.navigation.astar.iterative._search.path_barrier')
+    @patch('cnf.navigation.astar.iterative.sweep.search.astar_pathfind')
+    @patch('cnf.navigation.astar.iterative.sweep.search.evaluate_path_energies')
+    @patch('cnf.navigation.astar.iterative.sweep.search.path_barrier')
     def test_returns_found_with_path_data(
         self, mock_barrier, mock_eval, mock_astar
     ):
         """Should return path data when A* finds a path."""
-        from cnf.navigation.astar.iterative._search import search_at_ceiling
+        from cnf.navigation.astar.iterative.sweep.search import search_at_ceiling
 
         path = [(1, 2, 3), (4, 5, 6)]
         mock_astar.return_value = MockSearchState(path=path, iterations=250)
@@ -106,10 +106,10 @@ class TestSearchAtCeiling:
 
 
 class TestRetrySearch:
-    @patch('cnf.navigation.astar.iterative._search.search_at_ceiling')
+    @patch('cnf.navigation.astar.iterative.sweep.search.search_at_ceiling')
     def test_returns_on_first_success(self, mock_search, capsys):
         """Should return immediately when first attempt succeeds."""
-        from cnf.navigation.astar.iterative._search import retry_search
+        from cnf.navigation.astar.iterative.sweep.search import retry_search
 
         mock_search.return_value = {
             "ceiling": -10.0,
@@ -141,10 +141,10 @@ class TestRetrySearch:
         assert result["found"] is True
         assert mock_search.call_count == 1
 
-    @patch('cnf.navigation.astar.iterative._search.search_at_ceiling')
+    @patch('cnf.navigation.astar.iterative.sweep.search.search_at_ceiling')
     def test_retries_on_failure(self, mock_search, capsys):
         """Should retry up to `attempts` times on failure."""
-        from cnf.navigation.astar.iterative._search import retry_search
+        from cnf.navigation.astar.iterative.sweep.search import retry_search
 
         mock_search.return_value = {
             "ceiling": -10.0,
@@ -172,10 +172,10 @@ class TestRetrySearch:
         assert result["found"] is False
         assert mock_search.call_count == 3
 
-    @patch('cnf.navigation.astar.iterative._search.search_at_ceiling')
+    @patch('cnf.navigation.astar.iterative.sweep.search.search_at_ceiling')
     def test_bumps_max_iters_on_retry(self, mock_search, capsys):
         """Should increase max_iters by scale factor on each retry."""
-        from cnf.navigation.astar.iterative._search import retry_search
+        from cnf.navigation.astar.iterative.sweep.search import retry_search
 
         mock_search.return_value = {
             "ceiling": -10.0,
@@ -209,10 +209,10 @@ class TestRetrySearch:
         assert calls[1][0][9] == 200
         assert calls[2][0][9] == 400
 
-    @patch('cnf.navigation.astar.iterative._search.search_at_ceiling')
+    @patch('cnf.navigation.astar.iterative.sweep.search.search_at_ceiling')
     def test_succeeds_on_later_attempt(self, mock_search, capsys):
         """Should return success if a later attempt succeeds."""
-        from cnf.navigation.astar.iterative._search import retry_search
+        from cnf.navigation.astar.iterative.sweep.search import retry_search
 
         mock_search.side_effect = [
             {"ceiling": -10.0, "found": False, "iterations": 1000, "energy_evals": 100},
@@ -243,10 +243,10 @@ class TestRetrySearch:
         assert result["found"] is True
         assert mock_search.call_count == 3
 
-    @patch('cnf.navigation.astar.iterative._search.search_at_ceiling')
+    @patch('cnf.navigation.astar.iterative.sweep.search.search_at_ceiling')
     def test_verbose_prints_progress(self, mock_search, capsys):
         """Verbose mode should print progress messages."""
-        from cnf.navigation.astar.iterative._search import retry_search
+        from cnf.navigation.astar.iterative.sweep.search import retry_search
 
         mock_search.return_value = {
             "ceiling": -10.0,
@@ -279,10 +279,10 @@ class TestRetrySearch:
         assert "starting" in captured.out
         assert "path found" in captured.out
 
-    @patch('cnf.navigation.astar.iterative._search.search_at_ceiling')
+    @patch('cnf.navigation.astar.iterative.sweep.search.search_at_ceiling')
     def test_silent_mode_no_print(self, mock_search, capsys):
         """Silent mode (verbosity=0) should not print."""
-        from cnf.navigation.astar.iterative._search import retry_search
+        from cnf.navigation.astar.iterative.sweep.search import retry_search
 
         mock_search.return_value = {
             "ceiling": -10.0,
@@ -316,10 +316,10 @@ class TestRetrySearch:
 
 
 class TestSearchCeilingWithAttempts:
-    @patch('cnf.navigation.astar.iterative._search.retry_search')
+    @patch('cnf.navigation.astar.iterative.sweep.search.retry_search')
     def test_delegates_to_retry_search(self, mock_retry):
         """Should delegate to retry_search with all parameters."""
-        from cnf.navigation.astar.iterative._search import search_ceiling_with_attempts
+        from cnf.navigation.astar.iterative.sweep.search import search_ceiling_with_attempts
 
         mock_retry.return_value = {"found": True}
 
@@ -350,10 +350,10 @@ class TestSearchCeilingWithAttempts:
         assert call_args[0][11] == 5  # attempts
         assert call_args.kwargs['verbosity'] == 1
 
-    @patch('cnf.navigation.astar.iterative._search.retry_search')
+    @patch('cnf.navigation.astar.iterative.sweep.search.retry_search')
     def test_passes_verbosity_zero(self, mock_retry):
         """Should pass verbosity=0 to retry_search."""
-        from cnf.navigation.astar.iterative._search import search_ceiling_with_attempts
+        from cnf.navigation.astar.iterative.sweep.search import search_ceiling_with_attempts
 
         mock_retry.return_value = {"found": False}
 
@@ -376,10 +376,10 @@ class TestSearchCeilingWithAttempts:
         call_kwargs = mock_retry.call_args.kwargs
         assert call_kwargs.get('verbosity') == 0
 
-    @patch('cnf.navigation.astar.iterative._search.retry_search')
+    @patch('cnf.navigation.astar.iterative.sweep.search.retry_search')
     def test_respects_attempts_in_silent_mode(self, mock_retry):
         """Should respect attempts parameter even when verbosity=0."""
-        from cnf.navigation.astar.iterative._search import search_ceiling_with_attempts
+        from cnf.navigation.astar.iterative.sweep.search import search_ceiling_with_attempts
 
         mock_retry.return_value = {"found": False}
 

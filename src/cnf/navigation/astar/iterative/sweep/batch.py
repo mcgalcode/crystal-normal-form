@@ -1,7 +1,7 @@
 """Batch execution of A* searches across multiple ceilings."""
 
-from ._search import search_ceiling_with_attempts
-from ._workers import worker_search_with_attempts
+from .search import search_ceiling_with_attempts
+from .workers import worker_search_with_attempts
 
 
 def run_batch(ceilings, start_cnfs, goal_cnfs, elements, xi, delta,
