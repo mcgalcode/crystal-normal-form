@@ -7,7 +7,8 @@ from ._workers import worker_search_with_attempts
 def run_batch(ceilings, start_cnfs, goal_cnfs, elements, xi, delta,
               calc, cache, dropout, max_iters, beam_width,
               n_workers, pool, verbosity,
-              attempts_per_ceiling=1, pass_id=0):
+              attempts_per_ceiling=1, pass_id=0,
+              on_result=None):
     """Run A* searches across ceilings, with multiple attempts per ceiling.
 
     Each ceiling gets up to `attempts_per_ceiling` searches (stopping on
@@ -16,6 +17,8 @@ def run_batch(ceilings, start_cnfs, goal_cnfs, elements, xi, delta,
 
     Args:
         verbosity: 0=silent, 1=phase output, 2+=A* iteration progress.
+        on_result: Optional callback(result_dict) called after each ceiling
+            completes. Use for incremental saves.
 
     Returns list of result dicts (one per ceiling that was searched).
     """
@@ -40,6 +43,8 @@ def run_batch(ceilings, start_cnfs, goal_cnfs, elements, xi, delta,
         for f in as_completed(futures):
             r = f.result()
             results.append(r)
+            if on_result is not None:
+                on_result(r)
             if r["found"]:
                 if best_found_ceiling is None or r["ceiling"] < best_found_ceiling:
                     best_found_ceiling = r["ceiling"]
@@ -61,6 +66,8 @@ def run_batch(ceilings, start_cnfs, goal_cnfs, elements, xi, delta,
                 attempts_per_ceiling, verbosity,
             )
             results.append(r)
+            if on_result is not None:
+                on_result(r)
             if r["found"]:
                 if verbosity >= 1 and i < len(ceilings) - 1:
                     print(f"    Skipping {len(ceilings) - i - 1} "

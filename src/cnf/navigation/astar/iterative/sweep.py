@@ -187,23 +187,9 @@ def sweep(
                       f"{ceiling_top:.2f} eV "
                       f"(spacing={spacing:.2f} eV)")
 
-            pass_start = time.perf_counter()
-            batch_results = run_batch(
-                ceilings, start_cnfs, goal_cnfs, elements,
-                pass_xi, pass_delta, energy_calc, energy_cache,
-                current_dropout, current_max_iters, beam_width,
-                n_workers, pool, verbosity,
-                attempts_per_ceiling=attempts_per_ceiling,
-                pass_id=pass_num,
-            )
-            pass_elapsed = time.perf_counter() - pass_start
-
-            ceiling_to_attempts = {}
-            for r in batch_results:
+            def on_ceiling_result(r):
+                """Called after each ceiling completes - update result and save."""
                 ceil = r["ceiling"]
-                if ceil not in ceiling_to_attempts:
-                    ceiling_to_attempts[ceil] = []
-
                 if r["found"]:
                     path_obj = Path(
                         coords=[tuple(pt) for pt in r["path"]],
@@ -221,10 +207,7 @@ def sweep(
                         found=False,
                         iterations=r["iterations"],
                     )
-                ceiling_to_attempts[ceil].append(attempt)
 
-            for ceil in sorted(ceiling_to_attempts.keys()):
-                attempts = ceiling_to_attempts[ceil]
                 search_params = SearchParameters(
                     max_iterations=current_max_iters,
                     beam_width=beam_width,
@@ -236,13 +219,26 @@ def sweep(
                 search_result = SearchResult(
                     context=context,
                     parameters=search_params,
-                    attempts=attempts,
+                    attempts=[attempt],
                     metadata={
                         "pass": pass_num,
                         "ceiling": ceil,
                     }
                 )
                 result.results.append(search_result)
+                _save_result()
+
+            pass_start = time.perf_counter()
+            batch_results = run_batch(
+                ceilings, start_cnfs, goal_cnfs, elements,
+                pass_xi, pass_delta, energy_calc, energy_cache,
+                current_dropout, current_max_iters, beam_width,
+                n_workers, pool, verbosity,
+                attempts_per_ceiling=attempts_per_ceiling,
+                pass_id=pass_num,
+                on_result=on_ceiling_result,
+            )
+            pass_elapsed = time.perf_counter() - pass_start
 
             successes = [r for r in batch_results if r["found"]]
             if successes:
