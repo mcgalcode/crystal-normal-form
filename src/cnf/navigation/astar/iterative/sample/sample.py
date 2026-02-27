@@ -29,10 +29,14 @@ _worker_xi = None
 _worker_delta = None
 
 
-def _init_sample_worker(elements, xi, delta, calc_provider):
+def _init_sample_worker(elements, xi, delta, calc_provider, tf_threads=None):
     """Initialize a sample worker with its own calculator."""
     import time
     start_time = time.perf_counter()
+    if tf_threads is not None:
+        import tensorflow as tf
+        tf.config.threading.set_inter_op_parallelism_threads(tf_threads)
+        tf.config.threading.set_intra_op_parallelism_threads(tf_threads)
     global _worker_calc, _worker_elements, _worker_xi, _worker_delta
     _worker_calc = calc_provider()
     _worker_elements = elements
@@ -456,10 +460,15 @@ def _sample_parallel(
     results_by_idx = {}
     completed = 0
 
+    # Compute TF threads per worker to avoid contention
+    import multiprocessing
+    total_cores = multiprocessing.cpu_count()
+    tf_threads = max(1, total_cores // n_workers)
+
     with ProcessPoolExecutor(
         max_workers=n_workers,
         initializer=_init_sample_worker,
-        initargs=(elements, xi, delta, calc_provider),
+        initargs=(elements, xi, delta, calc_provider, tf_threads),
     ) as executor:
         futures = {executor.submit(_sample_worker, args): args[0] for args in worker_args}
 
