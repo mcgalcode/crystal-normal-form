@@ -5,6 +5,7 @@ evaluates energies, and returns the best barrier as a starting point
 for ceiling sweep (Phase 3).
 """
 
+import multiprocessing
 import os
 import random
 import time
@@ -448,8 +449,12 @@ def _sample_parallel(
     from functools import partial
     init_fn = partial(core_worker.init_worker, phase_name="Sample")
 
+    # Use spawn context to avoid TensorFlow + fork issues on Linux
+    ctx = multiprocessing.get_context('spawn')
+
     with ProcessPoolExecutor(
         max_workers=n_workers,
+        mp_context=ctx,
         initializer=init_fn,
         initargs=(calc_provider, tf_threads),
     ) as executor:
