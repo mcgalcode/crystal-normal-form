@@ -211,7 +211,7 @@ def ratchet_job(
     xi: float,
     delta: int,
     paths_per_round: int = 10,
-    max_rounds: int = 20,
+    max_refinement_rounds: int = 20,
     dropout: float = 0.3,
     min_dropout: float = 0.1,
     max_iterations: int = 100_000,
@@ -228,7 +228,7 @@ def ratchet_job(
         xi: Lattice discretization parameter.
         delta: Motif discretization parameter.
         paths_per_round: Number of paths to find per round.
-        max_rounds: Maximum refinement rounds.
+        max_refinement_rounds: Maximum refinement rounds.
         dropout: Initial neighbor dropout probability.
         min_dropout: Minimum dropout for adaptive adjustment.
         max_iterations: Max A* iterations per search.
@@ -254,7 +254,7 @@ def ratchet_job(
         initial_ceiling=initial_ceiling,
         energy_calc=GraceCalculator(model_path=grace_model_path),
         paths_per_round=paths_per_round,
-        max_rounds=max_rounds,
+        max_rounds=max_refinement_rounds,
         dropout=dropout,
         min_dropout=min_dropout,
         max_iterations=max_iterations,
@@ -280,7 +280,7 @@ def barrier_search_job(
     min_distance: float | None = None,
     num_samples: int = 20,
     num_ceilings: int | None = None,
-    max_rounds: int = 20,
+    max_refinement_rounds: int = 20,
     beam_width: int = 1000,
     n_workers: int = 0,
     grace_model_path: str | None = None,
@@ -305,7 +305,7 @@ def barrier_search_job(
         min_distance: Minimum interatomic distance filter.
         num_samples: Number of paths to sample in Phase 2.
         num_ceilings: Number of ceiling levels in Phase 3 (defaults to n_workers).
-        max_rounds: Maximum refinement rounds in Phase 4.
+        max_refinement_rounds: Maximum refinement rounds in Phase 4.
         beam_width: Beam width for all searches.
         n_workers: Number of parallel workers (0=auto, uses CPU count).
         grace_model_path: Path to local GRACE model (uses foundation model if None).
@@ -434,7 +434,7 @@ def barrier_search_job(
         initial_ceiling=sweep_ceiling,
         energy_calc=GraceCalculator(model_path=grace_model_path),
         paths_per_round=10,
-        max_rounds=max_rounds,
+        max_rounds=max_refinement_rounds,
         beam_width=beam_width,
         verbosity=1,
         output_dir=phase4_dir,
