@@ -91,6 +91,7 @@ def _search_at_resolution(
     tolerance: float,
     verbosity: int,
     log_prefix: str = "",
+    min_atoms: int | None = None,
 ) -> dict:
     """Search for optimal min_distance at a single resolution.
 
@@ -110,7 +111,7 @@ def _search_at_resolution(
     if verbosity >= 1:
         print(f"{log_prefix}Resolution: xi={xi}, atom_step={atom_step_length} Å -> delta={delta}")
 
-    start_cnfs, goal_cnfs = get_endpoint_cnfs(start_uc, end_uc, xi=xi, delta=delta)
+    start_cnfs, goal_cnfs = get_endpoint_cnfs(start_uc, end_uc, xi=xi, delta=delta, min_atoms=min_atoms)
     elements = start_cnfs[0].elements
 
     if verbosity >= 1:
@@ -169,7 +170,7 @@ def _worker_search_at_resolution(args):
     """Worker function for parallel resolution search."""
     (start_struct_dict, end_struct_dict, xi, atom_step_length,
      min_dist_low, min_dist_high, max_iterations, beam_width,
-     dropout, tolerance, verbosity, log_prefix) = args
+     dropout, tolerance, verbosity, log_prefix, min_atoms) = args
 
     from pymatgen.core import Structure
     start_struct = Structure.from_dict(start_struct_dict)
@@ -180,7 +181,7 @@ def _worker_search_at_resolution(args):
     return _search_at_resolution(
         start_uc, end_uc, xi, atom_step_length,
         min_dist_low, min_dist_high, max_iterations, beam_width,
-        dropout, tolerance, verbosity, log_prefix,
+        dropout, tolerance, verbosity, log_prefix, min_atoms,
     )
 
 
@@ -198,6 +199,7 @@ def search(
     n_workers: int = 0,
     verbosity: int = 1,
     output_dir: PathlibPath | str | None = None,
+    min_atoms: int | None = None,
 ) -> ParameterSearchResult:
     """Search for optimal discretization and filter parameters.
 
@@ -267,7 +269,7 @@ def search(
         args_list = [
             (start_struct_dict, end_struct_dict, xi, atom_step,
              min_dist_low, min_dist_high, max_iterations, beam_width,
-             dropout, tolerance, verbosity, f"[xi={xi}] ")
+             dropout, tolerance, verbosity, f"[xi={xi}] ", min_atoms)
             for xi, atom_step in resolutions
         ]
 

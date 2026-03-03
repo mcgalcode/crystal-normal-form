@@ -24,6 +24,7 @@ def sweep(
     calc_provider,
     xi=1.5,
     delta=10,
+    min_atoms: int | None = None,
     num_ceilings=5,
     attempts_per_ceiling=3,
     max_passes=5,
@@ -133,7 +134,7 @@ def sweep(
             energy_cache.clear()
 
             start_cnfs, goal_cnfs = get_endpoint_cnfs(
-                start_uc, end_uc, xi=pass_xi, delta=pass_delta
+                start_uc, end_uc, xi=pass_xi, delta=pass_delta, min_atoms=min_atoms
             )
             elements = start_cnfs[0].elements
 

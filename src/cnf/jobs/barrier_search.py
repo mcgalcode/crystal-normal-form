@@ -278,6 +278,7 @@ def barrier_search_job(
     xi: float | None = None,
     delta: int | None = None,
     min_distance: float | None = None,
+    min_atoms: int | None = None,
     num_samples: int = 20,
     num_ceilings: int | None = None,
     max_refinement_rounds: int = 20,
@@ -303,6 +304,10 @@ def barrier_search_job(
         xi: Lattice discretization (if None, runs parameter search).
         delta: Motif discretization (if None, runs parameter search).
         min_distance: Minimum interatomic distance filter.
+        min_atoms: Minimum number of atoms for supercell generation. If the LCM
+            of the two structures is less than this, supercells will be created
+            to reach at least this many atoms. Useful for ensuring fair barrier
+            comparisons across different structure pairs.
         num_samples: Number of paths to sample in Phase 2.
         num_ceilings: Number of ceiling levels in Phase 3 (defaults to n_workers).
         max_refinement_rounds: Maximum refinement rounds in Phase 4.
@@ -359,6 +364,7 @@ def barrier_search_job(
             n_workers=n_workers,
             verbosity=1,
             output_dir=phase1_dir,
+            min_atoms=min_atoms,
         )
         xi = search_result.recommended_xi
         delta = search_result.recommended_delta
@@ -367,7 +373,11 @@ def barrier_search_job(
         print(f"Recommended: xi={xi}, delta={delta}, min_distance={min_distance}")
 
     # Get endpoint CNFs for phases 2-4
-    start_cnfs, goal_cnfs = get_endpoint_cnfs(start_uc, end_uc, xi=xi, delta=delta)
+    start_cnfs, goal_cnfs = get_endpoint_cnfs(start_uc, end_uc, xi=xi, delta=delta, min_atoms=min_atoms)
+
+    # Log actual atom count
+    actual_atoms = len(start_cnfs[0].elements) if start_cnfs else None
+    print(f"Supercell atoms: {actual_atoms} (min_atoms={min_atoms})")
 
     # Create calc_provider for all phases
     calc_provider = GraceCalcProvider(model_path=grace_model_path)
@@ -409,6 +419,7 @@ def barrier_search_job(
         calc_provider=calc_provider,
         xi=xi,
         delta=delta,
+        min_atoms=min_atoms,
         num_ceilings=num_ceilings,
         beam_width=beam_width,
         n_workers=n_workers,
