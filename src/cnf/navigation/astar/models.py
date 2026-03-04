@@ -376,6 +376,14 @@ class CeilingSweepResult(MSONable):
         """Get the shared context (from first result)."""
         return self.results[0].context if self.results else None
 
+    @property
+    def max_successful_iterations(self) -> int | None:
+        """Get max iterations across all successful searches."""
+        all_iters = []
+        for result in self.results:
+            all_iters.extend(result.successful_iterations)
+        return max(all_iters) if all_iters else None
+
     def to_dict(self) -> dict:
         """Serialize to a JSON-compatible dictionary."""
         return {

@@ -431,7 +431,10 @@ def barrier_search_job(
         raise RuntimeError("Phase 3 failed: no paths found during sweep")
 
     sweep_ceiling = sweep_result.best_barrier
+    sweep_max_iters = sweep_result.max_successful_iterations
     print(f"Ceiling after sweep: {sweep_ceiling:.4f} eV")
+    if sweep_max_iters is not None:
+        print(f"Max iterations from sweep: {sweep_max_iters}")
 
     # Phase 4: Ratchet
     print("\n" + "="*60)
@@ -446,6 +449,7 @@ def barrier_search_job(
         energy_calc=GraceCalculator(model_path=grace_model_path),
         paths_per_round=10,
         max_rounds=max_refinement_rounds,
+        initial_max_iters=sweep_max_iters,
         beam_width=beam_width,
         verbosity=1,
         output_dir=phase4_dir,

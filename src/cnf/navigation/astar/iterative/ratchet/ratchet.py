@@ -40,6 +40,7 @@ def ratchet(
     dropout: float = 0.1,
     min_dropout: float = 0.1,
     max_iterations: int = 100_000,
+    initial_max_iters: int | None = None,
     beam_width: int = 1000,
     verbosity: int = 1,
     output_dir: PathlibPath | str | None = None,
@@ -60,6 +61,9 @@ def ratchet(
         dropout: Initial neighbor dropout probability.
         min_dropout: Minimum dropout for adaptive adjustment.
         max_iterations: Max A* iterations (absolute cap).
+        initial_max_iters: Starting max iterations for round 0. If None,
+            defaults to min(max_iterations, 5000). Use sweep results to
+            initialize this based on iterations needed in successful searches.
         beam_width: Max open-set size for beam search.
         verbosity: 0=silent, 1=phase output, 2+=A* iteration progress.
         output_dir: Path to output directory. If set, writes refinement_result.json
@@ -111,7 +115,10 @@ def ratchet(
         print(f"\nStarting refinement with ceiling={initial_ceiling:.4f} eV")
 
     current_dropout = dropout
-    current_max_iters = min(max_iterations, 500)
+    if initial_max_iters is not None:
+        current_max_iters = initial_max_iters
+    else:
+        current_max_iters = min(max_iterations, 5000)
 
     for round_num in range(max_rounds):
         round_start = time.perf_counter()
