@@ -251,6 +251,14 @@ def sweep(
                     print(f"\n  *** ceiling_top tightened to "
                           f"{ceiling_top:.2f} eV")
 
+                # Propagate max iterations to next pass based on successful searches
+                max_iters_from_pass = max(r["iterations"] for r in successes)
+                new_max_iters = max(max_iterations, int(max_iters_from_pass * 1.2))
+                if new_max_iters != max_iterations:
+                    if verbosity >= 1:
+                        print(f"  *** max_iterations: {max_iterations} → {new_max_iters}")
+                    max_iterations = new_max_iters
+
             result.metadata["current_ceiling_top"] = ceiling_top
 
             if verbosity >= 1:
