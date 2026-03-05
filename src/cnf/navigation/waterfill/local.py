@@ -2,12 +2,14 @@ from ...crystal_normal_form import CrystalNormalForm
 from ...calculation.base_calculator import BaseCalculator
 from ...calculation.grace import GraceCalculator
 from .. import find_neighbors
+from ..search_filters import FilterSet
 
 from dataclasses import dataclass
 import heapq
 import os
 import pickle
 import random
+from typing import Optional
 
 DEFAULT_CALC = GraceCalculator()
 
@@ -64,7 +66,8 @@ def waterfill(start_cnfs: list[CrystalNormalForm],
               checkpoint_path: str = None,
               checkpoint_interval: int = 500,
               resume: str = None,
-              batch_size: int = 1):
+              batch_size: int = 1,
+              filter_set: Optional[FilterSet] = None):
 
     if energy_calc is None:
         energy_calc = DEFAULT_CALC
@@ -144,6 +147,10 @@ def waterfill(start_cnfs: list[CrystalNormalForm],
         all_new_nbs = []
         for energy, pt in batch:
             nbs = find_neighbors(pt)
+
+            # Apply filter if provided
+            if filter_set is not None:
+                nbs, _ = filter_set.filter_cnfs(nbs)
 
             if dropped is not None:
                 nbs = [nb for nb in nbs if nb not in dropped]

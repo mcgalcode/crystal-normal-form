@@ -11,6 +11,7 @@ from cnf.navigation.search_filters import (
     VolumeLimitFilter,
     MinDistanceFilter,
     EnergyFilter,
+    PDDCylinderFilter,
 )
 
 
@@ -237,3 +238,67 @@ class TestFilterSet:
         fs = FilterSet([mock_filter1, mock_filter2])
         result_cnfs, _ = fs.filter_cnfs([zr_bcc_cnf, zr_hcp_cnf])
         assert len(result_cnfs) == 1
+
+
+class TestPDDCylinderFilter:
+
+    def test_accepts_endpoints(self, zr_bcc_cnf, zr_hcp_cnf):
+        filt = PDDCylinderFilter([zr_bcc_cnf], [zr_hcp_cnf], tolerance=1.0)
+        # Both endpoints should always pass
+        assert filt.should_add_pt(zr_bcc_cnf, None)
+        assert filt.should_add_pt(zr_hcp_cnf, None)
+
+    def test_direct_distance_computed(self, zr_bcc_cnf, zr_hcp_cnf):
+        filt = PDDCylinderFilter([zr_bcc_cnf], [zr_hcp_cnf], tolerance=1.2)
+        assert filt.direct_distance > 0
+        assert filt.max_path_distance == pytest.approx(filt.direct_distance * 1.2)
+
+    def test_cache_preseeded_with_endpoints(self, zr_bcc_cnf, zr_hcp_cnf):
+        filt = PDDCylinderFilter([zr_bcc_cnf], [zr_hcp_cnf], tolerance=1.0)
+        # Endpoints should be pre-cached
+        assert zr_bcc_cnf.coords in filt._cache
+        assert zr_hcp_cnf.coords in filt._cache
+        # Start has 0 distance to itself
+        assert filt._cache[zr_bcc_cnf.coords][0] == 0.0
+        # Goal has 0 distance to itself
+        assert filt._cache[zr_hcp_cnf.coords][1] == 0.0
+
+    def test_caches_distances(self, zr_bcc_cnf, zr_hcp_cnf):
+        filt = PDDCylinderFilter([zr_bcc_cnf], [zr_hcp_cnf], tolerance=1.5)
+        initial_size = filt.cache_size
+        # Access a point (use start again, already cached)
+        filt.should_add_pt(zr_bcc_cnf, None)
+        # Cache shouldn't grow for already-cached point
+        assert filt.cache_size == initial_size
+
+    def test_higher_tolerance_more_permissive(self, zr_bcc_cnf, zr_hcp_cnf):
+        strict = PDDCylinderFilter([zr_bcc_cnf], [zr_hcp_cnf], tolerance=1.0)
+        permissive = PDDCylinderFilter([zr_bcc_cnf], [zr_hcp_cnf], tolerance=2.0)
+        assert permissive.max_path_distance > strict.max_path_distance
+
+    def test_requires_structs_false(self, zr_bcc_cnf, zr_hcp_cnf):
+        filt = PDDCylinderFilter([zr_bcc_cnf], [zr_hcp_cnf], tolerance=1.0)
+        assert not filt.requires_structs
+
+    def test_same_structure_zero_distance(self, zr_bcc_cnf):
+        filt = PDDCylinderFilter([zr_bcc_cnf], [zr_bcc_cnf], tolerance=1.0)
+        # Distance to itself should be 0
+        assert filt.direct_distance == pytest.approx(0.0, abs=1e-6)
+
+    def test_multiple_starts_and_goals(self, zr_bcc_cnf, zr_hcp_cnf):
+        # With multiple endpoints, direct_distance should be min over all pairs
+        filt = PDDCylinderFilter(
+            [zr_bcc_cnf, zr_hcp_cnf],  # both as starts
+            [zr_bcc_cnf, zr_hcp_cnf],  # both as goals
+            tolerance=1.0
+        )
+        # Min distance should be 0 (bcc->bcc or hcp->hcp)
+        assert filt.direct_distance == pytest.approx(0.0, abs=1e-6)
+
+    def test_multiple_endpoints_uses_min_distance(self, zr_bcc_cnf, zr_hcp_cnf):
+        # Create filter with both CNFs as goals
+        filt = PDDCylinderFilter([zr_bcc_cnf], [zr_bcc_cnf, zr_hcp_cnf], tolerance=1.0)
+        # Start CNF should have 0 distance to goals (since it's in the goal set)
+        dist_to_starts, dist_to_goals = filt._get_distances(zr_bcc_cnf)
+        assert dist_to_starts == 0.0
+        assert dist_to_goals == 0.0  # min dist to [bcc, hcp] from bcc is 0

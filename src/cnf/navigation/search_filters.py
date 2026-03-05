@@ -1,5 +1,6 @@
 from ..crystal_normal_form import CrystalNormalForm
 from .utils import no_atoms_closer_than
+from ..utils.pdd import pdd_for_cnfs
 from abc import ABC, abstractmethod
 from pymatgen.core.structure import Structure
 from ..calculation.grace import GraceCalculator
@@ -143,8 +144,9 @@ class MinDistanceFilter(SearchFilter):
                 self.dist
             )
 
-            # Convert back to tuples
-            return [CrystalNormalForm.from_tuple(n, pt.elements, pt.xi, pt.delta) for n in filtered], []
+            # Convert back to CNFs, with None structs to maintain list length for chaining
+            filtered_cnfs = [CrystalNormalForm.from_tuple(n, pt.elements, pt.xi, pt.delta) for n in filtered]
+            return filtered_cnfs, [None] * len(filtered_cnfs)
         else:
             return super().filter_nbs(cnfs, structs)
     
@@ -172,3 +174,77 @@ class EnergyFilter(SearchFilter):
         if key not in self._cache:
             self._cache[key] = self.calc.calculate_energy(pt)
         return self._cache[key] < self.max_energy
+
+
+class PDDCylinderFilter(SearchFilter):
+    """Filter that constrains search to an ellipsoid in PDD space.
+
+    Uses the triangle inequality: for any node N on the path between
+    start S and goal G, we require:
+        min_d(S, N) + min_d(N, G) <= min_d(S, G) * tolerance
+
+    where min_d means minimum over all start/goal CNFs (since multiple
+    supercell orientations may exist for each polymorph).
+
+    When tolerance=1.0, only nodes on the geodesic are allowed.
+    Higher tolerance values (e.g., 1.2, 1.5) allow nodes within
+    an ellipsoid "buffer" around the direct path.
+    """
+
+    def __init__(
+        self,
+        start_cnfs: list[CrystalNormalForm],
+        goal_cnfs: list[CrystalNormalForm],
+        tolerance: float = 1.2,
+        k: int = 100,
+    ):
+        super().__init__()
+        self.requires_structs = False
+        self.start_cnfs = start_cnfs
+        self.goal_cnfs = goal_cnfs
+        self.tolerance = tolerance
+        self.k = k
+
+        # Precompute direct distance: min over all (start, goal) pairs
+        self.direct_distance = min(
+            pdd_for_cnfs(s, g, k=k)
+            for s in start_cnfs
+            for g in goal_cnfs
+        )
+        self.max_path_distance = self.direct_distance * tolerance
+
+        # Cache for PDD distances: key -> (min_dist_to_starts, min_dist_to_goals)
+        self._cache: dict[tuple, tuple[float, float]] = {}
+
+        # Pre-cache endpoint distances
+        for start in start_cnfs:
+            self._cache[start.coords] = (0.0, self._min_dist_to_goals(start))
+        for goal in goal_cnfs:
+            self._cache[goal.coords] = (self._min_dist_to_starts(goal), 0.0)
+
+    def _min_dist_to_starts(self, cnf: CrystalNormalForm) -> float:
+        """Compute minimum PDD distance from cnf to any start CNF."""
+        return min(pdd_for_cnfs(cnf, s, k=self.k) for s in self.start_cnfs)
+
+    def _min_dist_to_goals(self, cnf: CrystalNormalForm) -> float:
+        """Compute minimum PDD distance from cnf to any goal CNF."""
+        return min(pdd_for_cnfs(cnf, g, k=self.k) for g in self.goal_cnfs)
+
+    def _get_distances(self, cnf: CrystalNormalForm) -> tuple[float, float]:
+        """Get (min_dist_to_starts, min_dist_to_goals) for a CNF, using cache."""
+        key = cnf.coords
+        if key not in self._cache:
+            dist_to_starts = self._min_dist_to_starts(cnf)
+            dist_to_goals = self._min_dist_to_goals(cnf)
+            self._cache[key] = (dist_to_starts, dist_to_goals)
+        return self._cache[key]
+
+    def should_add_pt(self, pt: CrystalNormalForm, struct: Structure) -> bool:
+        dist_to_starts, dist_to_goals = self._get_distances(pt)
+        path_distance = dist_to_starts + dist_to_goals
+        return path_distance <= self.max_path_distance
+
+    @property
+    def cache_size(self) -> int:
+        """Return the number of cached PDD distances."""
+        return len(self._cache)
