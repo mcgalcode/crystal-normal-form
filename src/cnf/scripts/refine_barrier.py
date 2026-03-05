@@ -29,8 +29,7 @@ def main():
     from pymatgen.core import Structure
     from cnf import UnitCell
     from cnf.calculation.grace import GraceCalculator
-    from cnf.navigation import compute_delta_for_step_size
-    from cnf.navigation.endpoints import get_endpoint_cnfs
+    from cnf.navigation.endpoints import get_endpoint_cnfs_with_resolution
     from cnf.navigation.astar.iterative import ratchet
 
     calc = GraceCalculator(model_path=args.model_path) if args.model_path else GraceCalculator()
@@ -38,11 +37,10 @@ def main():
     start = UnitCell.from_pymatgen_structure(Structure.from_file(args.start))
     end = UnitCell.from_pymatgen_structure(Structure.from_file(args.end))
 
-    delta = max(compute_delta_for_step_size(start.to_pymatgen_structure(), args.atom_step_length),
-                compute_delta_for_step_size(end.to_pymatgen_structure(), args.atom_step_length),
-                args.min_delta)
-
-    start_cnfs, end_cnfs = get_endpoint_cnfs(start, end, xi=args.xi, delta=delta, min_atoms=args.min_atoms)
+    start_cnfs, end_cnfs, delta = get_endpoint_cnfs_with_resolution(
+        start, end, xi=args.xi, atom_step_length=args.atom_step_length,
+        min_delta=args.min_delta, min_atoms=args.min_atoms
+    )
     n_atoms = len(start_cnfs[0].elements)
 
     args.output_dir.mkdir(parents=True, exist_ok=True)

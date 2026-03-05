@@ -23,7 +23,8 @@ def sweep(
     max_ceiling: float,
     calc_provider,
     xi=1.5,
-    delta=10,
+    delta: int | None = None,
+    atom_step_length: float | None = None,
     min_atoms: int | None = None,
     num_ceilings=5,
     attempts_per_ceiling=3,
@@ -31,7 +32,6 @@ def sweep(
     xi_factor=0.8,
     delta_factor=1.2,
     dropout=0.1,
-    min_dropout=0.0,
     max_iterations=5000,
     beam_width=1000,
     n_workers=0,
@@ -50,14 +50,18 @@ def sweep(
         max_ceiling: Upper bound of sweep range (eV). Required.
         calc_provider: Callable returning energy calculator (required).
         xi: Initial lattice discretization parameter.
-        delta: Initial motif discretization parameter.
+        delta: Initial motif discretization parameter. If None, computed from
+            atom_step_length.
+        atom_step_length: Target physical step size in Angstroms. Used to compute
+            initial delta if delta is not provided. This ensures correct resolution
+            when using min_atoms supercells.
+        min_atoms: Minimum atoms (will create supercells if needed).
         num_ceilings: Number of ceiling levels to sweep per pass.
         attempts_per_ceiling: Searches per ceiling level.
         max_passes: Number of resolution refinement passes.
         xi_factor: xi multiplied by this each refinement pass.
         delta_factor: delta multiplied by this each refinement pass.
         dropout: Neighbor dropout probability.
-        min_dropout: Minimum dropout for adaptive adjustment.
         max_iterations: Max A* iterations per search.
         beam_width: Max open-set size for beam search.
         n_workers: Parallel worker processes. 0 = auto.
@@ -67,6 +71,15 @@ def sweep(
     Returns:
         CeilingSweepResult containing all passes and their attempts.
     """
+    from cnf.navigation.utils import compute_delta_for_endpoints
+
+    if delta is None and atom_step_length is None:
+        raise ValueError("Must provide either delta or atom_step_length")
+
+    # Compute delta from supercell lattice parameters if not provided
+    if delta is None:
+        delta = compute_delta_for_endpoints(start_uc, end_uc, atom_step_length, min_atoms)
+
     energy_calc = calc_provider()
 
     energy_cache = {}

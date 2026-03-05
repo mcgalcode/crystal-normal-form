@@ -101,6 +101,40 @@ def compute_delta_for_step_size(
     return int(np.ceil(max_param / target_step))
 
 
+def compute_delta_for_endpoints(
+    start_uc: UnitCell,
+    end_uc: UnitCell,
+    target_step: float,
+    min_atoms: int | None = None,
+) -> int:
+    """Compute delta for pathfinding between two unit cells.
+
+    This is the correct way to compute delta when using min_atoms supercells.
+    It first creates the supercells (if needed), then computes delta from the
+    supercell lattice parameters to ensure consistent physical resolution.
+
+    Args:
+        start_uc: Starting UnitCell.
+        end_uc: Ending UnitCell.
+        target_step: Target physical step size in Angstroms.
+        min_atoms: Minimum atoms (will create supercells if needed).
+
+    Returns:
+        Integer delta value that achieves step <= target_step for the actual
+        cell sizes used in pathfinding.
+    """
+    from cnf.navigation.endpoints import get_endpoint_unit_cells
+
+    start_scs, end_scs = get_endpoint_unit_cells(start_uc, end_uc, min_atoms=min_atoms)
+
+    # Compute delta from ALL supercell variants and take the maximum
+    all_deltas = []
+    for sc in start_scs + end_scs:
+        all_deltas.append(compute_delta_for_step_size(sc, target_step))
+
+    return max(all_deltas)
+
+
 def min_bond_length(structures: list[Union[Structure, CrystalNormalForm, UnitCell]]) -> float:
     """Compute minimum pairwise atomic distance across one or more structures.
 

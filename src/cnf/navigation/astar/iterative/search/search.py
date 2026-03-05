@@ -14,8 +14,7 @@ from cnf.navigation.astar import astar_rust
 from cnf.navigation.astar.models import (
     PathContext, Path, Attempt, SearchParameters, SearchResult, ParameterSearchResult
 )
-from cnf.navigation.endpoints import get_endpoint_cnfs
-from cnf.navigation.utils import compute_delta_for_step_size
+from cnf.navigation.endpoints import get_endpoint_cnfs_with_resolution
 
 
 
@@ -100,18 +99,13 @@ def _search_at_resolution(
 
     Returns a dict with resolution info and search result.
     """
-    start_struct = start_uc.to_pymatgen_structure()
-    end_struct = end_uc.to_pymatgen_structure()
-
-    delta = max(
-        compute_delta_for_step_size(start_struct, atom_step_length),
-        compute_delta_for_step_size(end_struct, atom_step_length),
+    # Get CNF endpoints with correct delta computed from supercell lattice parameters
+    start_cnfs, goal_cnfs, delta = get_endpoint_cnfs_with_resolution(
+        start_uc, end_uc, xi=xi, atom_step_length=atom_step_length, min_atoms=min_atoms
     )
 
     if verbosity >= 1:
         print(f"{log_prefix}Resolution: xi={xi}, atom_step={atom_step_length} Å -> delta={delta}")
-
-    start_cnfs, goal_cnfs = get_endpoint_cnfs(start_uc, end_uc, xi=xi, delta=delta, min_atoms=min_atoms)
     elements = start_cnfs[0].elements
 
     if verbosity >= 1:
@@ -269,7 +263,7 @@ def search(
         args_list = [
             (start_struct_dict, end_struct_dict, xi, atom_step,
              min_dist_low, min_dist_high, max_iterations, beam_width,
-             dropout, tolerance, verbosity, f"[xi={xi}] ", min_atoms)
+             dropout, tolerance, verbosity, f"[xi={xi}, atom_step={atom_step}] ", min_atoms)
             for xi, atom_step in resolutions
         ]
 

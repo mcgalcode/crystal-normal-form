@@ -29,7 +29,6 @@ def main():
     from cnf import UnitCell
     from cnf.calculation.grace import GraceCalcProvider
     from cnf.calculation.relaxation import relax_unit_cell
-    from cnf.navigation import compute_delta_for_step_size
     from cnf.navigation.endpoints import get_endpoint_unit_cells
     from cnf.navigation.astar.iterative import sweep
 
@@ -38,12 +37,7 @@ def main():
     start = UnitCell.from_pymatgen_structure(Structure.from_file(args.start))
     end = UnitCell.from_pymatgen_structure(Structure.from_file(args.end))
 
-    # Apply min_atoms constraint via supercells if specified
-    if args.min_atoms:
-        start_cells, end_cells = get_endpoint_unit_cells(start, end, min_atoms=args.min_atoms)
-        start, end = start_cells[0], end_cells[0]
-
-    # Relax endpoints if requested
+    # Relax endpoints if requested (before any supercell expansion)
     if args.relax_endpoints:
         print("Relaxing endpoints in continuous space...")
         calc = calc_provider()
@@ -54,18 +48,22 @@ def main():
         end.to_cif(str(args.output_dir / "end_relaxed.cif"))
         print(f"  Relaxed CIFs saved to {args.output_dir}")
 
-    n_atoms = len(start)
-
-    delta = max(compute_delta_for_step_size(start.to_pymatgen_structure(), args.atom_step_length),
-                compute_delta_for_step_size(end.to_pymatgen_structure(), args.atom_step_length))
+    # Get n_atoms from supercell if min_atoms specified
+    if args.min_atoms:
+        start_cells, _ = get_endpoint_unit_cells(start, end, min_atoms=args.min_atoms)
+        n_atoms = len(start_cells[0])
+    else:
+        n_atoms = len(start)
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
+    # sweep() computes delta internally from atom_step_length and min_atoms
     result = sweep(
         start, end,
         max_ceiling=args.max_ceiling,
         calc_provider=calc_provider,
-        delta=delta,
+        atom_step_length=args.atom_step_length,
+        min_atoms=args.min_atoms,
         num_ceilings=args.num_ceilings,
         attempts_per_ceiling=args.attempts_per_ceiling,
         max_passes=args.max_passes,
