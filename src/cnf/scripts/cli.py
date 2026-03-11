@@ -6,7 +6,8 @@ Usage:
     cnf sample <start.cif> <end.cif> --from <search_result.json> [options]
     cnf sweep <start.cif> <end.cif> --xi <xi> --delta <delta> --ceiling <eV> [options]
     cnf sweep <start.cif> <end.cif> --from <sample_result.json> [options]
-    cnf ratchet <start.cif> <end.cif> --xi <xi> --delta <delta> --ceiling <eV> [options]
+    cnf ratchet <start.cif> <end.cif> --xi <xi> --delta <delta> --ceiling-abs <eV> [options]
+    cnf ratchet <start.cif> <end.cif> --xi <xi> --delta <delta> --ceiling-rel-mev <meV/atom> [options]
     cnf ratchet <start.cif> <end.cif> --from <sweep_result.json> [options]
     cnf find-barrier <start.cif> <end.cif> [options]
 
@@ -210,7 +211,12 @@ def sweep_command(args):
 
 
 def ratchet_command(args):
-    """Phase 4: Serial barrier refinement with ratcheting ceiling."""
+    """Phase 4: Serial barrier refinement with ratcheting ceiling.
+
+    Runs A* searches with energy ceiling filter, ratcheting down the ceiling
+    when paths are found. Adapts xi/delta after 3 consecutive failures.
+    Terminates after max_adaptations are exhausted.
+    """
     from pymatgen.core import Structure
     from cnf import UnitCell
     from cnf.navigation.astar.iterative import ratchet
@@ -251,12 +257,15 @@ def ratchet_command(args):
             sys.exit(1)
         print(f"Loaded from {args.from_result}: xi={xi}, delta={delta}, ceiling={ceiling:.4f}")
     else:
-        if args.xi is None or args.delta is None or args.ceiling is None:
-            print("Error: --xi, --delta, and --ceiling are required (or use --from)")
+        if args.xi is None or args.delta is None:
+            print("Error: --xi and --delta are required (or use --from)")
+            sys.exit(1)
+        if args.ceiling_abs is None and args.ceiling_rel_mev is None:
+            print("Error: --ceiling-abs or --ceiling-rel-mev is required (or use --from)")
             sys.exit(1)
         xi = args.xi
         delta = args.delta
-        ceiling = args.ceiling
+        ceiling = args.ceiling_abs  # May be None if using --ceiling-rel-mev
 
     start = Structure.from_file(args.start)
     end = Structure.from_file(args.end)
@@ -265,30 +274,82 @@ def ratchet_command(args):
     end_uc = UnitCell.from_pymatgen_structure(end)
 
     start_cnfs, goal_cnfs = get_endpoint_cnfs(start_uc, end_uc, xi=xi, delta=delta)
+    n_atoms = len(start_cnfs[0].elements)
 
     calc = GraceCalculator(model_path=args.model) if args.model else GraceCalculator()
+
+    # Compute max endpoint energy per atom from original (undiscretized) structures
+    e_start_orig = calc.calculate_structure_energy(start_uc)
+    e_end_orig = calc.calculate_structure_energy(end_uc)
+    n_atoms_start = len(start_uc)
+    n_atoms_end = len(end_uc)
+    e_max_endpoint_per_atom = max(e_start_orig / n_atoms_start, e_end_orig / n_atoms_end)
+
+    # Compute ceiling from --ceiling-rel-mev if specified
+    if ceiling is None and args.ceiling_rel_mev is not None:
+        ceiling = (e_max_endpoint_per_atom + args.ceiling_rel_mev / 1000.0) * n_atoms
+        print(f"Max endpoint energy: {e_max_endpoint_per_atom:.4f} eV/atom")
+        print(f"Ceiling: {args.ceiling_rel_mev:.1f} meV/atom above endpoint = {ceiling:.4f} eV")
 
     result = ratchet(
         start_cnfs=start_cnfs,
         goal_cnfs=goal_cnfs,
         initial_ceiling=ceiling,
         energy_calc=calc,
-        paths_per_round=args.paths_per_round,
-        max_rounds=args.max_rounds,
+        start_uc=start_uc,
+        end_uc=end_uc,
+        max_adaptations=args.max_adaptations,
+        xi_factor=args.xi_factor,
+        delta_factor=args.delta_factor,
+        ceiling_step_mev_per_atom=args.ceiling_step,
         dropout=args.dropout,
-        min_dropout=args.min_dropout,
         max_iterations=args.max_iters,
         beam_width=args.beam_width,
         verbosity=get_verbosity(args),
         output_dir=args.output,
     )
 
-    print(f"\nCompleted {len(result.results)} rounds")
+    print(f"\nCompleted {result.metadata.get('total_attempts', len(result.results))} attempts")
+    print(f"Parameter adaptations: {result.metadata.get('num_adaptations', 0)}")
     if result.best_barrier:
-        print(f"Final barrier: {result.best_barrier:.4f} eV")
+        barrier_mev = (result.best_barrier / n_atoms - e_max_endpoint_per_atom) * 1000.0
+        print(f"Final barrier: {barrier_mev:.1f} meV/atom above endpoint")
     if result.final_ceiling:
-        print(f"Final ceiling: {result.final_ceiling:.4f} eV")
+        ceiling_mev = (result.final_ceiling / n_atoms - e_max_endpoint_per_atom) * 1000.0
+        print(f"Final ceiling: {ceiling_mev:.1f} meV/atom above endpoint")
     save_result(result, args.output, "ratchet_result.json")
+
+
+def astar_command(args):
+    """Run a single A* pathfinding between two crystal structures."""
+    from cnf.navigation.astar import pathfind_from_cifs
+
+    verbose = not args.quiet
+
+    result = pathfind_from_cifs(
+        args.start,
+        args.end,
+        xi=args.xi,
+        delta=args.delta,
+        atom_step_length=args.atom_step_length,
+        min_distance=args.min_distance,
+        max_iterations=args.max_iterations,
+        beam_width=args.beam_width,
+        greedy=args.greedy,
+        dropout=args.dropout,
+        min_atoms=args.min_atoms,
+        verbose=verbose,
+    )
+
+    # Save result
+    result.to_json(args.output)
+    if verbose:
+        print(f"Saved to {args.output}")
+
+    if result.attempts[0].found:
+        sys.exit(0)
+    else:
+        sys.exit(1)
 
 
 def find_barrier_command(args):
@@ -537,6 +598,31 @@ def main():
     def add_from_arg(p, help_text):
         p.add_argument('--from', dest='from_result', help=help_text)
 
+    # astar (single A* pathfinding)
+    astar_parser = subparsers.add_parser('astar', help='Run single A* pathfinding between two structures')
+    astar_parser.add_argument('start', help='Starting structure CIF file')
+    astar_parser.add_argument('end', help='Ending structure CIF file')
+    astar_parser.add_argument('output', help='Output JSON file')
+    astar_parser.add_argument('--xi', type=float, default=0.2, help='Lattice discretization (default: 0.2)')
+    astar_parser.add_argument('--delta', type=int, default=None, help='Motif discretization (default: 30, or computed from --atom-step-length)')
+    astar_parser.add_argument('--atom-step-length', type=float, default=None,
+                              help='Target step length in Å (alternative to --delta)')
+    astar_parser.add_argument('--min-distance', type=float, default=0.0,
+                              help='Minimum pairwise distance filter in Å (default: 0.0)')
+    astar_parser.add_argument('--dropout', type=float, default=0.0,
+                              help='Neighbor dropout probability (default: 0.0)')
+    astar_parser.add_argument('--max-iterations', type=int, default=100000,
+                              help='Maximum iterations (default: 100000)')
+    astar_parser.add_argument('--beam-width', type=int, default=1000,
+                              help='Beam width (default: 1000)')
+    astar_parser.add_argument('--greedy', action='store_true',
+                              help='Use greedy search instead of A*')
+    astar_parser.add_argument('--min-atoms', type=int, default=None,
+                              help='Minimum atoms (will create supercells if needed)')
+    astar_parser.add_argument('-q', '--quiet', action='store_true',
+                              help='Suppress output')
+    astar_parser.set_defaults(func=astar_command)
+
     # search
     search_parser = subparsers.add_parser('search', help='Phase 1: Parameter search')
     add_common_args(search_parser)
@@ -581,11 +667,18 @@ def main():
     add_discretization_args(ratchet_parser, required=False)
     add_energy_args(ratchet_parser)
     add_from_arg(ratchet_parser, 'Load xi/delta/ceiling from sweep or sample result JSON')
-    ratchet_parser.add_argument('--ceiling', type=float, help='Initial energy ceiling (eV)')
-    ratchet_parser.add_argument('--paths-per-round', type=int, default=10, help='Paths per round (default: 10)')
-    ratchet_parser.add_argument('--max-rounds', type=int, default=20, help='Max rounds (default: 20)')
-    ratchet_parser.add_argument('--dropout', type=float, default=0.1, help='Initial dropout (default: 0.1)')
-    ratchet_parser.add_argument('--min-dropout', type=float, default=0.1, help='Minimum dropout (default: 0.1)')
+    ratchet_parser.add_argument('--ceiling-abs', type=float, help='Initial ceiling as absolute energy (eV)')
+    ratchet_parser.add_argument('--ceiling-rel-mev', type=float,
+                                help='Initial ceiling as meV/atom above highest endpoint energy')
+    ratchet_parser.add_argument('--max-adaptations', type=int, default=5,
+                                help='Max xi/delta adaptations (default: 5)')
+    ratchet_parser.add_argument('--xi-factor', type=float, default=0.8,
+                                help='Multiply xi by this on adaptation (default: 0.8)')
+    ratchet_parser.add_argument('--delta-factor', type=float, default=1.2,
+                                help='Multiply delta by this on adaptation (default: 1.2)')
+    ratchet_parser.add_argument('--ceiling-step', type=float, default=2.0,
+                                help='Min ceiling reduction in meV/atom (default: 2.0)')
+    ratchet_parser.add_argument('--dropout', type=float, default=0.1, help='Dropout probability (default: 0.1)')
     ratchet_parser.set_defaults(func=ratchet_command)
 
     # find-barrier (full workflow)

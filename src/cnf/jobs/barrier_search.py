@@ -210,10 +210,12 @@ def ratchet_job(
     initial_ceiling: float,
     xi: float,
     delta: int,
-    paths_per_round: int = 10,
-    max_refinement_rounds: int = 20,
-    dropout: float = 0.3,
-    min_dropout: float = 0.1,
+    min_atoms: int | None = None,
+    max_adaptations: int = 5,
+    xi_factor: float = 0.8,
+    delta_factor: float = 1.2,
+    ceiling_step_mev_per_atom: float = 2.0,
+    dropout: float = 0.1,
     max_iterations: int = 100_000,
     beam_width: int = 1000,
     grace_model_path: str | None = None,
@@ -221,23 +223,29 @@ def ratchet_job(
 ) -> RefinementResult:
     """Phase 4: Serial barrier refinement with ratcheting ceiling.
 
+    Runs A* searches with energy ceiling filter, ratcheting down the ceiling
+    when paths are found. Adapts discretization parameters after 3 consecutive
+    failures. Terminates after max_adaptations are exhausted.
+
     Args:
         start_structure: Starting crystal structure.
         end_structure: Ending crystal structure.
         initial_ceiling: Starting energy ceiling (eV).
-        xi: Lattice discretization parameter.
-        delta: Motif discretization parameter.
-        paths_per_round: Number of paths to find per round.
-        max_refinement_rounds: Maximum refinement rounds.
-        dropout: Initial neighbor dropout probability.
-        min_dropout: Minimum dropout for adaptive adjustment.
+        xi: Initial lattice discretization parameter.
+        delta: Initial motif discretization parameter.
+        min_atoms: Minimum atoms for supercell (passed to get_endpoint_cnfs).
+        max_adaptations: Maximum xi/delta adaptations before final termination.
+        xi_factor: Multiply xi by this on each adaptation (< 1 = finer).
+        delta_factor: Multiply delta by this on each adaptation (> 1 = finer).
+        ceiling_step_mev_per_atom: Minimum ceiling reduction per atom in meV.
+        dropout: Neighbor dropout probability.
         max_iterations: Max A* iterations per search.
         beam_width: Max open-set size for beam search.
         grace_model_path: Path to local GRACE model (uses foundation model if None).
         output_dir: Directory for output files.
 
     Returns:
-        RefinementResult containing all refinement rounds.
+        RefinementResult containing all attempts.
     """
     from cnf.navigation.astar.iterative import ratchet
     from cnf.navigation.endpoints import get_endpoint_cnfs
@@ -246,17 +254,21 @@ def ratchet_job(
     start_uc = UnitCell.from_pymatgen_structure(start_structure)
     end_uc = UnitCell.from_pymatgen_structure(end_structure)
 
-    start_cnfs, goal_cnfs = get_endpoint_cnfs(start_uc, end_uc, xi=xi, delta=delta)
+    start_cnfs, goal_cnfs = get_endpoint_cnfs(start_uc, end_uc, xi=xi, delta=delta, min_atoms=min_atoms)
 
     return ratchet(
         start_cnfs=start_cnfs,
         goal_cnfs=goal_cnfs,
         initial_ceiling=initial_ceiling,
         energy_calc=GraceCalculator(model_path=grace_model_path),
-        paths_per_round=paths_per_round,
-        max_rounds=max_refinement_rounds,
+        start_uc=start_uc,
+        end_uc=end_uc,
+        min_atoms=min_atoms,
+        max_adaptations=max_adaptations,
+        xi_factor=xi_factor,
+        delta_factor=delta_factor,
+        ceiling_step_mev_per_atom=ceiling_step_mev_per_atom,
         dropout=dropout,
-        min_dropout=min_dropout,
         max_iterations=max_iterations,
         beam_width=beam_width,
         verbosity=1,
@@ -447,8 +459,12 @@ def barrier_search_job(
         goal_cnfs=goal_cnfs,
         initial_ceiling=sweep_ceiling,
         energy_calc=GraceCalculator(model_path=grace_model_path),
-        paths_per_round=10,
-        max_rounds=max_refinement_rounds,
+        start_uc=start_uc,
+        end_uc=end_uc,
+        min_atoms=min_atoms,
+        max_adaptations=5,
+        xi_factor=0.8,
+        delta_factor=1.2,
         initial_max_iters=sweep_max_iters,
         beam_width=beam_width,
         verbosity=1,

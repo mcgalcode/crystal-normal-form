@@ -6,7 +6,7 @@ from cnf import rust_cnf
 from cnf import CrystalNormalForm
 from ..search_filters import FilterSet, MinDistanceFilter
 from pymatgen.core import Structure
-from ..endpoints import get_endpoint_unit_cells
+from ..endpoints import get_endpoint_unit_cells, get_endpoint_cnfs_with_resolution
 from .core import astar_pathfind
 from .models import PathContext, Path, Attempt, SearchParameters, SearchResult
 from .heuristics import manhattan_distance
@@ -176,7 +176,8 @@ def pathfind_from_cifs(
     start_cif: str,
     end_cif: str,
     xi: float = 0.2,
-    delta: int = 30,
+    delta: int | None = None,
+    atom_step_length: float | None = None,
     min_distance: float = 0.0,
     max_iterations: int = 100_000,
     beam_width: int = 1000,
@@ -192,7 +193,11 @@ def pathfind_from_cifs(
         start_cif: Path to starting structure CIF file.
         end_cif: Path to ending structure CIF file.
         xi: Lattice discretization parameter.
-        delta: Motif discretization parameter.
+        delta: Motif discretization parameter. If None, computed from atom_step_length
+            or defaults to 30.
+        atom_step_length: Target physical step size in Angstroms. Used to compute
+            delta if delta is not provided. Ensures correct resolution when using
+            min_atoms supercells.
         min_distance: Minimum allowed pairwise atomic distance (Angstroms).
         max_iterations: Maximum search iterations.
         beam_width: Max open-set size for beam search.
@@ -208,13 +213,18 @@ def pathfind_from_cifs(
     start_struct = Structure.from_file(start_cif)
     end_struct = Structure.from_file(end_cif)
 
-    start_cells, goal_cells = get_endpoint_unit_cells(start_struct, end_struct, min_atoms=min_atoms)
+    # Default to delta=30 if neither delta nor atom_step_length provided
+    if delta is None and atom_step_length is None:
+        delta = 30
+
+    # Use get_endpoint_cnfs_with_resolution to handle delta computation correctly
+    start_cnfs, goal_cnfs, delta = get_endpoint_cnfs_with_resolution(
+        start_struct, end_struct, xi=xi, delta=delta,
+        atom_step_length=atom_step_length, min_atoms=min_atoms
+    )
 
     if verbose:
-        print(f"Endpoints: {len(start_cells)} start cells, {len(goal_cells)} goal cells")
-
-    start_cnfs = list(set([cell.to_cnf(xi=xi, delta=delta) for cell in start_cells]))
-    goal_cnfs = list(set([cell.to_cnf(xi=xi, delta=delta) for cell in goal_cells]))
+        print(f"Endpoints: {len(start_cnfs)} start CNFs, {len(goal_cnfs)} goal CNFs, delta={delta}")
 
     result = pathfind(
         start_cnfs,
