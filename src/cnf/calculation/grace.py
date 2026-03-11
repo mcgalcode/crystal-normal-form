@@ -51,6 +51,15 @@ class GraceCalculator(BaseCalculator):
         self._calc.calculate(atoms, properties=['energy'])
         return self._calc.results['energy']
 
+    def calculate_structure_energy(self, structure) -> float:
+        """Calculate energy from a pymatgen Structure or UnitCell."""
+        # Handle UnitCell by converting to Structure
+        if hasattr(structure, 'to_pymatgen_structure'):
+            structure = structure.to_pymatgen_structure()
+        atoms = structure.to_ase_atoms()
+        self._calc.calculate(atoms, properties=['energy'])
+        return self._calc.results['energy']
+
     def relax(self, cnf: CrystalNormalForm, max_iters = None) -> tuple[CrystalNormalForm, float, int]:
         min_e = self.calculate_energy(cnf)
         min_cnf = cnf
