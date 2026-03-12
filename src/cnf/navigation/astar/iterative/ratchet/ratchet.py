@@ -364,6 +364,51 @@ def ratchet(
                 print(f"  PATH FOUND: len={len(path_tuples)}, barrier={barrier_mev:.1f} meV/atom, "
                       f"iters={num_iters}")
 
+        # Check for trivial paths (start ≈ goal after discretization)
+        # A path of length 1 means start was already in the goal set - this is degenerate
+        if len(path_tuples) == 1:
+            if verbosity >= 1:
+                print(f"  WARNING: Trivial path (length 1) - start and goal are identical after discretization.")
+                print(f"           This means the two structures are the same at xi={xi}, delta={delta}.")
+                print(f"           Terminating ratchet - no meaningful barrier exists.")
+            result.metadata["termination_reason"] = "trivial_path_start_equals_goal"
+            result.metadata["trivial_path_warning"] = True
+            break
+
+        # Check if we've effectively found the optimal path (barrier ≈ 0)
+        # If barrier is less than the ceiling step, we can't improve further
+        if barrier_mev < ceiling_step_mev_per_atom:
+            if verbosity >= 1:
+                print(f"  Barrier ({barrier_mev:.1f} meV/atom) < ceiling step ({ceiling_step_mev_per_atom:.1f} meV/atom)")
+                print(f"  Found optimal path - terminating ratchet.")
+            result.metadata["termination_reason"] = "optimal_barrier_found"
+            # Still record this path before terminating
+            path_obj = Path(
+                coords=[tuple(pt) for pt in path_tuples],
+                energies=energies,
+                barrier=barrier,
+            )
+            attempt = Attempt(
+                path=path_obj,
+                found=True,
+                iterations=num_iters,
+                elapsed_seconds=attempt_elapsed,
+            )
+            search_result = SearchResult(
+                context=context,
+                parameters=search_params,
+                attempts=[attempt],
+                metadata={
+                    "attempt": attempt_num,
+                    "ceiling": ceiling,
+                    "consecutive_failures": 0,
+                    "num_adaptations": num_adaptations,
+                }
+            )
+            result.results.append(search_result)
+            _save_result()
+            break
+
         # Sanity check: barrier should never exceed ceiling (energy filter enforces this)
         if barrier > ceiling + 1e-6:  # small tolerance for floating point
             ceiling_mev = to_mev_above_endpoint(ceiling)
