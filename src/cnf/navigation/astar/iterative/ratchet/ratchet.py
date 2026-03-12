@@ -30,7 +30,7 @@ from cnf.navigation.astar.models import (
 )
 from cnf.navigation.search_filters import FilterSet, EnergyFilter
 
-from ..core import evaluate_path_energies, path_barrier
+from ..core import evaluate_path_energies, path_barrier, estimate_max_iterations
 
 USE_RUST = os.getenv('USE_RUST') == '1'
 
@@ -183,7 +183,22 @@ def ratchet(
         print(f"  Max adaptations: {max_adaptations}")
         print(f"  xi_factor={xi_factor}, delta_factor={delta_factor}")
 
-    current_max_iters = initial_max_iters if initial_max_iters else min(max_iterations, 5000)
+    # Estimate initial max_iters via plain A* search
+    if initial_max_iters is not None:
+        current_max_iters = initial_max_iters
+        if verbosity >= 1:
+            print(f"\nUsing provided initial_max_iters={current_max_iters}")
+    else:
+        if verbosity >= 1:
+            print(f"\nEstimating initial max_iters...")
+        current_max_iters = estimate_max_iterations(
+            start_cnfs=start_cnfs,
+            goal_cnfs=goal_cnfs,
+            beam_width=beam_width,
+            verbosity=verbosity,
+        )
+        # Cap at max_iterations
+        current_max_iters = min(current_max_iters, max_iterations)
 
     consecutive_failures = 0
     num_adaptations = 0
@@ -198,10 +213,10 @@ def ratchet(
             print(f"\n{'='*60}")
             if ceiling_mev_orig is not None:
                 print(f"Attempt {attempt_num} (ceiling={ceiling_mev:.1f}/{ceiling_mev_orig:.1f} meV/atom disc/orig, "
-                      f"xi={xi:.2f}, delta={delta})")
+                      f"xi={xi:.2f}, delta={delta}, max_iters={current_max_iters})")
             else:
                 print(f"Attempt {attempt_num} (ceiling={ceiling_mev:.1f} meV/atom, "
-                      f"xi={xi:.2f}, delta={delta})")
+                      f"xi={xi:.2f}, delta={delta}, max_iters={current_max_iters})")
             print(f"  Consecutive failures: {consecutive_failures}, "
                   f"adaptations: {num_adaptations}/{max_adaptations}")
             print(f"{'='*60}")
@@ -265,6 +280,12 @@ def ratchet(
             consecutive_failures += 1
             attempt_num += 1
 
+            # Increase max_iters after each failure
+            old_max_iters = current_max_iters
+            current_max_iters = min(int(current_max_iters * 1.3), max_iterations)
+            if current_max_iters != old_max_iters and verbosity >= 1:
+                print(f"  max_iters: {old_max_iters} → {current_max_iters}")
+
             # Check if we need to adapt parameters
             if consecutive_failures >= 3:
                 if num_adaptations >= max_adaptations:
@@ -311,12 +332,16 @@ def ratchet(
                     # Reset consecutive failures after adaptation
                     consecutive_failures = 0
 
-                    # Increase max_iters for harder search
-                    new_max_iters = min(int(current_max_iters * 1.5), max_iterations)
-                    if new_max_iters != current_max_iters:
-                        if verbosity >= 1:
-                            print(f"    max_iters: {current_max_iters} → {new_max_iters}")
-                        current_max_iters = new_max_iters
+                    # Re-estimate max_iters for new discretization
+                    if verbosity >= 1:
+                        print(f"    Re-estimating max_iters for new params...")
+                    current_max_iters = estimate_max_iterations(
+                        start_cnfs=start_cnfs,
+                        goal_cnfs=goal_cnfs,
+                        beam_width=beam_width,
+                        verbosity=verbosity,
+                    )
+                    current_max_iters = min(current_max_iters, max_iterations)
 
             continue
 

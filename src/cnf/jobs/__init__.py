@@ -8,6 +8,10 @@ from cnf.jobs.barrier_search import (
     BarrierSearchJob,
     barrier_search_job,
 )
+from cnf.jobs.parallel_ratchet import (
+    ParallelRatchetJob,
+    parallel_ratchet_job,
+)
 
 __all__ = [
     "SearchJob",
@@ -16,4 +20,6 @@ __all__ = [
     "RatchetJob",
     "BarrierSearchJob",
     "barrier_search_job",
+    "ParallelRatchetJob",
+    "parallel_ratchet_job",
 ]
