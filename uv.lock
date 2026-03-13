@@ -315,6 +315,11 @@ dependencies = [
     { name = "tensorpotential", version = "0.5.5", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux'" },
 ]
 
+[package.optional-dependencies]
+jobs = [
+    { name = "jobflow" },
+]
+
 [package.dev-dependencies]
 dev = [
     { name = "average-minimum-distance" },
@@ -325,6 +330,7 @@ dev = [
 requires-dist = [
     { name = "ase", specifier = ">=3.26.0" },
     { name = "average-minimum-distance", specifier = ">=1.6.0" },
+    { name = "jobflow", marker = "extra == 'jobs'", specifier = ">=0.1.18" },
     { name = "line-profiler", specifier = ">=5.0.0" },
     { name = "mp-api", specifier = ">=0.45.8" },
     { name = "numpy", specifier = "<2" },
@@ -332,9 +338,10 @@ requires-dist = [
     { name = "pytest-xdist", specifier = ">=3.8.0" },
     { name = "rustworkx", specifier = ">=0.17.1" },
     { name = "sortedcontainers", specifier = ">=2.4.0" },
-    { name = "tensorflow", specifier = ">=2.14.0" },
+    { name = "tensorflow", specifier = ">=2.14.0,<2.16" },
     { name = "tensorpotential", specifier = ">=0.4.5" },
 ]
+provides-extras = ["jobs"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -750,21 +757,30 @@ wheels = [
 ]
 
 [[package]]
-name = "invoke"
-version = "2.2.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/f9/42/127e6d792884ab860defc3f4d80a8f9812e48ace584ffc5a346de58cdc6c/invoke-2.2.0.tar.gz", hash = "sha256:ee6cbb101af1a859c7fe84f2a264c059020b0cb7fe3535f9424300ab568f6bd5", size = 299835, upload-time = "2023-07-12T18:05:17.998Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/0a/66/7f8c48009c72d73bc6bbe6eb87ac838d6a526146f7dab14af671121eb379/invoke-2.2.0-py3-none-any.whl", hash = "sha256:6ea924cc53d4f78e3d98bc436b08069a03077e6f85ad1ddaa8a116d7dad15820", size = 160274, upload-time = "2023-07-12T18:05:16.294Z" },
-]
-
-[[package]]
 name = "jmespath"
 version = "1.0.1"
 source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/00/2a/e867e8531cf3e36b41201936b7fa7ba7b5702dbef42922193f05c8976cd6/jmespath-1.0.1.tar.gz", hash = "sha256:90261b206d6defd58fdd5e85f478bf633a2901798906be2ad389150c5c60edbe", size = 25843, upload-time = "2022-06-17T18:00:12.224Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/31/b4/b9b800c45527aadd64d5b442f9b932b00648617eb5d63d2c7a6587b7cafc/jmespath-1.0.1-py3-none-any.whl", hash = "sha256:02e2e4cc71b5bcab88332eebf907519190dd9e6e82107fa7f83b1003a6252980", size = 20256, upload-time = "2022-06-17T18:00:10.251Z" },
+]
+
+[[package]]
+name = "jobflow"
+version = "0.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "maggma" },
+    { name = "monty" },
+    { name = "networkx" },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "pydash" },
+    { name = "pyyaml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/38/b5/565ba75e9daf597614be84eb7450ea08e6d08f4e4925bb991fcc91e234f4/jobflow-0.3.1.tar.gz", hash = "sha256:fbfa3c84598e7d69d489c93c95e2c85b4908497131451636fb8369aaaf180b0c", size = 57521, upload-time = "2026-02-05T07:57:05.309Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8c/de/3f1427486c021d7dee70ceabeadffaa6680b080977bc016e42e36a9ef38c/jobflow-0.3.1-py3-none-any.whl", hash = "sha256:2afb10eddad737eccc0cceaee9884405ed6818f003a74288b3740bd9a4da4470", size = 60586, upload-time = "2026-02-05T07:57:03.865Z" },
 ]
 
 [[package]]
@@ -972,7 +988,7 @@ wheels = [
 
 [[package]]
 name = "maggma"
-version = "0.71.5"
+version = "0.72.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aioitertools" },
@@ -986,6 +1002,7 @@ dependencies = [
     { name = "numpy" },
     { name = "orjson" },
     { name = "pandas" },
+    { name = "paramiko" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "pydash" },
@@ -993,13 +1010,12 @@ dependencies = [
     { name = "python-dateutil" },
     { name = "pyzmq" },
     { name = "ruamel-yaml" },
-    { name = "setuptools" },
     { name = "sshtunnel" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/74/5a/128d15e44650aaf65b13a5c7fa8b3c1690e45fec6a639afc5ad38fd781e8/maggma-0.71.5.tar.gz", hash = "sha256:5f14c13a512ee59fc7fa2ae714dc70a86b2fa7a02355cfe58a5d089466216419", size = 226393, upload-time = "2025-03-09T19:57:46.232Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/03/b3/7281ee15ab1df6cae32bcd6698f3647d5026ef1fe54390e42ae6939fdeb2/maggma-0.72.1.tar.gz", hash = "sha256:929ea18ae92e1b91480541af84a36bca2c817e36483c6eae874438a2d523bd38", size = 224414, upload-time = "2026-02-11T18:52:46.742Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5b/06/db10d3d8a45abc6fdc275a32a70490cd1e089677dd8448efef275cafe64b/maggma-0.71.5-py3-none-any.whl", hash = "sha256:3c3ec2a937922a64bb4f806ecb22e4f57b0201fdfb64cc6bdbe334ce198ee6e4", size = 122627, upload-time = "2025-03-09T19:57:44.443Z" },
+    { url = "https://files.pythonhosted.org/packages/d5/df/e6ed9ae87af6941300f111b7cb1b69cdc5f605bb86e7815f5cc3d4043d22/maggma-0.72.1-py3-none-any.whl", hash = "sha256:5aa894a3a2c0cef6629bb122b8025125af2099d09b5b284c9adfd75d9b56dfb1", size = 123654, upload-time = "2026-02-11T18:52:44.788Z" },
 ]
 
 [[package]]
@@ -1494,17 +1510,16 @@ wheels = [
 
 [[package]]
 name = "paramiko"
-version = "4.0.0"
+version = "3.5.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "bcrypt" },
     { name = "cryptography" },
-    { name = "invoke" },
     { name = "pynacl" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1f/e7/81fdcbc7f190cdb058cffc9431587eb289833bdd633e2002455ca9bb13d4/paramiko-4.0.0.tar.gz", hash = "sha256:6a25f07b380cc9c9a88d2b920ad37167ac4667f8d9886ccebd8f90f654b5d69f", size = 1630743, upload-time = "2025-08-04T01:02:03.711Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7d/15/ad6ce226e8138315f2451c2aeea985bf35ee910afb477bae7477dc3a8f3b/paramiko-3.5.1.tar.gz", hash = "sha256:b2c665bc45b2b215bd7d7f039901b14b067da00f3a11e6640995fd58f2664822", size = 1566110, upload-time = "2025-02-04T02:37:59.783Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a9/90/a744336f5af32c433bd09af7854599682a383b37cfd78f7de263de6ad6cb/paramiko-4.0.0-py3-none-any.whl", hash = "sha256:0e20e00ac666503bf0b4eda3b6d833465a2b7aff2e2b3d79a8bba5ef144ee3b9", size = 223932, upload-time = "2025-08-04T01:02:02.029Z" },
+    { url = "https://files.pythonhosted.org/packages/15/f8/c7bd0ef12954a81a1d3cea60a13946bd9a49a0036a5927770c461eade7ae/paramiko-3.5.1-py3-none-any.whl", hash = "sha256:43b9a0501fc2b5e70680388d9346cf252cfb7d00b0667c39e80eb43a408b8f61", size = 227298, upload-time = "2025-02-04T02:37:57.672Z" },
 ]
 
 [[package]]
