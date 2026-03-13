@@ -45,7 +45,8 @@ features = ["pyo3/extension-module"]
 
 [dependency-groups]
 dev = [
-    "average-minimum-distance>=1.6.0",
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
     "pytest>=8.4.1",
 ]
 
