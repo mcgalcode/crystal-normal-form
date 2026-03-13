@@ -1,6 +1,6 @@
 site_name: Crystal Normal Form
 site_description: A Python implementation of the crystallographic mapping algorithm
-repo_url: https://github.com/maxgallant/crystal-normal-form
+repo_url: https://github.com/mcgalcode/crystal-normal-form
 repo_name: crystal-normal-form
 
 theme:
