@@ -46,6 +46,7 @@ features = ["pyo3/extension-module"]
 [dependency-groups]
 dev = [
     "mkdocs>=1.6",
+    "mkdocs-jupyter>=0.25",
     "mkdocs-material>=9.5",
     "pytest>=8.4.1",
 ]
