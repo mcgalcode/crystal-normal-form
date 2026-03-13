@@ -27,7 +27,6 @@ jobs = ["jobflow>=0.1.18"]
 [project.scripts]
 cnf = "cnf.scripts.cli:main"
 cnf-setup-search = "cnf.scripts.setup_search_db:main"
-cnf-astar = "cnf.scripts.pathfind_astar:main"
 cnf-pathfind-waterfill = "cnf.scripts.pathfind_waterfill:main"
 cnf-db-status = "cnf.scripts.db_status_partitioned:main"
 cnf-check-completion = "cnf.scripts.check_search_completion:main"
