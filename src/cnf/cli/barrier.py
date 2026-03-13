@@ -570,34 +570,33 @@ def find_barrier_command(args):
         print(f"\nResults saved to: {output_dir}")
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        prog='cnf',
-        description='CNF barrier search workflow',
-    )
-    subparsers = parser.add_subparsers(dest='command', required=True)
+# Helper functions for argument parsing
+def _add_common_args(p):
+    p.add_argument('start', help='Start structure CIF file')
+    p.add_argument('end', help='End structure CIF file')
+    p.add_argument('--output', '-o', help='Output directory')
+    p.add_argument('-v', '--verbose', action='count', default=0,
+                   help='Increase verbosity (-v for A* progress, -vv for more)')
+    p.add_argument('-q', '--quiet', action='store_true', help='Silent mode')
+    p.add_argument('--beam-width', type=int, default=1000, help='Beam width (default: 1000)')
+    p.add_argument('--max-iters', type=int, default=5000, help='Max iterations (default: 5000)')
 
-    # Common arguments
-    def add_common_args(p):
-        p.add_argument('start', help='Start structure CIF file')
-        p.add_argument('end', help='End structure CIF file')
-        p.add_argument('--output', '-o', help='Output directory')
-        p.add_argument('-v', '--verbose', action='count', default=0,
-                       help='Increase verbosity (-v for A* progress, -vv for more)')
-        p.add_argument('-q', '--quiet', action='store_true', help='Silent mode')
-        p.add_argument('--beam-width', type=int, default=1000, help='Beam width (default: 1000)')
-        p.add_argument('--max-iters', type=int, default=5000, help='Max iterations (default: 5000)')
 
-    def add_discretization_args(p, required=True):
-        p.add_argument('--xi', type=float, required=False, help='Lattice discretization (Angstrom^2)')
-        p.add_argument('--delta', type=int, required=False, help='Motif discretization')
+def _add_discretization_args(p, required=True):
+    p.add_argument('--xi', type=float, required=False, help='Lattice discretization (Angstrom^2)')
+    p.add_argument('--delta', type=int, required=False, help='Motif discretization')
 
-    def add_energy_args(p):
-        p.add_argument('--model', help='Path to local GRACE model (uses foundation model if not specified)')
 
-    def add_from_arg(p, help_text):
-        p.add_argument('--from', dest='from_result', help=help_text)
+def _add_energy_args(p):
+    p.add_argument('--model', help='Path to local GRACE model (uses foundation model if not specified)')
 
+
+def _add_from_arg(p, help_text):
+    p.add_argument('--from', dest='from_result', help=help_text)
+
+
+def register_subparsers(subparsers):
+    """Register barrier search subcommands with the given subparsers."""
     # astar (single A* pathfinding)
     astar_parser = subparsers.add_parser('astar', help='Run single A* pathfinding between two structures')
     astar_parser.add_argument('start', help='Starting structure CIF file')
@@ -625,7 +624,7 @@ def main():
 
     # search
     search_parser = subparsers.add_parser('search', help='Phase 1: Parameter search')
-    add_common_args(search_parser)
+    _add_common_args(search_parser)
     search_parser.add_argument('--xi', help='Comma-separated xi values (default: 1.5,1.25,1.0,0.75)')
     search_parser.add_argument('--atom-steps', help='Comma-separated atom step lengths in Angstrom (default: 0.4,0.3,0.2,0.1)')
     search_parser.add_argument('--dropout', type=float, default=0.0, help='Dropout probability (default: 0.0)')
@@ -634,10 +633,10 @@ def main():
 
     # sample
     sample_parser = subparsers.add_parser('sample', help='Phase 2: Path sampling')
-    add_common_args(sample_parser)
-    add_discretization_args(sample_parser, required=False)
-    add_energy_args(sample_parser)
-    add_from_arg(sample_parser, 'Load xi/delta/min_distance from search result JSON')
+    _add_common_args(sample_parser)
+    _add_discretization_args(sample_parser, required=False)
+    _add_energy_args(sample_parser)
+    _add_from_arg(sample_parser, 'Load xi/delta/min_distance from search result JSON')
     sample_parser.add_argument('--num-samples', type=int, default=20, help='Number of samples (default: 20)')
     sample_parser.add_argument('--dropout-min', type=float, default=0.05, help='Min dropout (default: 0.05)')
     sample_parser.add_argument('--dropout-max', type=float, default=0.1, help='Max dropout (default: 0.1)')
@@ -647,10 +646,10 @@ def main():
 
     # sweep
     sweep_parser = subparsers.add_parser('sweep', help='Phase 3: Ceiling sweep')
-    add_common_args(sweep_parser)
-    add_discretization_args(sweep_parser, required=False)
-    add_energy_args(sweep_parser)
-    add_from_arg(sweep_parser, 'Load xi/delta/ceiling from sample result JSON')
+    _add_common_args(sweep_parser)
+    _add_discretization_args(sweep_parser, required=False)
+    _add_energy_args(sweep_parser)
+    _add_from_arg(sweep_parser, 'Load xi/delta/ceiling from sample result JSON')
     sweep_parser.add_argument('--ceiling', type=float, help='Max energy ceiling (eV)')
     sweep_parser.add_argument('--num-ceilings', type=int, default=5, help='Number of ceiling levels (default: 5)')
     sweep_parser.add_argument('--attempts', type=int, default=3, help='Sweep: A* searches per ceiling level for path diversity (default: 3)')
@@ -663,10 +662,10 @@ def main():
 
     # ratchet
     ratchet_parser = subparsers.add_parser('ratchet', help='Phase 4: Barrier refinement')
-    add_common_args(ratchet_parser)
-    add_discretization_args(ratchet_parser, required=False)
-    add_energy_args(ratchet_parser)
-    add_from_arg(ratchet_parser, 'Load xi/delta/ceiling from sweep or sample result JSON')
+    _add_common_args(ratchet_parser)
+    _add_discretization_args(ratchet_parser, required=False)
+    _add_energy_args(ratchet_parser)
+    _add_from_arg(ratchet_parser, 'Load xi/delta/ceiling from sweep or sample result JSON')
     ratchet_parser.add_argument('--ceiling-abs', type=float, help='Initial ceiling as absolute energy (eV)')
     ratchet_parser.add_argument('--ceiling-rel-mev', type=float,
                                 help='Initial ceiling as meV/atom above highest endpoint energy')
@@ -712,10 +711,3 @@ def main():
     fb_parser.add_argument('--paths-per-round', type=int, default=10, help='Ratchet: A* searches per round (default: 10)')
     fb_parser.add_argument('--max-rounds', type=int, default=20, help='Ratchet: Max refinement rounds (default: 20)')
     fb_parser.set_defaults(func=find_barrier_command)
-
-    args = parser.parse_args()
-    args.func(args)
-
-
-if __name__ == '__main__':
-    main()
