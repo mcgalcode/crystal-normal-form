@@ -24,6 +24,47 @@ This representation has several useful properties:
 
 - By exploring the energy landscape over this graph, one can find saddle points representing minimum energy barriers between phases.
 
+## Installation
+
+### Requirements
+
+- Python 3.10+
+- Rust toolchain (for building the Rust acceleration module)
+
+### Install with uv (recommended)
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/crystal-normal-form.git
+cd crystal-normal-form
+
+# Install with uv (builds both Python and Rust components)
+uv pip install -e .
+```
+
+### Install with pip
+
+```bash
+pip install -e .
+```
+
+### Rust Acceleration
+
+The package includes optional Rust implementations of performance-critical algorithms. To enable Rust acceleration, set the `USE_RUST` environment variable:
+
+```bash
+export USE_RUST=1
+```
+
+If you don't have a Rust toolchain installed, the package will still work using pure Python implementations.
+
+### Verify Installation
+
+```bash
+# Check that the CLI is available
+cnf --help
+```
+
 ## Citation
 
 This implementation is based on the theoretical framework developed by David Mrdjenovich. If you use this code in your research, please cite his work:
