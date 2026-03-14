@@ -11,10 +11,8 @@
       
       
       
-        <link rel="prev" href="..">
+        <link rel="prev" href="../motif_normal_form/">
       
-      
-        <link rel="next" href="../cnf_overview/">
       
       
         
@@ -25,7 +23,7 @@
     
     
       
-        <title>Quickstart - Crystal Normal Form</title>
+        <title>Neighbor Finding - Crystal Normal Form</title>
       
     
     
@@ -76,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#quickstart" class="md-skip">
+        <a href="#neighbor-finding" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +110,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Quickstart
+              Neighbor Finding
             
           </span>
         </div>
@@ -282,37 +280,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Quickstart
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../quickstart/" class="md-nav__link">
         
   
   
@@ -328,165 +299,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#loading-crystal-structures" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Loading Crystal Structures
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Loading Crystal Structures">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#from-pymatgen-directly" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        From pymatgen directly
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#from-a-cif-file" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        From a CIF file
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#from-ase-atoms" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        From ASE Atoms
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#converting-to-crystal-normal-form" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Converting to Crystal Normal Form
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Converting to Crystal Normal Form">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#using-the-unitcell-helper" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Using the UnitCell helper
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#reconstructing-a-structure-from-cnf" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Reconstructing a Structure from CNF
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#finding-neighbors" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Finding Neighbors
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Finding Neighbors">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#lattice-vs-motif-neighbors" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Lattice vs Motif Neighbors
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#examining-a-neighbor" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Examining a Neighbor
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next Steps
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -495,8 +307,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -507,13 +321,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
@@ -534,7 +346,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -633,10 +445,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../neighbor_finding/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Neighbor Finding
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -652,6 +491,125 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#two-types-of-neighbors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Two Types of Neighbors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lattice-neighbors-the-42-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lattice Neighbors: The 42 Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validating-lattice-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validating Lattice Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#motif-neighbors-atomic-displacements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Motif Neighbors: Atomic Displacements
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-role-of-stabilizers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Role of Stabilizers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#canonicalization-and-deduplication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Canonicalization and Deduplication
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#self-loop-filtering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Self-Loop Filtering
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-neighbor-graph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Neighbor Graph
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -691,88 +649,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#loading-crystal-structures" class="md-nav__link">
+  <a href="#two-types-of-neighbors" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Loading Crystal Structures
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Loading Crystal Structures">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#from-pymatgen-directly" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        From pymatgen directly
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#from-a-cif-file" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        From a CIF file
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#from-ase-atoms" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        From ASE Atoms
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#converting-to-crystal-normal-form" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Converting to Crystal Normal Form
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Converting to Crystal Normal Form">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#using-the-unitcell-helper" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Using the UnitCell helper
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#reconstructing-a-structure-from-cnf" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Reconstructing a Structure from CNF
+        Two Types of Neighbors
       
     </span>
   </a>
@@ -780,49 +660,87 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#finding-neighbors" class="md-nav__link">
+  <a href="#lattice-neighbors-the-42-steps" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Finding Neighbors
+        Lattice Neighbors: The 42 Steps
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Finding Neighbors">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#lattice-vs-motif-neighbors" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Lattice vs Motif Neighbors
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#examining-a-neighbor" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Examining a Neighbor
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
+  <a href="#validating-lattice-steps" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Next Steps
+        Validating Lattice Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#motif-neighbors-atomic-displacements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Motif Neighbors: Atomic Displacements
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-role-of-stabilizers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Role of Stabilizers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#canonicalization-and-deduplication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Canonicalization and Deduplication
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#self-loop-filtering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Self-Loop Filtering
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-neighbor-graph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Neighbor Graph
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
       
     </span>
   </a>
@@ -1576,29 +1494,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="quickstart">Quickstart<a class="anchor-link" href="#quickstart">¶</a></h1><p>This tutorial shows how to convert crystal structures to Crystal Normal Form (CNF) and explore their neighbors.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="loading-crystal-structures">Loading Crystal Structures<a class="anchor-link" href="#loading-crystal-structures">¶</a></h2><p>CNF works with pymatgen <code>Structure</code> objects. Here are several ways to create or load structures.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="from-pymatgen-directly">From pymatgen directly<a class="anchor-link" href="#from-pymatgen-directly">¶</a></h3><p>You can create structures programmatically using pymatgen:</p>
+<h1 id="neighbor-finding">Neighbor Finding<a class="anchor-link" href="#neighbor-finding">¶</a></h1><p>This guide explains how neighbors are identified in the CNF representation. Every crystal has a well-defined set of neighbors: structures that differ by small geometric perturbations. These neighbors form a graph connecting all possible crystals of a given composition, enabling pathfinding algorithms to discover transformation pathways between phases.</p>
 </div>
 </div>
 </div>
@@ -1622,26 +1518,40 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pymatgen.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">Structure</span><span class="p">,</span> <span class="n">Lattice</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cnf</span><span class="w"> </span><span class="kn">import</span> <span class="n">CNFConstructor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cnf.navigation</span><span class="w"> </span><span class="kn">import</span> <span class="n">NeighborFinder</span><span class="p">,</span> <span class="n">find_neighbors</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="c1"># Create a simple NaCl structure</span>
-<span class="n">lattice</span> <span class="o">=</span> <span class="n">Lattice</span><span class="o">.</span><span class="n">cubic</span><span class="p">(</span><span class="mf">5.64</span><span class="p">)</span>
-<span class="n">nacl</span> <span class="o">=</span> <span class="n">Structure</span><span class="p">(</span>
-    <span class="n">lattice</span><span class="p">,</span>
-    <span class="p">[</span><span class="s2">"Na"</span><span class="p">,</span> <span class="s2">"Cl"</span><span class="p">],</span>
-    <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]]</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">nacl</span><span class="p">)</span>
+<span class="c1"># Create rutile TiO2</span>
+<span class="n">a</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="mf">4.594</span><span class="p">,</span> <span class="mf">2.959</span>
+<span class="n">lattice</span> <span class="o">=</span> <span class="n">Lattice</span><span class="o">.</span><span class="n">tetragonal</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+<span class="n">species</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Ti"</span><span class="p">,</span> <span class="s2">"Ti"</span><span class="p">,</span> <span class="s2">"O"</span><span class="p">,</span> <span class="s2">"O"</span><span class="p">,</span> <span class="s2">"O"</span><span class="p">,</span> <span class="s2">"O"</span><span class="p">]</span>
+<span class="n">coords</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.305</span><span class="p">,</span> <span class="mf">0.305</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.695</span><span class="p">,</span> <span class="mf">0.695</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.805</span><span class="p">,</span> <span class="mf">0.195</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.195</span><span class="p">,</span> <span class="mf">0.805</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]]</span>
+<span class="n">rutile</span> <span class="o">=</span> <span class="n">Structure</span><span class="p">(</span><span class="n">lattice</span><span class="p">,</span> <span class="n">species</span><span class="p">,</span> <span class="n">coords</span><span class="p">)</span>
+
+<span class="n">constructor</span> <span class="o">=</span> <span class="n">CNFConstructor</span><span class="p">(</span><span class="n">xi</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">constructor</span><span class="o">.</span><span class="n">from_pymatgen_structure</span><span class="p">(</span><span class="n">rutile</span><span class="p">)</span>
+<span class="n">cnf</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">cnf</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Rutile TiO2 CNF: </span><span class="si">{</span><span class="n">cnf</span><span class="o">.</span><span class="n">coords</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-1">from pymatgen.core import Structure, Lattice
+from cnf import CNFConstructor
+from cnf.navigation import NeighborFinder, find_neighbors
+import numpy as np
 
-# Create a simple NaCl structure
-lattice = Lattice.cubic(5.64)
-nacl = Structure(
-    lattice,
-    ["Na", "Cl"],
-    [[0, 0, 0], [0.5, 0.5, 0.5]]
-)
-print(nacl)</div>
+# Create rutile TiO2
+a, c = 4.594, 2.959
+lattice = Lattice.tetragonal(a, c)
+species = ["Ti", "Ti", "O", "O", "O", "O"]
+coords = [[0, 0, 0], [0.5, 0.5, 0.5], [0.305, 0.305, 0], [0.695, 0.695, 0], [0.805, 0.195, 0.5], [0.195, 0.805, 0.5]]
+rutile = Structure(lattice, species, coords)
+
+constructor = CNFConstructor(xi=1.0, delta=100)
+result = constructor.from_pymatgen_structure(rutile)
+cnf = result.cnf
+
+print(f"Rutile TiO2 CNF: {cnf.coords}")</div>
 </div>
 </div>
 </div>
@@ -1653,16 +1563,7 @@ print(nacl)</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Full Formula (Na1 Cl1)
-Reduced Formula: NaCl
-abc   :   5.640000   5.640000   5.640000
-angles:  90.000000  90.000000  90.000000
-pbc   :       True       True       True
-Sites (2)
-  #  SP      a    b    c
----  ----  ---  ---  ---
-  0  Na    0    0    0
-  1  Cl    0.5  0.5  0.5
+<pre>Rutile TiO2 CNF: (9, 21, 21, 51, 30, 30, 42, 50, 50, 50, 0, 30, 30, 0, 70, 70, 50, 20, 80, 50, 80, 20)
 </pre>
 </div>
 </div>
@@ -1676,12 +1577,13 @@ Sites (2)
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="from-a-cif-file">From a CIF file<a class="anchor-link" href="#from-a-cif-file">¶</a></h3>
+<h2 id="two-types-of-neighbors">Two Types of Neighbors<a class="anchor-link" href="#two-types-of-neighbors">¶</a></h2><p>The CNF tuple consists of two parts: the lattice (first 7 integers) and the motif (remaining coordinates). Correspondingly, there are two types of neighbors.</p>
+<p>Lattice neighbors differ in the vonorm coordinates and represent small strain transformations of the unit cell. Motif neighbors differ in the atomic position coordinates and represent small displacements of atoms within a fixed lattice. Together, these neighbors capture all possible small perturbations of a crystal structure.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -1699,19 +1601,38 @@ Sites (2)
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Load from CIF (uncomment and provide your own path)</span>
-<span class="c1"># struct = Structure.from_file("path/to/structure.cif")</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">finder</span> <span class="o">=</span> <span class="n">NeighborFinder</span><span class="o">.</span><span class="n">from_cnf</span><span class="p">(</span><span class="n">cnf</span><span class="p">)</span>
 
-<span class="c1"># Or use the UnitCell helper class</span>
-<span class="c1"># from cnf import UnitCell</span>
-<span class="c1"># unit_cell = UnitCell.from_cif("path/to/structure.cif")</span>
+<span class="n">lattice_neighbors</span> <span class="o">=</span> <span class="n">finder</span><span class="o">.</span><span class="n">find_lattice_neighbor_cnfs</span><span class="p">(</span><span class="n">cnf</span><span class="p">)</span>
+<span class="n">motif_neighbors</span> <span class="o">=</span> <span class="n">finder</span><span class="o">.</span><span class="n">find_motif_neighbor_cnfs</span><span class="p">(</span><span class="n">cnf</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Lattice neighbors: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">lattice_neighbors</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Motif neighbors: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">motif_neighbors</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Total neighbors: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">lattice_neighbors</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">motif_neighbors</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-2"># Load from CIF (uncomment and provide your own path)
-# struct = Structure.from_file("path/to/structure.cif")
+<div class="clipboard-copy-txt" id="cell-2">finder = NeighborFinder.from_cnf(cnf)
 
-# Or use the UnitCell helper class
-# from cnf import UnitCell
-# unit_cell = UnitCell.from_cif("path/to/structure.cif")</div>
+lattice_neighbors = finder.find_lattice_neighbor_cnfs(cnf)
+motif_neighbors = finder.find_motif_neighbor_cnfs(cnf)
+
+print(f"Lattice neighbors: {len(lattice_neighbors)}")
+print(f"Motif neighbors: {len(motif_neighbors)}")
+print(f"Total neighbors: {len(lattice_neighbors) + len(motif_neighbors)}")</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Lattice neighbors: 11
+Motif neighbors: 11
+Total neighbors: 22
+</pre>
 </div>
 </div>
 </div>
@@ -1724,7 +1645,9 @@ Sites (2)
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="from-ase-atoms">From ASE Atoms<a class="anchor-link" href="#from-ase-atoms">¶</a></h3>
+<h2 id="lattice-neighbors-the-42-steps">Lattice Neighbors: The 42 Steps<a class="anchor-link" href="#lattice-neighbors-the-42-steps">¶</a></h2><p>A lattice can have up to 42 neighboring lattices connected by small strains. These arise from the structure of the vonorm representation.</p>
+<p>Recall that the 7 vonorms are not independent—they satisfy a constraint relating the primary vonorms (indices 0-3, the squared lengths of superbasis vectors) to the secondary vonorms (indices 4-6, the squared lengths of pairwise sums). Valid lattice perturbations must preserve this constraint.</p>
+<p>The 42 possible steps come from considering all pairs of vonorm indices. For each pair, we adjust one index by +1 and the other by ±1, with the sign determined by whether the indices are primary or secondary. Each such adjustment, along with its negation, gives 2 steps per pair. With 21 pairs from 7 indices, we get 42 total steps.</p>
 </div>
 </div>
 </div>
@@ -1747,31 +1670,25 @@ Sites (2)
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ase</span><span class="w"> </span><span class="kn">import</span> <span class="n">Atoms</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">ase.build</span><span class="w"> </span><span class="kn">import</span> <span class="n">bulk</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pymatgen.io.ase</span><span class="w"> </span><span class="kn">import</span> <span class="n">AseAtomsAdaptor</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cnf.navigation.lattice_step</span><span class="w"> </span><span class="kn">import</span> <span class="n">LatticeStep</span>
 
-<span class="c1"># Create an ASE Atoms object</span>
-<span class="n">si_ase</span> <span class="o">=</span> <span class="n">bulk</span><span class="p">(</span><span class="s1">'Si'</span><span class="p">,</span> <span class="s1">'diamond'</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mf">5.43</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"ASE Atoms:"</span><span class="p">,</span> <span class="n">si_ase</span><span class="p">)</span>
+<span class="n">all_steps</span> <span class="o">=</span> <span class="n">LatticeStep</span><span class="o">.</span><span class="n">all_step_vecs</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Total lattice step vectors: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">all_steps</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
-<span class="c1"># Convert to pymatgen Structure</span>
-<span class="n">si_pmg</span> <span class="o">=</span> <span class="n">AseAtomsAdaptor</span><span class="o">.</span><span class="n">get_structure</span><span class="p">(</span><span class="n">si_ase</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">pymatgen Structure:"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">si_pmg</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Example step vectors:"</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">all_steps</span><span class="p">[:</span><span class="mi">6</span><span class="p">]):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  ... and </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">all_steps</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">6</span><span class="si">}</span><span class="s2"> more"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-3">from ase import Atoms
-from ase.build import bulk
-from pymatgen.io.ase import AseAtomsAdaptor
+<div class="clipboard-copy-txt" id="cell-3">from cnf.navigation.lattice_step import LatticeStep
 
-# Create an ASE Atoms object
-si_ase = bulk('Si', 'diamond', a=5.43)
-print("ASE Atoms:", si_ase)
+all_steps = LatticeStep.all_step_vecs()
+print(f"Total lattice step vectors: {len(all_steps)}")
 
-# Convert to pymatgen Structure
-si_pmg = AseAtomsAdaptor.get_structure(si_ase)
-print("\npymatgen Structure:")
-print(si_pmg)</div>
+print("\nExample step vectors:")
+for i, step in enumerate(all_steps[:6]):
+    print(f"  {step}")
+print(f"  ... and {len(all_steps) - 6} more")</div>
 </div>
 </div>
 </div>
@@ -1783,38 +1700,19 @@ print(si_pmg)</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>ASE Atoms: Atoms(symbols='Si2', pbc=True, cell=[[0.0, 2.715, 2.715], [2.715, 0.0, 2.715], [2.715, 2.715, 0.0]])
+<pre>Total lattice step vectors: 42
 
-pymatgen Structure:
-Full Formula (Si2)
-Reduced Formula: Si
-abc   :   3.839590   3.839590   3.839590
-angles:  60.000000  60.000000  60.000000
-pbc   :       True       True       True
-Sites (2)
-  #  SP       a     b     c
----  ----  ----  ----  ----
-  0  Si    0     0     0
-  1  Si    0.25  0.25  0.25
+Example step vectors:
+  [1, -1, 0, 0, 0, 0, 0]
+  [-1, 1, 0, 0, 0, 0, 0]
+  [1, 0, -1, 0, 0, 0, 0]
+  [-1, 0, 1, 0, 0, 0, 0]
+  [1, 0, 0, -1, 0, 0, 0]
+  [-1, 0, 0, 1, 0, 0, 0]
+  ... and 36 more
 </pre>
 </div>
 </div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="converting-to-crystal-normal-form">Converting to Crystal Normal Form<a class="anchor-link" href="#converting-to-crystal-normal-form">¶</a></h2><p>To convert a structure to CNF, you need to specify two discretization parameters:</p>
-<ul>
-<li><strong>xi</strong> (ξ): Lattice resolution in Å². Smaller values give finer resolution.</li>
-<li><strong>delta</strong> (δ): Motif resolution. Atomic coordinates become multiples of 1/δ.</li>
-</ul>
-<p>Typical values are <code>xi=1.0</code> and <code>delta=100</code>.</p>
 </div>
 </div>
 </div>
@@ -1837,37 +1735,25 @@ Sites (2)
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cnf</span><span class="w"> </span><span class="kn">import</span> <span class="n">CNFConstructor</span>
-
-<span class="c1"># Create a CNF constructor with discretization parameters</span>
-<span class="n">xi</span> <span class="o">=</span> <span class="mf">1.0</span>    <span class="c1"># lattice resolution (Å²)</span>
-<span class="n">delta</span> <span class="o">=</span> <span class="mi">100</span>  <span class="c1"># motif resolution (1/δ fractional units)</span>
-
-<span class="n">constructor</span> <span class="o">=</span> <span class="n">CNFConstructor</span><span class="p">(</span><span class="n">xi</span><span class="o">=</span><span class="n">xi</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="n">delta</span><span class="p">)</span>
-
-<span class="c1"># Convert the NaCl structure to CNF</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">constructor</span><span class="o">.</span><span class="n">from_pymatgen_structure</span><span class="p">(</span><span class="n">nacl</span><span class="p">)</span>
-<span class="n">cnf</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">cnf</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="s2">"CNF coordinates:"</span><span class="p">,</span> <span class="n">cnf</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Lattice Normal Form (vonorms):"</span><span class="p">,</span> <span class="n">cnf</span><span class="o">.</span><span class="n">lattice_normal_form</span><span class="o">.</span><span class="n">vonorms</span><span class="o">.</span><span class="n">tuple</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Motif Normal Form:"</span><span class="p">,</span> <span class="n">cnf</span><span class="o">.</span><span class="n">motif_normal_form</span><span class="o">.</span><span class="n">coord_list</span><span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Show the pattern: pairs of indices with specific sign rules</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Step vector structure:"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"  Primary indices (0-3): squared lengths of superbasis vectors"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"  Secondary indices (4-6): squared lengths of pairwise sums"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Sign rules for (i, j) pairs:"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"  Primary-Primary:     (+1, -1)"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"  Primary-Secondary:   (+1, +1)"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"  Secondary-Secondary: (+1, -1)"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-4">from cnf import CNFConstructor
-
-# Create a CNF constructor with discretization parameters
-xi = 1.0    # lattice resolution (Å²)
-delta = 100  # motif resolution (1/δ fractional units)
-
-constructor = CNFConstructor(xi=xi, delta=delta)
-
-# Convert the NaCl structure to CNF
-result = constructor.from_pymatgen_structure(nacl)
-cnf = result.cnf
-
-print("CNF coordinates:", cnf.coords)
-print("\nLattice Normal Form (vonorms):", cnf.lattice_normal_form.vonorms.tuple)
-print("Motif Normal Form:", cnf.motif_normal_form.coord_list)</div>
+<div class="clipboard-copy-txt" id="cell-4"># Show the pattern: pairs of indices with specific sign rules
+print("Step vector structure:")
+print("  Primary indices (0-3): squared lengths of superbasis vectors")
+print("  Secondary indices (4-6): squared lengths of pairwise sums")
+print()
+print("Sign rules for (i, j) pairs:")
+print("  Primary-Primary:     (+1, -1)")
+print("  Primary-Secondary:   (+1, +1)")
+print("  Secondary-Secondary: (+1, -1)")</div>
 </div>
 </div>
 </div>
@@ -1879,10 +1765,14 @@ print("Motif Normal Form:", cnf.motif_normal_form.coord_list)</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>CNF coordinates: (32, 32, 33, 95, 64, 64, 64, 50, 50, 50)
+<pre>Step vector structure:
+  Primary indices (0-3): squared lengths of superbasis vectors
+  Secondary indices (4-6): squared lengths of pairwise sums
 
-Lattice Normal Form (vonorms): (32, 32, 33, 95, 64, 64, 64)
-Motif Normal Form: (50, 50, 50)
+Sign rules for (i, j) pairs:
+  Primary-Primary:     (+1, -1)
+  Primary-Secondary:   (+1, +1)
+  Secondary-Secondary: (+1, -1)
 </pre>
 </div>
 </div>
@@ -1896,7 +1786,8 @@ Motif Normal Form: (50, 50, 50)
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="using-the-unitcell-helper">Using the UnitCell helper<a class="anchor-link" href="#using-the-unitcell-helper">¶</a></h3><p>The <code>UnitCell</code> class provides a convenient interface:</p>
+<h2 id="validating-lattice-steps">Validating Lattice Steps<a class="anchor-link" href="#validating-lattice-steps">¶</a></h2><p>Not all 42 steps produce valid neighbors from a given lattice. A step is valid only if the resulting superbasis remains obtuse, meaning all conorms (dot products between superbasis vectors) are non-positive.</p>
+<p>The validation process applies each step vector to the current vonorms, checks that the resulting conorms satisfy the obtuseness constraint, and then canonicalizes the result to ensure it is in normal form.</p>
 </div>
 </div>
 </div>
@@ -1919,23 +1810,21 @@ Motif Normal Form: (50, 50, 50)
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cnf</span><span class="w"> </span><span class="kn">import</span> <span class="n">UnitCell</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Show which steps are valid for this lattice</span>
+<span class="n">current_vonorms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cnf</span><span class="o">.</span><span class="n">coords</span><span class="p">[:</span><span class="mi">7</span><span class="p">])</span>
 
-<span class="c1"># Create a UnitCell from a pymatgen Structure</span>
-<span class="n">unit_cell</span> <span class="o">=</span> <span class="n">UnitCell</span><span class="o">.</span><span class="n">from_pymatgen_structure</span><span class="p">(</span><span class="n">nacl</span><span class="p">)</span>
-
-<span class="c1"># Convert to CNF</span>
-<span class="n">cnf</span> <span class="o">=</span> <span class="n">unit_cell</span><span class="o">.</span><span class="n">to_cnf</span><span class="p">(</span><span class="n">xi</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"CNF:"</span><span class="p">,</span> <span class="n">cnf</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Current vonorms: </span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">current_vonorms</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Valid lattice neighbors: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">lattice_neighbors</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Invalid steps (rejected): </span><span class="si">{</span><span class="mi">42</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">lattice_neighbors</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-5">from cnf import UnitCell
+<div class="clipboard-copy-txt" id="cell-5"># Show which steps are valid for this lattice
+current_vonorms = np.array(cnf.coords[:7])
 
-# Create a UnitCell from a pymatgen Structure
-unit_cell = UnitCell.from_pymatgen_structure(nacl)
-
-# Convert to CNF
-cnf = unit_cell.to_cnf(xi=1.0, delta=100)
-print("CNF:", cnf)</div>
+print(f"Current vonorms: {tuple(current_vonorms)}")
+print()
+print(f"Valid lattice neighbors: {len(lattice_neighbors)}")
+print(f"Invalid steps (rejected): {42 - len(lattice_neighbors)}")</div>
 </div>
 </div>
 </div>
@@ -1947,21 +1836,13 @@ print("CNF:", cnf)</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>CNF: CrystalNormalForm(lattice=LatticeNormalForm(vonorms=(32, 32, 33, 95, 64, 64, 64),step_size=1.0), motif=MotifNormalForm((50, 50, 50),elements=['Cl', 'Na'],delta=100), xi=1.0, delta=100)
+<pre>Current vonorms: (9, 21, 21, 51, 30, 30, 42)
+
+Valid lattice neighbors: 11
+Invalid steps (rejected): 31
 </pre>
 </div>
 </div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="reconstructing-a-structure-from-cnf">Reconstructing a Structure from CNF<a class="anchor-link" href="#reconstructing-a-structure-from-cnf">¶</a></h2><p>You can convert a CNF back to a pymatgen Structure:</p>
 </div>
 </div>
 </div>
@@ -1984,13 +1865,25 @@ print("CNF:", cnf)</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Reconstruct the structure from CNF</span>
-<span class="n">reconstructed</span> <span class="o">=</span> <span class="n">cnf</span><span class="o">.</span><span class="n">reconstruct</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">reconstructed</span><span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Show how lattice neighbors differ from the original</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"First 5 lattice neighbors (showing vonorm changes):"</span><span class="p">)</span>
+<span class="n">orig_vonorms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cnf</span><span class="o">.</span><span class="n">coords</span><span class="p">[:</span><span class="mi">7</span><span class="p">])</span>
+
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lattice_neighbors</span><span class="p">[:</span><span class="mi">5</span><span class="p">]):</span>
+    <span class="n">neighbor_vonorms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">neighbor</span><span class="o">.</span><span class="n">coords</span><span class="p">[:</span><span class="mi">7</span><span class="p">])</span>
+    <span class="n">diff</span> <span class="o">=</span> <span class="n">neighbor_vonorms</span> <span class="o">-</span> <span class="n">orig_vonorms</span>
+    <span class="n">changes</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"v</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">diff</span><span class="p">[</span><span class="n">j</span><span class="p">])</span><span class="si">:</span><span class="s2">+d</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">diff</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">. </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">changes</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-6"># Reconstruct the structure from CNF
-reconstructed = cnf.reconstruct()
-print(reconstructed)</div>
+<div class="clipboard-copy-txt" id="cell-6"># Show how lattice neighbors differ from the original
+print("First 5 lattice neighbors (showing vonorm changes):")
+orig_vonorms = np.array(cnf.coords[:7])
+
+for i, neighbor in enumerate(lattice_neighbors[:5]):
+    neighbor_vonorms = np.array(neighbor.coords[:7])
+    diff = neighbor_vonorms - orig_vonorms
+    changes = [f"v{j}: {int(diff[j]):+d}" for j in np.where(diff != 0)[0]]
+    print(f"  {i+1}. {', '.join(changes)}")</div>
 </div>
 </div>
 </div>
@@ -2002,16 +1895,12 @@ print(reconstructed)</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Full Formula (Na1 Cl1)
-Reduced Formula: NaCl
-abc   :   5.656854   5.656854   5.744563
-angles:  90.881613  90.881613  90.000000
-pbc   :       True       True       True
-Sites (2)
-  #  SP      a    b    c
----  ----  ---  ---  ---
-  0  Cl    0    0    0
-  1  Na    0.5  0.5  0.5
+<pre>First 5 lattice neighbors (showing vonorm changes):
+  1. v2: +1, v3: -1
+  2. v1: +1, v2: +9, v3: -9, v5: -8, v6: +9
+  3. v2: +9, v3: -9, v4: -1, v5: -8, v6: +9
+  4. v0: +1, v2: +9, v3: -10, v5: -9, v6: +9
+  5. v3: -1, v6: -1
 </pre>
 </div>
 </div>
@@ -2025,7 +1914,8 @@ Sites (2)
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="finding-neighbors">Finding Neighbors<a class="anchor-link" href="#finding-neighbors">¶</a></h2><p>One of the key features of CNF is that every crystal has well-defined "neighbors" - structures that differ by small strains or atomic displacements. This creates a navigable graph over all possible crystal structures.</p>
+<h2 id="motif-neighbors-atomic-displacements">Motif Neighbors: Atomic Displacements<a class="anchor-link" href="#motif-neighbors-atomic-displacements">¶</a></h2><p>Motif neighbors keep the lattice fixed and perturb the atomic positions. For a structure with N atoms, there are up to 8(N-1) motif neighbors. The factor of N-1 arises because one atom is fixed at the origin.</p>
+<p>For each non-origin atom, we consider two types of perturbations. First, we vary each of the three fractional coordinates individually by ±1 (in units of 1/δ), giving 6 neighbors per atom. Second, we vary all three coordinates simultaneously by ±1, giving 2 more neighbors per atom. This corresponds to a diagonal displacement in fractional coordinate space.</p>
 </div>
 </div>
 </div>
@@ -2048,27 +1938,29 @@ Sites (2)
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cnf.navigation</span><span class="w"> </span><span class="kn">import</span> <span class="n">NeighborFinder</span><span class="p">,</span> <span class="n">find_neighbors</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">n_atoms</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cnf</span><span class="o">.</span><span class="n">elements</span><span class="p">)</span>
+<span class="n">n_non_origin</span> <span class="o">=</span> <span class="n">n_atoms</span> <span class="o">-</span> <span class="mi">1</span>
 
-<span class="c1"># Method 1: Use the convenience function</span>
-<span class="n">neighbors</span> <span class="o">=</span> <span class="n">find_neighbors</span><span class="p">(</span><span class="n">cnf</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">neighbors</span><span class="p">)</span><span class="si">}</span><span class="s2"> neighbors"</span><span class="p">)</span>
-
-<span class="c1"># Method 2: Use NeighborFinder for more control</span>
-<span class="n">finder</span> <span class="o">=</span> <span class="n">NeighborFinder</span><span class="o">.</span><span class="n">from_cnf</span><span class="p">(</span><span class="n">cnf</span><span class="p">)</span>
-<span class="n">neighbors</span> <span class="o">=</span> <span class="n">finder</span><span class="o">.</span><span class="n">find_neighbors</span><span class="p">(</span><span class="n">cnf</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">neighbors</span><span class="p">)</span><span class="si">}</span><span class="s2"> neighbors"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Number of atoms: </span><span class="si">{</span><span class="n">n_atoms</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Non-origin atoms: </span><span class="si">{</span><span class="n">n_non_origin</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Individual coordinate variations: </span><span class="si">{</span><span class="n">n_non_origin</span><span class="si">}</span><span class="s2"> atoms × 3 coords × 2 directions = </span><span class="si">{</span><span class="n">n_non_origin</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">6</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Diagonal variations: </span><span class="si">{</span><span class="n">n_non_origin</span><span class="si">}</span><span class="s2"> atoms × 2 directions = </span><span class="si">{</span><span class="n">n_non_origin</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">2</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Maximum motif neighbors: </span><span class="si">{</span><span class="n">n_non_origin</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">8</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Actual motif neighbors found: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">motif_neighbors</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-7">from cnf.navigation import NeighborFinder, find_neighbors
+<div class="clipboard-copy-txt" id="cell-7">n_atoms = len(cnf.elements)
+n_non_origin = n_atoms - 1
 
-# Method 1: Use the convenience function
-neighbors = find_neighbors(cnf)
-print(f"Found {len(neighbors)} neighbors")
-
-# Method 2: Use NeighborFinder for more control
-finder = NeighborFinder.from_cnf(cnf)
-neighbors = finder.find_neighbors(cnf)
-print(f"Found {len(neighbors)} neighbors")</div>
+print(f"Number of atoms: {n_atoms}")
+print(f"Non-origin atoms: {n_non_origin}")
+print()
+print(f"Individual coordinate variations: {n_non_origin} atoms × 3 coords × 2 directions = {n_non_origin * 6}")
+print(f"Diagonal variations: {n_non_origin} atoms × 2 directions = {n_non_origin * 2}")
+print(f"Maximum motif neighbors: {n_non_origin * 8}")
+print()
+print(f"Actual motif neighbors found: {len(motif_neighbors)}")</div>
 </div>
 </div>
 </div>
@@ -2080,26 +1972,17 @@ print(f"Found {len(neighbors)} neighbors")</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Found 25 neighbors
-Found 25 neighbors
+<pre>Number of atoms: 6
+Non-origin atoms: 5
+
+Individual coordinate variations: 5 atoms × 3 coords × 2 directions = 30
+Diagonal variations: 5 atoms × 2 directions = 10
+Maximum motif neighbors: 40
+
+Actual motif neighbors found: 11
 </pre>
 </div>
 </div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="lattice-vs-motif-neighbors">Lattice vs Motif Neighbors<a class="anchor-link" href="#lattice-vs-motif-neighbors">¶</a></h3><p>Neighbors come in two types:</p>
-<ul>
-<li><strong>Lattice neighbors</strong>: Differ by a small strain (±1 step in vonorm space)</li>
-<li><strong>Motif neighbors</strong>: Differ by a small atomic displacement (±1 step in fractional coordinates)</li>
-</ul>
 </div>
 </div>
 </div>
@@ -2122,19 +2005,35 @@ Found 25 neighbors
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Find lattice and motif neighbors separately</span>
-<span class="n">lattice_neighbors</span> <span class="o">=</span> <span class="n">finder</span><span class="o">.</span><span class="n">find_lattice_neighbor_cnfs</span><span class="p">(</span><span class="n">cnf</span><span class="p">)</span>
-<span class="n">motif_neighbors</span> <span class="o">=</span> <span class="n">finder</span><span class="o">.</span><span class="n">find_motif_neighbor_cnfs</span><span class="p">(</span><span class="n">cnf</span><span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Show how motif neighbors differ from the original</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"First 5 motif neighbors (showing coordinate changes):"</span><span class="p">)</span>
+<span class="n">orig_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cnf</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Lattice neighbors: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">lattice_neighbors</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Motif neighbors: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">motif_neighbors</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">motif_neighbors</span><span class="p">[:</span><span class="mi">5</span><span class="p">]):</span>
+    <span class="n">neighbor_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">neighbor</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
+    <span class="n">diff</span> <span class="o">=</span> <span class="n">neighbor_coords</span> <span class="o">-</span> <span class="n">orig_coords</span>
+    <span class="c1"># Only show motif differences (indices 7+)</span>
+    <span class="n">changes</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">]: </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">diff</span><span class="p">[</span><span class="n">j</span><span class="p">])</span><span class="si">:</span><span class="s2">+d</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">diff</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">j</span> <span class="o">&gt;=</span> <span class="mi">7</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">changes</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">. </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">changes</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># The neighbor might have permuted coordinates</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">. (coordinates reordered by canonicalization)"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-8"># Find lattice and motif neighbors separately
-lattice_neighbors = finder.find_lattice_neighbor_cnfs(cnf)
-motif_neighbors = finder.find_motif_neighbor_cnfs(cnf)
+<div class="clipboard-copy-txt" id="cell-8"># Show how motif neighbors differ from the original
+print("First 5 motif neighbors (showing coordinate changes):")
+orig_coords = np.array(cnf.coords)
 
-print(f"Lattice neighbors: {len(lattice_neighbors)}")
-print(f"Motif neighbors: {len(motif_neighbors)}")</div>
+for i, neighbor in enumerate(motif_neighbors[:5]):
+    neighbor_coords = np.array(neighbor.coords)
+    diff = neighbor_coords - orig_coords
+    # Only show motif differences (indices 7+)
+    changes = [f"[{j}]: {int(diff[j]):+d}" for j in np.where(diff != 0)[0] if j &gt;= 7]
+    if changes:
+        print(f"  {i+1}. {', '.join(changes)}")
+    else:
+        # The neighbor might have permuted coordinates
+        print(f"  {i+1}. (coordinates reordered by canonicalization)")</div>
 </div>
 </div>
 </div>
@@ -2146,8 +2045,12 @@ print(f"Motif neighbors: {len(motif_neighbors)}")</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Lattice neighbors: 22
-Motif neighbors: 4
+<pre>First 5 motif neighbors (showing coordinate changes):
+  1. [8]: -1, [11]: -1, [14]: -1, [17]: -1, [20]: -1
+  2. [16]: -1, [17]: +1, [18]: -1
+  3. [16]: -1, [17]: -1, [18]: +1
+  4. [16]: -1
+  5. [7]: -1
 </pre>
 </div>
 </div>
@@ -2161,7 +2064,8 @@ Motif neighbors: 4
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="examining-a-neighbor">Examining a Neighbor<a class="anchor-link" href="#examining-a-neighbor">¶</a></h3><p>Let's look at how a neighbor differs from the original structure:</p>
+<h2 id="the-role-of-stabilizers">The Role of Stabilizers<a class="anchor-link" href="#the-role-of-stabilizers">¶</a></h2><p>High-symmetry lattices have stabilizers: permutations that leave the canonical vonorms unchanged. When finding motif neighbors, we must account for these symmetries.</p>
+<p>The algorithm applies each stabilizer transformation to the motif before generating coordinate perturbations. This ensures that equivalent perturbations related by lattice symmetry are discovered. After generating all candidates, each is canonicalized (via the MNF algorithm) and duplicates are removed.</p>
 </div>
 </div>
 </div>
@@ -2184,31 +2088,25 @@ Motif neighbors: 4
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">if</span> <span class="n">neighbors</span><span class="p">:</span>
-    <span class="n">neighbor</span> <span class="o">=</span> <span class="n">neighbors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"Original CNF coords:"</span><span class="p">,</span> <span class="n">cnf</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"Neighbor CNF coords:"</span><span class="p">,</span> <span class="n">neighbor</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
-    
-    <span class="c1"># Reconstruct and compare volumes</span>
-    <span class="n">orig_struct</span> <span class="o">=</span> <span class="n">cnf</span><span class="o">.</span><span class="n">reconstruct</span><span class="p">()</span>
-    <span class="n">neighbor_struct</span> <span class="o">=</span> <span class="n">neighbor</span><span class="o">.</span><span class="n">reconstruct</span><span class="p">()</span>
-    
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Original volume: </span><span class="si">{</span><span class="n">orig_struct</span><span class="o">.</span><span class="n">volume</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> Å³"</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Neighbor volume: </span><span class="si">{</span><span class="n">neighbor_struct</span><span class="o">.</span><span class="n">volume</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> Å³"</span><span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cnf.lattice.voronoi</span><span class="w"> </span><span class="kn">import</span> <span class="n">VonormList</span>
+
+<span class="n">vonorms</span> <span class="o">=</span> <span class="n">VonormList</span><span class="p">(</span><span class="n">cnf</span><span class="o">.</span><span class="n">coords</span><span class="p">[:</span><span class="mi">7</span><span class="p">],</span> <span class="n">conorm_tol</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">stabilizers</span> <span class="o">=</span> <span class="n">vonorms</span><span class="o">.</span><span class="n">stabilizer_matrices_fast</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Number of stabilizer matrices: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">stabilizers</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Each stabilizer represents a symmetry operation that preserves the lattice."</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Motif perturbations are tried from each stabilizer-transformed starting point."</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-9">if neighbors:
-    neighbor = neighbors[0]
-    
-    print("Original CNF coords:", cnf.coords)
-    print("Neighbor CNF coords:", neighbor.coords)
-    
-    # Reconstruct and compare volumes
-    orig_struct = cnf.reconstruct()
-    neighbor_struct = neighbor.reconstruct()
-    
-    print(f"\nOriginal volume: {orig_struct.volume:.3f} Å³")
-    print(f"Neighbor volume: {neighbor_struct.volume:.3f} Å³")</div>
+<div class="clipboard-copy-txt" id="cell-9">from cnf.lattice.voronoi import VonormList
+
+vonorms = VonormList(cnf.coords[:7], conorm_tol=0)
+stabilizers = vonorms.stabilizer_matrices_fast()
+
+print(f"Number of stabilizer matrices: {len(stabilizers)}")
+print()
+print("Each stabilizer represents a symmetry operation that preserves the lattice.")
+print("Motif perturbations are tried from each stabilizer-transformed starting point.")</div>
 </div>
 </div>
 </div>
@@ -2220,11 +2118,10 @@ Motif neighbors: 4
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Original CNF coords: (32, 32, 33, 95, 64, 64, 64, 50, 50, 50)
-Neighbor CNF coords: (32, 32, 33, 95, 64, 63, 65, 50, 50, 50)
+<pre>Number of stabilizer matrices: 8
 
-Original volume: 183.782 Å³
-Neighbor volume: 183.739 Å³
+Each stabilizer represents a symmetry operation that preserves the lattice.
+Motif perturbations are tried from each stabilizer-transformed starting point.
 </pre>
 </div>
 </div>
@@ -2238,13 +2135,223 @@ Neighbor volume: 183.739 Å³
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="next-steps">Next Steps<a class="anchor-link" href="#next-steps">¶</a></h2><p>Now that you can create CNFs and find neighbors, you can:</p>
-<ul>
-<li>Use A* search to find paths between two crystal structures</li>
-<li>Explore the energy landscape using the waterfill algorithm</li>
-<li>Calculate energy barriers between phases</li>
-</ul>
-<p>See the CLI reference for command-line tools, or the Python API guide for programmatic access.</p>
+<h2 id="canonicalization-and-deduplication">Canonicalization and Deduplication<a class="anchor-link" href="#canonicalization-and-deduplication">¶</a></h2><p>After generating candidate neighbors, each must be converted to canonical form. For lattice neighbors, this means recomputing the LNF (applying permissible permutations and selecting the lexicographically smallest vonorms). For motif neighbors, this means recomputing the MNF (trying all stabilizers and origin shifts, then selecting the lexicographically smallest coordinates).</p>
+<p>Canonicalization serves two purposes. First, it ensures that neighbors are directly comparable—two structures are identical if and only if their canonical forms match. Second, it eliminates duplicates: different perturbations that produce the same physical structure will canonicalize to the same tuple.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [10]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-10">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># The combined neighbor set is deduplicated</span>
+<span class="n">all_neighbors</span> <span class="o">=</span> <span class="n">find_neighbors</span><span class="p">(</span><span class="n">cnf</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Lattice neighbors: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">lattice_neighbors</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Motif neighbors: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">motif_neighbors</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Combined (deduplicated): </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">all_neighbors</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"The combined count equals the sum because lattice and motif neighbors"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"are disjoint—they change different parts of the CNF tuple."</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-10"># The combined neighbor set is deduplicated
+all_neighbors = find_neighbors(cnf)
+
+print(f"Lattice neighbors: {len(lattice_neighbors)}")
+print(f"Motif neighbors: {len(motif_neighbors)}")
+print(f"Combined (deduplicated): {len(all_neighbors)}")
+print()
+print("The combined count equals the sum because lattice and motif neighbors")
+print("are disjoint—they change different parts of the CNF tuple.")</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Lattice neighbors: 11
+Motif neighbors: 11
+Combined (deduplicated): 22
+
+The combined count equals the sum because lattice and motif neighbors
+are disjoint—they change different parts of the CNF tuple.
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="self-loop-filtering">Self-Loop Filtering<a class="anchor-link" href="#self-loop-filtering">¶</a></h2><p>On high-symmetry lattices, a perturbation can sometimes map back to the original structure after canonicalization. These self-loops must be filtered out to avoid infinite loops in pathfinding algorithms.</p>
+<p>The implementation explicitly checks for and removes the original point from the neighbor set.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [11]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-11">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Verify no self-loops</span>
+<span class="n">original_tuple</span> <span class="o">=</span> <span class="n">cnf</span><span class="o">.</span><span class="n">coords</span>
+<span class="n">self_loops</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">all_neighbors</span> <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">coords</span> <span class="o">==</span> <span class="n">original_tuple</span><span class="p">]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Self-loops found: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">self_loops</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"(Self-loops are automatically filtered out)"</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-11"># Verify no self-loops
+original_tuple = cnf.coords
+self_loops = [n for n in all_neighbors if n.coords == original_tuple]
+
+print(f"Self-loops found: {len(self_loops)}")
+print("(Self-loops are automatically filtered out)")</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Self-loops found: 0
+(Self-loops are automatically filtered out)
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="the-neighbor-graph">The Neighbor Graph<a class="anchor-link" href="#the-neighbor-graph">¶</a></h2><p>The neighbor relation defines a graph over all possible crystals of a given composition. Each crystal is a node, and edges connect crystals that are neighbors. This graph is symmetric: if B is a neighbor of A, then A is a neighbor of B.</p>
+<p>Pathfinding algorithms like A* can traverse this graph to find transformation pathways between any two structures. The path length gives a measure of structural distance, and by evaluating energies along the path, one can identify minimum-energy barriers between phases.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [12]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-12">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Verify symmetry: pick a neighbor and check that the original is in its neighbor set</span>
+<span class="k">if</span> <span class="n">all_neighbors</span><span class="p">:</span>
+    <span class="n">test_neighbor</span> <span class="o">=</span> <span class="n">all_neighbors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">neighbor_of_neighbor</span> <span class="o">=</span> <span class="n">find_neighbors</span><span class="p">(</span><span class="n">test_neighbor</span><span class="p">)</span>
+    
+    <span class="c1"># Check if original is a neighbor of the neighbor</span>
+    <span class="n">original_in_neighbors</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">coords</span> <span class="o">==</span> <span class="n">original_tuple</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">neighbor_of_neighbor</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Testing symmetry with neighbor: </span><span class="si">{</span><span class="n">test_neighbor</span><span class="o">.</span><span class="n">coords</span><span class="p">[:</span><span class="mi">7</span><span class="p">]</span><span class="si">}</span><span class="s2">..."</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Original is neighbor of neighbor: </span><span class="si">{</span><span class="n">original_in_neighbors</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-12"># Verify symmetry: pick a neighbor and check that the original is in its neighbor set
+if all_neighbors:
+    test_neighbor = all_neighbors[0]
+    neighbor_of_neighbor = find_neighbors(test_neighbor)
+    
+    # Check if original is a neighbor of the neighbor
+    original_in_neighbors = any(n.coords == original_tuple for n in neighbor_of_neighbor)
+    
+    print(f"Testing symmetry with neighbor: {test_neighbor.coords[:7]}...")
+    print(f"Original is neighbor of neighbor: {original_in_neighbors}")</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Testing symmetry with neighbor: (9, 21, 21, 51, 30, 30, 42)...
+Original is neighbor of neighbor: True
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="summary">Summary<a class="anchor-link" href="#summary">¶</a></h2><p>Neighbor finding in the CNF representation works as follows:</p>
+<ol>
+<li><p>Lattice neighbors are generated by applying up to 42 step vectors to the vonorms, validating that the result has an obtuse superbasis, and canonicalizing via the LNF algorithm.</p>
+</li>
+<li><p>Motif neighbors are generated by perturbing each non-origin atom's coordinates by ±1 (individually and diagonally), applying all stabilizer transformations, and canonicalizing via the MNF algorithm.</p>
+</li>
+<li><p>Both types of neighbors are deduplicated and self-loops are removed.</p>
+</li>
+</ol>
+<p>The result is a well-defined neighbor graph connecting all crystals of a given composition, suitable for systematic exploration and pathfinding.</p>
 </div>
 </div>
 </div>

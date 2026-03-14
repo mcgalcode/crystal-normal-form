@@ -11,10 +11,10 @@
       
       
       
-        <link rel="prev" href="..">
+        <link rel="prev" href="../lattice_normal_form/">
       
       
-        <link rel="next" href="../cnf_overview/">
+        <link rel="next" href="../neighbor_finding/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Quickstart - Crystal Normal Form</title>
+        <title>Motif Normal Form - Crystal Normal Form</title>
       
     
     
@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#quickstart" class="md-skip">
+        <a href="#motif-normal-form" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Quickstart
+              Motif Normal Form
             
           </span>
         </div>
@@ -282,37 +282,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Quickstart
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../quickstart/" class="md-nav__link">
         
   
   
@@ -328,165 +301,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#loading-crystal-structures" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Loading Crystal Structures
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Loading Crystal Structures">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#from-pymatgen-directly" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        From pymatgen directly
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#from-a-cif-file" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        From a CIF file
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#from-ase-atoms" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        From ASE Atoms
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#converting-to-crystal-normal-form" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Converting to Crystal Normal Form
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Converting to Crystal Normal Form">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#using-the-unitcell-helper" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Using the UnitCell helper
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#reconstructing-a-structure-from-cnf" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Reconstructing a Structure from CNF
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#finding-neighbors" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Finding Neighbors
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Finding Neighbors">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#lattice-vs-motif-neighbors" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Lattice vs Motif Neighbors
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#examining-a-neighbor" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Examining a Neighbor
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next Steps
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -495,8 +309,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -507,13 +323,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
@@ -534,7 +348,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -605,10 +419,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../motif_normal_form/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Motif Normal Form
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -624,6 +465,114 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#multiple-equivalent-representations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multiple Equivalent Representations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stabilizers-from-the-lnf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stabilizers from the LNF
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#applying-stabilizer-transformations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Applying Stabilizer Transformations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#origin-shifts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Origin Shifts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sorting-and-lexicographic-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sorting and Lexicographic Selection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#discretization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Discretization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-complete-cnf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Complete CNF
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -691,88 +640,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#loading-crystal-structures" class="md-nav__link">
+  <a href="#multiple-equivalent-representations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Loading Crystal Structures
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Loading Crystal Structures">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#from-pymatgen-directly" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        From pymatgen directly
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#from-a-cif-file" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        From a CIF file
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#from-ase-atoms" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        From ASE Atoms
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#converting-to-crystal-normal-form" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Converting to Crystal Normal Form
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Converting to Crystal Normal Form">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#using-the-unitcell-helper" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Using the UnitCell helper
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#reconstructing-a-structure-from-cnf" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Reconstructing a Structure from CNF
+        Multiple Equivalent Representations
       
     </span>
   </a>
@@ -780,49 +651,76 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#finding-neighbors" class="md-nav__link">
+  <a href="#stabilizers-from-the-lnf" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Finding Neighbors
+        Stabilizers from the LNF
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Finding Neighbors">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#lattice-vs-motif-neighbors" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Lattice vs Motif Neighbors
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#examining-a-neighbor" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Examining a Neighbor
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
+  <a href="#applying-stabilizer-transformations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Next Steps
+        Applying Stabilizer Transformations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#origin-shifts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Origin Shifts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sorting-and-lexicographic-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sorting and Lexicographic Selection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#discretization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Discretization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-complete-cnf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Complete CNF
       
     </span>
   </a>
@@ -1576,7 +1474,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="quickstart">Quickstart<a class="anchor-link" href="#quickstart">¶</a></h1><p>This tutorial shows how to convert crystal structures to Crystal Normal Form (CNF) and explore their neighbors.</p>
+<h1 id="motif-normal-form">Motif Normal Form<a class="anchor-link" href="#motif-normal-form">¶</a></h1><p>This guide explains how the Motif Normal Form (MNF), the atomic position coordinates in a CNF, is constructed.</p>
 </div>
 </div>
 </div>
@@ -1587,18 +1485,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="loading-crystal-structures">Loading Crystal Structures<a class="anchor-link" href="#loading-crystal-structures">¶</a></h2><p>CNF works with pymatgen <code>Structure</code> objects. Here are several ways to create or load structures.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="from-pymatgen-directly">From pymatgen directly<a class="anchor-link" href="#from-pymatgen-directly">¶</a></h3><p>You can create structures programmatically using pymatgen:</p>
+<h2 id="multiple-equivalent-representations">Multiple Equivalent Representations<a class="anchor-link" href="#multiple-equivalent-representations">¶</a></h2><p>Given a crystal's atomic positions, there are many ways to write them down. The origin can be shifted to any atom, the lattice may have symmetries that permute equivalent positions, and atoms of the same element can be listed in any order. The MNF algorithm finds a unique canonical representation by exploring all these choices and selecting the lexicographically smallest.</p>
 </div>
 </div>
 </div>
@@ -1622,26 +1509,38 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pymatgen.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">Structure</span><span class="p">,</span> <span class="n">Lattice</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cnf</span><span class="w"> </span><span class="kn">import</span> <span class="n">CNFConstructor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cnf.lattice</span><span class="w"> </span><span class="kn">import</span> <span class="n">Superbasis</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cnf.lattice.selling</span><span class="w"> </span><span class="kn">import</span> <span class="n">SuperbasisSellingReducer</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="c1"># Create a simple NaCl structure</span>
-<span class="n">lattice</span> <span class="o">=</span> <span class="n">Lattice</span><span class="o">.</span><span class="n">cubic</span><span class="p">(</span><span class="mf">5.64</span><span class="p">)</span>
-<span class="n">nacl</span> <span class="o">=</span> <span class="n">Structure</span><span class="p">(</span>
-    <span class="n">lattice</span><span class="p">,</span>
-    <span class="p">[</span><span class="s2">"Na"</span><span class="p">,</span> <span class="s2">"Cl"</span><span class="p">],</span>
-    <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]]</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">nacl</span><span class="p">)</span>
+<span class="c1"># Create rutile TiO2</span>
+<span class="n">a</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="mf">4.594</span><span class="p">,</span> <span class="mf">2.959</span>
+<span class="n">lattice</span> <span class="o">=</span> <span class="n">Lattice</span><span class="o">.</span><span class="n">tetragonal</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+<span class="n">species</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Ti"</span><span class="p">,</span> <span class="s2">"Ti"</span><span class="p">,</span> <span class="s2">"O"</span><span class="p">,</span> <span class="s2">"O"</span><span class="p">,</span> <span class="s2">"O"</span><span class="p">,</span> <span class="s2">"O"</span><span class="p">]</span>
+<span class="n">coords</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.305</span><span class="p">,</span> <span class="mf">0.305</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.695</span><span class="p">,</span> <span class="mf">0.695</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.805</span><span class="p">,</span> <span class="mf">0.195</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.195</span><span class="p">,</span> <span class="mf">0.805</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]]</span>
+<span class="n">rutile</span> <span class="o">=</span> <span class="n">Structure</span><span class="p">(</span><span class="n">lattice</span><span class="p">,</span> <span class="n">species</span><span class="p">,</span> <span class="n">coords</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Rutile TiO2: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">rutile</span><span class="p">)</span><span class="si">}</span><span class="s2"> atoms"</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">site</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rutile</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">site</span><span class="o">.</span><span class="n">specie</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="p">[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">'</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">site</span><span class="o">.</span><span class="n">frac_coords</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-1">from pymatgen.core import Structure, Lattice
+from cnf import CNFConstructor
+from cnf.lattice import Superbasis
+from cnf.lattice.selling import SuperbasisSellingReducer
+import numpy as np
 
-# Create a simple NaCl structure
-lattice = Lattice.cubic(5.64)
-nacl = Structure(
-    lattice,
-    ["Na", "Cl"],
-    [[0, 0, 0], [0.5, 0.5, 0.5]]
-)
-print(nacl)</div>
+# Create rutile TiO2
+a, c = 4.594, 2.959
+lattice = Lattice.tetragonal(a, c)
+species = ["Ti", "Ti", "O", "O", "O", "O"]
+coords = [[0, 0, 0], [0.5, 0.5, 0.5], [0.305, 0.305, 0], [0.695, 0.695, 0], [0.805, 0.195, 0.5], [0.195, 0.805, 0.5]]
+rutile = Structure(lattice, species, coords)
+
+print(f"Rutile TiO2: {len(rutile)} atoms")
+for i, site in enumerate(rutile):
+    print(f"  {site.specie}: {[f'{x:.3f}' for x in site.frac_coords]}")</div>
 </div>
 </div>
 </div>
@@ -1653,16 +1552,13 @@ print(nacl)</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Full Formula (Na1 Cl1)
-Reduced Formula: NaCl
-abc   :   5.640000   5.640000   5.640000
-angles:  90.000000  90.000000  90.000000
-pbc   :       True       True       True
-Sites (2)
-  #  SP      a    b    c
----  ----  ---  ---  ---
-  0  Na    0    0    0
-  1  Cl    0.5  0.5  0.5
+<pre>Rutile TiO2: 6 atoms
+  Ti: ['0.000', '0.000', '0.000']
+  Ti: ['0.500', '0.500', '0.500']
+  O: ['0.305', '0.305', '0.000']
+  O: ['0.695', '0.695', '0.000']
+  O: ['0.805', '0.195', '0.500']
+  O: ['0.195', '0.805', '0.500']
 </pre>
 </div>
 </div>
@@ -1676,12 +1572,12 @@ Sites (2)
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="from-a-cif-file">From a CIF file<a class="anchor-link" href="#from-a-cif-file">¶</a></h3>
+<h2 id="stabilizers-from-the-lnf">Stabilizers from the LNF<a class="anchor-link" href="#stabilizers-from-the-lnf">¶</a></h2><p>The construction begins with the stabilizers from the LNF. These are lattice permutations that leave the canonical vonorms unchanged. Each stabilizer permutation can correspond to one or more unimodular matrices that transform fractional coordinates while preserving the lattice geometry.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -1699,32 +1595,68 @@ Sites (2)
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Load from CIF (uncomment and provide your own path)</span>
-<span class="c1"># struct = Structure.from_file("path/to/structure.cif")</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Get the reduced superbasis and its vonorms</span>
+<span class="n">superbasis</span> <span class="o">=</span> <span class="n">Superbasis</span><span class="o">.</span><span class="n">from_pymatgen_structure</span><span class="p">(</span><span class="n">rutile</span><span class="p">)</span>
+<span class="n">reducer</span> <span class="o">=</span> <span class="n">SuperbasisSellingReducer</span><span class="p">()</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">reducer</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="n">superbasis</span><span class="p">)</span>
+<span class="n">reduced_superbasis</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">reduced_object</span>
+<span class="n">reduced_vonorms</span> <span class="o">=</span> <span class="n">reduced_superbasis</span><span class="o">.</span><span class="n">compute_vonorms</span><span class="p">()</span>
 
-<span class="c1"># Or use the UnitCell helper class</span>
-<span class="c1"># from cnf import UnitCell</span>
-<span class="c1"># unit_cell = UnitCell.from_cif("path/to/structure.cif")</span>
+<span class="c1"># Find the canonical vonorms</span>
+<span class="n">perms</span> <span class="o">=</span> <span class="n">reduced_vonorms</span><span class="o">.</span><span class="n">permissible_perms</span>
+<span class="n">candidates</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">perm</span> <span class="ow">in</span> <span class="n">perms</span><span class="p">:</span>
+    <span class="n">permuted</span> <span class="o">=</span> <span class="n">reduced_vonorms</span><span class="o">.</span><span class="n">apply_permutation</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">perm</span><span class="o">.</span><span class="n">vonorm_permutation</span><span class="p">))</span>
+    <span class="n">candidates</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">permuted</span><span class="o">.</span><span class="n">tuple</span><span class="p">,</span> <span class="n">perm</span><span class="p">))</span>
+<span class="n">candidates</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">canonical_vonorms</span> <span class="o">=</span> <span class="n">candidates</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="c1"># Find stabilizers - permutations that give the canonical vonorms</span>
+<span class="n">stabilizers</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">vonorms_tuple</span><span class="p">,</span> <span class="n">perm</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">vonorms_tuple</span> <span class="o">==</span> <span class="n">canonical_vonorms</span><span class="p">:</span>
+        <span class="n">stabilizers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">perm</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Number of stabilizer permutations: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">stabilizers</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-2"># Load from CIF (uncomment and provide your own path)
-# struct = Structure.from_file("path/to/structure.cif")
+<div class="clipboard-copy-txt" id="cell-2"># Get the reduced superbasis and its vonorms
+superbasis = Superbasis.from_pymatgen_structure(rutile)
+reducer = SuperbasisSellingReducer()
+result = reducer.reduce(superbasis)
+reduced_superbasis = result.reduced_object
+reduced_vonorms = reduced_superbasis.compute_vonorms()
 
-# Or use the UnitCell helper class
-# from cnf import UnitCell
-# unit_cell = UnitCell.from_cif("path/to/structure.cif")</div>
+# Find the canonical vonorms
+perms = reduced_vonorms.permissible_perms
+candidates = []
+for perm in perms:
+    permuted = reduced_vonorms.apply_permutation(tuple(perm.vonorm_permutation))
+    candidates.append((permuted.tuple, perm))
+candidates.sort(key=lambda x: x[0])
+canonical_vonorms = candidates[0][0]
+
+# Find stabilizers - permutations that give the canonical vonorms
+stabilizers = []
+for vonorms_tuple, perm in candidates:
+    if vonorms_tuple == canonical_vonorms:
+        stabilizers.append(perm)
+
+print(f"Number of stabilizer permutations: {len(stabilizers)}")</div>
 </div>
 </div>
 </div>
 </div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Number of stabilizer permutations: 1
+</pre>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="from-ase-atoms">From ASE Atoms<a class="anchor-link" href="#from-ase-atoms">¶</a></h3>
 </div>
 </div>
 </div>
@@ -1747,31 +1679,25 @@ Sites (2)
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ase</span><span class="w"> </span><span class="kn">import</span> <span class="n">Atoms</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">ase.build</span><span class="w"> </span><span class="kn">import</span> <span class="n">bulk</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pymatgen.io.ase</span><span class="w"> </span><span class="kn">import</span> <span class="n">AseAtomsAdaptor</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Each stabilizer permutation may correspond to multiple unimodular matrices</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Unimodular matrices for each stabilizer permutation:"</span><span class="p">)</span>
+<span class="n">all_matrices</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">stab</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">stabilizers</span><span class="p">):</span>
+    <span class="n">matrices</span> <span class="o">=</span> <span class="n">stab</span><span class="o">.</span><span class="n">all_matrices</span>
+    <span class="n">all_matrices</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">matrices</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Permutation </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">matrices</span><span class="p">)</span><span class="si">}</span><span class="s2"> matrix(es)"</span><span class="p">)</span>
 
-<span class="c1"># Create an ASE Atoms object</span>
-<span class="n">si_ase</span> <span class="o">=</span> <span class="n">bulk</span><span class="p">(</span><span class="s1">'Si'</span><span class="p">,</span> <span class="s1">'diamond'</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mf">5.43</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"ASE Atoms:"</span><span class="p">,</span> <span class="n">si_ase</span><span class="p">)</span>
-
-<span class="c1"># Convert to pymatgen Structure</span>
-<span class="n">si_pmg</span> <span class="o">=</span> <span class="n">AseAtomsAdaptor</span><span class="o">.</span><span class="n">get_structure</span><span class="p">(</span><span class="n">si_ase</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">pymatgen Structure:"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">si_pmg</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Total unimodular matrices: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">all_matrices</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-3">from ase import Atoms
-from ase.build import bulk
-from pymatgen.io.ase import AseAtomsAdaptor
+<div class="clipboard-copy-txt" id="cell-3"># Each stabilizer permutation may correspond to multiple unimodular matrices
+print("Unimodular matrices for each stabilizer permutation:")
+all_matrices = []
+for i, stab in enumerate(stabilizers):
+    matrices = stab.all_matrices
+    all_matrices.extend(matrices)
+    print(f"  Permutation {i+1}: {len(matrices)} matrix(es)")
 
-# Create an ASE Atoms object
-si_ase = bulk('Si', 'diamond', a=5.43)
-print("ASE Atoms:", si_ase)
-
-# Convert to pymatgen Structure
-si_pmg = AseAtomsAdaptor.get_structure(si_ase)
-print("\npymatgen Structure:")
-print(si_pmg)</div>
+print(f"\nTotal unimodular matrices: {len(all_matrices)}")</div>
 </div>
 </div>
 </div>
@@ -1783,38 +1709,13 @@ print(si_pmg)</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>ASE Atoms: Atoms(symbols='Si2', pbc=True, cell=[[0.0, 2.715, 2.715], [2.715, 0.0, 2.715], [2.715, 2.715, 0.0]])
+<pre>Unimodular matrices for each stabilizer permutation:
+  Permutation 1: 4 matrix(es)
 
-pymatgen Structure:
-Full Formula (Si2)
-Reduced Formula: Si
-abc   :   3.839590   3.839590   3.839590
-angles:  60.000000  60.000000  60.000000
-pbc   :       True       True       True
-Sites (2)
-  #  SP       a     b     c
----  ----  ----  ----  ----
-  0  Si    0     0     0
-  1  Si    0.25  0.25  0.25
+Total unimodular matrices: 4
 </pre>
 </div>
 </div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="converting-to-crystal-normal-form">Converting to Crystal Normal Form<a class="anchor-link" href="#converting-to-crystal-normal-form">¶</a></h2><p>To convert a structure to CNF, you need to specify two discretization parameters:</p>
-<ul>
-<li><strong>xi</strong> (ξ): Lattice resolution in Å². Smaller values give finer resolution.</li>
-<li><strong>delta</strong> (δ): Motif resolution. Atomic coordinates become multiples of 1/δ.</li>
-</ul>
-<p>Typical values are <code>xi=1.0</code> and <code>delta=100</code>.</p>
 </div>
 </div>
 </div>
@@ -1837,37 +1738,19 @@ Sites (2)
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cnf</span><span class="w"> </span><span class="kn">import</span> <span class="n">CNFConstructor</span>
-
-<span class="c1"># Create a CNF constructor with discretization parameters</span>
-<span class="n">xi</span> <span class="o">=</span> <span class="mf">1.0</span>    <span class="c1"># lattice resolution (Å²)</span>
-<span class="n">delta</span> <span class="o">=</span> <span class="mi">100</span>  <span class="c1"># motif resolution (1/δ fractional units)</span>
-
-<span class="n">constructor</span> <span class="o">=</span> <span class="n">CNFConstructor</span><span class="p">(</span><span class="n">xi</span><span class="o">=</span><span class="n">xi</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="n">delta</span><span class="p">)</span>
-
-<span class="c1"># Convert the NaCl structure to CNF</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">constructor</span><span class="o">.</span><span class="n">from_pymatgen_structure</span><span class="p">(</span><span class="n">nacl</span><span class="p">)</span>
-<span class="n">cnf</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">cnf</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="s2">"CNF coordinates:"</span><span class="p">,</span> <span class="n">cnf</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Lattice Normal Form (vonorms):"</span><span class="p">,</span> <span class="n">cnf</span><span class="o">.</span><span class="n">lattice_normal_form</span><span class="o">.</span><span class="n">vonorms</span><span class="o">.</span><span class="n">tuple</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Motif Normal Form:"</span><span class="p">,</span> <span class="n">cnf</span><span class="o">.</span><span class="n">motif_normal_form</span><span class="o">.</span><span class="n">coord_list</span><span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Show a few example matrices</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Example unimodular matrices:"</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">mat</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">all_matrices</span><span class="p">[:</span><span class="mi">3</span><span class="p">]):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">  Matrix </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">:"</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">mat</span><span class="o">.</span><span class="n">matrix</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"    </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">row</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-4">from cnf import CNFConstructor
-
-# Create a CNF constructor with discretization parameters
-xi = 1.0    # lattice resolution (Å²)
-delta = 100  # motif resolution (1/δ fractional units)
-
-constructor = CNFConstructor(xi=xi, delta=delta)
-
-# Convert the NaCl structure to CNF
-result = constructor.from_pymatgen_structure(nacl)
-cnf = result.cnf
-
-print("CNF coordinates:", cnf.coords)
-print("\nLattice Normal Form (vonorms):", cnf.lattice_normal_form.vonorms.tuple)
-print("Motif Normal Form:", cnf.motif_normal_form.coord_list)</div>
+<div class="clipboard-copy-txt" id="cell-4"># Show a few example matrices
+print("Example unimodular matrices:")
+for i, mat in enumerate(all_matrices[:3]):
+    print(f"\n  Matrix {i+1}:")
+    for row in mat.matrix:
+        print(f"    {list(row)}")</div>
 </div>
 </div>
 </div>
@@ -1879,10 +1762,22 @@ print("Motif Normal Form:", cnf.motif_normal_form.coord_list)</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>CNF coordinates: (32, 32, 33, 95, 64, 64, 64, 50, 50, 50)
+<pre>Example unimodular matrices:
 
-Lattice Normal Form (vonorms): (32, 32, 33, 95, 64, 64, 64)
-Motif Normal Form: (50, 50, 50)
+  Matrix 1:
+    [0, 0, -1]
+    [0, -1, 0]
+    [-1, 0, 0]
+
+  Matrix 2:
+    [0, 0, 1]
+    [0, 1, 0]
+    [-1, 0, 0]
+
+  Matrix 3:
+    [0, 0, 1]
+    [0, -1, 0]
+    [1, 0, 0]
 </pre>
 </div>
 </div>
@@ -1896,7 +1791,7 @@ Motif Normal Form: (50, 50, 50)
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="using-the-unitcell-helper">Using the UnitCell helper<a class="anchor-link" href="#using-the-unitcell-helper">¶</a></h3><p>The <code>UnitCell</code> class provides a convenient interface:</p>
+<h2 id="applying-stabilizer-transformations">Applying Stabilizer Transformations<a class="anchor-link" href="#applying-stabilizer-transformations">¶</a></h2><p>Each unimodular matrix transforms the fractional coordinates. We apply all of them to generate candidate motif representations.</p>
 </div>
 </div>
 </div>
@@ -1919,23 +1814,23 @@ Motif Normal Form: (50, 50, 50)
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cnf</span><span class="w"> </span><span class="kn">import</span> <span class="n">UnitCell</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cnf.motif</span><span class="w"> </span><span class="kn">import</span> <span class="n">FractionalMotif</span>
 
-<span class="c1"># Create a UnitCell from a pymatgen Structure</span>
-<span class="n">unit_cell</span> <span class="o">=</span> <span class="n">UnitCell</span><span class="o">.</span><span class="n">from_pymatgen_structure</span><span class="p">(</span><span class="n">nacl</span><span class="p">)</span>
+<span class="c1"># Get the original motif</span>
+<span class="n">motif</span> <span class="o">=</span> <span class="n">FractionalMotif</span><span class="o">.</span><span class="n">from_pymatgen_structure</span><span class="p">(</span><span class="n">rutile</span><span class="p">)</span>
 
-<span class="c1"># Convert to CNF</span>
-<span class="n">cnf</span> <span class="o">=</span> <span class="n">unit_cell</span><span class="o">.</span><span class="n">to_cnf</span><span class="p">(</span><span class="n">xi</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"CNF:"</span><span class="p">,</span> <span class="n">cnf</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Original motif:"</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">atom</span><span class="p">,</span> <span class="n">pos</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">motif</span><span class="o">.</span><span class="n">atoms</span><span class="p">,</span> <span class="n">motif</span><span class="o">.</span><span class="n">positions</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">atom</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="p">[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">'</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">pos</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-5">from cnf import UnitCell
+<div class="clipboard-copy-txt" id="cell-5">from cnf.motif import FractionalMotif
 
-# Create a UnitCell from a pymatgen Structure
-unit_cell = UnitCell.from_pymatgen_structure(nacl)
+# Get the original motif
+motif = FractionalMotif.from_pymatgen_structure(rutile)
 
-# Convert to CNF
-cnf = unit_cell.to_cnf(xi=1.0, delta=100)
-print("CNF:", cnf)</div>
+print("Original motif:")
+for atom, pos in zip(motif.atoms, motif.positions):
+    print(f"  {atom}: {[f'{x:.3f}' for x in pos]}")</div>
 </div>
 </div>
 </div>
@@ -1947,21 +1842,16 @@ print("CNF:", cnf)</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>CNF: CrystalNormalForm(lattice=LatticeNormalForm(vonorms=(32, 32, 33, 95, 64, 64, 64),step_size=1.0), motif=MotifNormalForm((50, 50, 50),elements=['Cl', 'Na'],delta=100), xi=1.0, delta=100)
+<pre>Original motif:
+  Ti: ['0.000', '0.000', '0.000']
+  Ti: ['0.500', '0.500', '0.500']
+  O: ['0.305', '0.305', '0.000']
+  O: ['0.695', '0.695', '0.000']
+  O: ['0.805', '0.195', '0.500']
+  O: ['0.195', '0.805', '0.500']
 </pre>
 </div>
 </div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="reconstructing-a-structure-from-cnf">Reconstructing a Structure from CNF<a class="anchor-link" href="#reconstructing-a-structure-from-cnf">¶</a></h2><p>You can convert a CNF back to a pymatgen Structure:</p>
 </div>
 </div>
 </div>
@@ -1984,13 +1874,35 @@ print("CNF:", cnf)</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Reconstruct the structure from CNF</span>
-<span class="n">reconstructed</span> <span class="o">=</span> <span class="n">cnf</span><span class="o">.</span><span class="n">reconstruct</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">reconstructed</span><span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Apply a stabilizer transformation</span>
+<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_matrices</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="n">example_matrix</span> <span class="o">=</span> <span class="n">all_matrices</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">example_matrix</span> <span class="o">=</span> <span class="n">all_matrices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    
+<span class="n">transformed_motif</span> <span class="o">=</span> <span class="n">motif</span><span class="o">.</span><span class="n">apply_unimodular</span><span class="p">(</span><span class="n">example_matrix</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"After applying unimodular matrix:"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Matrix: </span><span class="si">{</span><span class="n">example_matrix</span><span class="o">.</span><span class="n">matrix</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">atom</span><span class="p">,</span> <span class="n">pos</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">transformed_motif</span><span class="o">.</span><span class="n">atoms</span><span class="p">,</span> <span class="n">transformed_motif</span><span class="o">.</span><span class="n">positions</span><span class="p">):</span>
+    <span class="n">wrapped</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="o">%</span> <span class="mf">1.0</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pos</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">atom</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="p">[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">'</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">wrapped</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-6"># Reconstruct the structure from CNF
-reconstructed = cnf.reconstruct()
-print(reconstructed)</div>
+<div class="clipboard-copy-txt" id="cell-6"># Apply a stabilizer transformation
+if len(all_matrices) &gt; 1:
+    example_matrix = all_matrices[1]
+else:
+    example_matrix = all_matrices[0]
+    
+transformed_motif = motif.apply_unimodular(example_matrix)
+
+print(f"After applying unimodular matrix:")
+print(f"Matrix: {example_matrix.matrix.tolist()}")
+print()
+for atom, pos in zip(transformed_motif.atoms, transformed_motif.positions):
+    wrapped = [p % 1.0 for p in pos]
+    print(f"  {atom}: {[f'{x:.3f}' for x in wrapped]}")</div>
 </div>
 </div>
 </div>
@@ -2002,16 +1914,15 @@ print(reconstructed)</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Full Formula (Na1 Cl1)
-Reduced Formula: NaCl
-abc   :   5.656854   5.656854   5.744563
-angles:  90.881613  90.881613  90.000000
-pbc   :       True       True       True
-Sites (2)
-  #  SP      a    b    c
----  ----  ---  ---  ---
-  0  Cl    0    0    0
-  1  Na    0.5  0.5  0.5
+<pre>After applying unimodular matrix:
+Matrix: [[0, 0, 1], [0, 1, 0], [-1, 0, 0]]
+
+  Ti: ['0.000', '0.000', '0.000']
+  Ti: ['0.500', '0.500', '0.500']
+  O: ['0.000', '0.305', '0.305']
+  O: ['0.000', '0.695', '0.695']
+  O: ['0.500', '0.195', '0.805']
+  O: ['0.500', '0.805', '0.195']
 </pre>
 </div>
 </div>
@@ -2025,7 +1936,7 @@ Sites (2)
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="finding-neighbors">Finding Neighbors<a class="anchor-link" href="#finding-neighbors">¶</a></h2><p>One of the key features of CNF is that every crystal has well-defined "neighbors" - structures that differ by small strains or atomic displacements. This creates a navigable graph over all possible crystal structures.</p>
+<h2 id="origin-shifts">Origin Shifts<a class="anchor-link" href="#origin-shifts">¶</a></h2><p>For each transformed motif, we try placing different atoms at the origin. This eliminates translational freedom. By convention, the implementation considers atoms of a specific element type (determined by sorting order) as origin candidates.</p>
 </div>
 </div>
 </div>
@@ -2048,27 +1959,15 @@ Sites (2)
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cnf.navigation</span><span class="w"> </span><span class="kn">import</span> <span class="n">NeighborFinder</span><span class="p">,</span> <span class="n">find_neighbors</span>
-
-<span class="c1"># Method 1: Use the convenience function</span>
-<span class="n">neighbors</span> <span class="o">=</span> <span class="n">find_neighbors</span><span class="p">(</span><span class="n">cnf</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">neighbors</span><span class="p">)</span><span class="si">}</span><span class="s2"> neighbors"</span><span class="p">)</span>
-
-<span class="c1"># Method 2: Use NeighborFinder for more control</span>
-<span class="n">finder</span> <span class="o">=</span> <span class="n">NeighborFinder</span><span class="o">.</span><span class="n">from_cnf</span><span class="p">(</span><span class="n">cnf</span><span class="p">)</span>
-<span class="n">neighbors</span> <span class="o">=</span> <span class="n">finder</span><span class="o">.</span><span class="n">find_neighbors</span><span class="p">(</span><span class="n">cnf</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">neighbors</span><span class="p">)</span><span class="si">}</span><span class="s2"> neighbors"</span><span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># The sorted elements determine which atoms can be origin candidates</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Sorted elements: </span><span class="si">{</span><span class="n">motif</span><span class="o">.</span><span class="n">sorted_elements</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Origin candidates are atoms of element: </span><span class="si">{</span><span class="n">motif</span><span class="o">.</span><span class="n">sorted_elements</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Number of origin candidates: </span><span class="si">{</span><span class="n">motif</span><span class="o">.</span><span class="n">num_origin_atoms</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-7">from cnf.navigation import NeighborFinder, find_neighbors
-
-# Method 1: Use the convenience function
-neighbors = find_neighbors(cnf)
-print(f"Found {len(neighbors)} neighbors")
-
-# Method 2: Use NeighborFinder for more control
-finder = NeighborFinder.from_cnf(cnf)
-neighbors = finder.find_neighbors(cnf)
-print(f"Found {len(neighbors)} neighbors")</div>
+<div class="clipboard-copy-txt" id="cell-7"># The sorted elements determine which atoms can be origin candidates
+print(f"Sorted elements: {motif.sorted_elements}")
+print(f"Origin candidates are atoms of element: {motif.sorted_elements[0]}")
+print(f"Number of origin candidates: {motif.num_origin_atoms}")</div>
 </div>
 </div>
 </div>
@@ -2080,26 +1979,12 @@ print(f"Found {len(neighbors)} neighbors")</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Found 25 neighbors
-Found 25 neighbors
+<pre>Sorted elements: [Element Ti, Element O]
+Origin candidates are atoms of element: Ti
+Number of origin candidates: 2
 </pre>
 </div>
 </div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="lattice-vs-motif-neighbors">Lattice vs Motif Neighbors<a class="anchor-link" href="#lattice-vs-motif-neighbors">¶</a></h3><p>Neighbors come in two types:</p>
-<ul>
-<li><strong>Lattice neighbors</strong>: Differ by a small strain (±1 step in vonorm space)</li>
-<li><strong>Motif neighbors</strong>: Differ by a small atomic displacement (±1 step in fractional coordinates)</li>
-</ul>
 </div>
 </div>
 </div>
@@ -2122,19 +2007,29 @@ Found 25 neighbors
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Find lattice and motif neighbors separately</span>
-<span class="n">lattice_neighbors</span> <span class="o">=</span> <span class="n">finder</span><span class="o">.</span><span class="n">find_lattice_neighbor_cnfs</span><span class="p">(</span><span class="n">cnf</span><span class="p">)</span>
-<span class="n">motif_neighbors</span> <span class="o">=</span> <span class="n">finder</span><span class="o">.</span><span class="n">find_motif_neighbor_cnfs</span><span class="p">(</span><span class="n">cnf</span><span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Show origin shifts for the first element type</span>
+<span class="n">origin_element</span> <span class="o">=</span> <span class="n">motif</span><span class="o">.</span><span class="n">sorted_elements</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">origin_positions</span> <span class="o">=</span> <span class="n">motif</span><span class="o">.</span><span class="n">get_element_positions</span><span class="p">(</span><span class="n">origin_element</span><span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Lattice neighbors: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">lattice_neighbors</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Motif neighbors: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">motif_neighbors</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Shifting origin to each </span><span class="si">{</span><span class="n">origin_element</span><span class="si">}</span><span class="s2"> atom:"</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">origin_pos</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">origin_positions</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Origin at </span><span class="si">{</span><span class="n">origin_element</span><span class="si">}</span><span class="s2"> atom </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2"> (shift by </span><span class="si">{</span><span class="p">[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="o">-</span><span class="n">x</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">'</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">origin_pos</span><span class="p">]</span><span class="si">}</span><span class="s2">):"</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">atom</span><span class="p">,</span> <span class="n">pos</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">motif</span><span class="o">.</span><span class="n">atoms</span><span class="p">,</span> <span class="n">motif</span><span class="o">.</span><span class="n">positions</span><span class="p">):</span>
+        <span class="n">new_pos</span> <span class="o">=</span> <span class="p">[(</span><span class="n">p</span> <span class="o">-</span> <span class="n">s</span><span class="p">)</span> <span class="o">%</span> <span class="mf">1.0</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">origin_pos</span><span class="p">)]</span>
+        <span class="n">marker</span> <span class="o">=</span> <span class="s2">" ← origin"</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">origin_pos</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">atom</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="p">[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">'</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">new_pos</span><span class="p">]</span><span class="si">}{</span><span class="n">marker</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-8"># Find lattice and motif neighbors separately
-lattice_neighbors = finder.find_lattice_neighbor_cnfs(cnf)
-motif_neighbors = finder.find_motif_neighbor_cnfs(cnf)
+<div class="clipboard-copy-txt" id="cell-8"># Show origin shifts for the first element type
+origin_element = motif.sorted_elements[0]
+origin_positions = motif.get_element_positions(origin_element)
 
-print(f"Lattice neighbors: {len(lattice_neighbors)}")
-print(f"Motif neighbors: {len(motif_neighbors)}")</div>
+print(f"Shifting origin to each {origin_element} atom:")
+for i, origin_pos in enumerate(origin_positions):
+    print(f"\nOrigin at {origin_element} atom {i+1} (shift by {[f'{-x:.3f}' for x in origin_pos]}):")
+    for atom, pos in zip(motif.atoms, motif.positions):
+        new_pos = [(p - s) % 1.0 for p, s in zip(pos, origin_pos)]
+        marker = " ← origin" if np.allclose(pos, origin_pos) else ""
+        print(f"  {atom}: {[f'{x:.3f}' for x in new_pos]}{marker}")</div>
 </div>
 </div>
 </div>
@@ -2146,8 +2041,23 @@ print(f"Motif neighbors: {len(motif_neighbors)}")</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Lattice neighbors: 22
-Motif neighbors: 4
+<pre>Shifting origin to each Ti atom:
+
+Origin at Ti atom 1 (shift by ['-0.000', '-0.000', '-0.000']):
+  Ti: ['0.000', '0.000', '0.000'] ← origin
+  Ti: ['0.500', '0.500', '0.500']
+  O: ['0.305', '0.305', '0.000']
+  O: ['0.695', '0.695', '0.000']
+  O: ['0.805', '0.195', '0.500']
+  O: ['0.195', '0.805', '0.500']
+
+Origin at Ti atom 2 (shift by ['-0.500', '-0.500', '-0.500']):
+  Ti: ['0.500', '0.500', '0.500']
+  Ti: ['0.000', '0.000', '0.000'] ← origin
+  O: ['0.805', '0.805', '0.500']
+  O: ['0.195', '0.195', '0.500']
+  O: ['0.305', '0.695', '0.000']
+  O: ['0.695', '0.305', '0.000']
 </pre>
 </div>
 </div>
@@ -2161,7 +2071,18 @@ Motif neighbors: 4
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="examining-a-neighbor">Examining a Neighbor<a class="anchor-link" href="#examining-a-neighbor">¶</a></h3><p>Let's look at how a neighbor differs from the original structure:</p>
+<h2 id="sorting-and-lexicographic-selection">Sorting and Lexicographic Selection<a class="anchor-link" href="#sorting-and-lexicographic-selection">¶</a></h2><p>For each combination of stabilizer matrix and origin shift, atoms are sorted by element and then by position. The coordinates are then flattened to a tuple, excluding the origin atom which is implicitly at (0, 0, 0). Finally, the lexicographically smallest tuple across all combinations is selected as the canonical MNF.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="discretization">Discretization<a class="anchor-link" href="#discretization">¶</a></h2><p>The fractional coordinates are discretized to integer multiples of 1/δ (delta). For example, with δ=100, a coordinate of 0.305 becomes round(0.305 × 100) = 31.</p>
 </div>
 </div>
 </div>
@@ -2184,31 +2105,31 @@ Motif neighbors: 4
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">if</span> <span class="n">neighbors</span><span class="p">:</span>
-    <span class="n">neighbor</span> <span class="o">=</span> <span class="n">neighbors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"Original CNF coords:"</span><span class="p">,</span> <span class="n">cnf</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"Neighbor CNF coords:"</span><span class="p">,</span> <span class="n">neighbor</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
-    
-    <span class="c1"># Reconstruct and compare volumes</span>
-    <span class="n">orig_struct</span> <span class="o">=</span> <span class="n">cnf</span><span class="o">.</span><span class="n">reconstruct</span><span class="p">()</span>
-    <span class="n">neighbor_struct</span> <span class="o">=</span> <span class="n">neighbor</span><span class="o">.</span><span class="n">reconstruct</span><span class="p">()</span>
-    
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Original volume: </span><span class="si">{</span><span class="n">orig_struct</span><span class="o">.</span><span class="n">volume</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> Å³"</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Neighbor volume: </span><span class="si">{</span><span class="n">neighbor_struct</span><span class="o">.</span><span class="n">volume</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> Å³"</span><span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Get the actual MNF from CNF construction</span>
+<span class="n">constructor</span> <span class="o">=</span> <span class="n">CNFConstructor</span><span class="p">(</span><span class="n">xi</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">cnf_result</span> <span class="o">=</span> <span class="n">constructor</span><span class="o">.</span><span class="n">from_pymatgen_structure</span><span class="p">(</span><span class="n">rutile</span><span class="p">)</span>
+<span class="n">mnf</span> <span class="o">=</span> <span class="n">cnf_result</span><span class="o">.</span><span class="n">cnf</span><span class="o">.</span><span class="n">motif_normal_form</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Final Motif Normal Form:"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Elements: </span><span class="si">{</span><span class="n">mnf</span><span class="o">.</span><span class="n">elements</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Coordinates: </span><span class="si">{</span><span class="n">mnf</span><span class="o">.</span><span class="n">coord_list</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Delta: </span><span class="si">{</span><span class="n">mnf</span><span class="o">.</span><span class="n">delta</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"The first atom (</span><span class="si">{</span><span class="n">mnf</span><span class="o">.</span><span class="n">elements</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">) is at the origin [0, 0, 0]"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Remaining </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">mnf</span><span class="o">.</span><span class="n">elements</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="si">}</span><span class="s2"> atoms × 3 coordinates = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">mnf</span><span class="o">.</span><span class="n">coord_list</span><span class="p">)</span><span class="si">}</span><span class="s2"> integers"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-9">if neighbors:
-    neighbor = neighbors[0]
-    
-    print("Original CNF coords:", cnf.coords)
-    print("Neighbor CNF coords:", neighbor.coords)
-    
-    # Reconstruct and compare volumes
-    orig_struct = cnf.reconstruct()
-    neighbor_struct = neighbor.reconstruct()
-    
-    print(f"\nOriginal volume: {orig_struct.volume:.3f} Å³")
-    print(f"Neighbor volume: {neighbor_struct.volume:.3f} Å³")</div>
+<div class="clipboard-copy-txt" id="cell-9"># Get the actual MNF from CNF construction
+constructor = CNFConstructor(xi=1.0, delta=100)
+cnf_result = constructor.from_pymatgen_structure(rutile)
+mnf = cnf_result.cnf.motif_normal_form
+
+print("Final Motif Normal Form:")
+print(f"  Elements: {mnf.elements}")
+print(f"  Coordinates: {mnf.coord_list}")
+print(f"  Delta: {mnf.delta}")
+print()
+print(f"The first atom ({mnf.elements[0]}) is at the origin [0, 0, 0]")
+print(f"Remaining {len(mnf.elements)-1} atoms × 3 coordinates = {len(mnf.coord_list)} integers")</div>
 </div>
 </div>
 </div>
@@ -2220,11 +2141,80 @@ Motif neighbors: 4
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Original CNF coords: (32, 32, 33, 95, 64, 64, 64, 50, 50, 50)
-Neighbor CNF coords: (32, 32, 33, 95, 64, 63, 65, 50, 50, 50)
+<pre>Final Motif Normal Form:
+  Elements: ['Ti', 'Ti', 'O', 'O', 'O', 'O']
+  Coordinates: (50, 50, 50, 0, 30, 30, 0, 70, 70, 50, 20, 80, 50, 80, 20)
+  Delta: 100
 
-Original volume: 183.782 Å³
-Neighbor volume: 183.739 Å³
+The first atom (Ti) is at the origin [0, 0, 0]
+Remaining 5 atoms × 3 coordinates = 15 integers
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [10]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-10">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Show the mapping from integers back to fractional coordinates</span>
+<span class="n">delta</span> <span class="o">=</span> <span class="n">mnf</span><span class="o">.</span><span class="n">delta</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Discretization with delta = </span><span class="si">{</span><span class="n">delta</span><span class="si">}</span><span class="s2">:"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"MNF integers → fractional coordinates:"</span><span class="p">)</span>
+<span class="n">coords</span> <span class="o">=</span> <span class="n">mnf</span><span class="o">.</span><span class="n">coord_list</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">),</span> <span class="mi">3</span><span class="p">):</span>
+    <span class="n">atom_idx</span> <span class="o">=</span> <span class="n">i</span> <span class="o">//</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">1</span>  <span class="c1"># +1 because first atom is at origin</span>
+    <span class="n">int_coords</span> <span class="o">=</span> <span class="n">coords</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">frac_coords</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="o">/</span> <span class="n">delta</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">int_coords</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Atom </span><span class="si">{</span><span class="n">atom_idx</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">int_coords</span><span class="p">)</span><span class="si">}</span><span class="s2"> → </span><span class="si">{</span><span class="p">[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">'</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">frac_coords</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-10"># Show the mapping from integers back to fractional coordinates
+delta = mnf.delta
+print(f"Discretization with delta = {delta}:")
+print()
+print("MNF integers → fractional coordinates:")
+coords = mnf.coord_list
+for i in range(0, len(coords), 3):
+    atom_idx = i // 3 + 1  # +1 because first atom is at origin
+    int_coords = coords[i:i+3]
+    frac_coords = [c / delta for c in int_coords]
+    print(f"  Atom {atom_idx}: {list(int_coords)} → {[f'{x:.3f}' for x in frac_coords]}")</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Discretization with delta = 100:
+
+MNF integers → fractional coordinates:
+  Atom 1: [50, 50, 50] → ['0.500', '0.500', '0.500']
+  Atom 2: [0, 30, 30] → ['0.000', '0.300', '0.300']
+  Atom 3: [0, 70, 70] → ['0.000', '0.700', '0.700']
+  Atom 4: [50, 20, 80] → ['0.500', '0.200', '0.800']
+  Atom 5: [50, 80, 20] → ['0.500', '0.800', '0.200']
 </pre>
 </div>
 </div>
@@ -2238,13 +2228,98 @@ Neighbor volume: 183.739 Å³
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="next-steps">Next Steps<a class="anchor-link" href="#next-steps">¶</a></h2><p>Now that you can create CNFs and find neighbors, you can:</p>
-<ul>
-<li>Use A* search to find paths between two crystal structures</li>
-<li>Explore the energy landscape using the waterfill algorithm</li>
-<li>Calculate energy barriers between phases</li>
-</ul>
-<p>See the CLI reference for command-line tools, or the Python API guide for programmatic access.</p>
+<h2 id="summary">Summary<a class="anchor-link" href="#summary">¶</a></h2><p>The MNF construction proceeds as follows:</p>
+<ol>
+<li>Obtain stabilizer matrices from the LNF (permutations that preserve canonical vonorms)</li>
+<li>Apply each unimodular matrix to the atomic coordinates</li>
+<li>For each transformed motif, shift the origin to each candidate atom</li>
+<li>Sort atoms by element and position</li>
+<li>Discretize coordinates to multiples of 1/δ</li>
+<li>Select the lexicographically smallest coordinate tuple</li>
+</ol>
+<p>The result is 3×(N-1) integers that uniquely characterize the atomic positions.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="the-complete-cnf">The Complete CNF<a class="anchor-link" href="#the-complete-cnf">¶</a></h2><p>Combining LNF (7 integers) and MNF (3×(N-1) integers) gives the complete Crystal Normal Form.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [11]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-11">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">cnf</span> <span class="o">=</span> <span class="n">cnf_result</span><span class="o">.</span><span class="n">cnf</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Complete Crystal Normal Form:"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">  CNF = </span><span class="si">{</span><span class="n">cnf</span><span class="o">.</span><span class="n">coords</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">  Breakdown:"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"    LNF (7 vonorms):        </span><span class="si">{</span><span class="n">cnf</span><span class="o">.</span><span class="n">coords</span><span class="p">[:</span><span class="mi">7</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"    MNF (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cnf</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span><span class="o">-</span><span class="mi">7</span><span class="si">}</span><span class="s2"> coordinates): </span><span class="si">{</span><span class="n">cnf</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="mi">7</span><span class="p">:]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">  Parameters:"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"    xi = </span><span class="si">{</span><span class="n">cnf</span><span class="o">.</span><span class="n">xi</span><span class="si">}</span><span class="s2"> Å²"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"    delta = </span><span class="si">{</span><span class="n">cnf</span><span class="o">.</span><span class="n">delta</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"    elements = </span><span class="si">{</span><span class="n">cnf</span><span class="o">.</span><span class="n">elements</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-11">cnf = cnf_result.cnf
+
+print("Complete Crystal Normal Form:")
+print(f"\n  CNF = {cnf.coords}")
+print(f"\n  Breakdown:")
+print(f"    LNF (7 vonorms):        {cnf.coords[:7]}")
+print(f"    MNF ({len(cnf.coords)-7} coordinates): {cnf.coords[7:]}")
+print(f"\n  Parameters:")
+print(f"    xi = {cnf.xi} Å²")
+print(f"    delta = {cnf.delta}")
+print(f"    elements = {cnf.elements}")</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Complete Crystal Normal Form:
+
+  CNF = (9, 21, 21, 51, 30, 30, 42, 50, 50, 50, 0, 30, 30, 0, 70, 70, 50, 20, 80, 50, 80, 20)
+
+  Breakdown:
+    LNF (7 vonorms):        (9, 21, 21, 51, 30, 30, 42)
+    MNF (15 coordinates): (50, 50, 50, 0, 30, 30, 0, 70, 70, 50, 20, 80, 50, 80, 20)
+
+  Parameters:
+    xi = 1.0 Å²
+    delta = 100
+    elements = ['Ti', 'Ti', 'O', 'O', 'O', 'O']
+</pre>
+</div>
+</div>
 </div>
 </div>
 </div>
