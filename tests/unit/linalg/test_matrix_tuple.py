@@ -1,12 +1,19 @@
 import pytest
 import numpy as np
 
-from cnf.lattice.swaps.utils import get_unimodular_matrix_for_swap
 from cnf.linalg.matrix_tuple import MatrixTuple
 
+
+# A simple unimodular matrix (det = 1) for testing
+EXAMPLE_UNIMODULAR = np.array([
+    [0, 1, 0],
+    [1, 0, 0],
+    [0, 0, -1],
+], dtype=np.int64)
+
+
 def test_roundtrip_unimodular_class():
-    example_unimodular = get_unimodular_matrix_for_swap((0,1))
-    before = MatrixTuple(example_unimodular)
+    before = MatrixTuple(EXAMPLE_UNIMODULAR)
     after = MatrixTuple.from_tuple(before.tuple)
 
     assert np.all(before.matrix == after.matrix)
@@ -26,12 +33,15 @@ def test_equality_function():
     assert m2 in container
 
 def test_unimodularity_check():
-    example_unimodular = get_unimodular_matrix_for_swap((0,1))
-    mt = MatrixTuple(example_unimodular)
+    mt = MatrixTuple(EXAMPLE_UNIMODULAR)
     assert mt.is_unimodular()
 
-    not_unimodular = get_unimodular_matrix_for_swap((0,1))
-    not_unimodular[0][0] = 120
+    # Scale a row to make det != +/-1
+    not_unimodular = np.array([
+        [2, 0, 0],
+        [0, 2, 0],
+        [0, 0, 1],
+    ])
     mt = MatrixTuple(not_unimodular)
     assert not mt.is_unimodular()
 

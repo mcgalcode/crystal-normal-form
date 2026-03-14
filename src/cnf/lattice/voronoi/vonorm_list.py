@@ -1,6 +1,5 @@
 import numpy as np
 from functools import cached_property
-from ..swaps.sorting import swap_vonorm_idxs
 from .conorm_list import ConormList
 from ...linalg import MatrixTuple
 from ..permutations import apply_permutation, Permutation, ConormPermutation, VonormPermutation, PermutationMatrix, apply_permutation_np, ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS
@@ -57,16 +56,7 @@ class VonormList():
     
     def __getitem__(self, key):
         return self.vonorms[key]
-    
-    def swap_labels(self, swap_pair, return_swaps=False):
-        i, j = swap_pair
-        if return_swaps:
-            new_vonorms, swaps = swap_vonorm_idxs(i, j, self.vonorms, in_place=False, return_swaps=True)
-            return VonormList(new_vonorms), swaps
-        else:
-            new_vonorms = swap_vonorm_idxs(i, j, self.vonorms, in_place=False)
-            return VonormList(new_vonorms)
-    
+
     def has_same_members(self, other: 'VonormList', tol=1e-8):
         diff = np.abs(np.array(sorted(self.vonorms)) - np.array(sorted(other.vonorms)))
         return np.all(diff < tol)
