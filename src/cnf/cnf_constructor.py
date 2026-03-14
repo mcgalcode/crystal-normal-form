@@ -54,7 +54,7 @@ class CNFConstructor():
 
         if use_rust:
             # Use Rust for LNF construction
-            import rust_cnf
+            from cnf import rust_cnf
             vonorms_arr = np.ascontiguousarray(vonorms.vonorms_np, dtype=np.float64)
 
             if use_float:
@@ -213,7 +213,7 @@ class CNFConstructor():
 
         if use_rust:
             # Use Rust's combined function
-            import rust_cnf
+            from cnf import rust_cnf
             vonorms_arr = np.ascontiguousarray(vonorms.vonorms_np, dtype=np.float64)
             canonical_arr = np.ascontiguousarray(canonical_vonorms.vonorms_np, dtype=np.float64)
             middle_flat = middle.astype(np.int32).flatten()

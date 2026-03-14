@@ -28,7 +28,7 @@ def test_neighbors_are_unique(idx, struct: Structure):
     nf = NeighborFinder.from_cnf(original_cnf)
     py_nbs = nf.find_neighbors(original_cnf)
 
-    import rust_cnf
+    from cnf import rust_cnf
 
     for nb in py_nbs:
         py_stab = nb.lattice_normal_form.vonorms.stabilizer_matrices_fast()

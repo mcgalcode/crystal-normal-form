@@ -128,7 +128,7 @@ class MinDistanceFilter(SearchFilter):
         if self._use_rust:
             if len(cnfs) == 0:
                 return cnfs, []
-            import rust_cnf
+            from cnf import rust_cnf
             pt = cnfs[0]
             n_atoms = len(pt.elements)
 

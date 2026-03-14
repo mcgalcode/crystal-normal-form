@@ -220,7 +220,7 @@ class MNFConstructor():
 
     def _build_vectorized_rust(self, original_motif: FractionalMotif):
         """Rust-accelerated MNF construction"""
-        import rust_cnf
+        from cnf import rust_cnf
 
         if len(original_motif.atoms) == 1:
             candidate = MNFCandidate(tuple([]), None, None, None)
@@ -284,7 +284,7 @@ class MNFConstructor():
 
         if use_rust:
             # Use batch Rust implementation - single call for all coordinates
-            import rust_cnf
+            from cnf import rust_cnf
 
             # Convert coords_list to list of float64 arrays for Rust
             coords_batch = []
@@ -376,7 +376,7 @@ class MNFConstructor():
 
         if use_rust:
             # Use Rust implementation
-            import rust_cnf
+            from cnf import rust_cnf
 
             # Rust expects float64 for coordinates
             coords_flat_contig = np.ascontiguousarray(coords_array.flatten(), dtype=np.float64)

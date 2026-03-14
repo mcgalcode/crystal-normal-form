@@ -30,7 +30,7 @@ def test_find_neighbor_tuples_equal(idx, struct: Structure):
 
     # Get Rust neighbors using find_neighbor_tuples_rust
     os.environ['USE_RUST'] = '1'
-    import rust_cnf
+    from cnf import rust_cnf
 
     # Prepare inputs
     vonorms_i32 = np.array(original_cnf.lattice_normal_form.vonorms.tuple, dtype=np.int32)

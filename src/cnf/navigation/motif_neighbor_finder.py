@@ -31,7 +31,7 @@ class MotifNeighborFinder():
 
         Returns list of (vonorms_tuple, coords_tuple) for each neighbor.
         """
-        import rust_cnf
+        from cnf import rust_cnf
         import numpy as np
 
         # Get input data

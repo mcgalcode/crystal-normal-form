@@ -3,7 +3,7 @@
 import pytest
 import numpy as np
 import helpers
-import rust_cnf
+from cnf import rust_cnf
 
 from cnf.cnf_constructor import CNFConstructor
 from pymatgen.core.structure import Structure

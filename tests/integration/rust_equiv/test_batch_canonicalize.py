@@ -55,7 +55,7 @@ def test_batch_canonicalize_equals_individual(idx, struct: Structure):
         py_results.append(canonical_tuple)
 
     # Rust: batch canonicalize
-    import rust_cnf
+    from cnf import rust_cnf
 
     # Convert validated_steps to ensure proper types for Rust
     # Note: Rust expects coords to INCLUDE origin atom at (0,0,0)

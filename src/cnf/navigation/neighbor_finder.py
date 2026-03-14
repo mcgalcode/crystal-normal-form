@@ -43,7 +43,7 @@ class NeighborFinder():
         if use_rust:
             # Pure Rust path - single call does lattice + motif
             # Self-loop filtering is done in Rust (neighbors.rs)
-            import rust_cnf
+            from cnf import rust_cnf
 
             vonorms_i32 = np.array(point[:7], dtype=np.int32)
             coords_i32 = np.array(point[7:], dtype=np.int32)

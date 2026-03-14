@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 import helpers
-import rust_cnf
+from cnf import rust_cnf
 
 from cnf import CrystalNormalForm
 from cnf.cnf_constructor import CNFConstructor

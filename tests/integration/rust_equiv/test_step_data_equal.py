@@ -11,7 +11,7 @@ from pymatgen.core.structure import Structure
 
 def _compute_step_data_raw_rust(cnf_tuple: tuple, delta):
     """Rust implementation of step data computation."""
-    import rust_cnf
+    from cnf import rust_cnf
 
     # Get motif data using helper (Rust needs origin atom)
     motif_coord_matrix, n_atoms = extract_coord_matrix_from_mnf_tuple(cnf_tuple[7:], include_origin=True)

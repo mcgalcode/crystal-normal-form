@@ -23,7 +23,7 @@ def test_validate_step_data_equal(idx, struct: Structure):
 
     # Get step data from Rust (unvalidated)
     os.environ['USE_RUST'] = '1'
-    import rust_cnf
+    from cnf import rust_cnf
 
     vonorms = original_cnf.lattice_normal_form.vonorms
     input_vonorms = np.array(vonorms.vonorms, dtype=np.float64)

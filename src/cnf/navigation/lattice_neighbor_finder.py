@@ -87,7 +87,7 @@ class LatticeNeighborFinder():
 
     def _find_neighbor_tuples_rust(self, cnf_tuple: tuple) -> list[tuple]:
         """Rust implementation - returns tuples without constructing CNF objects."""
-        import rust_cnf
+        from cnf import rust_cnf
 
         # Prepare all inputs for combined Rust function
         vonorms = cnf_tuple[:7]

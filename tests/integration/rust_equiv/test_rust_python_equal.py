@@ -66,7 +66,7 @@ def test_rust_and_python_recover_same_neighbors(idx, struct: Structure):
     py_only = list(py_unique_nbs - rust_unique_nbs)[:3]  # Check first 3
     rust_only = list(rust_unique_nbs - py_unique_nbs)[:3]
 
-    import rust_cnf
+    from cnf import rust_cnf
 
     print("\nPython-only neighbors:")
     for cnf in py_only:

@@ -5,7 +5,7 @@ import os
 from cnf.cnf_constructor import CNFConstructor
 from cnf.linalg import MatrixTuple
 from pymatgen.core.structure import Structure
-import rust_cnf
+from cnf import rust_cnf
 
 
 @helpers.parameterized_by_mp_structs

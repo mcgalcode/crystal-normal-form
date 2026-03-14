@@ -28,7 +28,7 @@ def test_s4_groups_equal(idx, struct: Structure):
     nf = NeighborFinder.from_cnf(original_cnf)
     py_nbs = nf.find_neighbors(original_cnf)
 
-    import rust_cnf
+    from cnf import rust_cnf
 
     for nb in py_nbs:
         vonorms = nb.lattice_normal_form.vonorms
