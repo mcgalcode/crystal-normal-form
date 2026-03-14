@@ -32,9 +32,19 @@ markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.superfences
+  - pymdownx.arithmatex:
+      generic: true
   - admonition
   - pymdownx.details
+
+extra_javascript:
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
 nav:
   - Home: index.md
   - Quickstart: quickstart.ipynb
+  - Guides:
+    - CNF Overview: cnf_overview.ipynb
+    - Lattice Normal Form: lattice_normal_form.ipynb
+    - Motif Normal Form: motif_normal_form.ipynb
+    - Neighbor Finding: neighbor_finding.ipynb
