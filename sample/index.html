@@ -11,10 +11,8 @@
       
       
       
-        <link rel="prev" href="../quickstart/">
+        <link rel="prev" href="../search/">
       
-      
-        <link rel="next" href="../lattice_normal_form/">
       
       
         
@@ -25,7 +23,7 @@
     
     
       
-        <title>CNF Overview - Crystal Normal Form</title>
+        <title>Path Sampling - Crystal Normal Form</title>
       
     
     
@@ -76,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#cnf-overview" class="md-skip">
+        <a href="#path-sampling" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +110,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              CNF Overview
+              Path Sampling
             
           </span>
         </div>
@@ -309,8 +307,6 @@
       
   
   
-    
-  
   
   
     
@@ -323,11 +319,13 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
@@ -348,7 +346,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -363,37 +361,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    CNF Overview
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../cnf_overview/" class="md-nav__link">
         
   
   
@@ -409,125 +380,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#motivation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Motivation
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#structure-of-the-cnf-tuple" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Structure of the CNF Tuple
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#what-are-lnf-coordinates" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What are LNF coordinates?
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#what-are-mnf-coordinates" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What are MNF coordinates?
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#discretization-parameters" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Discretization Parameters
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#reconstruction" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Reconstruction
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#the-neighbor-graph" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The Neighbor Graph
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#applications" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Applications
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#further-reading" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Further Reading
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -628,8 +480,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -640,13 +494,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
           <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
@@ -667,7 +519,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -766,10 +618,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../sample/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Path Sampling
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -785,6 +664,158 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-role-of-dropout-in-path-diversity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Role of Dropout in Path Diversity
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#energy-evaluation-with-grace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Energy Evaluation with GRACE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-simple-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A Simple Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#understanding-the-result" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Understanding the Result
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examining-the-best-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examining the Best Path
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dropout-range" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dropout Range
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bidirectional-sampling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bidirectional Sampling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parallel-sampling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parallel Sampling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-calculator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom Calculator
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#saving-and-loading-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Saving and Loading Results
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-the-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using the Results
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -852,10 +883,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#motivation" class="md-nav__link">
+  <a href="#the-role-of-dropout-in-path-diversity" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Motivation
+        The Role of Dropout in Path Diversity
       
     </span>
   </a>
@@ -863,10 +894,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#structure-of-the-cnf-tuple" class="md-nav__link">
+  <a href="#energy-evaluation-with-grace" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Structure of the CNF Tuple
+        Energy Evaluation with GRACE
       
     </span>
   </a>
@@ -874,10 +905,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-are-lnf-coordinates" class="md-nav__link">
+  <a href="#a-simple-example" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What are LNF coordinates?
+        A Simple Example
       
     </span>
   </a>
@@ -885,10 +916,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-are-mnf-coordinates" class="md-nav__link">
+  <a href="#understanding-the-result" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What are MNF coordinates?
+        Understanding the Result
       
     </span>
   </a>
@@ -896,10 +927,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#discretization-parameters" class="md-nav__link">
+  <a href="#examining-the-best-path" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Discretization Parameters
+        Examining the Best Path
       
     </span>
   </a>
@@ -907,10 +938,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#reconstruction" class="md-nav__link">
+  <a href="#dropout-range" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reconstruction
+        Dropout Range
       
     </span>
   </a>
@@ -918,10 +949,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-neighbor-graph" class="md-nav__link">
+  <a href="#bidirectional-sampling" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The Neighbor Graph
+        Bidirectional Sampling
       
     </span>
   </a>
@@ -929,10 +960,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#applications" class="md-nav__link">
+  <a href="#parallel-sampling" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Applications
+        Parallel Sampling
       
     </span>
   </a>
@@ -940,10 +971,43 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#further-reading" class="md-nav__link">
+  <a href="#custom-calculator" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Further Reading
+        Custom Calculator
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#saving-and-loading-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Saving and Loading Results
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-the-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using the Results
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
       
     </span>
   </a>
@@ -1691,35 +1755,61 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </style>
 <!-- End of mermaid configuration --><div class="jupyter-wrapper">
 <div class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-0">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="cnf-overview">CNF Overview<a class="anchor-link" href="#cnf-overview">¶</a></h1><p>Crystal Normal Form (CNF) is a unique integer representation for any 3D crystal structure. This guide introduces the representation and shows how it works in practice.</p>
+<h1 id="path-sampling">Path Sampling<a class="anchor-link" href="#path-sampling">¶</a></h1><p>Path sampling runs many A* searches with varied dropout to generate diverse paths between two crystal structures, then evaluates their energies using a machine learning potential. The path with the lowest barrier represents the best estimate of the minimum energy pathway found so far.</p>
+<p>This guide explains how path sampling works and how to use it.</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-1">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="motivation">Motivation<a class="anchor-link" href="#motivation">¶</a></h2><p>Crystal structures are traditionally described using three lattice vectors plus fractional atomic coordinates. While intuitive, this representation is highly redundant: infinitely many choices of unit cell can describe the same lattice, the origin can be placed anywhere, and atoms of the same element can be labeled in any order.</p>
-<p>CNF addresses this by providing a canonical representation. Every crystal maps to a unique tuple of integers, and two crystals have the same CNF if and only if they are geometrically equivalent. This enables exact comparison of structures and systematic exploration of crystal configuration space.</p>
+<h2 id="the-role-of-dropout-in-path-diversity">The Role of Dropout in Path Diversity<a class="anchor-link" href="#the-role-of-dropout-in-path-diversity">¶</a></h2><p>A* search is deterministic: given the same inputs, it always produces the same path. This is problematic when we want to explore different regions of the energy landscape. The path A* finds might have a high barrier, while a slightly different path could have a much lower one.</p>
+<p>Dropout introduces controlled randomness. At each step of A<em>, some fraction of valid neighbors are randomly excluded from consideration. Different dropout values (and different random number sequences) lead A</em> to explore different parts of the search space and find different paths.</p>
+<p>By running many searches with varied dropout, we sample the space of possible paths. The more samples we take, the more likely we are to find a good (low barrier) path.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-2">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="energy-evaluation-with-grace">Energy Evaluation with GRACE<a class="anchor-link" href="#energy-evaluation-with-grace">¶</a></h2><p>Each path found by A* is just a sequence of CNF coordinates. To measure its barrier, we need to evaluate the energy of each structure along the path. The barrier is simply the maximum energy encountered.</p>
+<p>We use GRACE, a machine learning interatomic potential, to evaluate energies. GRACE provides fast, reasonably accurate energies without running expensive DFT calculations. The energies are not as accurate as DFT, but they're good enough to identify promising paths that can be refined later.</p>
+<p>Energy evaluation is often the computational bottleneck. Each path might contain hundreds of structures, and each energy evaluation takes a few milliseconds. To avoid redundant calculations, we maintain an energy cache: if the same CNF coordinate appears in multiple paths, we reuse the cached energy rather than recomputing it.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-3">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="a-simple-example">A Simple Example<a class="anchor-link" href="#a-simple-example">¶</a></h2><p>Let's sample paths between two zirconium structures. We'll first convert the structures to CNF, then run path sampling.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-4">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-1">
@@ -1734,96 +1824,77 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pymatgen.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">Structure</span><span class="p">,</span> <span class="n">Lattice</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cnf</span><span class="w"> </span><span class="kn">import</span> <span class="n">CNFConstructor</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="c1"># Create a rutile TiO2 structure</span>
-<span class="n">a</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="mf">4.594</span><span class="p">,</span> <span class="mf">2.959</span>
-<span class="n">lattice</span> <span class="o">=</span> <span class="n">Lattice</span><span class="o">.</span><span class="n">tetragonal</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
-<span class="n">species</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Ti"</span><span class="p">,</span> <span class="s2">"Ti"</span><span class="p">,</span> <span class="s2">"O"</span><span class="p">,</span> <span class="s2">"O"</span><span class="p">,</span> <span class="s2">"O"</span><span class="p">,</span> <span class="s2">"O"</span><span class="p">]</span>
-<span class="n">coords</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
-    <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
-    <span class="p">[</span><span class="mf">0.305</span><span class="p">,</span> <span class="mf">0.305</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
-    <span class="p">[</span><span class="mf">0.695</span><span class="p">,</span> <span class="mf">0.695</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
-    <span class="p">[</span><span class="mf">0.805</span><span class="p">,</span> <span class="mf">0.195</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
-    <span class="p">[</span><span class="mf">0.195</span><span class="p">,</span> <span class="mf">0.805</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
-<span class="p">]</span>
-<span class="n">rutile</span> <span class="o">=</span> <span class="n">Structure</span><span class="p">(</span><span class="n">lattice</span><span class="p">,</span> <span class="n">species</span><span class="p">,</span> <span class="n">coords</span><span class="p">)</span>
+<span class="c1"># HCP zirconium (2 atoms per cell)</span>
+<span class="n">a</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="mf">3.23</span><span class="p">,</span> <span class="mf">5.15</span>
+<span class="n">lattice_start</span> <span class="o">=</span> <span class="n">Lattice</span><span class="o">.</span><span class="n">hexagonal</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+<span class="n">zr_start</span> <span class="o">=</span> <span class="n">Structure</span><span class="p">(</span>
+    <span class="n">lattice_start</span><span class="p">,</span>
+    <span class="p">[</span><span class="s2">"Zr"</span><span class="p">,</span> <span class="s2">"Zr"</span><span class="p">],</span>
+    <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]]</span>
+<span class="p">)</span>
 
-<span class="c1"># Convert to CNF</span>
-<span class="n">constructor</span> <span class="o">=</span> <span class="n">CNFConstructor</span><span class="p">(</span><span class="n">xi</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">constructor</span><span class="o">.</span><span class="n">from_pymatgen_structure</span><span class="p">(</span><span class="n">rutile</span><span class="p">)</span>
-<span class="n">cnf</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">cnf</span>
+<span class="c1"># Strained version (5% larger a parameter)</span>
+<span class="n">lattice_goal</span> <span class="o">=</span> <span class="n">Lattice</span><span class="o">.</span><span class="n">hexagonal</span><span class="p">(</span><span class="n">a</span> <span class="o">*</span> <span class="mf">1.05</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+<span class="n">zr_goal</span> <span class="o">=</span> <span class="n">Structure</span><span class="p">(</span>
+    <span class="n">lattice_goal</span><span class="p">,</span>
+    <span class="p">[</span><span class="s2">"Zr"</span><span class="p">,</span> <span class="s2">"Zr"</span><span class="p">],</span>
+    <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]]</span>
+<span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Rutile TiO2 Crystal Normal Form:"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">cnf</span><span class="o">.</span><span class="n">coords</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">This tuple of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cnf</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span><span class="si">}</span><span class="s2"> integers uniquely identifies this crystal."</span><span class="p">)</span>
+<span class="c1"># Convert to CNF at moderate resolution</span>
+<span class="n">xi</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="n">delta</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="n">constructor</span> <span class="o">=</span> <span class="n">CNFConstructor</span><span class="p">(</span><span class="n">xi</span><span class="o">=</span><span class="n">xi</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="n">delta</span><span class="p">)</span>
+
+<span class="n">start_cnf</span> <span class="o">=</span> <span class="n">constructor</span><span class="o">.</span><span class="n">from_pymatgen_structure</span><span class="p">(</span><span class="n">zr_start</span><span class="p">)</span><span class="o">.</span><span class="n">cnf</span>
+<span class="n">goal_cnf</span> <span class="o">=</span> <span class="n">constructor</span><span class="o">.</span><span class="n">from_pymatgen_structure</span><span class="p">(</span><span class="n">zr_goal</span><span class="p">)</span><span class="o">.</span><span class="n">cnf</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Start CNF: </span><span class="si">{</span><span class="n">start_cnf</span><span class="o">.</span><span class="n">coords</span><span class="p">[:</span><span class="mi">7</span><span class="p">]</span><span class="si">}</span><span class="s2">..."</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Goal CNF:  </span><span class="si">{</span><span class="n">goal_cnf</span><span class="o">.</span><span class="n">coords</span><span class="p">[:</span><span class="mi">7</span><span class="p">]</span><span class="si">}</span><span class="s2">..."</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-1">from pymatgen.core import Structure, Lattice
 from cnf import CNFConstructor
-import numpy as np
 
-# Create a rutile TiO2 structure
-a, c = 4.594, 2.959
-lattice = Lattice.tetragonal(a, c)
-species = ["Ti", "Ti", "O", "O", "O", "O"]
-coords = [
-    [0.0, 0.0, 0.0],
-    [0.5, 0.5, 0.5],
-    [0.305, 0.305, 0.0],
-    [0.695, 0.695, 0.0],
-    [0.805, 0.195, 0.5],
-    [0.195, 0.805, 0.5],
-]
-rutile = Structure(lattice, species, coords)
+# HCP zirconium (2 atoms per cell)
+a, c = 3.23, 5.15
+lattice_start = Lattice.hexagonal(a, c)
+zr_start = Structure(
+    lattice_start,
+    ["Zr", "Zr"],
+    [[0, 0, 0], [1/3, 2/3, 0.5]]
+)
 
-# Convert to CNF
-constructor = CNFConstructor(xi=1.0, delta=100)
-result = constructor.from_pymatgen_structure(rutile)
-cnf = result.cnf
+# Strained version (5% larger a parameter)
+lattice_goal = Lattice.hexagonal(a * 1.05, c)
+zr_goal = Structure(
+    lattice_goal,
+    ["Zr", "Zr"],
+    [[0, 0, 0], [1/3, 2/3, 0.5]]
+)
 
-print("Rutile TiO2 Crystal Normal Form:")
-print(f"  {cnf.coords}")
-print(f"\nThis tuple of {len(cnf.coords)} integers uniquely identifies this crystal.")</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Rutile TiO2 Crystal Normal Form:
-  (9, 21, 21, 51, 30, 30, 42, 50, 50, 50, 0, 30, 30, 0, 70, 70, 50, 20, 80, 50, 80, 20)
+# Convert to CNF at moderate resolution
+xi = 1.0
+delta = 50
+constructor = CNFConstructor(xi=xi, delta=delta)
 
-This tuple of 22 integers uniquely identifies this crystal.
-</pre>
+start_cnf = constructor.from_pymatgen_structure(zr_start).cnf
+goal_cnf = constructor.from_pymatgen_structure(zr_goal).cnf
+
+print(f"Start CNF: {start_cnf.coords[:7]}...")
+print(f"Goal CNF:  {goal_cnf.coords[:7]}...")</div>
 </div>
 </div>
 </div>
 </div>
 </div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="structure-of-the-cnf-tuple">Structure of the CNF Tuple<a class="anchor-link" href="#structure-of-the-cnf-tuple">¶</a></h2><p>The CNF tuple has two parts. The first 7 integers form the Lattice Normal Form (LNF), which describes the lattice geometry. The remaining integers form the Motif Normal Form (MNF), which describes atomic positions. For a structure with N atoms, the MNF contains 3×(N-1) integers, since one atom is fixed at the origin by convention.</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-2">
@@ -1836,105 +1907,52 @@ This tuple of 22 integers uniquely identifies this crystal.
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">lnf</span> <span class="o">=</span> <span class="n">cnf</span><span class="o">.</span><span class="n">lattice_normal_form</span>
-<span class="n">mnf</span> <span class="o">=</span> <span class="n">cnf</span><span class="o">.</span><span class="n">motif_normal_form</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cnf.navigation.astar.iterative</span><span class="w"> </span><span class="kn">import</span> <span class="n">sample</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Lattice Normal Form (LNF):"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Coordinates: </span><span class="si">{</span><span class="n">lnf</span><span class="o">.</span><span class="n">vonorms</span><span class="o">.</span><span class="n">tuple</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Motif Normal Form (MNF):"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Coordinates: </span><span class="si">{</span><span class="n">mnf</span><span class="o">.</span><span class="n">coord_list</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Elements: </span><span class="si">{</span><span class="n">mnf</span><span class="o">.</span><span class="n">elements</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"The structure has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">mnf</span><span class="o">.</span><span class="n">elements</span><span class="p">)</span><span class="si">}</span><span class="s2"> atoms."</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"The first atom is at the origin (implicit), so the MNF stores"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">mnf</span><span class="o">.</span><span class="n">elements</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="si">}</span><span class="s2"> atoms × 3 coordinates = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">mnf</span><span class="o">.</span><span class="n">coord_list</span><span class="p">)</span><span class="si">}</span><span class="s2"> integers."</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">sample</span><span class="p">(</span>
+    <span class="n">start_cnfs</span><span class="o">=</span><span class="p">[</span><span class="n">start_cnf</span><span class="p">],</span>
+    <span class="n">goal_cnfs</span><span class="o">=</span><span class="p">[</span><span class="n">goal_cnf</span><span class="p">],</span>
+    <span class="n">num_samples</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">dropout_range</span><span class="o">=</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">),</span>
+    <span class="n">min_distance</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
+    <span class="n">max_iterations</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
+    <span class="n">verbosity</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-2">lnf = cnf.lattice_normal_form
-mnf = cnf.motif_normal_form
+<div class="clipboard-copy-txt" id="cell-2">from cnf.navigation.astar.iterative import sample
 
-print("Lattice Normal Form (LNF):")
-print(f"  Coordinates: {lnf.vonorms.tuple}")
-print()
-print("Motif Normal Form (MNF):")
-print(f"  Coordinates: {mnf.coord_list}")
-print(f"  Elements: {mnf.elements}")
-print()
-print(f"The structure has {len(mnf.elements)} atoms.")
-print(f"The first atom is at the origin (implicit), so the MNF stores")
-print(f"{len(mnf.elements)-1} atoms × 3 coordinates = {len(mnf.coord_list)} integers.")</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Lattice Normal Form (LNF):
-  Coordinates: (9, 21, 21, 51, 30, 30, 42)
-
-Motif Normal Form (MNF):
-  Coordinates: (50, 50, 50, 0, 30, 30, 0, 70, 70, 50, 20, 80, 50, 80, 20)
-  Elements: ['Ti', 'Ti', 'O', 'O', 'O', 'O']
-
-The structure has 6 atoms.
-The first atom is at the origin (implicit), so the MNF stores
-5 atoms × 3 coordinates = 15 integers.
-</pre>
+result = sample(
+    start_cnfs=[start_cnf],
+    goal_cnfs=[goal_cnf],
+    num_samples=10,
+    dropout_range=(0.05, 0.15),
+    min_distance=1.5,
+    max_iterations=5000,
+    verbosity=1,
+)</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-6">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="what-are-lnf-coordinates">What are LNF coordinates?<a class="anchor-link" href="#what-are-lnf-coordinates">¶</a></h2><p>The 7 LNF coordinates are called vonorms. They derive from a construction involving the Wigner-Seitz cell of the lattice.</p>
-<p>The Wigner-Seitz cell (also known as the Voronoi cell) is the region of space closer to one lattice point than to any other. In 3D, this cell is a convex polyhedron whose faces are perpendicular bisector planes of vectors connecting the origin to neighboring lattice points. The vectors that define these faces are called Voronoi vectors.</p>
-<p>Conway and Sloane showed that any 3D lattice can be described by an obtuse superbasis of 4 vectors, from which at most 7 Voronoi vectors can be derived. The squared lengths of these 7 vectors are the vonorms. They uniquely characterize the lattice geometry up to rotation and reflection.</p>
-<p>The LNF coordinates are these vonorms, discretized to integer multiples of the resolution parameter ξ (xi).</p>
+<p>The output shows each attempt with its dropout value, whether a path was found, and if so, the path length and barrier height. At the end, we see summary statistics including the best barrier found.</p>
 </div>
 </div>
 </div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="what-are-mnf-coordinates">What are MNF coordinates?<a class="anchor-link" href="#what-are-mnf-coordinates">¶</a></h2><p>The MNF coordinates are fractional atomic positions, discretized to integer multiples of 1/δ (delta). By convention, one atom (the one with lowest atomic number, sorted lexicographically by position) is fixed at the origin, and the remaining N-1 atoms have their 3 fractional coordinates stored.</p>
-<p>The MNF is made canonical by considering all equivalent ways to represent the same motif (using lattice symmetries and different origin choices) and selecting the lexicographically smallest coordinate tuple.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="discretization-parameters">Discretization Parameters<a class="anchor-link" href="#discretization-parameters">¶</a></h2><p>CNF uses two resolution parameters. The parameter ξ (xi) controls lattice resolution and has units of Å². The parameter δ (delta) controls motif resolution, with coordinates stored as multiples of 1/δ.</p>
-<p>Smaller values give finer resolution but result in larger coordinate values and more neighbors.</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-7">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-3">
@@ -1947,55 +1965,36 @@ The first atom is at the origin (implicit), so the MNF stores
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Compare different resolutions</span>
-<span class="k">for</span> <span class="n">xi</span><span class="p">,</span> <span class="n">delta</span> <span class="ow">in</span> <span class="p">[(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">200</span><span class="p">),</span> <span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="mi">50</span><span class="p">)]:</span>
-    <span class="n">c</span> <span class="o">=</span> <span class="n">CNFConstructor</span><span class="p">(</span><span class="n">xi</span><span class="o">=</span><span class="n">xi</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="n">delta</span><span class="p">)</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">from_pymatgen_structure</span><span class="p">(</span><span class="n">rutile</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"xi=</span><span class="si">{</span><span class="n">xi</span><span class="si">}</span><span class="s2">, delta=</span><span class="si">{</span><span class="n">delta</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">cnf</span><span class="o">.</span><span class="n">coords</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Paths found: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">paths</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">attempts</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Best barrier: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">best_barrier</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> eV"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Best path length: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">best_path</span><span class="p">)</span><span class="si">}</span><span class="s2"> steps"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-3"># Compare different resolutions
-for xi, delta in [(1.0, 100), (0.5, 200), (2.0, 50)]:
-    c = CNFConstructor(xi=xi, delta=delta)
-    result = c.from_pymatgen_structure(rutile)
-    print(f"xi={xi}, delta={delta}: {result.cnf.coords}")</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>xi=1.0, delta=100: (9, 21, 21, 51, 30, 30, 42, 50, 50, 50, 0, 30, 30, 0, 70, 70, 50, 20, 80, 50, 80, 20)
-xi=0.5, delta=200: (18, 42, 42, 102, 60, 60, 84, 100, 100, 100, 0, 61, 61, 0, 139, 139, 100, 39, 161, 100, 161, 39)
-xi=2.0, delta=50: (4, 11, 11, 25, 15, 15, 21, 25, 25, 25, 0, 15, 15, 0, 35, 35, 25, 10, 40, 25, 40, 10)
-</pre>
+<div class="clipboard-copy-txt" id="cell-3">print(f"Paths found: {len(result.paths)}/{len(result.attempts)}")
+print(f"Best barrier: {result.best_barrier:.4f} eV")
+print(f"Best path length: {len(result.best_path)} steps")</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="reconstruction">Reconstruction<a class="anchor-link" href="#reconstruction">¶</a></h2><p>A CNF can be converted back to a pymatgen Structure. Small differences from the original arise from discretization.</p>
+<h2 id="understanding-the-result">Understanding the Result<a class="anchor-link" href="#understanding-the-result">¶</a></h2><p>The <code>SearchResult</code> contains all attempts, both successful and unsuccessful. Each attempt records whether a path was found, how many A* iterations it took, and the dropout value used.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-9">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-4">
@@ -2008,56 +2007,46 @@ xi=2.0, delta=50: (4, 11, 11, 25, 15, 15, 21, 25, 25, 25, 0, 15, 15, 0, 35, 35, 
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">reconstructed</span> <span class="o">=</span> <span class="n">cnf</span><span class="o">.</span><span class="n">reconstruct</span><span class="p">()</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Original volume:      </span><span class="si">{</span><span class="n">rutile</span><span class="o">.</span><span class="n">volume</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> Å³"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Reconstructed volume: </span><span class="si">{</span><span class="n">reconstructed</span><span class="o">.</span><span class="n">volume</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> Å³"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Difference:           </span><span class="si">{</span><span class="nb">abs</span><span class="p">(</span><span class="n">rutile</span><span class="o">.</span><span class="n">volume</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">reconstructed</span><span class="o">.</span><span class="n">volume</span><span class="p">)</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> Å³"</span><span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Look at individual attempts</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">attempt</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">attempts</span><span class="p">[:</span><span class="mi">5</span><span class="p">]):</span>
+    <span class="k">if</span> <span class="n">attempt</span><span class="o">.</span><span class="n">found</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Attempt </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">: dropout=</span><span class="si">{</span><span class="n">attempt</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">'dropout'</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">, "</span>
+              <span class="sa">f</span><span class="s2">"barrier=</span><span class="si">{</span><span class="n">attempt</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">barrier</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> eV, "</span>
+              <span class="sa">f</span><span class="s2">"length=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">attempt</span><span class="o">.</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Attempt </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">: dropout=</span><span class="si">{</span><span class="n">attempt</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">'dropout'</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">, no path found"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-4">reconstructed = cnf.reconstruct()
-
-print(f"Original volume:      {rutile.volume:.4f} Å³")
-print(f"Reconstructed volume: {reconstructed.volume:.4f} Å³")
-print(f"Difference:           {abs(rutile.volume - reconstructed.volume):.4f} Å³")</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Original volume:      62.4492 Å³
-Reconstructed volume: 63.0000 Å³
-Difference:           0.5508 Å³
-</pre>
+<div class="clipboard-copy-txt" id="cell-4"># Look at individual attempts
+for i, attempt in enumerate(result.attempts[:5]):
+    if attempt.found:
+        print(f"Attempt {i+1}: dropout={attempt.metadata['dropout']:.2f}, "
+              f"barrier={attempt.path.barrier:.4f} eV, "
+              f"length={len(attempt.path)}")
+    else:
+        print(f"Attempt {i+1}: dropout={attempt.metadata['dropout']:.2f}, no path found")</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-10">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="the-neighbor-graph">The Neighbor Graph<a class="anchor-link" href="#the-neighbor-graph">¶</a></h2><p>A key property of the CNF representation is that every crystal has well-defined neighbors: structures whose CNF coordinates differ by ±1 in a single position.</p>
-<p>Lattice neighbors (changes to the first 7 coordinates) correspond to small strains. Motif neighbors (changes to the remaining coordinates) correspond to small atomic displacements. Together, these define a graph connecting all possible crystals of a given composition.</p>
+<h2 id="examining-the-best-path">Examining the Best Path<a class="anchor-link" href="#examining-the-best-path">¶</a></h2><p>The best path is the one with the lowest barrier. We can examine its energy profile to understand the transformation.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-11">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-5">
@@ -2070,61 +2059,35 @@ Difference:           0.5508 Å³
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cnf.navigation</span><span class="w"> </span><span class="kn">import</span> <span class="n">find_neighbors</span><span class="p">,</span> <span class="n">NeighborFinder</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">best_path</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">best_path</span>
 
-<span class="n">neighbors</span> <span class="o">=</span> <span class="n">find_neighbors</span><span class="p">(</span><span class="n">cnf</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"This CNF has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">neighbors</span><span class="p">)</span><span class="si">}</span><span class="s2"> neighbors."</span><span class="p">)</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">First 5 neighbors (showing coordinate changes):"</span><span class="p">)</span>
-<span class="n">orig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cnf</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">neighbors</span><span class="p">[:</span><span class="mi">5</span><span class="p">]):</span>
-    <span class="n">diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">neighbor</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span> <span class="o">-</span> <span class="n">orig</span>
-    <span class="n">changes</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">]: </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">diff</span><span class="p">[</span><span class="n">j</span><span class="p">])</span><span class="si">:</span><span class="s2">+d</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">diff</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]]</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">. </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">changes</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Path length: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">best_path</span><span class="p">)</span><span class="si">}</span><span class="s2"> steps"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Barrier: </span><span class="si">{</span><span class="n">best_path</span><span class="o">.</span><span class="n">barrier</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> eV"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Energy profile (every 10th point):"</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">best_path</span><span class="o">.</span><span class="n">energies</span><span class="p">),</span> <span class="mi">10</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Step </span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">3d</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">best_path</span><span class="o">.</span><span class="n">energies</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> eV"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-5">from cnf.navigation import find_neighbors, NeighborFinder
+<div class="clipboard-copy-txt" id="cell-5">best_path = result.best_path
 
-neighbors = find_neighbors(cnf)
-print(f"This CNF has {len(neighbors)} neighbors.")
-
-print("\nFirst 5 neighbors (showing coordinate changes):")
-orig = np.array(cnf.coords)
-for i, neighbor in enumerate(neighbors[:5]):
-    diff = np.array(neighbor.coords) - orig
-    changes = [f"[{j}]: {int(diff[j]):+d}" for j in np.where(diff != 0)[0]]
-    print(f"  {i+1}. {', '.join(changes)}")</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>This CNF has 22 neighbors.
-
-First 5 neighbors (showing coordinate changes):
-  1. [16]: -1
-  2. [3]: -1, [4]: -1
-  3. [14]: -1
-  4. [7]: -1, [8]: -1, [9]: -1
-  5. [0]: +1, [3]: -1
-</pre>
+print(f"Path length: {len(best_path)} steps")
+print(f"Barrier: {best_path.barrier:.4f} eV")
+print()
+print("Energy profile (every 10th point):")
+for i in range(0, len(best_path.energies), 10):
+    print(f"  Step {i:3d}: {best_path.energies[i]:.4f} eV")</div>
 </div>
 </div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-12">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-6">
@@ -2137,60 +2100,480 @@ First 5 neighbors (showing coordinate changes):
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Separate lattice and motif neighbors</span>
-<span class="n">finder</span> <span class="o">=</span> <span class="n">NeighborFinder</span><span class="o">.</span><span class="n">from_cnf</span><span class="p">(</span><span class="n">cnf</span><span class="p">)</span>
-<span class="n">lattice_neighbors</span> <span class="o">=</span> <span class="n">finder</span><span class="o">.</span><span class="n">find_lattice_neighbor_cnfs</span><span class="p">(</span><span class="n">cnf</span><span class="p">)</span>
-<span class="n">motif_neighbors</span> <span class="o">=</span> <span class="n">finder</span><span class="o">.</span><span class="n">find_motif_neighbor_cnfs</span><span class="p">(</span><span class="n">cnf</span><span class="p">)</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Lattice neighbors (strain): </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">lattice_neighbors</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Motif neighbors (displacement): </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">motif_neighbors</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># What types of steps does the path contain?</span>
+<span class="n">step_types</span> <span class="o">=</span> <span class="n">best_path</span><span class="o">.</span><span class="n">get_step_types</span><span class="p">()</span>
+<span class="k">if</span> <span class="n">step_types</span><span class="p">:</span>
+    <span class="n">lattice_steps</span> <span class="o">=</span> <span class="n">step_types</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s1">'lattice'</span><span class="p">)</span>
+    <span class="n">motif_steps</span> <span class="o">=</span> <span class="n">step_types</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s1">'motif'</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Lattice steps: </span><span class="si">{</span><span class="n">lattice_steps</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Motif steps: </span><span class="si">{</span><span class="n">motif_steps</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-6"># Separate lattice and motif neighbors
-finder = NeighborFinder.from_cnf(cnf)
-lattice_neighbors = finder.find_lattice_neighbor_cnfs(cnf)
-motif_neighbors = finder.find_motif_neighbor_cnfs(cnf)
+<div class="clipboard-copy-txt" id="cell-6"># What types of steps does the path contain?
+step_types = best_path.get_step_types()
+if step_types:
+    lattice_steps = step_types.count('lattice')
+    motif_steps = step_types.count('motif')
+    print(f"Lattice steps: {lattice_steps}")
+    print(f"Motif steps: {motif_steps}")</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-13">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="dropout-range">Dropout Range<a class="anchor-link" href="#dropout-range">¶</a></h2><p>The <code>dropout_range</code> parameter controls the range of dropout values used across attempts. Each attempt samples uniformly from this range.</p>
+<p>Low dropout (0.02-0.05) produces paths similar to the deterministic A* result, with small variations. High dropout (0.2-0.3) produces very different paths but may fail to find any path at all because too many neighbors are excluded.</p>
+<p>A moderate range like (0.05, 0.1) balances path diversity with success rate. If you find that many attempts fail, try lowering the upper bound. If all paths look similar, try raising the lower bound.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-14">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-7">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Try with higher dropout for more diversity</span>
+<span class="n">result_high_dropout</span> <span class="o">=</span> <span class="n">sample</span><span class="p">(</span>
+    <span class="n">start_cnfs</span><span class="o">=</span><span class="p">[</span><span class="n">start_cnf</span><span class="p">],</span>
+    <span class="n">goal_cnfs</span><span class="o">=</span><span class="p">[</span><span class="n">goal_cnf</span><span class="p">],</span>
+    <span class="n">num_samples</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">dropout_range</span><span class="o">=</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">),</span>
+    <span class="n">min_distance</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
+    <span class="n">max_iterations</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
+    <span class="n">verbosity</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-7"># Try with higher dropout for more diversity
+result_high_dropout = sample(
+    start_cnfs=[start_cnf],
+    goal_cnfs=[goal_cnf],
+    num_samples=10,
+    dropout_range=(0.1, 0.2),
+    min_distance=1.5,
+    max_iterations=5000,
+    verbosity=1,
+)</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-15">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="bidirectional-sampling">Bidirectional Sampling<a class="anchor-link" href="#bidirectional-sampling">¶</a></h2><p>By default, all sampling attempts search from start to goal. The <code>bidirectional</code> option causes about half the attempts to search in the reverse direction (goal to start). This can help discover paths that are easier to find in one direction than the other.</p>
+<p>Note that when a reverse path is found, it's automatically reversed before energy evaluation, so all paths in the result go from start to goal regardless of which direction was searched.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-16">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-8">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Bidirectional sampling</span>
+<span class="n">result_bidir</span> <span class="o">=</span> <span class="n">sample</span><span class="p">(</span>
+    <span class="n">start_cnfs</span><span class="o">=</span><span class="p">[</span><span class="n">start_cnf</span><span class="p">],</span>
+    <span class="n">goal_cnfs</span><span class="o">=</span><span class="p">[</span><span class="n">goal_cnf</span><span class="p">],</span>
+    <span class="n">num_samples</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">dropout_range</span><span class="o">=</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span>
+    <span class="n">bidirectional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">min_distance</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
+    <span class="n">max_iterations</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
+    <span class="n">verbosity</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
 
-print(f"Lattice neighbors (strain): {len(lattice_neighbors)}")
-print(f"Motif neighbors (displacement): {len(motif_neighbors)}")</div>
+<span class="c1"># Check the directions used</span>
+<span class="n">forward</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">result_bidir</span><span class="o">.</span><span class="n">attempts</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'direction'</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'forward'</span><span class="p">)</span>
+<span class="n">backward</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">result_bidir</span><span class="o">.</span><span class="n">attempts</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'direction'</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'backward'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Forward attempts: </span><span class="si">{</span><span class="n">forward</span><span class="si">}</span><span class="s2">, Backward attempts: </span><span class="si">{</span><span class="n">backward</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-8"># Bidirectional sampling
+result_bidir = sample(
+    start_cnfs=[start_cnf],
+    goal_cnfs=[goal_cnf],
+    num_samples=10,
+    dropout_range=(0.05, 0.1),
+    bidirectional=True,
+    min_distance=1.5,
+    max_iterations=5000,
+    verbosity=1,
+)
+
+# Check the directions used
+forward = sum(1 for a in result_bidir.attempts if a.metadata.get('direction') == 'forward')
+backward = sum(1 for a in result_bidir.attempts if a.metadata.get('direction') == 'backward')
+print(f"\nForward attempts: {forward}, Backward attempts: {backward}")</div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Lattice neighbors (strain): 11
-Motif neighbors (displacement): 11
-</pre>
 </div>
 </div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-17">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="applications">Applications<a class="anchor-link" href="#applications">¶</a></h2><p>The CNF representation enables several capabilities. Two crystals can be compared for exact geometric equivalence by checking if their CNFs match. Transformation paths between any two crystals of the same composition can be found by walking through the neighbor graph. Energy landscape exploration becomes possible by systematically visiting crystal configurations to find transition barriers between phases.</p>
-<p>The neighbor graph connects all possible crystals of a given composition, allowing navigation from any structure to any other through a series of small steps.</p>
+<h2 id="parallel-sampling">Parallel Sampling<a class="anchor-link" href="#parallel-sampling">¶</a></h2><p>Sampling attempts are independent and can be run in parallel. The <code>n_workers</code> parameter controls parallelization. Each worker creates its own energy calculator, so GPU memory and CPU resources are distributed across workers.</p>
+<p>The implementation uses Python's ProcessPoolExecutor with the 'spawn' context to avoid issues with TensorFlow and fork. Each worker receives a <code>CalcProvider</code> (a picklable factory) and creates its own calculator instance, with TensorFlow threading adjusted to avoid contention.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-18">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-9">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Parallel sampling with 4 workers</span>
+<span class="n">result_parallel</span> <span class="o">=</span> <span class="n">sample</span><span class="p">(</span>
+    <span class="n">start_cnfs</span><span class="o">=</span><span class="p">[</span><span class="n">start_cnf</span><span class="p">],</span>
+    <span class="n">goal_cnfs</span><span class="o">=</span><span class="p">[</span><span class="n">goal_cnf</span><span class="p">],</span>
+    <span class="n">num_samples</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+    <span class="n">dropout_range</span><span class="o">=</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span>
+    <span class="n">min_distance</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
+    <span class="n">max_iterations</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
+    <span class="n">n_workers</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">verbosity</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-9"># Parallel sampling with 4 workers
+result_parallel = sample(
+    start_cnfs=[start_cnf],
+    goal_cnfs=[goal_cnf],
+    num_samples=20,
+    dropout_range=(0.05, 0.1),
+    min_distance=1.5,
+    max_iterations=5000,
+    n_workers=4,
+    verbosity=1,
+)</div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-19">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="further-reading">Further Reading<a class="anchor-link" href="#further-reading">¶</a></h2><p>For details on how CNF is constructed, see the <a href="lattice_normal_form.ipynb">Lattice Normal Form</a> and <a href="motif_normal_form.ipynb">Motif Normal Form</a> guides.</p>
+<h2 id="custom-calculator">Custom Calculator<a class="anchor-link" href="#custom-calculator">¶</a></h2><p>By default, sampling uses a GRACE foundation model. If you have a fine-tuned model for your material system, you can provide a custom calculator via <code>CalcProvider</code>.</p>
+<p>The <code>CalcProvider</code> is a picklable factory that creates calculator instances. This pattern is necessary because calculator objects (which contain loaded ML models) cannot be directly pickled and sent to worker processes. Instead, each worker receives the provider and creates its own calculator.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-20">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-10">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cnf.calculation.grace</span><span class="w"> </span><span class="kn">import</span> <span class="n">GraceCalcProvider</span>
+
+<span class="c1"># Using a custom model path (commented out since path is hypothetical)</span>
+<span class="c1"># custom_provider = GraceCalcProvider(model_path="/path/to/fine_tuned_model")</span>
+<span class="c1"># result_custom = sample(</span>
+<span class="c1">#     start_cnfs=[start_cnf],</span>
+<span class="c1">#     goal_cnfs=[goal_cnf],</span>
+<span class="c1">#     calc_provider=custom_provider,</span>
+<span class="c1">#     num_samples=10,</span>
+<span class="c1">#     max_iterations=5000,</span>
+<span class="c1"># )</span>
+
+<span class="c1"># For testing with constant energy (no ML model needed)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cnf.calculation.constant_calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConstantCalcProvider</span>
+
+<span class="n">test_provider</span> <span class="o">=</span> <span class="n">ConstantCalcProvider</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+<span class="n">result_test</span> <span class="o">=</span> <span class="n">sample</span><span class="p">(</span>
+    <span class="n">start_cnfs</span><span class="o">=</span><span class="p">[</span><span class="n">start_cnf</span><span class="p">],</span>
+    <span class="n">goal_cnfs</span><span class="o">=</span><span class="p">[</span><span class="n">goal_cnf</span><span class="p">],</span>
+    <span class="n">calc_provider</span><span class="o">=</span><span class="n">test_provider</span><span class="p">,</span>
+    <span class="n">num_samples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">dropout_range</span><span class="o">=</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span>
+    <span class="n">min_distance</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
+    <span class="n">max_iterations</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
+    <span class="n">verbosity</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">With constant energy, all barriers are: </span><span class="si">{</span><span class="n">result_test</span><span class="o">.</span><span class="n">best_barrier</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-10">from cnf.calculation.grace import GraceCalcProvider
+
+# Using a custom model path (commented out since path is hypothetical)
+# custom_provider = GraceCalcProvider(model_path="/path/to/fine_tuned_model")
+# result_custom = sample(
+#     start_cnfs=[start_cnf],
+#     goal_cnfs=[goal_cnf],
+#     calc_provider=custom_provider,
+#     num_samples=10,
+#     max_iterations=5000,
+# )
+
+# For testing with constant energy (no ML model needed)
+from cnf.calculation.constant_calculator import ConstantCalcProvider
+
+test_provider = ConstantCalcProvider(val=0.0)
+result_test = sample(
+    start_cnfs=[start_cnf],
+    goal_cnfs=[goal_cnf],
+    calc_provider=test_provider,
+    num_samples=5,
+    dropout_range=(0.05, 0.1),
+    min_distance=1.5,
+    max_iterations=5000,
+    verbosity=1,
+)
+
+print(f"\nWith constant energy, all barriers are: {result_test.best_barrier}")</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-21">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="saving-and-loading-results">Saving and Loading Results<a class="anchor-link" href="#saving-and-loading-results">¶</a></h2><p>Sampling results can be saved to JSON. The <code>output_dir</code> parameter causes automatic saving, with intermediate saves every 10 attempts (useful for long runs that might be interrupted).</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-22">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-11">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
+<span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdir</span><span class="p">:</span>
+    <span class="n">result_saved</span> <span class="o">=</span> <span class="n">sample</span><span class="p">(</span>
+        <span class="n">start_cnfs</span><span class="o">=</span><span class="p">[</span><span class="n">start_cnf</span><span class="p">],</span>
+        <span class="n">goal_cnfs</span><span class="o">=</span><span class="p">[</span><span class="n">goal_cnf</span><span class="p">],</span>
+        <span class="n">num_samples</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">dropout_range</span><span class="o">=</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span>
+        <span class="n">min_distance</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
+        <span class="n">max_iterations</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
+        <span class="n">output_dir</span><span class="o">=</span><span class="n">tmpdir</span><span class="p">,</span>
+        <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span>
+    
+    <span class="n">saved_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">,</span> <span class="s2">"sample_result.json"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Saved to: </span><span class="si">{</span><span class="n">saved_path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"File exists: </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">saved_path</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-11">import tempfile
+import os
+
+with tempfile.TemporaryDirectory() as tmpdir:
+    result_saved = sample(
+        start_cnfs=[start_cnf],
+        goal_cnfs=[goal_cnf],
+        num_samples=10,
+        dropout_range=(0.05, 0.1),
+        min_distance=1.5,
+        max_iterations=5000,
+        output_dir=tmpdir,
+        verbosity=0,
+    )
+    
+    saved_path = os.path.join(tmpdir, "sample_result.json")
+    print(f"Saved to: {saved_path}")
+    print(f"File exists: {os.path.exists(saved_path)}")</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-23">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-12">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Loading a saved result</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cnf.navigation.astar.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">SearchResult</span>
+
+<span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdir</span><span class="p">:</span>
+    <span class="n">outpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">,</span> <span class="s2">"sample_result.json"</span><span class="p">)</span>
+    <span class="n">result</span><span class="o">.</span><span class="n">to_json</span><span class="p">(</span><span class="n">outpath</span><span class="p">)</span>
+    
+    <span class="n">loaded</span> <span class="o">=</span> <span class="n">SearchResult</span><span class="o">.</span><span class="n">from_json</span><span class="p">(</span><span class="n">outpath</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Loaded </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">loaded</span><span class="o">.</span><span class="n">paths</span><span class="p">)</span><span class="si">}</span><span class="s2"> paths"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Best barrier: </span><span class="si">{</span><span class="n">loaded</span><span class="o">.</span><span class="n">best_barrier</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> eV"</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-12"># Loading a saved result
+from cnf.navigation.astar.models import SearchResult
+
+with tempfile.TemporaryDirectory() as tmpdir:
+    outpath = os.path.join(tmpdir, "sample_result.json")
+    result.to_json(outpath)
+    
+    loaded = SearchResult.from_json(outpath)
+    print(f"Loaded {len(loaded.paths)} paths")
+    print(f"Best barrier: {loaded.best_barrier:.4f} eV")</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-24">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="using-the-results">Using the Results<a class="anchor-link" href="#using-the-results">¶</a></h2><p>The main output of path sampling is the best barrier found across all sampled paths. This gives an upper bound on the true minimum energy barrier between the two structures. More samples generally lead to better (lower) estimates.</p>
+<p>The sampling result also provides useful statistics like the maximum iterations used by successful attempts, which can help calibrate iteration limits for future searches.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-25">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-13">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Best barrier: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">best_barrier</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> eV"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Max successful iterations: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">max_successful_iterations</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success rate: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success_rate</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-13">print(f"Best barrier: {result.best_barrier:.4f} eV")
+print(f"Max successful iterations: {result.max_successful_iterations}")
+print(f"Success rate: {result.success_rate:.1%}")</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-26">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="summary">Summary<a class="anchor-link" href="#summary">¶</a></h2><p>Path sampling generates diverse transformation pathways by running many A* searches with varied dropout. Each path is evaluated using a machine learning potential to measure its energy barrier.</p>
+<p>The main outputs are:</p>
+<ol>
+<li>Multiple paths with their energies and barriers</li>
+<li>The best (lowest) barrier found</li>
+<li>Iteration statistics that can help calibrate future searches</li>
+</ol>
+<p>The best barrier found in sampling is an upper bound on the true minimum barrier. Taking more samples increases the likelihood of finding lower-barrier paths.</p>
 </div>
 </div>
 </div>

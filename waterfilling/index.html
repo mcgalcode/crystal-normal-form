@@ -11,10 +11,10 @@
       
       
       
-        <link rel="prev" href="../quickstart/">
+        <link rel="prev" href="../astar/">
       
       
-        <link rel="next" href="../lattice_normal_form/">
+        <link rel="next" href="../search/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>CNF Overview - Crystal Normal Form</title>
+        <title>Waterfilling - Crystal Normal Form</title>
       
     
     
@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#cnf-overview" class="md-skip">
+        <a href="#waterfilling" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              CNF Overview
+              Waterfilling
             
           </span>
         </div>
@@ -309,8 +309,6 @@
       
   
   
-    
-  
   
   
     
@@ -323,11 +321,13 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
@@ -348,7 +348,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -363,37 +363,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    CNF Overview
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../cnf_overview/" class="md-nav__link">
         
   
   
@@ -409,125 +382,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#motivation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Motivation
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#structure-of-the-cnf-tuple" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Structure of the CNF Tuple
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#what-are-lnf-coordinates" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What are LNF coordinates?
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#what-are-mnf-coordinates" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What are MNF coordinates?
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#discretization-parameters" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Discretization Parameters
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#reconstruction" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Reconstruction
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#the-neighbor-graph" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The Neighbor Graph
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#applications" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Applications
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#further-reading" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Further Reading
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -628,8 +482,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -640,13 +496,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
           <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
@@ -667,7 +521,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -710,10 +564,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../waterfilling/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Waterfilling
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -729,6 +610,214 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-waterfilling-concept" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Waterfilling Concept
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#local-waterfilling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local Waterfilling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#local-waterfilling_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local Waterfilling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Local Waterfilling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-the-algorithm-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the Algorithm Works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optional-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optional Features
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#database-backed-waterfilling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Database-Backed Waterfilling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Database-Backed Waterfilling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-water-level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Water Level
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mailboxes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mailboxes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setting-up-a-distributed-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setting Up a Distributed Search
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-workers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running Workers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#worker-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Worker Algorithm
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#monitoring-progress" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Monitoring Progress
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#programmatic-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Programmatic Usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choosing-between-implementations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing Between Implementations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -852,10 +941,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#motivation" class="md-nav__link">
+  <a href="#the-waterfilling-concept" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Motivation
+        The Waterfilling Concept
       
     </span>
   </a>
@@ -863,10 +952,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#structure-of-the-cnf-tuple" class="md-nav__link">
+  <a href="#local-waterfilling" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Structure of the CNF Tuple
+        Local Waterfilling
       
     </span>
   </a>
@@ -874,10 +963,154 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-are-lnf-coordinates" class="md-nav__link">
+  <a href="#local-waterfilling_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What are LNF coordinates?
+        Local Waterfilling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Local Waterfilling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-the-algorithm-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the Algorithm Works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optional-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optional Features
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#database-backed-waterfilling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Database-Backed Waterfilling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Database-Backed Waterfilling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-water-level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Water Level
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mailboxes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mailboxes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setting-up-a-distributed-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setting Up a Distributed Search
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-workers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running Workers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#worker-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Worker Algorithm
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#monitoring-progress" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Monitoring Progress
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#programmatic-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Programmatic Usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choosing-between-implementations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing Between Implementations
       
     </span>
   </a>
@@ -885,65 +1118,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-are-mnf-coordinates" class="md-nav__link">
+  <a href="#summary" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What are MNF coordinates?
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#discretization-parameters" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Discretization Parameters
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#reconstruction" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Reconstruction
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#the-neighbor-graph" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The Neighbor Graph
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#applications" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Applications
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#further-reading" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Further Reading
+        Summary
       
     </span>
   </a>
@@ -1691,35 +1869,48 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </style>
 <!-- End of mermaid configuration --><div class="jupyter-wrapper">
 <div class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-0">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="cnf-overview">CNF Overview<a class="anchor-link" href="#cnf-overview">¶</a></h1><p>Crystal Normal Form (CNF) is a unique integer representation for any 3D crystal structure. This guide introduces the representation and shows how it works in practice.</p>
+<h1 id="waterfilling">Waterfilling<a class="anchor-link" href="#waterfilling">¶</a></h1><p>Waterfilling is an energy-guided search algorithm that explores the CNF graph in order of increasing energy. Unlike A*, which seeks a specific goal, waterfilling expands outward from a starting point like water filling a basin, always flowing to the lowest available point. When it reaches a goal, the highest energy encountered along the way gives an upper bound on the minimum energy barrier between the two structures.</p>
+<p>This guide covers two implementations: a simple in-memory version for small searches, and a distributed database-backed version for large-scale exploration.</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-1">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="motivation">Motivation<a class="anchor-link" href="#motivation">¶</a></h2><p>Crystal structures are traditionally described using three lattice vectors plus fractional atomic coordinates. While intuitive, this representation is highly redundant: infinitely many choices of unit cell can describe the same lattice, the origin can be placed anywhere, and atoms of the same element can be labeled in any order.</p>
-<p>CNF addresses this by providing a canonical representation. Every crystal maps to a unique tuple of integers, and two crystals have the same CNF if and only if they are geometrically equivalent. This enables exact comparison of structures and systematic exploration of crystal configuration space.</p>
+<h2 id="the-waterfilling-concept">The Waterfilling Concept<a class="anchor-link" href="#the-waterfilling-concept">¶</a></h2><p>Imagine the energy landscape of crystal configuration space as a terrain with valleys and ridges. If you pour water at a starting structure (a low point in this terrain), it will fill up the local basin and eventually overflow into neighboring regions through the lowest available saddle point.</p>
+<p>Waterfilling simulates this process algorithmically. We maintain a frontier of discovered but unexplored crystal structures, sorted by energy. At each step, we expand the lowest-energy frontier point by finding its neighbors, computing their energies, and adding them to the frontier. When the goal structure appears in the frontier, we know the "water" has reached it, and the maximum energy we explored along the way represents the barrier height.</p>
+<p>The algorithm terminates either when the goal is found or when a maximum number of points have been explored. In either case, the highest energy encountered gives an upper bound on the activation barrier.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-2">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="local-waterfilling">Local Waterfilling<a class="anchor-link" href="#local-waterfilling">¶</a></h2><p>The local implementation is a single-threaded, in-memory algorithm suitable for small to medium searches. It uses a priority queue (min-heap) keyed by energy to efficiently select the lowest-energy frontier point at each step.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-3">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-1">
@@ -1734,96 +1925,88 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pymatgen.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">Structure</span><span class="p">,</span> <span class="n">Lattice</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cnf</span><span class="w"> </span><span class="kn">import</span> <span class="n">CNFConstructor</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cnf.calculation.grace</span><span class="w"> </span><span class="kn">import</span> <span class="n">GraceCalculator</span>
 
-<span class="c1"># Create a rutile TiO2 structure</span>
-<span class="n">a</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="mf">4.594</span><span class="p">,</span> <span class="mf">2.959</span>
-<span class="n">lattice</span> <span class="o">=</span> <span class="n">Lattice</span><span class="o">.</span><span class="n">tetragonal</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
-<span class="n">species</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Ti"</span><span class="p">,</span> <span class="s2">"Ti"</span><span class="p">,</span> <span class="s2">"O"</span><span class="p">,</span> <span class="s2">"O"</span><span class="p">,</span> <span class="s2">"O"</span><span class="p">,</span> <span class="s2">"O"</span><span class="p">]</span>
-<span class="n">coords</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
-    <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
-    <span class="p">[</span><span class="mf">0.305</span><span class="p">,</span> <span class="mf">0.305</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
-    <span class="p">[</span><span class="mf">0.695</span><span class="p">,</span> <span class="mf">0.695</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
-    <span class="p">[</span><span class="mf">0.805</span><span class="p">,</span> <span class="mf">0.195</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
-    <span class="p">[</span><span class="mf">0.195</span><span class="p">,</span> <span class="mf">0.805</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
-<span class="p">]</span>
-<span class="n">rutile</span> <span class="o">=</span> <span class="n">Structure</span><span class="p">(</span><span class="n">lattice</span><span class="p">,</span> <span class="n">species</span><span class="p">,</span> <span class="n">coords</span><span class="p">)</span>
+<span class="c1"># Create two simple Zr structures</span>
+<span class="n">a_hcp</span><span class="p">,</span> <span class="n">c_hcp</span> <span class="o">=</span> <span class="mf">3.23</span><span class="p">,</span> <span class="mf">5.15</span>
+<span class="n">lattice_hcp</span> <span class="o">=</span> <span class="n">Lattice</span><span class="o">.</span><span class="n">hexagonal</span><span class="p">(</span><span class="n">a_hcp</span><span class="p">,</span> <span class="n">c_hcp</span><span class="p">)</span>
+<span class="n">zr_hcp</span> <span class="o">=</span> <span class="n">Structure</span><span class="p">(</span>
+    <span class="n">lattice_hcp</span><span class="p">,</span>
+    <span class="p">[</span><span class="s2">"Zr"</span><span class="p">,</span> <span class="s2">"Zr"</span><span class="p">],</span>
+    <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]]</span>
+<span class="p">)</span>
+
+<span class="c1"># A slightly strained version as the "goal"</span>
+<span class="n">lattice_strained</span> <span class="o">=</span> <span class="n">Lattice</span><span class="o">.</span><span class="n">hexagonal</span><span class="p">(</span><span class="n">a_hcp</span> <span class="o">*</span> <span class="mf">1.03</span><span class="p">,</span> <span class="n">c_hcp</span><span class="p">)</span>
+<span class="n">zr_strained</span> <span class="o">=</span> <span class="n">Structure</span><span class="p">(</span>
+    <span class="n">lattice_strained</span><span class="p">,</span>
+    <span class="p">[</span><span class="s2">"Zr"</span><span class="p">,</span> <span class="s2">"Zr"</span><span class="p">],</span>
+    <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]]</span>
+<span class="p">)</span>
 
 <span class="c1"># Convert to CNF</span>
-<span class="n">constructor</span> <span class="o">=</span> <span class="n">CNFConstructor</span><span class="p">(</span><span class="n">xi</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">constructor</span><span class="o">.</span><span class="n">from_pymatgen_structure</span><span class="p">(</span><span class="n">rutile</span><span class="p">)</span>
-<span class="n">cnf</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">cnf</span>
+<span class="n">xi</span> <span class="o">=</span> <span class="mf">2.0</span>
+<span class="n">delta</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="n">constructor</span> <span class="o">=</span> <span class="n">CNFConstructor</span><span class="p">(</span><span class="n">xi</span><span class="o">=</span><span class="n">xi</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="n">delta</span><span class="p">)</span>
+<span class="n">start_cnf</span> <span class="o">=</span> <span class="n">constructor</span><span class="o">.</span><span class="n">from_pymatgen_structure</span><span class="p">(</span><span class="n">zr_hcp</span><span class="p">)</span><span class="o">.</span><span class="n">cnf</span>
+<span class="n">goal_cnf</span> <span class="o">=</span> <span class="n">constructor</span><span class="o">.</span><span class="n">from_pymatgen_structure</span><span class="p">(</span><span class="n">zr_strained</span><span class="p">)</span><span class="o">.</span><span class="n">cnf</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Rutile TiO2 Crystal Normal Form:"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">cnf</span><span class="o">.</span><span class="n">coords</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">This tuple of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cnf</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span><span class="si">}</span><span class="s2"> integers uniquely identifies this crystal."</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Start CNF: </span><span class="si">{</span><span class="n">start_cnf</span><span class="o">.</span><span class="n">coords</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Goal CNF:  </span><span class="si">{</span><span class="n">goal_cnf</span><span class="o">.</span><span class="n">coords</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-1">from pymatgen.core import Structure, Lattice
 from cnf import CNFConstructor
-import numpy as np
+from cnf.calculation.grace import GraceCalculator
 
-# Create a rutile TiO2 structure
-a, c = 4.594, 2.959
-lattice = Lattice.tetragonal(a, c)
-species = ["Ti", "Ti", "O", "O", "O", "O"]
-coords = [
-    [0.0, 0.0, 0.0],
-    [0.5, 0.5, 0.5],
-    [0.305, 0.305, 0.0],
-    [0.695, 0.695, 0.0],
-    [0.805, 0.195, 0.5],
-    [0.195, 0.805, 0.5],
-]
-rutile = Structure(lattice, species, coords)
+# Create two simple Zr structures
+a_hcp, c_hcp = 3.23, 5.15
+lattice_hcp = Lattice.hexagonal(a_hcp, c_hcp)
+zr_hcp = Structure(
+    lattice_hcp,
+    ["Zr", "Zr"],
+    [[0, 0, 0], [1/3, 2/3, 0.5]]
+)
+
+# A slightly strained version as the "goal"
+lattice_strained = Lattice.hexagonal(a_hcp * 1.03, c_hcp)
+zr_strained = Structure(
+    lattice_strained,
+    ["Zr", "Zr"],
+    [[0, 0, 0], [1/3, 2/3, 0.5]]
+)
 
 # Convert to CNF
-constructor = CNFConstructor(xi=1.0, delta=100)
-result = constructor.from_pymatgen_structure(rutile)
-cnf = result.cnf
+xi = 2.0
+delta = 50
+constructor = CNFConstructor(xi=xi, delta=delta)
+start_cnf = constructor.from_pymatgen_structure(zr_hcp).cnf
+goal_cnf = constructor.from_pymatgen_structure(zr_strained).cnf
 
-print("Rutile TiO2 Crystal Normal Form:")
-print(f"  {cnf.coords}")
-print(f"\nThis tuple of {len(cnf.coords)} integers uniquely identifies this crystal.")</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Rutile TiO2 Crystal Normal Form:
-  (9, 21, 21, 51, 30, 30, 42, 50, 50, 50, 0, 30, 30, 0, 70, 70, 50, 20, 80, 50, 80, 20)
-
-This tuple of 22 integers uniquely identifies this crystal.
-</pre>
+print(f"Start CNF: {start_cnf.coords}")
+print(f"Goal CNF:  {goal_cnf.coords}")</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-4">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="structure-of-the-cnf-tuple">Structure of the CNF Tuple<a class="anchor-link" href="#structure-of-the-cnf-tuple">¶</a></h2><p>The CNF tuple has two parts. The first 7 integers form the Lattice Normal Form (LNF), which describes the lattice geometry. The remaining integers form the Motif Normal Form (MNF), which describes atomic positions. For a structure with N atoms, the MNF contains 3×(N-1) integers, since one atom is fixed at the origin by convention.</p>
+<h2 id="local-waterfilling">Local Waterfilling<a class="anchor-link" href="#local-waterfilling">¶</a></h2><p>The local implementation is a single-threaded, in-memory algorithm suitable for small to medium searches. It uses a priority queue (min-heap) keyed by energy to efficiently select the lowest-energy frontier point at each step.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-2">
@@ -1836,105 +2019,86 @@ This tuple of 22 integers uniquely identifies this crystal.
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">lnf</span> <span class="o">=</span> <span class="n">cnf</span><span class="o">.</span><span class="n">lattice_normal_form</span>
-<span class="n">mnf</span> <span class="o">=</span> <span class="n">cnf</span><span class="o">.</span><span class="n">motif_normal_form</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cnf.navigation.waterfill</span><span class="w"> </span><span class="kn">import</span> <span class="n">waterfill</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Lattice Normal Form (LNF):"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Coordinates: </span><span class="si">{</span><span class="n">lnf</span><span class="o">.</span><span class="n">vonorms</span><span class="o">.</span><span class="n">tuple</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Motif Normal Form (MNF):"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Coordinates: </span><span class="si">{</span><span class="n">mnf</span><span class="o">.</span><span class="n">coord_list</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Elements: </span><span class="si">{</span><span class="n">mnf</span><span class="o">.</span><span class="n">elements</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"The structure has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">mnf</span><span class="o">.</span><span class="n">elements</span><span class="p">)</span><span class="si">}</span><span class="s2"> atoms."</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"The first atom is at the origin (implicit), so the MNF stores"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">mnf</span><span class="o">.</span><span class="n">elements</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="si">}</span><span class="s2"> atoms × 3 coordinates = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">mnf</span><span class="o">.</span><span class="n">coord_list</span><span class="p">)</span><span class="si">}</span><span class="s2"> integers."</span><span class="p">)</span>
+<span class="n">calc</span> <span class="o">=</span> <span class="n">GraceCalculator</span><span class="p">()</span>
+
+<span class="n">barrier</span><span class="p">,</span> <span class="n">explored_energies</span><span class="p">,</span> <span class="n">goal_found</span> <span class="o">=</span> <span class="n">waterfill</span><span class="p">(</span>
+    <span class="n">start_cnfs</span><span class="o">=</span><span class="p">[</span><span class="n">start_cnf</span><span class="p">],</span>
+    <span class="n">goal_cnfs</span><span class="o">=</span><span class="p">[</span><span class="n">goal_cnf</span><span class="p">],</span>
+    <span class="n">energy_calc</span><span class="o">=</span><span class="n">calc</span><span class="p">,</span>
+    <span class="n">max_iters</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Goal found: </span><span class="si">{</span><span class="n">goal_found</span><span class="w"> </span><span class="ow">is</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="kc">None</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Points explored: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">explored_energies</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Barrier height: </span><span class="si">{</span><span class="n">barrier</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> eV"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-2">lnf = cnf.lattice_normal_form
-mnf = cnf.motif_normal_form
+<div class="clipboard-copy-txt" id="cell-2">from cnf.navigation.waterfill import waterfill
 
-print("Lattice Normal Form (LNF):")
-print(f"  Coordinates: {lnf.vonorms.tuple}")
-print()
-print("Motif Normal Form (MNF):")
-print(f"  Coordinates: {mnf.coord_list}")
-print(f"  Elements: {mnf.elements}")
-print()
-print(f"The structure has {len(mnf.elements)} atoms.")
-print(f"The first atom is at the origin (implicit), so the MNF stores")
-print(f"{len(mnf.elements)-1} atoms × 3 coordinates = {len(mnf.coord_list)} integers.")</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Lattice Normal Form (LNF):
-  Coordinates: (9, 21, 21, 51, 30, 30, 42)
+calc = GraceCalculator()
 
-Motif Normal Form (MNF):
-  Coordinates: (50, 50, 50, 0, 30, 30, 0, 70, 70, 50, 20, 80, 50, 80, 20)
-  Elements: ['Ti', 'Ti', 'O', 'O', 'O', 'O']
+barrier, explored_energies, goal_found = waterfill(
+    start_cnfs=[start_cnf],
+    goal_cnfs=[goal_cnf],
+    energy_calc=calc,
+    max_iters=500,
+)
 
-The structure has 6 atoms.
-The first atom is at the origin (implicit), so the MNF stores
-5 atoms × 3 coordinates = 15 integers.
-</pre>
+print(f"\nGoal found: {goal_found is not None}")
+print(f"Points explored: {len(explored_energies)}")
+print(f"Barrier height: {barrier:.4f} eV")</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-6">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="what-are-lnf-coordinates">What are LNF coordinates?<a class="anchor-link" href="#what-are-lnf-coordinates">¶</a></h2><p>The 7 LNF coordinates are called vonorms. They derive from a construction involving the Wigner-Seitz cell of the lattice.</p>
-<p>The Wigner-Seitz cell (also known as the Voronoi cell) is the region of space closer to one lattice point than to any other. In 3D, this cell is a convex polyhedron whose faces are perpendicular bisector planes of vectors connecting the origin to neighboring lattice points. The vectors that define these faces are called Voronoi vectors.</p>
-<p>Conway and Sloane showed that any 3D lattice can be described by an obtuse superbasis of 4 vectors, from which at most 7 Voronoi vectors can be derived. The squared lengths of these 7 vectors are the vonorms. They uniquely characterize the lattice geometry up to rotation and reflection.</p>
-<p>The LNF coordinates are these vonorms, discretized to integer multiples of the resolution parameter ξ (xi).</p>
+<h3 id="how-the-algorithm-works">How the Algorithm Works<a class="anchor-link" href="#how-the-algorithm-works">¶</a></h3><p>The local waterfill maintains several data structures:</p>
+<ol>
+<li><p>A <strong>frontier</strong> (min-heap) of <code>(energy, counter, cnf)</code> tuples. The counter is a tiebreaker to ensure stable ordering when energies are equal.</p>
+</li>
+<li><p>A <strong>seen</strong> set of all CNFs that have been discovered (either explored or in the frontier). This prevents re-adding points.</p>
+</li>
+<li><p>A list of <strong>explored energies</strong>, used to compute the final barrier height.</p>
+</li>
+</ol>
+<p>At each iteration:</p>
+<ol>
+<li>Pop the lowest-energy point from the frontier</li>
+<li>Find its neighbors in the CNF graph</li>
+<li>For each new neighbor not in the seen set, compute its energy and add it to the frontier</li>
+<li>If any neighbor is a goal, stop</li>
+</ol>
+<p>The barrier height is simply the maximum energy among all explored points.</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-7">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="what-are-mnf-coordinates">What are MNF coordinates?<a class="anchor-link" href="#what-are-mnf-coordinates">¶</a></h2><p>The MNF coordinates are fractional atomic positions, discretized to integer multiples of 1/δ (delta). By convention, one atom (the one with lowest atomic number, sorted lexicographically by position) is fixed at the origin, and the remaining N-1 atoms have their 3 fractional coordinates stored.</p>
-<p>The MNF is made canonical by considering all equivalent ways to represent the same motif (using lattice symmetries and different origin choices) and selecting the lexicographically smallest coordinate tuple.</p>
+<h3 id="optional-features">Optional Features<a class="anchor-link" href="#optional-features">¶</a></h3><p>The local waterfill supports several optional features:</p>
+<p><strong>Dropout</strong> randomly excludes some neighbors from consideration, introducing stochasticity that can help explore different regions of the energy landscape.</p>
 </div>
 </div>
 </div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="discretization-parameters">Discretization Parameters<a class="anchor-link" href="#discretization-parameters">¶</a></h2><p>CNF uses two resolution parameters. The parameter ξ (xi) controls lattice resolution and has units of Å². The parameter δ (delta) controls motif resolution, with coordinates stored as multiples of 1/δ.</p>
-<p>Smaller values give finer resolution but result in larger coordinate values and more neighbors.</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-3">
@@ -1947,55 +2111,50 @@ The first atom is at the origin (implicit), so the MNF stores
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Compare different resolutions</span>
-<span class="k">for</span> <span class="n">xi</span><span class="p">,</span> <span class="n">delta</span> <span class="ow">in</span> <span class="p">[(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">200</span><span class="p">),</span> <span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="mi">50</span><span class="p">)]:</span>
-    <span class="n">c</span> <span class="o">=</span> <span class="n">CNFConstructor</span><span class="p">(</span><span class="n">xi</span><span class="o">=</span><span class="n">xi</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="n">delta</span><span class="p">)</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">from_pymatgen_structure</span><span class="p">(</span><span class="n">rutile</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"xi=</span><span class="si">{</span><span class="n">xi</span><span class="si">}</span><span class="s2">, delta=</span><span class="si">{</span><span class="n">delta</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">cnf</span><span class="o">.</span><span class="n">coords</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Waterfill with dropout</span>
+<span class="n">barrier2</span><span class="p">,</span> <span class="n">energies2</span><span class="p">,</span> <span class="n">found2</span> <span class="o">=</span> <span class="n">waterfill</span><span class="p">(</span>
+    <span class="n">start_cnfs</span><span class="o">=</span><span class="p">[</span><span class="n">start_cnf</span><span class="p">],</span>
+    <span class="n">goal_cnfs</span><span class="o">=</span><span class="p">[</span><span class="n">goal_cnf</span><span class="p">],</span>
+    <span class="n">energy_calc</span><span class="o">=</span><span class="n">calc</span><span class="p">,</span>
+    <span class="n">max_iters</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+    <span class="n">dropout</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>  <span class="c1"># Drop 10% of neighbors randomly</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"With 10% dropout: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">energies2</span><span class="p">)</span><span class="si">}</span><span class="s2"> points explored"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-3"># Compare different resolutions
-for xi, delta in [(1.0, 100), (0.5, 200), (2.0, 50)]:
-    c = CNFConstructor(xi=xi, delta=delta)
-    result = c.from_pymatgen_structure(rutile)
-    print(f"xi={xi}, delta={delta}: {result.cnf.coords}")</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>xi=1.0, delta=100: (9, 21, 21, 51, 30, 30, 42, 50, 50, 50, 0, 30, 30, 0, 70, 70, 50, 20, 80, 50, 80, 20)
-xi=0.5, delta=200: (18, 42, 42, 102, 60, 60, 84, 100, 100, 100, 0, 61, 61, 0, 139, 139, 100, 39, 161, 100, 161, 39)
-xi=2.0, delta=50: (4, 11, 11, 25, 15, 15, 21, 25, 25, 25, 0, 15, 15, 0, 35, 35, 25, 10, 40, 25, 40, 10)
-</pre>
+<div class="clipboard-copy-txt" id="cell-3"># Waterfill with dropout
+barrier2, energies2, found2 = waterfill(
+    start_cnfs=[start_cnf],
+    goal_cnfs=[goal_cnf],
+    energy_calc=calc,
+    max_iters=500,
+    dropout=0.1,  # Drop 10% of neighbors randomly
+)
+
+print(f"With 10% dropout: {len(energies2)} points explored")</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-9">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="reconstruction">Reconstruction<a class="anchor-link" href="#reconstruction">¶</a></h2><p>A CNF can be converted back to a pymatgen Structure. Small differences from the original arise from discretization.</p>
+<p><strong>Filters</strong> can restrict which neighbors are considered. For example, a <code>MinDistanceFilter</code> rejects structures where atoms are too close together.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-10">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-4">
@@ -2008,56 +2167,58 @@ xi=2.0, delta=50: (4, 11, 11, 25, 15, 15, 21, 25, 25, 25, 0, 15, 15, 0, 35, 35, 
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">reconstructed</span> <span class="o">=</span> <span class="n">cnf</span><span class="o">.</span><span class="n">reconstruct</span><span class="p">()</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cnf.navigation.search_filters</span><span class="w"> </span><span class="kn">import</span> <span class="n">FilterSet</span><span class="p">,</span> <span class="n">MinDistanceFilter</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Original volume:      </span><span class="si">{</span><span class="n">rutile</span><span class="o">.</span><span class="n">volume</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> Å³"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Reconstructed volume: </span><span class="si">{</span><span class="n">reconstructed</span><span class="o">.</span><span class="n">volume</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> Å³"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Difference:           </span><span class="si">{</span><span class="nb">abs</span><span class="p">(</span><span class="n">rutile</span><span class="o">.</span><span class="n">volume</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">reconstructed</span><span class="o">.</span><span class="n">volume</span><span class="p">)</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> Å³"</span><span class="p">)</span>
+<span class="n">min_dist_filter</span> <span class="o">=</span> <span class="n">MinDistanceFilter</span><span class="p">(</span><span class="n">min_dist</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+<span class="n">filter_set</span> <span class="o">=</span> <span class="n">FilterSet</span><span class="p">([</span><span class="n">min_dist_filter</span><span class="p">])</span>
+
+<span class="n">barrier3</span><span class="p">,</span> <span class="n">energies3</span><span class="p">,</span> <span class="n">found3</span> <span class="o">=</span> <span class="n">waterfill</span><span class="p">(</span>
+    <span class="n">start_cnfs</span><span class="o">=</span><span class="p">[</span><span class="n">start_cnf</span><span class="p">],</span>
+    <span class="n">goal_cnfs</span><span class="o">=</span><span class="p">[</span><span class="n">goal_cnf</span><span class="p">],</span>
+    <span class="n">energy_calc</span><span class="o">=</span><span class="n">calc</span><span class="p">,</span>
+    <span class="n">max_iters</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+    <span class="n">filter_set</span><span class="o">=</span><span class="n">filter_set</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"With min_distance filter: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">energies3</span><span class="p">)</span><span class="si">}</span><span class="s2"> points explored"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-4">reconstructed = cnf.reconstruct()
+<div class="clipboard-copy-txt" id="cell-4">from cnf.navigation.search_filters import FilterSet, MinDistanceFilter
 
-print(f"Original volume:      {rutile.volume:.4f} Å³")
-print(f"Reconstructed volume: {reconstructed.volume:.4f} Å³")
-print(f"Difference:           {abs(rutile.volume - reconstructed.volume):.4f} Å³")</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Original volume:      62.4492 Å³
-Reconstructed volume: 63.0000 Å³
-Difference:           0.5508 Å³
-</pre>
+min_dist_filter = MinDistanceFilter(min_dist=2.0)
+filter_set = FilterSet([min_dist_filter])
+
+barrier3, energies3, found3 = waterfill(
+    start_cnfs=[start_cnf],
+    goal_cnfs=[goal_cnf],
+    energy_calc=calc,
+    max_iters=500,
+    filter_set=filter_set,
+)
+
+print(f"With min_distance filter: {len(energies3)} points explored")</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-11">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="the-neighbor-graph">The Neighbor Graph<a class="anchor-link" href="#the-neighbor-graph">¶</a></h2><p>A key property of the CNF representation is that every crystal has well-defined neighbors: structures whose CNF coordinates differ by ±1 in a single position.</p>
-<p>Lattice neighbors (changes to the first 7 coordinates) correspond to small strains. Motif neighbors (changes to the remaining coordinates) correspond to small atomic displacements. Together, these define a graph connecting all possible crystals of a given composition.</p>
+<p><strong>Checkpointing</strong> periodically saves the search state to disk, allowing long searches to be resumed after interruption. The implementation uses a fork-based approach: the parent process continues immediately while a child process serializes the state in the background, avoiding blocking on I/O.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-12">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-5">
@@ -2070,61 +2231,64 @@ Difference:           0.5508 Å³
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cnf.navigation</span><span class="w"> </span><span class="kn">import</span> <span class="n">find_neighbors</span><span class="p">,</span> <span class="n">NeighborFinder</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 
-<span class="n">neighbors</span> <span class="o">=</span> <span class="n">find_neighbors</span><span class="p">(</span><span class="n">cnf</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"This CNF has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">neighbors</span><span class="p">)</span><span class="si">}</span><span class="s2"> neighbors."</span><span class="p">)</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">First 5 neighbors (showing coordinate changes):"</span><span class="p">)</span>
-<span class="n">orig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cnf</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">neighbors</span><span class="p">[:</span><span class="mi">5</span><span class="p">]):</span>
-    <span class="n">diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">neighbor</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span> <span class="o">-</span> <span class="n">orig</span>
-    <span class="n">changes</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">]: </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">diff</span><span class="p">[</span><span class="n">j</span><span class="p">])</span><span class="si">:</span><span class="s2">+d</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">diff</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]]</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">. </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">changes</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="c1"># Checkpointing example (writes to temporary directory)</span>
+<span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdir</span><span class="p">:</span>
+    <span class="n">checkpoint_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">,</span> <span class="s2">"waterfill_checkpoint.pkl"</span><span class="p">)</span>
+    
+    <span class="n">barrier4</span><span class="p">,</span> <span class="n">energies4</span><span class="p">,</span> <span class="n">found4</span> <span class="o">=</span> <span class="n">waterfill</span><span class="p">(</span>
+        <span class="n">start_cnfs</span><span class="o">=</span><span class="p">[</span><span class="n">start_cnf</span><span class="p">],</span>
+        <span class="n">goal_cnfs</span><span class="o">=</span><span class="p">[</span><span class="n">goal_cnf</span><span class="p">],</span>
+        <span class="n">energy_calc</span><span class="o">=</span><span class="n">calc</span><span class="p">,</span>
+        <span class="n">max_iters</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+        <span class="n">checkpoint_path</span><span class="o">=</span><span class="n">checkpoint_path</span><span class="p">,</span>
+        <span class="n">checkpoint_interval</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>  <span class="c1"># Checkpoint every 50 points</span>
+    <span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Checkpoint exists: </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-5">from cnf.navigation import find_neighbors, NeighborFinder
+<div class="clipboard-copy-txt" id="cell-5">import tempfile
+import os
 
-neighbors = find_neighbors(cnf)
-print(f"This CNF has {len(neighbors)} neighbors.")
-
-print("\nFirst 5 neighbors (showing coordinate changes):")
-orig = np.array(cnf.coords)
-for i, neighbor in enumerate(neighbors[:5]):
-    diff = np.array(neighbor.coords) - orig
-    changes = [f"[{j}]: {int(diff[j]):+d}" for j in np.where(diff != 0)[0]]
-    print(f"  {i+1}. {', '.join(changes)}")</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>This CNF has 22 neighbors.
-
-First 5 neighbors (showing coordinate changes):
-  1. [16]: -1
-  2. [3]: -1, [4]: -1
-  3. [14]: -1
-  4. [7]: -1, [8]: -1, [9]: -1
-  5. [0]: +1, [3]: -1
-</pre>
+# Checkpointing example (writes to temporary directory)
+with tempfile.TemporaryDirectory() as tmpdir:
+    checkpoint_path = os.path.join(tmpdir, "waterfill_checkpoint.pkl")
+    
+    barrier4, energies4, found4 = waterfill(
+        start_cnfs=[start_cnf],
+        goal_cnfs=[goal_cnf],
+        energy_calc=calc,
+        max_iters=200,
+        checkpoint_path=checkpoint_path,
+        checkpoint_interval=50,  # Checkpoint every 50 points
+    )
+    
+    print(f"Checkpoint exists: {os.path.exists(checkpoint_path)}")</div>
 </div>
 </div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-13">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><strong>Graph tracking</strong> records the full graph structure (node energies and edges) during exploration, useful for visualization or analysis.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-14">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-6">
@@ -2137,60 +2301,353 @@ First 5 neighbors (showing coordinate changes):
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Separate lattice and motif neighbors</span>
-<span class="n">finder</span> <span class="o">=</span> <span class="n">NeighborFinder</span><span class="o">.</span><span class="n">from_cnf</span><span class="p">(</span><span class="n">cnf</span><span class="p">)</span>
-<span class="n">lattice_neighbors</span> <span class="o">=</span> <span class="n">finder</span><span class="o">.</span><span class="n">find_lattice_neighbor_cnfs</span><span class="p">(</span><span class="n">cnf</span><span class="p">)</span>
-<span class="n">motif_neighbors</span> <span class="o">=</span> <span class="n">finder</span><span class="o">.</span><span class="n">find_motif_neighbor_cnfs</span><span class="p">(</span><span class="n">cnf</span><span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">barrier5</span><span class="p">,</span> <span class="n">energies5</span><span class="p">,</span> <span class="n">found5</span><span class="p">,</span> <span class="n">node_energies</span><span class="p">,</span> <span class="n">edge_set</span> <span class="o">=</span> <span class="n">waterfill</span><span class="p">(</span>
+    <span class="n">start_cnfs</span><span class="o">=</span><span class="p">[</span><span class="n">start_cnf</span><span class="p">],</span>
+    <span class="n">goal_cnfs</span><span class="o">=</span><span class="p">[</span><span class="n">goal_cnf</span><span class="p">],</span>
+    <span class="n">energy_calc</span><span class="o">=</span><span class="n">calc</span><span class="p">,</span>
+    <span class="n">max_iters</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">track_graph</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Lattice neighbors (strain): </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">lattice_neighbors</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Motif neighbors (displacement): </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">motif_neighbors</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Nodes recorded: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">node_energies</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Edges recorded: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">edge_set</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-6"># Separate lattice and motif neighbors
-finder = NeighborFinder.from_cnf(cnf)
-lattice_neighbors = finder.find_lattice_neighbor_cnfs(cnf)
-motif_neighbors = finder.find_motif_neighbor_cnfs(cnf)
+<div class="clipboard-copy-txt" id="cell-6">barrier5, energies5, found5, node_energies, edge_set = waterfill(
+    start_cnfs=[start_cnf],
+    goal_cnfs=[goal_cnf],
+    energy_calc=calc,
+    max_iters=100,
+    track_graph=True,
+)
 
-print(f"Lattice neighbors (strain): {len(lattice_neighbors)}")
-print(f"Motif neighbors (displacement): {len(motif_neighbors)}")</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Lattice neighbors (strain): 11
-Motif neighbors (displacement): 11
-</pre>
+print(f"Nodes recorded: {len(node_energies)}")
+print(f"Edges recorded: {len(edge_set)}")</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-15">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="applications">Applications<a class="anchor-link" href="#applications">¶</a></h2><p>The CNF representation enables several capabilities. Two crystals can be compared for exact geometric equivalence by checking if their CNFs match. Transformation paths between any two crystals of the same composition can be found by walking through the neighbor graph. Energy landscape exploration becomes possible by systematically visiting crystal configurations to find transition barriers between phases.</p>
-<p>The neighbor graph connects all possible crystals of a given composition, allowing navigation from any structure to any other through a series of small steps.</p>
+<h2 id="database-backed-waterfilling">Database-Backed Waterfilling<a class="anchor-link" href="#database-backed-waterfilling">¶</a></h2><p>For large-scale searches, the local implementation runs into two limitations: memory (all discovered points must fit in RAM) and speed (single-threaded). The database-backed implementation addresses both by storing state in a partitioned SQLite database and supporting parallel workers.</p>
+<p>The key insight is that the CNF graph can be partitioned by hashing CNF coordinates. Each partition stores a subset of the points and can be processed independently, with coordination happening through a shared control plane.</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-16">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="further-reading">Further Reading<a class="anchor-link" href="#further-reading">¶</a></h2><p>For details on how CNF is constructed, see the <a href="lattice_normal_form.ipynb">Lattice Normal Form</a> and <a href="motif_normal_form.ipynb">Motif Normal Form</a> guides.</p>
+<h3 id="architecture">Architecture<a class="anchor-link" href="#architecture">¶</a></h3><p>The distributed system consists of several components:</p>
+<p><strong>Partitions</strong>: Each partition is a SQLite database file containing a subset of CNF points and edges. A point belongs to partition <code>hash(cnf) % num_partitions</code>. This ensures that the same CNF always maps to the same partition.</p>
+<p><strong>CrystalMapStore</strong>: Within each partition, this store manages points (CNF coordinates, energies, explored status) and edges (neighbor relationships).</p>
+<p><strong>SearchProcessStore</strong>: Manages search-specific state within each partition: the frontier (points to explore), searched set (points already explored), and an "inbox" for receiving points from other partitions.</p>
+<p><strong>MetaStore</strong>: A separate control database that tracks global state: the current water level (minimum frontier energy across all partitions), search completion status, and aggregate statistics.</p>
+<p><strong>PartitionedDB</strong>: A Python class that provides a unified interface to all partitions and the meta store, routing operations to the appropriate partition based on CNF hash.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-17">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="the-water-level">The Water Level<a class="anchor-link" href="#the-water-level">¶</a></h3><p>The central concept in distributed waterfilling is the "water level": the minimum energy among all frontier points across all partitions. Workers only explore points whose energy is at or below the current water level (plus a small tolerance called <code>frontier_width</code>).</p>
+<p>This constraint ensures that the search proceeds in energy order globally, even though different workers are processing different partitions independently. As low-energy regions are exhausted, the water level naturally rises, and higher-energy frontier points become eligible for exploration.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-18">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="mailboxes">Mailboxes<a class="anchor-link" href="#mailboxes">¶</a></h3><p>When a worker explores a point, some of its neighbors may belong to other partitions. Rather than writing directly to foreign partitions (which could cause lock contention), the worker drops these neighbors into the target partition's "inbox."</p>
+<p>At the start of each step, workers process their inbox: they read incoming CNFs, add them to their local partition, compute their energies, and add them to the local frontier. This decoupled communication pattern allows workers to operate mostly independently.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-19">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="setting-up-a-distributed-search">Setting Up a Distributed Search<a class="anchor-link" href="#setting-up-a-distributed-search">¶</a></h3><p>Setting up a distributed waterfill search requires creating the partitioned database with start and end points. The CLI provides commands for this:</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-20">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<div class="highlight"><pre><span></span><span class="c1"># Create a partitioned database</span>
+cnf<span class="w"> </span>waterfill<span class="w"> </span>setup<span class="w"> </span>start.cif<span class="w"> </span>end.cif<span class="w"> </span>./search_db<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--num-partitions<span class="w"> </span><span class="m">16</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--xi<span class="w"> </span><span class="m">1</span>.5<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--delta<span class="w"> </span><span class="m">100</span>
+</pre></div>
+<p>This creates a directory <code>search_db/</code> containing:</p>
+<ul>
+<li><code>0.partition.db</code>, <code>1.partition.db</code>, ..., <code>15.partition.db</code> — the partition files</li>
+<li><code>meta.db</code> — the control plane database</li>
+<li><code>search_metadata.json</code> — configuration metadata</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-21">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="running-workers">Running Workers<a class="anchor-link" href="#running-workers">¶</a></h3><p>Once the database is set up, workers can be launched to perform the search:</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-22">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<div class="highlight"><pre><span></span><span class="c1"># Run with 4 parallel workers</span>
+cnf<span class="w"> </span>waterfill<span class="w"> </span>run<span class="w"> </span>./search_db<span class="w"> </span>--num-workers<span class="w"> </span><span class="m">4</span>
+
+<span class="c1"># Run with iteration limit</span>
+cnf<span class="w"> </span>waterfill<span class="w"> </span>run<span class="w"> </span>./search_db<span class="w"> </span>--num-workers<span class="w"> </span><span class="m">4</span><span class="w"> </span>--max-iters<span class="w"> </span><span class="m">10000</span>
+</pre></div>
+<p>Each worker is assigned a subset of partitions. The <code>run</code> command spawns multiple processes, each calling <code>continue_search_waterfill()</code> with its assigned partition range.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-23">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="worker-algorithm">Worker Algorithm<a class="anchor-link" href="#worker-algorithm">¶</a></h3><p>Each worker repeatedly executes <code>waterfill_step()</code>, which does the following:</p>
+<ol>
+<li><p><strong>Reload configuration</strong>: Read the current <code>frontier_width</code> from the metadata file (allows dynamic tuning without restarting workers).</p>
+</li>
+<li><p><strong>Get water level</strong>: Query the meta store for the global minimum frontier energy.</p>
+</li>
+<li><p><strong>Choose a partition</strong>: Select a random partition from the worker's assigned range.</p>
+</li>
+<li><p><strong>Process inbox</strong>: Read incoming CNFs from the partition's inbox, add them to the local map store, compute their energies, and add them to the search frontier.</p>
+</li>
+<li><p><strong>Process frontier</strong>: Select up to <code>batch_size</code> frontier points with energy ≤ water_level + frontier_width. For each:</p>
+<ul>
+<li>Find neighbors using the neighbor finder</li>
+<li>Partition neighbors by target partition</li>
+<li>Add local neighbors to local map store and frontier</li>
+<li>Send remote neighbors to target partition inboxes</li>
+<li>Mark the point as searched</li>
+</ul>
+</li>
+<li><p><strong>Sync stats</strong>: Update the meta store with partition statistics.</p>
+</li>
+<li><p><strong>Update water level</strong>: Report the partition's minimum frontier energy to the control plane.</p>
+</li>
+<li><p><strong>Check completion</strong>: If a goal point has been found, mark the search as complete.</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-24">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="monitoring-progress">Monitoring Progress<a class="anchor-link" href="#monitoring-progress">¶</a></h3><p>The <code>status</code> command provides a dashboard showing search progress:</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-25">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<div class="highlight"><pre><span></span><span class="c1"># One-time status check</span>
+cnf<span class="w"> </span>waterfill<span class="w"> </span>status<span class="w"> </span>./search_db
+
+<span class="c1"># Live dashboard (updates every second)</span>
+cnf<span class="w"> </span>waterfill<span class="w"> </span>status<span class="w"> </span>./search_db<span class="w"> </span>--watch
+
+<span class="c1"># Show per-partition breakdown</span>
+cnf<span class="w"> </span>waterfill<span class="w"> </span>status<span class="w"> </span>./search_db<span class="w"> </span>--partitions
+</pre></div>
+<p>The dashboard shows:</p>
+<ul>
+<li>Total points discovered and explored</li>
+<li>Current water level and high water mark (maximum searched energy)</li>
+<li>Frontier size and inbox sizes</li>
+<li>Per-partition statistics if requested</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-26">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="programmatic-usage">Programmatic Usage<a class="anchor-link" href="#programmatic-usage">¶</a></h3><p>The distributed waterfill can also be used programmatically. Here's a sketch of the setup and execution flow:</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-27">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-7">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># This cell demonstrates the API but doesn't run a full search</span>
+<span class="c1"># (would require actual CIF files and energy calculator)</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">cnf.db.setup_partitions</span><span class="w"> </span><span class="kn">import</span> <span class="n">setup_search_dir</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cnf.db.partitioned_db</span><span class="w"> </span><span class="kn">import</span> <span class="n">PartitionedDB</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cnf.navigation.waterfill</span><span class="w"> </span><span class="kn">import</span> <span class="n">continue_search_waterfill</span>
+
+<span class="c1"># The setup flow would be:</span>
+<span class="c1"># 1. Load structures and convert to CNFs</span>
+<span class="c1"># 2. Set up the partitioned database</span>
+<span class="c1">#    search_id = setup_search_dir(</span>
+<span class="c1">#        location="./search_db",</span>
+<span class="c1">#        description="Example search",</span>
+<span class="c1">#        num_partitions=16,</span>
+<span class="c1">#        start_cnfs=start_cnfs,</span>
+<span class="c1">#        end_cnfs=end_cnfs,</span>
+<span class="c1">#        calculator=energy_calc</span>
+<span class="c1">#    )</span>
+<span class="c1">#</span>
+<span class="c1"># 3. Run the search (typically in separate processes)</span>
+<span class="c1">#    continue_search_waterfill(</span>
+<span class="c1">#        search_id=search_id,</span>
+<span class="c1">#        partitions_dir="./search_db",</span>
+<span class="c1">#        calculator=energy_calc,</span>
+<span class="c1">#        max_iters=10000,</span>
+<span class="c1">#        batch_size=100,</span>
+<span class="c1">#        partition_range=[0, 1, 2, 3]  # This worker handles partitions 0-3</span>
+<span class="c1">#    )</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"See CLI examples above for actual usage"</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-7"># This cell demonstrates the API but doesn't run a full search
+# (would require actual CIF files and energy calculator)
+
+from cnf.db.setup_partitions import setup_search_dir
+from cnf.db.partitioned_db import PartitionedDB
+from cnf.navigation.waterfill import continue_search_waterfill
+
+# The setup flow would be:
+# 1. Load structures and convert to CNFs
+# 2. Set up the partitioned database
+#    search_id = setup_search_dir(
+#        location="./search_db",
+#        description="Example search",
+#        num_partitions=16,
+#        start_cnfs=start_cnfs,
+#        end_cnfs=end_cnfs,
+#        calculator=energy_calc
+#    )
+#
+# 3. Run the search (typically in separate processes)
+#    continue_search_waterfill(
+#        search_id=search_id,
+#        partitions_dir="./search_db",
+#        calculator=energy_calc,
+#        max_iters=10000,
+#        batch_size=100,
+#        partition_range=[0, 1, 2, 3]  # This worker handles partitions 0-3
+#    )
+
+print("See CLI examples above for actual usage")</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-28">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="choosing-between-implementations">Choosing Between Implementations<a class="anchor-link" href="#choosing-between-implementations">¶</a></h2><p>The local implementation is simpler and appropriate when:</p>
+<ul>
+<li>The search space is small enough to fit in memory</li>
+<li>You want quick exploration without setup overhead</li>
+<li>Checkpointing to a single file is sufficient for recovery</li>
+</ul>
+<p>The distributed implementation is better when:</p>
+<ul>
+<li>The search space is large (millions of points)</li>
+<li>You want to parallelize across multiple CPU cores or machines</li>
+<li>You need persistent state that survives process crashes</li>
+<li>You want to monitor progress in real-time</li>
+</ul>
+<p>For most barrier-finding workflows, the A*-based iterative algorithms (search, sample, sweep, ratchet) are more efficient than waterfilling because they are goal-directed. Waterfilling is most useful for open-ended exploration where you want to map out the energy landscape systematically rather than find a specific path.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-29">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="summary">Summary<a class="anchor-link" href="#summary">¶</a></h2><p>Waterfilling explores the CNF graph in energy order, expanding from low-energy regions to high-energy regions like water filling a basin. The local implementation provides a simple in-memory algorithm with optional checkpointing, dropout, and graph tracking. The distributed implementation uses a partitioned SQLite database to scale to large search spaces, with multiple workers processing different partitions and coordinating through a shared control plane.</p>
+<p>The key concepts in distributed waterfilling are:</p>
+<ul>
+<li><strong>Partitioning</strong> by CNF hash ensures each point belongs to exactly one partition</li>
+<li><strong>Water level</strong> coordinates workers to explore in global energy order</li>
+<li><strong>Mailboxes</strong> decouple inter-partition communication to reduce lock contention</li>
+<li><strong>Meta store</strong> provides the control plane for water level and completion status</li>
+</ul>
 </div>
 </div>
 </div>
