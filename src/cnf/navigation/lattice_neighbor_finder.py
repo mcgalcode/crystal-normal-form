@@ -5,8 +5,41 @@ from ..lattice.lattice_normal_form import LatticeNormalForm
 from ..lattice.voronoi import VonormList
 from ..motif.motif_normal_form import MotifNormalForm
 from ..motif.mnf_constructor import extract_coord_matrix_from_mnf_tuple
-from .lattice_step import LatticeStep
 from ..utils.config import should_use_rust
+
+
+def _is_primary_idx(idx):
+    return idx >= 0 and idx < 4
+
+
+def _is_secondary_idx(idx):
+    return idx >= 4 and idx < 7
+
+
+def all_step_vecs():
+    """Generate all 42 canonical vonorm step vectors.
+
+    Each step vector represents a +1/-1 adjustment to vonorm indices,
+    as described in Mrdjenovich's thesis.
+    """
+    steps = []
+    for first_idx in range(7):
+        for second_idx in range(first_idx + 1, 7):
+            vec = np.zeros(7)
+            vec[first_idx] = 1
+            if _is_primary_idx(first_idx) and _is_primary_idx(second_idx):
+                vec[second_idx] = -1
+
+            if _is_primary_idx(first_idx) and _is_secondary_idx(second_idx):
+                vec[second_idx] = 1
+
+            if _is_secondary_idx(first_idx):
+                vec[second_idx] = -1
+
+            steps.append([int(v) for v in vec])
+            steps.append([-int(v) for v in vec])
+
+    return steps
 
 class LatticeNeighborFinder():
 
@@ -134,7 +167,7 @@ class LatticeNeighborFinder():
 
             # These step vecs are the canonical vonorm adjustments (+1,-1) pairs
             # described in Dr. Mrdjenovich's thesis.
-            step_vecs = LatticeStep.all_step_vecs()
+            step_vecs = all_step_vecs()
             permuted_vonorms_arr = np.array(permuted_vonorms.vonorms)
 
             for mat in unimodular_mats:

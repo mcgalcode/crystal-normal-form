@@ -5,7 +5,6 @@ import helpers
 from cnf import CrystalNormalForm
 from cnf.cnf_constructor import CNFConstructor
 from cnf.navigation.neighbor_finder import NeighborFinder
-from cnf.navigation.neighbor import Neighbor
 from pymatgen.core.structure import Structure
 from cnf.unit_cell import UnitCell
 

@@ -4,24 +4,17 @@ import helpers
 
 from cnf.cnf_constructor import CNFConstructor
 from cnf import CrystalNormalForm
-from cnf.navigation.lattice_neighbor_finder import LatticeStep, LatticeNeighborFinder
+from cnf.navigation.lattice_neighbor_finder import all_step_vecs, LatticeNeighborFinder
 from cnf.navigation.neighbor_finder import NeighborFinder
 
 @pytest.fixture()
 def cnf_constructor():
     return CNFConstructor(1.5, 10, False)
 
-def test_breaks_if_vec_has_non_one_value():
-    vec = [0,0,0,2,0,0,0]
-    with pytest.raises(ValueError) as excep:
-        LatticeStep(vec, None, None, None)
-    
-    assert "invalid element != 1" in excep.value.__repr__()
-
 def test_can_find_all_lattice_steps():
-    all_steps = LatticeStep.all_step_vecs()
-    assert len(all_steps) == 42
-    assert len(set([tuple(s) for s in all_steps])) == 42
+    steps = all_step_vecs()
+    assert len(steps) == 42
+    assert len(set([tuple(s) for s in steps])) == 42
 
 @helpers.parameterized_by_mp_struct_idxs([537])  # mp-1977794
 def test_lattice_neighbor_lnfs_make_sense(idx, struct, cnf_constructor):
