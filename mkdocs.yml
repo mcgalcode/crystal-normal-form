@@ -43,8 +43,14 @@ extra_javascript:
 nav:
   - Home: index.md
   - Quickstart: quickstart.ipynb
-  - Guides:
+  - Core:
     - CNF Overview: cnf_overview.ipynb
     - Lattice Normal Form: lattice_normal_form.ipynb
     - Motif Normal Form: motif_normal_form.ipynb
     - Neighbor Finding: neighbor_finding.ipynb
+  - Pathfinding:
+    - A* Search: astar.ipynb
+    - Waterfilling: waterfilling.ipynb
+    - Parameter Search: search.ipynb
+    - Path Sampling: sample.ipynb
+    - Barrier Refinement: ratchet.ipynb
