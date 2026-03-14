@@ -78,16 +78,15 @@ class TestBinarySearchMinDistance:
 
 class TestSearchAtResolution:
     @patch('cnf.navigation.astar.iterative.search.search._binary_search_min_distance')
-    @patch('cnf.navigation.astar.iterative.search.search.get_endpoint_cnfs')
-    @patch('cnf.navigation.astar.iterative.search.search.compute_delta_for_step_size')
-    def test_computes_delta_from_atom_step(self, mock_delta, mock_endpoints, mock_binary):
+    @patch('cnf.navigation.astar.iterative.search.search.get_endpoint_cnfs_with_resolution')
+    def test_computes_delta_from_atom_step(self, mock_endpoints, mock_binary):
         """Should compute delta from atom step length and structure."""
         from cnf.navigation.astar.iterative.search.search import _search_at_resolution
 
-        mock_delta.return_value = 12
         mock_cnf = MagicMock()
         mock_cnf.elements = ("Zr",)
-        mock_endpoints.return_value = ([mock_cnf], [mock_cnf])
+        # get_endpoint_cnfs_with_resolution returns (start_cnfs, goal_cnfs, delta)
+        mock_endpoints.return_value = ([mock_cnf], [mock_cnf], 12)
         mock_binary.return_value = (0.8, 100)
 
         start_uc = MockUnitCell()
@@ -107,27 +106,23 @@ class TestSearchAtResolution:
             verbosity=0,
         )
 
-        # Should call compute_delta_for_step_size
-        assert mock_delta.call_count == 2
+        # Should call get_endpoint_cnfs_with_resolution once
+        assert mock_endpoints.call_count == 1
 
         assert result["xi"] == 1.5
-        assert result["delta"] == 12  # max of both calls
+        assert result["delta"] == 12
         assert result["min_distance"] == 0.8
         assert result["found"] is True
 
     @patch('cnf.navigation.astar.iterative.search.search._binary_search_min_distance')
-    @patch('cnf.navigation.astar.iterative.search.search.get_endpoint_cnfs')
-    @patch('cnf.navigation.astar.iterative.search.search.compute_delta_for_step_size')
-    def test_returns_not_found_when_binary_search_fails(
-        self, mock_delta, mock_endpoints, mock_binary
-    ):
+    @patch('cnf.navigation.astar.iterative.search.search.get_endpoint_cnfs_with_resolution')
+    def test_returns_not_found_when_binary_search_fails(self, mock_endpoints, mock_binary):
         """Should mark as not found when binary search returns None."""
         from cnf.navigation.astar.iterative.search.search import _search_at_resolution
 
-        mock_delta.return_value = 10
         mock_cnf = MagicMock()
         mock_cnf.elements = ("Zr",)
-        mock_endpoints.return_value = ([mock_cnf], [mock_cnf])
+        mock_endpoints.return_value = ([mock_cnf], [mock_cnf], 10)
         mock_binary.return_value = (None, None)
 
         start_uc = MockUnitCell()
