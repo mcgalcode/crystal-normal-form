@@ -830,7 +830,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ratchet.ipynb" class="md-nav__link">
+      <a href="../ratchet/" class="md-nav__link">
         
   
   
@@ -1866,13 +1866,13 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-6">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=cell-6">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-1">
@@ -1940,14 +1940,28 @@ print(f"Goal volume:  {zr_goal.volume:.2f} Ang^3")</div>
 </div>
 </div>
 </div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-7">
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Start volume: 46.53 Ang^3
+Goal volume:  51.30 Ang^3
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=cell-7">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-2">
@@ -1962,21 +1976,89 @@ print(f"Goal volume:  {zr_goal.volume:.2f} Ang^3")</div>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cnf.navigation.astar.iterative</span><span class="w"> </span><span class="kn">import</span> <span class="n">search</span>
 
+<span class="c1"># Use just 2 resolution levels for a quick demo</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">search</span><span class="p">(</span>
     <span class="n">start_uc</span><span class="p">,</span>
     <span class="n">end_uc</span><span class="p">,</span>
-    <span class="n">max_iterations</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
+    <span class="n">xi_values</span><span class="o">=</span><span class="p">[</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">],</span>
+    <span class="n">atom_step_lengths</span><span class="o">=</span><span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">],</span>
+    <span class="n">max_iterations</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>  <span class="c1"># Coarse tolerance for speed</span>
     <span class="n">verbosity</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-2">from cnf.navigation.astar.iterative import search
 
+# Use just 2 resolution levels for a quick demo
 result = search(
     start_uc,
     end_uc,
-    max_iterations=5000,
+    xi_values=[2.0, 1.5],
+    atom_step_lengths=[0.5, 0.4],
+    max_iterations=1000,
+    tolerance=0.2,  # Coarse tolerance for speed
     verbosity=1,
 )</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>[tensorpotential] Info: Environment variable TF_USE_LEGACY_KERAS is automatically set to '1'.
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>
+Parameter search: 2 resolution levels
+  xi values: [2.0, 1.5]
+  atom step lengths: [0.5, 0.4]
+  min_distance range: [0.50, 2.00] Å
+  Auto workers: 3
+
+  Running 2 resolutions with 3 workers...
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>[xi=2.0, atom_step=0.5] Resolution: xi=2.0, atom_step=0.5 Å -&gt; delta=11
+[xi=2.0, atom_step=0.5]   1 start CNFs, 1 goal CNFs
+[xi=2.0, atom_step=0.5]   Binary search for min_distance in [0.50, 2.00]
+[xi=2.0, atom_step=0.5]     trying min_distance=1.250 Å... path found (4 iters)
+[xi=2.0, atom_step=0.5]     trying min_distance=1.625 Å... path found (4 iters)
+[xi=2.0, atom_step=0.5]     trying min_distance=1.812 Å... [xi=1.5, atom_step=0.4] Resolution: xi=1.5, atom_step=0.4 Å -&gt; delta=13
+[xi=1.5, atom_step=0.4]   1 start CNFs, 1 goal CNFs
+[xi=1.5, atom_step=0.4]   Binary search for min_distance in [0.50, 2.00]
+[xi=1.5, atom_step=0.4]     trying min_distance=1.250 Å...   [xi=2.0, delta=11] min_distance=1.812 Å
+path found (2 iters)
+[xi=1.5, atom_step=0.4]     trying min_distance=1.625 Å... path found (2 iters)
+[xi=1.5, atom_step=0.4]     trying min_distance=1.812 Å...   [xi=1.5, delta=13] min_distance=1.812 Å
+path found (2 iters)
+path found (4 iters)
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>
+============================================================
+Parameter search complete:
+  Successful resolutions: 2/2
+  Recommended: xi=1.5, delta=13, min_distance=1.812 Å
+  Total time: 4.6s
+============================================================
+</pre>
 </div>
 </div>
 </div>
@@ -1993,13 +2075,13 @@ result = search(
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-9">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=cell-9">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-3">
@@ -2031,6 +2113,25 @@ print(f"  min_distance = {result.recommended_min_distance:.3f} Ang")</div>
 </div>
 </div>
 </div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Search succeeded: True
+Successful resolutions: 2
+
+Recommended parameters:
+  xi = 1.5
+  delta = 13
+  min_distance = 1.812 Ang
+</pre>
+</div>
+</div>
+</div>
+</div>
 </div>
 </div>
 <div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-10">
@@ -2045,13 +2146,13 @@ print(f"  min_distance = {result.recommended_min_distance:.3f} Ang")</div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-11">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=cell-11">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-4">
@@ -2079,6 +2180,23 @@ print(f"\nTotal resolution levels tried: {len(result.results)}")</div>
 </div>
 </div>
 </div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>All successful parameters:
+  xi=2.0, delta=11, min_distance=1.812
+  xi=1.5, delta=13, min_distance=1.812
+
+Total resolution levels tried: 2
+</pre>
+</div>
+</div>
+</div>
+</div>
 </div>
 </div>
 <div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cell-12">
@@ -2092,13 +2210,13 @@ print(f"\nTotal resolution levels tried: {len(result.results)}")</div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-13">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=cell-13">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-5">
@@ -2111,23 +2229,81 @@ print(f"\nTotal resolution levels tried: {len(result.results)}")</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Parallel search with 4 workers</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Parallel search with 2 workers</span>
 <span class="n">result_parallel</span> <span class="o">=</span> <span class="n">search</span><span class="p">(</span>
     <span class="n">start_uc</span><span class="p">,</span>
     <span class="n">end_uc</span><span class="p">,</span>
-    <span class="n">max_iterations</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
-    <span class="n">n_workers</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">xi_values</span><span class="o">=</span><span class="p">[</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">],</span>
+    <span class="n">atom_step_lengths</span><span class="o">=</span><span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">],</span>
+    <span class="n">max_iterations</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">n_workers</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
     <span class="n">verbosity</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-5"># Parallel search with 4 workers
+<div class="clipboard-copy-txt" id="cell-5"># Parallel search with 2 workers
 result_parallel = search(
     start_uc,
     end_uc,
-    max_iterations=5000,
-    n_workers=4,
+    xi_values=[2.0, 1.5],
+    atom_step_lengths=[0.5, 0.4],
+    max_iterations=1000,
+    tolerance=0.2,
+    n_workers=2,
     verbosity=1,
 )</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>
+Parameter search: 2 resolution levels
+  xi values: [2.0, 1.5]
+  atom step lengths: [0.5, 0.4]
+  min_distance range: [0.50, 2.00] Å
+
+  Running 2 resolutions with 2 workers...
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>[xi=1.5, atom_step=0.4] Resolution: xi=1.5, atom_step=0.4 Å -&gt; delta=13
+[xi=1.5, atom_step=0.4]   1 start CNFs, 1 goal CNFs
+[xi=1.5, atom_step=0.4]   Binary search for min_distance in [0.50, 2.00]
+[xi=1.5, atom_step=0.4]     trying min_distance=1.250 Å... [xi=2.0, atom_step=0.5] Resolution: xi=2.0, atom_step=0.5 Å -&gt; delta=11
+[xi=2.0, atom_step=0.5]   1 start CNFs, 1 goal CNFs
+[xi=2.0, atom_step=0.5]   Binary search for min_distance in [0.50, 2.00]
+[xi=2.0, atom_step=0.5]     trying min_distance=1.250 Å... path found (4 iters)
+[xi=2.0, atom_step=0.5]     trying min_distance=1.625 Å... path found (2 iters)
+[xi=1.5, atom_step=0.4]     trying min_distance=1.625 Å... path found (4 iters)
+[xi=2.0, atom_step=0.5]     trying min_distance=1.812 Å... path found (2 iters)
+[xi=1.5, atom_step=0.4]     trying min_distance=1.812 Å...   [xi=2.0, delta=11] min_distance=1.812 Å
+  [xi=1.5, delta=13] min_distance=1.812 Å
+path found (2 iters)
+path found (4 iters)
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>
+============================================================
+Parameter search complete:
+  Successful resolutions: 2/2
+  Recommended: xi=1.5, delta=13, min_distance=1.812 Å
+  Total time: 4.6s
+============================================================
+</pre>
 </div>
 </div>
 </div>
@@ -2145,13 +2321,13 @@ result_parallel = search(
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-15">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=cell-15">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-6">
@@ -2164,25 +2340,80 @@ result_parallel = search(
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Focus on finer resolutions</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Custom resolution levels example</span>
 <span class="n">result_fine</span> <span class="o">=</span> <span class="n">search</span><span class="p">(</span>
     <span class="n">start_uc</span><span class="p">,</span>
     <span class="n">end_uc</span><span class="p">,</span>
-    <span class="n">xi_values</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
-    <span class="n">atom_step_lengths</span><span class="o">=</span><span class="p">[</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span>
-    <span class="n">max_iterations</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
+    <span class="n">xi_values</span><span class="o">=</span><span class="p">[</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.25</span><span class="p">],</span>
+    <span class="n">atom_step_lengths</span><span class="o">=</span><span class="p">[</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">],</span>
+    <span class="n">max_iterations</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
     <span class="n">verbosity</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-6"># Focus on finer resolutions
+<div class="clipboard-copy-txt" id="cell-6"># Custom resolution levels example
 result_fine = search(
     start_uc,
     end_uc,
-    xi_values=[1.0, 0.75, 0.5],
-    atom_step_lengths=[0.2, 0.15, 0.1],
-    max_iterations=5000,
+    xi_values=[1.5, 1.25],
+    atom_step_lengths=[0.4, 0.3],
+    max_iterations=1000,
+    tolerance=0.2,
     verbosity=1,
 )</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>
+Parameter search: 2 resolution levels
+  xi values: [1.5, 1.25]
+  atom step lengths: [0.4, 0.3]
+  min_distance range: [0.50, 2.00] Å
+  Auto workers: 3
+
+  Running 2 resolutions with 3 workers...
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>[xi=1.25, atom_step=0.3] Resolution: xi=1.25, atom_step=0.3 Å -&gt; delta=18
+[xi=1.25, atom_step=0.3]   1 start CNFs, 1 goal CNFs
+[xi=1.25, atom_step=0.3]   Binary search for min_distance in [0.50, 2.00]
+[xi=1.25, atom_step=0.3]     trying min_distance=1.250 Å... [xi=1.5, atom_step=0.4] Resolution: xi=1.5, atom_step=0.4 Å -&gt; delta=13
+[xi=1.5, atom_step=0.4]   1 start CNFs, 1 goal CNFs
+[xi=1.5, atom_step=0.4]   Binary search for min_distance in [0.50, 2.00]
+[xi=1.5, atom_step=0.4]     trying min_distance=1.250 Å... path found (7 iters)
+[xi=1.25, atom_step=0.3]     trying min_distance=1.625 Å... path found (7 iters)
+[xi=1.25, atom_step=0.3]     trying min_distance=1.812 Å... path found (2 iters)
+[xi=1.5, atom_step=0.4]     trying min_distance=1.625 Å... path found (2 iters)
+[xi=1.5, atom_step=0.4]     trying min_distance=1.812 Å...   [xi=1.5, delta=13] min_distance=1.812 Å
+  [xi=1.25, delta=18] min_distance=1.812 Å
+path found (7 iters)
+path found (2 iters)
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>
+============================================================
+Parameter search complete:
+  Successful resolutions: 2/2
+  Recommended: xi=1.25, delta=18, min_distance=1.812 Å
+  Total time: 4.6s
+============================================================
+</pre>
 </div>
 </div>
 </div>
@@ -2201,13 +2432,13 @@ result_fine = search(
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-17">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=cell-17">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-7">
@@ -2224,10 +2455,12 @@ result_fine = search(
 <span class="n">result_custom</span> <span class="o">=</span> <span class="n">search</span><span class="p">(</span>
     <span class="n">start_uc</span><span class="p">,</span>
     <span class="n">end_uc</span><span class="p">,</span>
-    <span class="n">min_dist_low</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>     <span class="c1"># Don't bother with very permissive constraints</span>
-    <span class="n">min_dist_high</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span>    <span class="c1"># Try stricter constraints</span>
-    <span class="n">tolerance</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span>       <span class="c1"># Finer precision</span>
-    <span class="n">max_iterations</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
+    <span class="n">xi_values</span><span class="o">=</span><span class="p">[</span><span class="mf">2.0</span><span class="p">],</span>
+    <span class="n">atom_step_lengths</span><span class="o">=</span><span class="p">[</span><span class="mf">0.5</span><span class="p">],</span>
+    <span class="n">min_dist_low</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">min_dist_high</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">max_iterations</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
     <span class="n">verbosity</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
@@ -2235,12 +2468,64 @@ result_fine = search(
 result_custom = search(
     start_uc,
     end_uc,
-    min_dist_low=1.0,     # Don't bother with very permissive constraints
-    min_dist_high=3.0,    # Try stricter constraints
-    tolerance=0.02,       # Finer precision
-    max_iterations=5000,
+    xi_values=[2.0],
+    atom_step_lengths=[0.5],
+    min_dist_low=1.0,
+    min_dist_high=2.5,
+    tolerance=0.2,
+    max_iterations=1000,
     verbosity=1,
 )</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>
+Parameter search: 1 resolution levels
+  xi values: [2.0]
+  atom step lengths: [0.5]
+  min_distance range: [1.00, 2.50] Å
+  Auto workers: 3
+
+[1/1] Resolution: xi=2.0, atom_step=0.5 Å -&gt; delta=11
+  1 start CNFs, 1 goal CNFs
+  Binary search for min_distance in [1.00, 2.50]
+    trying min_distance=1.750 Å... </pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>path found (4 iters)
+    trying min_distance=2.125 Å... </pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>path found (4 iters)
+    trying min_distance=2.312 Å... </pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>path found (4 iters)
+
+============================================================
+Parameter search complete:
+  Successful resolutions: 1/1
+  Recommended: xi=2.0, delta=11, min_distance=2.312 Å
+  Total time: 0.1s
+============================================================
+</pre>
 </div>
 </div>
 </div>
@@ -2258,13 +2543,13 @@ result_custom = search(
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-19">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=cell-19">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-8">
@@ -2285,7 +2570,10 @@ result_custom = search(
     <span class="n">result_saved</span> <span class="o">=</span> <span class="n">search</span><span class="p">(</span>
         <span class="n">start_uc</span><span class="p">,</span>
         <span class="n">end_uc</span><span class="p">,</span>
-        <span class="n">max_iterations</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
+        <span class="n">xi_values</span><span class="o">=</span><span class="p">[</span><span class="mf">2.0</span><span class="p">],</span>
+        <span class="n">atom_step_lengths</span><span class="o">=</span><span class="p">[</span><span class="mf">0.5</span><span class="p">],</span>
+        <span class="n">max_iterations</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
         <span class="n">output_dir</span><span class="o">=</span><span class="n">tmpdir</span><span class="p">,</span>
         <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
     <span class="p">)</span>
@@ -2303,7 +2591,10 @@ with tempfile.TemporaryDirectory() as tmpdir:
     result_saved = search(
         start_uc,
         end_uc,
-        max_iterations=5000,
+        xi_values=[2.0],
+        atom_step_lengths=[0.5],
+        max_iterations=1000,
+        tolerance=0.2,
         output_dir=tmpdir,
         verbosity=0,
     )
@@ -2316,14 +2607,29 @@ with tempfile.TemporaryDirectory() as tmpdir:
 </div>
 </div>
 </div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cell-20">
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>  [Search] Saved: /var/folders/20/rp8b8xzd0tn81qzlh8zmmvg00000gn/T/tmpglo7zjvq/parameter_search_result.json
+Saved to: /var/folders/20/rp8b8xzd0tn81qzlh8zmmvg00000gn/T/tmpglo7zjvq/parameter_search_result.json
+File exists: True
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=cell-20">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-9">
@@ -2357,6 +2663,20 @@ with tempfile.TemporaryDirectory() as tmpdir:
     loaded = ParameterSearchResult.from_json(outpath)
     print(f"Loaded recommended xi: {loaded.recommended_xi}")
     print(f"Loaded recommended delta: {loaded.recommended_delta}")</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Loaded recommended xi: 1.5
+Loaded recommended delta: 13
+</pre>
 </div>
 </div>
 </div>
