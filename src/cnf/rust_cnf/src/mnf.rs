@@ -332,9 +332,10 @@ pub fn build_mnf_batch(
     results
 }
 
-/// Compute atom labels from atom symbols
-/// Consecutive identical atoms get the same label
-fn compute_atom_labels_from_atoms(atoms: &[String]) -> Vec<usize> {
+/// Compute atom labels from atom symbols.
+///
+/// Consecutive identical atoms get the same label (0, 0, 0, 1, 1, 2, ...).
+pub fn compute_atom_labels(atoms: &[String]) -> Vec<usize> {
     let mut labels = Vec::with_capacity(atoms.len());
     if atoms.is_empty() {
         return labels;
@@ -446,7 +447,7 @@ pub fn find_and_canonicalize_motif_neighbors(
     let n_atoms = atoms.len();
 
     // Pre-compute atom labels
-    let atom_labels = compute_atom_labels_from_atoms(atoms);
+    let atom_labels = compute_atom_labels(atoms);
 
     // Count origin atoms (atoms matching the first atom)
     let num_origin_atoms = atoms.iter().filter(|a| *a == &atoms[0]).count();

@@ -7,6 +7,7 @@
 
 use std::collections::HashSet;
 use crate::linalg::{mat_inv, mat_to_flat};
+use crate::mnf::compute_atom_labels;
 use crate::permutations::PERMUTATIONS;
 
 // =============================================================================
@@ -94,25 +95,6 @@ const VORONOI_IDX_TO_COLUMN: [[i32; 3]; 7] = [
 // ---------------------------------------------------------------------------
 // Helper functions
 // ---------------------------------------------------------------------------
-
-/// Compute atom labels from element symbols (consecutive same elements get same label)
-fn compute_atom_labels(elements: &[String]) -> Vec<usize> {
-    let mut labels = Vec::with_capacity(elements.len());
-    if elements.is_empty() {
-        return labels;
-    }
-    let mut current_label = 0usize;
-    let mut prev = &elements[0];
-    for el in elements {
-        if el != prev {
-            current_label += 1;
-            prev = el;
-        }
-        labels.push(current_label);
-    }
-    labels
-}
-
 
 /// Build a 3x3 unimodular matrix from 3 Voronoi vector indices.
 /// Corresponds to Python's `VonormPermutationMatrix.from_vector_idxs(perm[1:4])`.

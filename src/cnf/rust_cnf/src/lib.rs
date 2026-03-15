@@ -639,8 +639,9 @@ pub(crate) fn compute_step_data_raw_internal(
     result.into_iter().map(|(_, v)| v).collect()
 }
 
-// Use shared linalg functions
+// Use shared functions
 use linalg::{mat_mul, mat_inv_f64};
+use mnf::compute_atom_labels;
 
 /// Build CNFs from validated step data
 ///
@@ -883,22 +884,6 @@ fn validate_step_data_rust<'py>(
     Ok(validated_steps)
 }
 
-/// Helper: Compute atom labels from atom symbols
-fn compute_atom_labels(atoms: &[String]) -> Vec<i32> {
-    let mut labels = Vec::new();
-    let mut current_label = 0i32;
-    let mut prev_atom = "";
-
-    for atom in atoms {
-        if atom != prev_atom && !prev_atom.is_empty() {
-            current_label += 1;
-        }
-        labels.push(current_label);
-        prev_atom = atom;
-    }
-
-    labels
-}
 
 /// Internal version: Canonicalize a batch of CNF step data
 /// Returns Vec of (canonical_vonorms_i32, canonical_coords_i32) tuples
@@ -960,12 +945,10 @@ pub(crate) fn canonicalize_cnfs_batch_internal(
         let combined_stabs_flat = lnf::combine_middle_and_s2_stabilizers(&s2_flat, &middle);
 
         // Step 4: Build canonical MNF
-        let labels_usize: Vec<usize> = atom_labels.iter().map(|&x| x as usize).collect();
-
         let canonical_coords = mnf::build_mnf_vectorized(
             &coords,
             n_atoms,
-            &labels_usize,
+            &atom_labels,
             num_origin_atoms,
             &combined_stabs_flat,
             delta as f64,
