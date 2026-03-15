@@ -1122,6 +1122,61 @@ fn reconstruct_structure_from_cnf<'py>(
     Ok((lattice_flat, cart_coords))
 }
 
+/// Validate A* pathfinding inputs.
+fn validate_pathfind_inputs(
+    start_points: &[(Vec<i32>, Vec<i32>)],
+    goal_points: &[(Vec<i32>, Vec<i32>)],
+    elements: &[String],
+    n_atoms: usize,
+) -> PyResult<()> {
+    if start_points.is_empty() {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "start_points cannot be empty"
+        ));
+    }
+    if goal_points.is_empty() {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "goal_points cannot be empty"
+        ));
+    }
+
+    let expected_coords_len = (n_atoms - 1) * 3;
+
+    for (i, (vonorms, coords)) in start_points.iter().enumerate() {
+        if vonorms.len() != 7 {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                format!("start_points[{}] vonorms must have exactly 7 elements", i)
+            ));
+        }
+        if coords.len() != expected_coords_len {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                format!("start_points[{}] coords must have {} elements ((n_atoms-1) * 3)", i, expected_coords_len)
+            ));
+        }
+    }
+
+    for (i, (vonorms, coords)) in goal_points.iter().enumerate() {
+        if vonorms.len() != 7 {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                format!("goal_points[{}] vonorms must have exactly 7 elements", i)
+            ));
+        }
+        if coords.len() != expected_coords_len {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                format!("goal_points[{}] coords must have {} elements ((n_atoms-1) * 3)", i, expected_coords_len)
+            ));
+        }
+    }
+
+    if elements.len() != n_atoms {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            format!("elements must have {} elements (n_atoms)", n_atoms)
+        ));
+    }
+
+    Ok(())
+}
+
 /// A* pathfinding from multiple start CNFs to multiple goal CNFs (pure Rust implementation)
 ///
 /// Args:
@@ -1167,53 +1222,7 @@ fn astar_pathfind_rust<'py>(
     use crate::pathfinding::astar_pathfind;
     use crate::heuristics::HeuristicMode;
 
-    // Validate inputs
-    if start_points.is_empty() {
-        return Err(pyo3::exceptions::PyValueError::new_err(
-            "start_points cannot be empty"
-        ));
-    }
-    if goal_points.is_empty() {
-        return Err(pyo3::exceptions::PyValueError::new_err(
-            "goal_points cannot be empty"
-        ));
-    }
-
-    let expected_coords_len = (n_atoms - 1) * 3;
-
-    // Validate all start points
-    for (i, (vonorms, coords)) in start_points.iter().enumerate() {
-        if vonorms.len() != 7 {
-            return Err(pyo3::exceptions::PyValueError::new_err(
-                format!("start_points[{}] vonorms must have exactly 7 elements", i)
-            ));
-        }
-        if coords.len() != expected_coords_len {
-            return Err(pyo3::exceptions::PyValueError::new_err(
-                format!("start_points[{}] coords must have {} elements ((n_atoms-1) * 3)", i, expected_coords_len)
-            ));
-        }
-    }
-
-    // Validate all goal points
-    for (i, (vonorms, coords)) in goal_points.iter().enumerate() {
-        if vonorms.len() != 7 {
-            return Err(pyo3::exceptions::PyValueError::new_err(
-                format!("goal_points[{}] vonorms must have exactly 7 elements", i)
-            ));
-        }
-        if coords.len() != expected_coords_len {
-            return Err(pyo3::exceptions::PyValueError::new_err(
-                format!("goal_points[{}] coords must have {} elements ((n_atoms-1) * 3)", i, expected_coords_len)
-            ));
-        }
-    }
-
-    if elements.len() != n_atoms {
-        return Err(pyo3::exceptions::PyValueError::new_err(
-            format!("elements must have {} elements (n_atoms)", n_atoms)
-        ));
-    }
+    validate_pathfind_inputs(&start_points, &goal_points, &elements, n_atoms)?;
 
     // Parse heuristic mode
     let mode = HeuristicMode::from_str(heuristic_mode);
@@ -1279,53 +1288,7 @@ fn bidirectional_astar_pathfind_rust<'py>(
 ) -> PyResult<Option<Vec<Vec<i32>>>> {
     use crate::bidirectional::bidirectional_astar_pathfind;
 
-    // Validate inputs (same as astar_pathfind_rust)
-    if start_points.is_empty() {
-        return Err(pyo3::exceptions::PyValueError::new_err(
-            "start_points cannot be empty"
-        ));
-    }
-    if goal_points.is_empty() {
-        return Err(pyo3::exceptions::PyValueError::new_err(
-            "goal_points cannot be empty"
-        ));
-    }
-
-    let expected_coords_len = (n_atoms - 1) * 3;
-
-    // Validate all start points
-    for (i, (vonorms, coords)) in start_points.iter().enumerate() {
-        if vonorms.len() != 7 {
-            return Err(pyo3::exceptions::PyValueError::new_err(
-                format!("start_points[{}] vonorms must have exactly 7 elements", i)
-            ));
-        }
-        if coords.len() != expected_coords_len {
-            return Err(pyo3::exceptions::PyValueError::new_err(
-                format!("start_points[{}] coords must have {} elements ((n_atoms-1) * 3)", i, expected_coords_len)
-            ));
-        }
-    }
-
-    // Validate all goal points
-    for (i, (vonorms, coords)) in goal_points.iter().enumerate() {
-        if vonorms.len() != 7 {
-            return Err(pyo3::exceptions::PyValueError::new_err(
-                format!("goal_points[{}] vonorms must have exactly 7 elements", i)
-            ));
-        }
-        if coords.len() != expected_coords_len {
-            return Err(pyo3::exceptions::PyValueError::new_err(
-                format!("goal_points[{}] coords must have {} elements ((n_atoms-1) * 3)", i, expected_coords_len)
-            ));
-        }
-    }
-
-    if elements.len() != n_atoms {
-        return Err(pyo3::exceptions::PyValueError::new_err(
-            format!("elements must have {} elements (n_atoms)", n_atoms)
-        ));
-    }
+    validate_pathfind_inputs(&start_points, &goal_points, &elements, n_atoms)?;
 
     // Call the Rust bidirectional pathfinding function
     let result = bidirectional_astar_pathfind(
