@@ -4,7 +4,6 @@ mod lnf;
 mod mnf;
 mod geometry;
 mod pathfinding;
-mod bidirectional;
 mod neighbors;
 mod heuristics;
 
@@ -1267,46 +1266,6 @@ fn astar_pathfind_rust<'py>(
 ///     delta: Integer discretization factor
 ///     min_distance: Minimum allowed pairwise distance for filtering (e.g., 1.4 Angstroms)
 ///     max_iterations: Maximum iterations (0 for unlimited)
-///     beam_width: Maximum size of each open set (0 for unlimited, beam search)
-///     verbose: Print progress every 5 iterations
-///
-/// Returns:
-///     List of flat Vec<i32> (vonorms + coords concatenated) representing the path, or None if no path found
-#[pyfunction]
-fn bidirectional_astar_pathfind_rust<'py>(
-    _py: Python<'py>,
-    start_points: Vec<(Vec<i32>, Vec<i32>)>,
-    goal_points: Vec<(Vec<i32>, Vec<i32>)>,
-    elements: Vec<String>,
-    n_atoms: usize,
-    xi: f64,
-    delta: i32,
-    min_distance: f64,
-    max_iterations: usize,
-    beam_width: usize,
-    verbose: bool,
-) -> PyResult<Option<Vec<Vec<i32>>>> {
-    use crate::bidirectional::bidirectional_astar_pathfind;
-
-    validate_pathfind_inputs(&start_points, &goal_points, &elements, n_atoms)?;
-
-    // Call the Rust bidirectional pathfinding function
-    let result = bidirectional_astar_pathfind(
-        &start_points,
-        &goal_points,
-        &elements,
-        n_atoms,
-        xi,
-        delta,
-        min_distance,
-        max_iterations,
-        beam_width,
-        verbose,
-    );
-
-    Ok(result)
-}
-
 /// Filter neighbor tuples by minimum pairwise distance
 ///
 /// Args:
@@ -1379,7 +1338,6 @@ fn rust_cnf(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(find_neighbor_tuples_rust, m)?)?;
     m.add_function(wrap_pyfunction!(reconstruct_structure_from_cnf, m)?)?;
     m.add_function(wrap_pyfunction!(astar_pathfind_rust, m)?)?;
-    m.add_function(wrap_pyfunction!(bidirectional_astar_pathfind_rust, m)?)?;
     m.add_function(wrap_pyfunction!(filter_neighbors_by_min_distance_rust, m)?)?;
     Ok(())
 }
