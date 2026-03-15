@@ -65,6 +65,17 @@ If you don't have a Rust toolchain installed, the package will still work using 
 cnf --help
 ```
 
+## Documentation
+
+For detailed guides and tutorials, visit the documentation at **[maxgallant.com/crystal-normal-form](https://maxgallant.com/crystal-normal-form)**.
+
+The documentation includes:
+- **Quickstart** — Get up and running with your first CNF calculation
+- **CNF Overview** — Understanding the crystal normal form representation
+- **Lattice & Motif Normal Forms** — Deep dives into LNF and MNF construction
+- **Neighbor Finding** — How crystal neighbors are generated
+- **Pathfinding** — A*, waterfilling, and barrier search algorithms
+
 ## Citation
 
 This implementation is based on the theoretical framework developed by David Mrdjenovich. If you use this code in your research, please cite his work:
