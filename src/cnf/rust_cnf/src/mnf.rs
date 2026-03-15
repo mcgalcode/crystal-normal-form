@@ -5,45 +5,7 @@
 
 use std::cmp::Ordering;
 
-/// Invert a 3x3 matrix (for i32, returns f64)
-fn invert_matrix_3x3(mat: &[[i32; 3]; 3]) -> [[f64; 3]; 3] {
-    let m = mat;
-
-    // Convert to f64 for inversion
-    let a = [
-        [m[0][0] as f64, m[0][1] as f64, m[0][2] as f64],
-        [m[1][0] as f64, m[1][1] as f64, m[1][2] as f64],
-        [m[2][0] as f64, m[2][1] as f64, m[2][2] as f64],
-    ];
-
-    // Calculate determinant
-    let det = a[0][0] * (a[1][1] * a[2][2] - a[1][2] * a[2][1])
-            - a[0][1] * (a[1][0] * a[2][2] - a[1][2] * a[2][0])
-            + a[0][2] * (a[1][0] * a[2][1] - a[1][1] * a[2][0]);
-
-    if det.abs() < 1e-10 {
-        panic!("Matrix is singular, cannot invert");
-    }
-
-    let inv_det = 1.0 / det;
-
-    // Calculate inverse using cofactor method
-    let mut inv = [[0.0; 3]; 3];
-
-    inv[0][0] = (a[1][1] * a[2][2] - a[1][2] * a[2][1]) * inv_det;
-    inv[0][1] = (a[0][2] * a[2][1] - a[0][1] * a[2][2]) * inv_det;
-    inv[0][2] = (a[0][1] * a[1][2] - a[0][2] * a[1][1]) * inv_det;
-
-    inv[1][0] = (a[1][2] * a[2][0] - a[1][0] * a[2][2]) * inv_det;
-    inv[1][1] = (a[0][0] * a[2][2] - a[0][2] * a[2][0]) * inv_det;
-    inv[1][2] = (a[0][2] * a[1][0] - a[0][0] * a[1][2]) * inv_det;
-
-    inv[2][0] = (a[1][0] * a[2][1] - a[1][1] * a[2][0]) * inv_det;
-    inv[2][1] = (a[0][1] * a[2][0] - a[0][0] * a[2][1]) * inv_det;
-    inv[2][2] = (a[0][0] * a[1][1] - a[0][1] * a[1][0]) * inv_det;
-
-    inv
-}
+use crate::linalg::mat_inv_f64;
 
 /// Multiply a 3x3 matrix by a 3xN coordinate matrix
 fn matrix_mult_coords(mat: &[[f64; 3]; 3], coords: &[f64], n_atoms: usize) -> Vec<f64> {
@@ -84,7 +46,7 @@ fn apply_stabilizers(
 
     for stab in stabilizers {
         // Invert the stabilizer
-        let inv = invert_matrix_3x3(stab);
+        let inv = mat_inv_f64(stab);
 
         // Apply to coordinates
         let mut transformed = matrix_mult_coords(&inv, coords, n_atoms);
@@ -476,7 +438,7 @@ pub fn find_and_canonicalize_motif_neighbors(
 
     for stabilizer in &stabilizers {
         // Apply stabilizer transformation
-        let inv = invert_matrix_3x3(stabilizer);
+        let inv = mat_inv_f64(stabilizer);
         let mut transformed = matrix_mult_coords(&inv, &coords_f64, n_atoms);
         move_into_bounds(&mut transformed, delta as f64);
 

@@ -1,3 +1,4 @@
+use crate::linalg::{mat_det, mat_mul};
 use crate::permutations::{compute_conorms, find_zero_indices_exact, find_zero_indices_tol, PERMUTATIONS};
 
 /// Mapping from conorm index to vector pair
@@ -186,7 +187,7 @@ fn selling_reduce_with_transform(vonorms: &[f64; 7], tol: f64, max_steps: usize)
         let mut step_matrix = get_selling_step_matrix(i, j);
 
         // Check determinant - if -1, flip signs (matching Python behavior)
-        let det = matrix_determinant_3x3(&step_matrix);
+        let det = mat_det(&step_matrix);
         if det == -1 {
             // Flip signs of the entire matrix
             for row in 0..3 {
@@ -197,7 +198,7 @@ fn selling_reduce_with_transform(vonorms: &[f64; 7], tol: f64, max_steps: usize)
         }
 
         // Multiply left-to-right to match Python: transform @ step_matrix
-        transform = matrix_multiply_3x3(&transform, &step_matrix);
+        transform = mat_mul(&transform, &step_matrix);
 
         steps += 1;
         if steps >= max_steps {
@@ -473,28 +474,6 @@ pub fn find_stabilizers_raw_float(vonorms: &[f64; 7], tol: f64) -> Vec<i32> {
     })
 }
 
-/// Calculate determinant of a 3x3 i32 matrix
-#[inline]
-fn matrix_determinant_3x3(m: &[[i32; 3]; 3]) -> i32 {
-    m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1])
-        - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
-        + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0])
-}
-
-/// 3x3 matrix multiplication for i32 matrices
-#[inline]
-fn matrix_multiply_3x3(a: &[[i32; 3]; 3], b: &[[i32; 3]; 3]) -> [[i32; 3]; 3] {
-    let mut result = [[0i32; 3]; 3];
-    for i in 0..3 {
-        for j in 0..3 {
-            for k in 0..3 {
-                result[i][j] += a[i][k] * b[k][j];
-            }
-        }
-    }
-    result
-}
-
 /// Combine and deduplicate stabilizer matrices
 ///
 /// Computes all combinations s1[i] @ middle @ s2[j] and deduplicates.
@@ -541,11 +520,11 @@ pub fn combine_stabilizers(
     // Compute all combinations
     for s1 in &s1_matrices {
         // Pre-compute s1 @ middle
-        let temp = matrix_multiply_3x3(s1, middle);
+        let temp = mat_mul(s1, middle);
 
         for s2 in &s2_matrices {
             // Compute (s1 @ middle) @ s2
-            let result = matrix_multiply_3x3(&temp, s2);
+            let result = mat_mul(&temp, s2);
 
             // Flatten and add to set
             let flat = [
@@ -597,7 +576,7 @@ pub fn combine_middle_and_s2_stabilizers(
 
     // Compute middle @ s2 for each s2
     for s2 in &s2_matrices {
-        let result = matrix_multiply_3x3(middle, s2);
+        let result = mat_mul(middle, s2);
 
         // Flatten and add to set
         let flat = [
