@@ -114,6 +114,65 @@ pub fn mat_det(m: &[[i32; 3]; 3]) -> i32 {
 }
 
 // =============================================================================
+// Constants
+// =============================================================================
+
+/// 3x3 identity matrix
+pub const IDENTITY_3X3: [[i32; 3]; 3] = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+
+// =============================================================================
+// Array Conversion Helpers
+// =============================================================================
+
+/// Convert a flat 9-element slice to a 3x3 matrix
+#[inline]
+pub fn flat9_to_mat3x3(flat: &[i32]) -> [[i32; 3]; 3] {
+    debug_assert!(flat.len() >= 9, "flat array must have at least 9 elements");
+    [
+        [flat[0], flat[1], flat[2]],
+        [flat[3], flat[4], flat[5]],
+        [flat[6], flat[7], flat[8]],
+    ]
+}
+
+/// Convert a slice of f64 to a fixed-size 7-element array (for vonorms)
+#[inline]
+pub fn slice_to_vonorms(slice: &[f64]) -> [f64; 7] {
+    debug_assert!(slice.len() >= 7, "slice must have at least 7 elements");
+    [slice[0], slice[1], slice[2], slice[3], slice[4], slice[5], slice[6]]
+}
+
+/// Parse a flat i32 slice into a Vec of 3x3 matrices
+pub fn parse_flat_to_matrices(flat: &[i32]) -> Vec<[[i32; 3]; 3]> {
+    let n = flat.len() / 9;
+    let mut matrices = Vec::with_capacity(n);
+    for i in 0..n {
+        let o = i * 9;
+        matrices.push([
+            [flat[o], flat[o + 1], flat[o + 2]],
+            [flat[o + 3], flat[o + 4], flat[o + 5]],
+            [flat[o + 6], flat[o + 7], flat[o + 8]],
+        ]);
+    }
+    matrices
+}
+
+/// Convert flat stabilizer matrices to 3D nested Vec for Python
+pub fn flat_matrices_to_nested(flat: &[i32]) -> Vec<Vec<Vec<i32>>> {
+    let n_matrices = flat.len() / 9;
+    let mut matrices = Vec::with_capacity(n_matrices);
+    for i in 0..n_matrices {
+        let start = i * 9;
+        matrices.push(vec![
+            flat[start..start+3].to_vec(),
+            flat[start+3..start+6].to_vec(),
+            flat[start+6..start+9].to_vec(),
+        ]);
+    }
+    matrices
+}
+
+// =============================================================================
 // Matrix Conversion
 // =============================================================================
 
@@ -124,17 +183,6 @@ pub fn mat_to_flat(m: &[[i32; 3]; 3]) -> [i32; 9] {
         m[0][0], m[0][1], m[0][2],
         m[1][0], m[1][1], m[1][2],
         m[2][0], m[2][1], m[2][2],
-    ]
-}
-
-/// Convert a flat 9-element slice to a 3x3 matrix.
-#[inline]
-pub fn flat_to_mat(flat: &[i32]) -> [[i32; 3]; 3] {
-    debug_assert!(flat.len() >= 9);
-    [
-        [flat[0], flat[1], flat[2]],
-        [flat[3], flat[4], flat[5]],
-        [flat[6], flat[7], flat[8]],
     ]
 }
 
@@ -181,14 +229,6 @@ mod tests {
         let inv = mat_inv(&m);
         let product = mat_mul(&m, &inv);
         assert_eq!(product, [[1, 0, 0], [0, 1, 0], [0, 0, 1]]);
-    }
-
-    #[test]
-    fn test_flat_roundtrip() {
-        let m = [[1, 2, 3], [4, 5, 6], [7, 8, 9]];
-        let flat = mat_to_flat(&m);
-        let recovered = flat_to_mat(&flat);
-        assert_eq!(m, recovered);
     }
 
     #[test]

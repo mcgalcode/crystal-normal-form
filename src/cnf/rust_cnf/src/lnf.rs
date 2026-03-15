@@ -1,5 +1,7 @@
-use crate::linalg::{mat_det, mat_mul};
-use crate::permutations::{compute_conorms, find_zero_indices_exact, find_zero_indices_tol, PERMUTATIONS};
+use std::collections::HashSet;
+
+use crate::linalg::{mat_det, mat_mul, mat_to_flat, parse_flat_to_matrices, IDENTITY_3X3};
+use crate::permutations::{compute_conorms, find_zero_indices_exact, find_zero_indices_tol, apply_vonorm_perm, PERMUTATIONS};
 
 /// Mapping from conorm index to vector pair
 const CONORM_IDX_TO_VECTOR_PAIRS: [(usize, usize); 6] = [
@@ -12,6 +14,7 @@ const CONORM_IDX_TO_VECTOR_PAIRS: [(usize, usize); 6] = [
 ];
 
 /// Mapping from vector pair to secondary vonorm index
+#[inline]
 fn get_secondary_vonorm_idx(i: usize, j: usize) -> usize {
     let (min, max) = if i < j { (i, j) } else { (j, i) };
     match (min, max) {
@@ -22,18 +25,31 @@ fn get_secondary_vonorm_idx(i: usize, j: usize) -> usize {
     }
 }
 
+/// Round a float to specified number of decimal places
+#[inline]
+fn round_to_decimal_places(value: f64, decimal_places: u32) -> f64 {
+    let multiplier = 10f64.powi(decimal_places as i32);
+    (value * multiplier).round() / multiplier
+}
+
+/// Find the other two indices from {0,1,2,3} given i and j
+#[inline]
+fn get_other_indices(i: usize, j: usize) -> (usize, usize) {
+    match (i, j) {
+        (0, 1) | (1, 0) => (2, 3),
+        (0, 2) | (2, 0) => (1, 3),
+        (0, 3) | (3, 0) => (1, 2),
+        (1, 2) | (2, 1) => (0, 3),
+        (1, 3) | (3, 1) => (0, 2),
+        (2, 3) | (3, 2) => (0, 1),
+        _ => panic!("Invalid indices: ({}, {})", i, j),
+    }
+}
+
 /// Apply one Selling transformation step for the given vector pair (i, j)
 fn apply_selling_step(vonorms: &[f64; 7], conorms: &[f64; 6], conorm_idx: usize) -> [f64; 7] {
     let (i, j) = CONORM_IDX_TO_VECTOR_PAIRS[conorm_idx];
-
-    // Find k and l (the other two indices from {0, 1, 2, 3})
-    let all_indices: Vec<usize> = vec![0, 1, 2, 3];
-    let other_indices: Vec<usize> = all_indices
-        .iter()
-        .filter(|&&idx| idx != i && idx != j)
-        .copied()
-        .collect();
-    let (k, l) = (other_indices[0], other_indices[1]);
+    let (k, l) = get_other_indices(i, j);
 
     let mut new_vonorms = [0.0; 7];
 
@@ -122,10 +138,7 @@ fn get_selling_step_matrix(i: usize, j: usize) -> [[i32; 3]; 3] {
 /// Returns (reduced_vonorms, cumulative_transformation_matrix)
 fn selling_reduce_with_transform(vonorms: &[f64; 7], tol: f64, max_steps: usize) -> ([f64; 7], [[i32; 3]; 3]) {
     let mut current = *vonorms;
-    let mut transform = [[0i32; 3]; 3];
-    transform[0][0] = 1;
-    transform[1][1] = 1;
-    transform[2][2] = 1;  // Start with identity
+    let mut transform = IDENTITY_3X3;
     let mut steps = 0;
 
     // Python uses sorting_decimal_places=4 when rounding conorms before selecting
@@ -207,86 +220,88 @@ fn selling_reduce_with_transform(vonorms: &[f64; 7], tol: f64, max_steps: usize)
     }
 }
 
-/// Fast LNF construction for discretized vonorms (exact equality)
+/// Internal LNF construction with optional tolerance
 ///
-/// Returns:
-/// - canonical vonorms
-/// - zero conorm indices
-/// - selling transformation matrix (None if no reduction needed)
-/// - sorting permutation matrices (matrices that give the canonical form)
-pub fn build_lnf_raw_discretized(vonorms: &[f64; 7]) -> (Vec<f64>, Vec<usize>, Option<Vec<i32>>, Vec<Vec<i32>>) {
-    // Step 1: Compute conorms
+/// If tol is None, uses exact equality (for discretized vonorms).
+/// If tol is Some(t), uses tolerance-based comparisons with rounding.
+fn build_lnf_raw_internal(
+    vonorms: &[f64; 7],
+    tol: Option<f64>,
+) -> (Vec<f64>, Vec<usize>, Option<Vec<i32>>, Vec<Vec<i32>>) {
+    let tolerance = tol.unwrap_or(0.0);
+    let use_rounding = tol.is_some();
+
+    // Step 1: Compute conorms and check if already obtuse
     let mut current_vonorms = *vonorms;
     let conorms = compute_conorms(&current_vonorms);
+    let is_obtuse = conorms.iter().all(|&c| c <= tolerance);
 
-    // Step 2: Check if already obtuse (all conorms <= 0)
-    let is_obtuse = conorms.iter().all(|&c| c <= 0.0);
-
-    // Step 2b: If not obtuse, apply Selling reduction and track transformation
+    // Step 2: If not obtuse, apply Selling reduction
     let selling_transform = if !is_obtuse {
-        let (reduced_vonorms, transform) = selling_reduce_with_transform(&current_vonorms, 0.0, 500);
-        current_vonorms = reduced_vonorms;
+        let (reduced, transform) = selling_reduce_with_transform(&current_vonorms, tolerance, 500);
+        current_vonorms = reduced;
         Some(transform)
     } else {
         None
     };
 
-    // Step 3: Find zero conorm indices (exact equality for discretized)
-    let zero_idxs = find_zero_indices_exact(&compute_conorms(&current_vonorms));
-
-    // Step 4: Get permissible permutations
-    let perm_to_mats = match PERMUTATIONS.zero_to_perm_to_mats.get(&zero_idxs) {
-        Some(p) => p,
-        None => panic!("Invalid zero conorm set: {:?}", zero_idxs),
+    // Step 3: Find zero conorm indices
+    let final_conorms = compute_conorms(&current_vonorms);
+    let zero_idxs = if use_rounding {
+        find_zero_indices_tol(&final_conorms, tolerance)
+    } else {
+        find_zero_indices_exact(&final_conorms)
     };
 
-    // Step 5: Apply all permutations and find lexicographically smallest
-    let mut permuted_vonorms: Vec<(Vec<f64>, Vec<Vec<i32>>)> = Vec::new();
+    // Step 4: Get permissible permutations
+    let perm_to_mats = PERMUTATIONS.zero_to_perm_to_mats.get(&zero_idxs)
+        .unwrap_or_else(|| panic!("Invalid zero conorm set: {:?}", zero_idxs));
+
+    // Step 5: Apply all permutations
+    // Store (sort_key, actual_vonorms, matrices)
+    let sorting_decimal_places = 5;
+    let mut candidates: Vec<(Vec<f64>, Vec<f64>, Vec<Vec<i32>>)> = Vec::new();
 
     for (conorm_perm, mat_list) in perm_to_mats.iter() {
-        // Convert conorm perm to vonorm perm using pre-loaded mapping
         let vonorm_perm = PERMUTATIONS.conorm_to_vonorm_perm.get(conorm_perm)
-            .unwrap_or_else(|| panic!("No vonorm permutation found for conorm permutation: {:?}", conorm_perm));
+            .unwrap_or_else(|| panic!("No vonorm perm for conorm perm: {:?}", conorm_perm));
 
-        // Apply permutation
-        let mut permuted = [0.0; 7];
-        for (i, &idx) in vonorm_perm.iter().enumerate() {
-            if idx < 7 && i < 7 {
-                permuted[i] = current_vonorms[idx];
-            }
-        }
+        let permuted = apply_vonorm_perm(&current_vonorms, vonorm_perm);
+        let permuted_vec = permuted.to_vec();
 
-        // Clone the matrix list for this permutation
-        let matrices: Vec<Vec<i32>> = mat_list.iter().map(|mat| {
-            mat.iter().flat_map(|row| row.iter().copied()).collect()
-        }).collect();
+        let sort_key = if use_rounding {
+            permuted.iter().map(|&v| round_to_decimal_places(v, sorting_decimal_places)).collect()
+        } else {
+            permuted_vec.clone()
+        };
 
-        permuted_vonorms.push((permuted.to_vec(), matrices));
+        let matrices: Vec<Vec<i32>> = mat_list.iter()
+            .map(|mat| mat.iter().flat_map(|row| row.iter().copied()).collect())
+            .collect();
+
+        candidates.push((sort_key, permuted_vec, matrices));
     }
 
-    // Step 6: Sort to find canonical
-    permuted_vonorms.sort_by(|a, b| {
-        for (x, y) in a.0.iter().zip(b.0.iter()) {
-            match x.partial_cmp(y) {
-                Some(std::cmp::Ordering::Equal) => continue,
-                Some(ord) => return ord,
-                None => continue,
-            }
-        }
-        std::cmp::Ordering::Equal
+    // Step 6: Sort to find canonical (by sort_key)
+    candidates.sort_by(|a, b| {
+        a.0.iter().zip(b.0.iter())
+            .find_map(|(x, y)| match x.partial_cmp(y) {
+                Some(std::cmp::Ordering::Equal) => None,
+                ord => ord,
+            })
+            .unwrap_or(std::cmp::Ordering::Equal)
     });
 
-    let canonical = permuted_vonorms[0].0.clone();
+    let canonical = candidates[0].1.clone();
+    let canonical_key = &candidates[0].0;
 
-    // Find all equivalent transformations (those that give the canonical form)
-    let mut all_equivalent_mats: Vec<Vec<i32>> = Vec::new();
-    for (perm_vonorms, matrices) in &permuted_vonorms {
-        if perm_vonorms == &canonical {
-            all_equivalent_mats.extend(matrices.clone());
-        }
-    }
+    // Collect all equivalent matrices
+    let all_equivalent_mats: Vec<Vec<i32>> = candidates.iter()
+        .filter(|(key, _, _)| key == canonical_key)
+        .flat_map(|(_, _, mats)| mats.clone())
+        .collect();
 
-    // Convert selling transform to flat array if present
+    // Convert selling transform to flat array
     let selling_flat = selling_transform.map(|mat| {
         mat.iter().flat_map(|row| row.iter().copied()).collect()
     });
@@ -294,111 +309,16 @@ pub fn build_lnf_raw_discretized(vonorms: &[f64; 7]) -> (Vec<f64>, Vec<usize>, O
     (canonical, zero_idxs, selling_flat, all_equivalent_mats)
 }
 
-/// Round a float to specified number of decimal places
-fn round_to_decimal_places(value: f64, decimal_places: u32) -> f64 {
-    let multiplier = 10f64.powi(decimal_places as i32);
-    (value * multiplier).round() / multiplier
+/// Fast LNF construction for discretized vonorms (exact equality)
+pub fn build_lnf_raw_discretized(vonorms: &[f64; 7]) -> (Vec<f64>, Vec<usize>, Option<Vec<i32>>, Vec<Vec<i32>>) {
+    build_lnf_raw_internal(vonorms, None)
 }
 
 /// Fast LNF construction for float vonorms (tolerance-based comparisons)
-///
-/// Returns:
-/// - canonical vonorms
-/// - zero conorm indices
-/// - selling transformation matrix (None if no reduction needed)
-/// - sorting permutation matrices (matrices that give the canonical form)
 pub fn build_lnf_raw_float(vonorms: &[f64; 7], tol: f64) -> (Vec<f64>, Vec<usize>, Option<Vec<i32>>, Vec<Vec<i32>>) {
-    // Step 1: Compute conorms
-    let mut current_vonorms = *vonorms;
-    let conorms = compute_conorms(&current_vonorms);
-
-    // Step 2: Check if already obtuse (all conorms <= tol)
-    let is_obtuse = conorms.iter().all(|&c| c <= tol);
-
-    // Step 2b: If not obtuse, apply Selling reduction and track transformation
-    let selling_transform = if !is_obtuse {
-        let (reduced_vonorms, transform) = selling_reduce_with_transform(&current_vonorms, tol, 500);
-        current_vonorms = reduced_vonorms;
-        Some(transform)
-    } else {
-        None
-    };
-
-    // Step 3: Find zero conorm indices (tolerance-based for floats)
-    let zero_idxs = find_zero_indices_tol(&compute_conorms(&current_vonorms), tol);
-
-    // Step 4: Get permissible permutations
-    let perm_to_mats = match PERMUTATIONS.zero_to_perm_to_mats.get(&zero_idxs) {
-        Some(p) => p,
-        None => panic!("Invalid zero conorm set: {:?}", zero_idxs),
-    };
-
-    // Step 5: Apply all permutations and round for sorting (to handle float precision)
-    let sorting_decimal_places = 5; // Match Python's sorting_dec_places
-    let mut permuted_vonorms: Vec<(Vec<f64>, Vec<f64>, Vec<Vec<i32>>)> = Vec::new();
-
-    for (conorm_perm, mat_list) in perm_to_mats.iter() {
-        // Convert conorm perm to vonorm perm using pre-loaded mapping
-        let vonorm_perm = PERMUTATIONS.conorm_to_vonorm_perm.get(conorm_perm)
-            .unwrap_or_else(|| panic!("No vonorm permutation found for conorm permutation: {:?}", conorm_perm));
-
-        // Apply permutation
-        let mut permuted = [0.0; 7];
-        for (i, &idx) in vonorm_perm.iter().enumerate() {
-            if idx < 7 && i < 7 {
-                permuted[i] = current_vonorms[idx];
-            }
-        }
-
-        // Round for sorting to avoid float precision issues
-        let rounded: Vec<f64> = permuted.iter()
-            .map(|&v| round_to_decimal_places(v, sorting_decimal_places))
-            .collect();
-
-        // Clone the matrix list for this permutation
-        let matrices: Vec<Vec<i32>> = mat_list.iter().map(|mat| {
-            mat.iter().flat_map(|row| row.iter().copied()).collect()
-        }).collect();
-
-        permuted_vonorms.push((rounded, permuted.to_vec(), matrices));
-    }
-
-    // Step 6: Sort by rounded values to find canonical
-    permuted_vonorms.sort_by(|a, b| {
-        for (x, y) in a.0.iter().zip(b.0.iter()) {
-            match x.partial_cmp(y) {
-                Some(std::cmp::Ordering::Equal) => continue,
-                Some(ord) => return ord,
-                None => continue,
-            }
-        }
-        std::cmp::Ordering::Equal
-    });
-
-    // Use the unrounded canonical vonorms
-    let canonical = permuted_vonorms[0].1.clone();
-    let canonical_rounded = &permuted_vonorms[0].0;
-
-    // Find all equivalent transformations (compare rounded values)
-    let mut all_equivalent_mats: Vec<Vec<i32>> = Vec::new();
-    for (rounded, _unrounded, matrices) in &permuted_vonorms {
-        if rounded == canonical_rounded {
-            all_equivalent_mats.extend(matrices.clone());
-        }
-    }
-
-    // Convert selling transform to flat array if present
-    let selling_flat = selling_transform.map(|mat| {
-        mat.iter().flat_map(|row| row.iter().copied()).collect()
-    });
-
-    (canonical, zero_idxs, selling_flat, all_equivalent_mats)
+    build_lnf_raw_internal(vonorms, Some(tol))
 }
 
-/// Fast stabilizer computation for discretized vonorms
-///
-/// Returns a flat Vec of matrices (each matrix is 9 elements in row-major order)
-/// to avoid Python object creation overhead.
 /// Internal helper for finding stabilizers with custom equality check
 fn find_stabilizers_internal<F>(
     vonorms: &[f64; 7],
@@ -408,34 +328,22 @@ fn find_stabilizers_internal<F>(
 where
     F: Fn(&[f64; 7], &[f64; 7]) -> bool,
 {
-    // Get permutations from pre-computed mapping
     let perm_to_mats = match PERMUTATIONS.zero_to_perm_to_mats.get(&zero_idxs) {
         Some(p) => p,
-        None => return Vec::new(), // No valid permutations
+        None => return Vec::new(),
     };
 
     let mut stabilizers = Vec::new();
 
-    // Iterate over conorm permutations and check which preserve vonorms
     for (conorm_perm, mat_list) in perm_to_mats.iter() {
-        // Get vonorm permutation
         let vonorm_perm = match PERMUTATIONS.conorm_to_vonorm_perm.get(conorm_perm) {
             Some(p) => p,
             None => continue,
         };
 
-        // Apply permutation
-        let mut permuted = [0.0; 7];
-        for (i, &idx) in vonorm_perm.iter().enumerate() {
-            if idx < 7 && i < 7 {
-                permuted[i] = vonorms[idx];
-            }
-        }
+        let permuted = apply_vonorm_perm(vonorms, vonorm_perm);
 
-        // Check if permutation preserves vonorms using custom equality
-        let matches = equals(&permuted, vonorms);
-        if matches {
-            // Add all matrices for this permutation (flattened to row-major)
+        if equals(&permuted, vonorms) {
             for mat in mat_list {
                 for row in mat {
                     stabilizers.extend_from_slice(row);
@@ -477,131 +385,46 @@ pub fn find_stabilizers_raw_float(vonorms: &[f64; 7], tol: f64) -> Vec<i32> {
 /// Combine and deduplicate stabilizer matrices
 ///
 /// Computes all combinations s1[i] @ middle @ s2[j] and deduplicates.
-/// This replaces the Python einsum + deduplication code.
-///
-/// Returns a flat Vec of unique matrices (each matrix is 9 elements in row-major order)
+/// Returns a flat Vec of unique matrices (9 elements per matrix in row-major order)
 pub fn combine_stabilizers(
     s1_flat: &[i32],
     s2_flat: &[i32],
     middle: &[[i32; 3]; 3],
 ) -> Vec<i32> {
-    use std::collections::HashSet;
+    let s1_matrices = parse_flat_to_matrices(s1_flat);
+    let s2_matrices = parse_flat_to_matrices(s2_flat);
 
-    // Convert flat arrays to matrix arrays
-    let n1 = s1_flat.len() / 9;
-    let n2 = s2_flat.len() / 9;
+    let mut unique: HashSet<[i32; 9]> = HashSet::new();
 
-    let mut s1_matrices = Vec::with_capacity(n1);
-    for i in 0..n1 {
-        let offset = i * 9;
-        let mat = [
-            [s1_flat[offset], s1_flat[offset + 1], s1_flat[offset + 2]],
-            [s1_flat[offset + 3], s1_flat[offset + 4], s1_flat[offset + 5]],
-            [s1_flat[offset + 6], s1_flat[offset + 7], s1_flat[offset + 8]],
-        ];
-        s1_matrices.push(mat);
-    }
-
-    let mut s2_matrices = Vec::with_capacity(n2);
-    for i in 0..n2 {
-        let offset = i * 9;
-        let mat = [
-            [s2_flat[offset], s2_flat[offset + 1], s2_flat[offset + 2]],
-            [s2_flat[offset + 3], s2_flat[offset + 4], s2_flat[offset + 5]],
-            [s2_flat[offset + 6], s2_flat[offset + 7], s2_flat[offset + 8]],
-        ];
-        s2_matrices.push(mat);
-    }
-
-    // Use HashSet for automatic deduplication
-    // We'll use the flattened matrix as the key
-    let mut unique_matrices: HashSet<[i32; 9]> = HashSet::new();
-
-    // Compute all combinations
     for s1 in &s1_matrices {
-        // Pre-compute s1 @ middle
         let temp = mat_mul(s1, middle);
-
         for s2 in &s2_matrices {
-            // Compute (s1 @ middle) @ s2
-            let result = mat_mul(&temp, s2);
-
-            // Flatten and add to set
-            let flat = [
-                result[0][0], result[0][1], result[0][2],
-                result[1][0], result[1][1], result[1][2],
-                result[2][0], result[2][1], result[2][2],
-            ];
-            unique_matrices.insert(flat);
+            unique.insert(mat_to_flat(&mat_mul(&temp, s2)));
         }
     }
 
-    // Convert HashSet to flat Vec
-    let mut result = Vec::with_capacity(unique_matrices.len() * 9);
-    for mat in unique_matrices {
-        result.extend_from_slice(&mat);
-    }
-
-    result
+    unique.into_iter().flat_map(|m| m).collect()
 }
 
-/// OPTIMIZED: Combine middle transformation with s2 stabilizers only
+/// Combine middle transformation with s2 stabilizers only (optimized version)
 ///
-/// This skips the orbit through s1 stabilizers, computing only middle @ s2.
-/// This is much faster (5.43x speedup for CNF construction) but assumes
-/// orbiting through s1 is unnecessary. Use the full combine_stabilizers
-/// if this optimization proves incorrect.
+/// Computes middle @ s2 for each s2, skipping the s1 orbit.
+/// ~5x faster than full combine_stabilizers for CNF construction.
 pub fn combine_middle_and_s2_stabilizers(
     s2_flat: &[i32],
     middle: &[[i32; 3]; 3],
 ) -> Vec<i32> {
-    use std::collections::HashSet;
+    let s2_matrices = parse_flat_to_matrices(s2_flat);
 
-    // Convert flat array to matrix arrays
-    let n2 = s2_flat.len() / 9;
+    let unique: HashSet<[i32; 9]> = s2_matrices.iter()
+        .map(|s2| mat_to_flat(&mat_mul(middle, s2)))
+        .collect();
 
-    let mut s2_matrices = Vec::with_capacity(n2);
-    for i in 0..n2 {
-        let offset = i * 9;
-        let mat = [
-            [s2_flat[offset], s2_flat[offset + 1], s2_flat[offset + 2]],
-            [s2_flat[offset + 3], s2_flat[offset + 4], s2_flat[offset + 5]],
-            [s2_flat[offset + 6], s2_flat[offset + 7], s2_flat[offset + 8]],
-        ];
-        s2_matrices.push(mat);
-    }
-
-    // Use HashSet for automatic deduplication
-    let mut unique_matrices: HashSet<[i32; 9]> = HashSet::new();
-
-    // Compute middle @ s2 for each s2
-    for s2 in &s2_matrices {
-        let result = mat_mul(middle, s2);
-
-        // Flatten and add to set
-        let flat = [
-            result[0][0], result[0][1], result[0][2],
-            result[1][0], result[1][1], result[1][2],
-            result[2][0], result[2][1], result[2][2],
-        ];
-        unique_matrices.insert(flat);
-    }
-
-    // Convert HashSet to flat Vec
-    let mut result_vec = Vec::with_capacity(unique_matrices.len() * 9);
-    for mat in unique_matrices {
-        result_vec.extend_from_slice(&mat);
-    }
-
-    result_vec
+    unique.into_iter().flat_map(|m| m).collect()
 }
 
 /// Check if vonorms have valid conorms
-/// Matches Python's VonormList.has_valid_conorms_exact()
-/// Python checks if zero_idxs are in ZERO_CONORM_SETS_TO_PERMUTATIONS_TO_UNIMOD_MATS
 pub fn has_valid_conorms_exact(vonorms: &[f64; 7]) -> bool {
-    use crate::permutations::{compute_conorms, find_zero_indices_exact, PERMUTATIONS};
-
     let conorms = compute_conorms(vonorms);
     let zero_indices = find_zero_indices_exact(&conorms);
 

@@ -158,15 +158,12 @@ pub fn find_zero_indices_exact(conorms: &[f64; 6]) -> Vec<usize> {
 }
 
 /// Apply a vonorm permutation to get permuted vonorms
-fn apply_vonorm_permutation(vonorms: &[f64; 7], perm: &[usize]) -> [f64; 7] {
+#[inline]
+pub fn apply_vonorm_perm(vonorms: &[f64; 7], perm: &[usize]) -> [f64; 7] {
+    debug_assert!(perm.len() >= 7);
     [
-        vonorms[perm[0]],
-        vonorms[perm[1]],
-        vonorms[perm[2]],
-        vonorms[perm[3]],
-        vonorms[perm[4]],
-        vonorms[perm[5]],
-        vonorms[perm[6]],
+        vonorms[perm[0]], vonorms[perm[1]], vonorms[perm[2]], vonorms[perm[3]],
+        vonorms[perm[4]], vonorms[perm[5]], vonorms[perm[6]],
     ]
 }
 
@@ -193,7 +190,7 @@ pub fn get_s4_representatives(
             let mut candidates: Vec<([f64; 7], usize)> = group.vonorm_perms
                 .iter()
                 .enumerate()
-                .map(|(idx, perm)| (apply_vonorm_permutation(vonorms, perm), idx))
+                .map(|(idx, perm)| (apply_vonorm_perm(vonorms, perm), idx))
                 .collect();
 
             // Sort by vonorm tuple (ascending)

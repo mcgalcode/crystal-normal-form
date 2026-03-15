@@ -5,7 +5,7 @@
 
 use std::cmp::Ordering;
 
-use crate::linalg::mat_inv_f64;
+use crate::linalg::{mat_inv_f64, parse_flat_to_matrices};
 
 /// Multiply a 3x3 matrix by a 3xN coordinate matrix
 fn matrix_mult_coords(mat: &[[f64; 3]; 3], coords: &[f64], n_atoms: usize) -> Vec<f64> {
@@ -145,42 +145,24 @@ fn sort_coords(coords: &[f64], atom_labels: &[usize], n_atoms: usize) -> Vec<f64
 }
 
 /// Extract MNF string from sorted coordinates (skip first atom, which is at origin)
+#[inline]
 fn extract_mnf(coords: &[f64], n_atoms: usize) -> Vec<f64> {
-    // Skip first 3 elements (the origin atom at 0,0,0)
     coords[3..n_atoms * 3].to_vec()
 }
 
-/// Build MNF using vectorized algorithm
+/// Core MNF algorithm: compute canonical MNF for a single coordinate set
 ///
-/// Returns the lexicographically smallest MNF coordinates
-pub fn build_mnf_vectorized(
-    coords: &[f64],           // Flat array of 3*n_atoms coordinates (x,y,z for each atom)
+/// Takes pre-parsed stabilizers to allow sharing across batch calls.
+fn compute_canonical_mnf(
+    coords: &[f64],
+    stabilizers: &[[[i32; 3]; 3]],
     n_atoms: usize,
-    atom_labels: &[usize],    // Element label for each atom (0, 1, 2, etc.)
-    num_origin_atoms: usize,  // Number of atoms with the first element type
-    stabilizers_flat: &[i32], // Flat array of stabilizer matrices
-    mod_val: f64,             // Modulus (1.0 for fractional, delta for discretized)
+    atom_labels: &[usize],
+    num_origin_atoms: usize,
+    mod_val: f64,
 ) -> Vec<f64> {
-    // Handle single atom case
-    if n_atoms == 1 {
-        return vec![];
-    }
-
-    // Parse stabilizers
-    let n_stabilizers = stabilizers_flat.len() / 9;
-    let mut stabilizers = Vec::with_capacity(n_stabilizers);
-    for i in 0..n_stabilizers {
-        let offset = i * 9;
-        let mat = [
-            [stabilizers_flat[offset], stabilizers_flat[offset + 1], stabilizers_flat[offset + 2]],
-            [stabilizers_flat[offset + 3], stabilizers_flat[offset + 4], stabilizers_flat[offset + 5]],
-            [stabilizers_flat[offset + 6], stabilizers_flat[offset + 7], stabilizers_flat[offset + 8]],
-        ];
-        stabilizers.push(mat);
-    }
-
     // Step 1: Apply all stabilizers
-    let stabilized_mats = apply_stabilizers(&stabilizers, coords, n_atoms, mod_val);
+    let stabilized_mats = apply_stabilizers(stabilizers, coords, n_atoms, mod_val);
 
     // Step 2: Generate all shifts for each stabilized motif
     let mut all_shifted = Vec::new();
@@ -190,108 +172,66 @@ pub fn build_mnf_vectorized(
     }
 
     // Step 3: Sort each shifted motif
-    let mut sorted_mats = Vec::with_capacity(all_shifted.len());
-    for coords in all_shifted {
-        let sorted = sort_coords(&coords, atom_labels, n_atoms);
-        sorted_mats.push(sorted);
-    }
-
-    // Step 4: Extract MNF strings
-    let mut mnf_strings: Vec<Vec<f64>> = sorted_mats
-        .iter()
-        .map(|coords| extract_mnf(coords, n_atoms))
+    let sorted_mats: Vec<Vec<f64>> = all_shifted
+        .into_iter()
+        .map(|c| sort_coords(&c, atom_labels, n_atoms))
         .collect();
 
-    // Step 5: Find lexicographically smallest
+    // Step 4: Extract MNF strings and find lexicographically smallest
+    let mut mnf_strings: Vec<Vec<f64>> = sorted_mats
+        .iter()
+        .map(|c| extract_mnf(c, n_atoms))
+        .collect();
+
     mnf_strings.sort_by(|a, b| {
-        for (x, y) in a.iter().zip(b.iter()) {
-            match x.partial_cmp(y) {
-                Some(Ordering::Equal) => continue,
-                Some(ord) => return ord,
-                None => continue,
-            }
-        }
-        Ordering::Equal
+        a.iter().zip(b.iter())
+            .find_map(|(x, y)| match x.partial_cmp(y) {
+                Some(Ordering::Equal) => None,
+                ord => ord,
+            })
+            .unwrap_or(Ordering::Equal)
     });
 
-    mnf_strings[0].clone()
+    mnf_strings.swap_remove(0)
+}
+
+/// Build MNF using vectorized algorithm
+///
+/// Returns the lexicographically smallest MNF coordinates
+pub fn build_mnf_vectorized(
+    coords: &[f64],
+    n_atoms: usize,
+    atom_labels: &[usize],
+    num_origin_atoms: usize,
+    stabilizers_flat: &[i32],
+    mod_val: f64,
+) -> Vec<f64> {
+    if n_atoms == 1 {
+        return vec![];
+    }
+    let stabilizers = parse_flat_to_matrices(stabilizers_flat);
+    compute_canonical_mnf(coords, &stabilizers, n_atoms, atom_labels, num_origin_atoms, mod_val)
 }
 
 /// Build MNFs for many coordinate sets in batch
 ///
-/// This processes all coordinate sets in one call, sharing stabilizer parsing and
-/// avoiding Python/Rust boundary overhead.
-///
-/// Returns a vector of MNF coordinate vectors (one per input coordinate set)
+/// Parses stabilizers once and reuses across all coordinate sets.
 pub fn build_mnf_batch(
-    coords_batch: &[Vec<f64>],    // Vector of coordinate sets, each [x1,y1,z1,x2,y2,z2,...]
+    coords_batch: &[Vec<f64>],
     n_atoms: usize,
-    atom_labels: &[usize],        // Element label for each atom (shared across all)
-    num_origin_atoms: usize,      // Number of origin atoms (shared across all)
-    stabilizers_flat: &[i32],     // Flat array of stabilizer matrices (shared across all)
-    mod_val: f64,                 // Modulus (shared across all)
+    atom_labels: &[usize],
+    num_origin_atoms: usize,
+    stabilizers_flat: &[i32],
+    mod_val: f64,
 ) -> Vec<Vec<f64>> {
-    // Handle single atom case
     if n_atoms == 1 {
         return vec![vec![]; coords_batch.len()];
     }
-
-    // Parse stabilizers once for all coordinate sets
-    let n_stabilizers = stabilizers_flat.len() / 9;
-    let mut stabilizers = Vec::with_capacity(n_stabilizers);
-    for i in 0..n_stabilizers {
-        let offset = i * 9;
-        let mat = [
-            [stabilizers_flat[offset], stabilizers_flat[offset + 1], stabilizers_flat[offset + 2]],
-            [stabilizers_flat[offset + 3], stabilizers_flat[offset + 4], stabilizers_flat[offset + 5]],
-            [stabilizers_flat[offset + 6], stabilizers_flat[offset + 7], stabilizers_flat[offset + 8]],
-        ];
-        stabilizers.push(mat);
-    }
-
-    // Process each coordinate set
-    let mut results = Vec::with_capacity(coords_batch.len());
-
-    for coords in coords_batch {
-        // Step 1: Apply all stabilizers
-        let stabilized_mats = apply_stabilizers(&stabilizers, coords, n_atoms, mod_val);
-
-        // Step 2: Generate all shifts for each stabilized motif
-        let mut all_shifted = Vec::new();
-        for stab_coords in stabilized_mats {
-            let shifted = generate_all_shifts(&stab_coords, n_atoms, num_origin_atoms, mod_val);
-            all_shifted.extend(shifted);
-        }
-
-        // Step 3: Sort each shifted motif
-        let mut sorted_mats = Vec::with_capacity(all_shifted.len());
-        for coord_set in all_shifted {
-            let sorted = sort_coords(&coord_set, atom_labels, n_atoms);
-            sorted_mats.push(sorted);
-        }
-
-        // Step 4: Extract MNF strings
-        let mut mnf_strings: Vec<Vec<f64>> = sorted_mats
-            .iter()
-            .map(|coords| extract_mnf(coords, n_atoms))
-            .collect();
-
-        // Step 5: Find lexicographically smallest
-        mnf_strings.sort_by(|a, b| {
-            for (x, y) in a.iter().zip(b.iter()) {
-                match x.partial_cmp(y) {
-                    Some(Ordering::Equal) => continue,
-                    Some(ord) => return ord,
-                    None => continue,
-                }
-            }
-            Ordering::Equal
-        });
-
-        results.push(mnf_strings[0].clone());
-    }
-
-    results
+    let stabilizers = parse_flat_to_matrices(stabilizers_flat);
+    coords_batch
+        .iter()
+        .map(|coords| compute_canonical_mnf(coords, &stabilizers, n_atoms, atom_labels, num_origin_atoms, mod_val))
+        .collect()
 }
 
 /// Compute atom labels from atom symbols.
@@ -315,43 +255,6 @@ pub fn compute_atom_labels(atoms: &[String]) -> Vec<usize> {
     }
 
     labels
-}
-
-/// Sort coordinates by (atom_label, x, y, z) lexicographically
-/// coords: flat array [x1, y1, z1, x2, y2, z2, ...]
-/// Returns sorted coordinates in same format
-fn sort_coords_by_labels(coords: &[f64], atom_labels: &[usize], n_atoms: usize) -> Vec<f64> {
-    // Create vector of (label, x, y, z, original_index)
-    let mut indexed_coords: Vec<(usize, f64, f64, f64, usize)> = Vec::with_capacity(n_atoms);
-
-    for i in 0..n_atoms {
-        let offset = i * 3;
-        indexed_coords.push((
-            atom_labels[i],
-            coords[offset],
-            coords[offset + 1],
-            coords[offset + 2],
-            i,
-        ));
-    }
-
-    // Sort by (label, x, y, z) - lexicographic ordering
-    indexed_coords.sort_by(|a, b| {
-        a.0.cmp(&b.0)
-            .then(a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal))
-            .then(a.2.partial_cmp(&b.2).unwrap_or(Ordering::Equal))
-            .then(a.3.partial_cmp(&b.3).unwrap_or(Ordering::Equal))
-    });
-
-    // Extract sorted coordinates
-    let mut sorted = Vec::with_capacity(coords.len());
-    for (_, x, y, z, _) in indexed_coords {
-        sorted.push(x);
-        sorted.push(y);
-        sorted.push(z);
-    }
-
-    sorted
 }
 
 /// Generate motif perturbations
@@ -414,18 +317,8 @@ pub fn find_and_canonicalize_motif_neighbors(
     // Count origin atoms (atoms matching the first atom)
     let num_origin_atoms = atoms.iter().filter(|a| *a == &atoms[0]).count();
 
-    // Reshape stabilizers
-    let n_stabilizers = stabilizers_flat.len() / 9;
-    let mut stabilizers: Vec<[[i32; 3]; 3]> = Vec::with_capacity(n_stabilizers);
-    for i in 0..n_stabilizers {
-        let offset = i * 9;
-        let mat = [
-            [stabilizers_flat[offset], stabilizers_flat[offset + 1], stabilizers_flat[offset + 2]],
-            [stabilizers_flat[offset + 3], stabilizers_flat[offset + 4], stabilizers_flat[offset + 5]],
-            [stabilizers_flat[offset + 6], stabilizers_flat[offset + 7], stabilizers_flat[offset + 8]],
-        ];
-        stabilizers.push(mat);
-    }
+    // Parse stabilizers using shared utility
+    let stabilizers = parse_flat_to_matrices(stabilizers_flat);
 
     // Convert motif_coords to f64 and prepend origin
     let mut coords_f64 = vec![0.0, 0.0, 0.0]; // Origin at [0, 0, 0]
@@ -443,7 +336,7 @@ pub fn find_and_canonicalize_motif_neighbors(
         move_into_bounds(&mut transformed, delta as f64);
 
         // Sort by (atom_label, x, y, z)
-        let sorted = sort_coords_by_labels(&transformed, &atom_labels, n_atoms);
+        let sorted = sort_coords(&transformed, &atom_labels, n_atoms);
 
         // Extract coords excluding origin and convert to i32
         let sorted_mnf: Vec<i32> = sorted[3..]  // Skip first 3 (origin)

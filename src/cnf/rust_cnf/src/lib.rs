@@ -10,6 +10,32 @@ mod heuristics;
 use pyo3::prelude::*;
 use numpy::{PyArray1, PyArrayMethods, PyReadonlyArray1};
 
+// =============================================================================
+// Helper functions for PyO3 type conversions
+// =============================================================================
+
+/// Validate and convert a vonorms slice to a fixed-size array
+#[inline]
+fn validate_and_convert_vonorms(slice: &[f64]) -> PyResult<[f64; 7]> {
+    if slice.len() != 7 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "vonorms must have exactly 7 elements"
+        ));
+    }
+    Ok(slice_to_vonorms(slice))
+}
+
+/// Validate and convert a middle matrix from flat array
+#[inline]
+fn validate_and_convert_middle(slice: &[i32]) -> PyResult<[[i32; 3]; 3]> {
+    if slice.len() != 9 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "middle matrix must have exactly 9 elements (3x3)"
+        ));
+    }
+    Ok(flat9_to_mat3x3(slice))
+}
+
 /// Rust implementation of build_lnf_raw for discretized vonorms (exact equality)
 /// Returns: (canonical_vonorms, zero_idxs, selling_transform_flat, sorting_matrices)
 #[pyfunction]
@@ -17,19 +43,8 @@ fn build_lnf_raw_rust<'py>(
     py: Python<'py>,
     vonorms: PyReadonlyArray1<f64>,
 ) -> PyResult<(Py<PyArray1<f64>>, Vec<usize>, Option<Vec<i32>>, Vec<Vec<i32>>)> {
-    let vonorms_arr = vonorms.as_array();
-
-    // Convert to fixed-size array
-    if vonorms_arr.len() != 7 {
-        return Err(pyo3::exceptions::PyValueError::new_err(
-            "vonorms must have exactly 7 elements"
-        ));
-    }
-
-    let mut vonorms_fixed = [0.0; 7];
-    for (i, &v) in vonorms_arr.iter().enumerate() {
-        vonorms_fixed[i] = v;
-    }
+    let vonorms_slice = vonorms.as_slice()?;
+    let vonorms_fixed = validate_and_convert_vonorms(vonorms_slice)?;
 
     // Call Rust implementation (discretized version)
     let (canonical, zero_idxs, selling_flat, sorting_mats) = lnf::build_lnf_raw_discretized(&vonorms_fixed);
@@ -48,19 +63,8 @@ fn build_lnf_raw_float_rust<'py>(
     vonorms: PyReadonlyArray1<f64>,
     tol: f64,
 ) -> PyResult<(Py<PyArray1<f64>>, Vec<usize>, Option<Vec<i32>>, Vec<Vec<i32>>)> {
-    let vonorms_arr = vonorms.as_array();
-
-    // Convert to fixed-size array
-    if vonorms_arr.len() != 7 {
-        return Err(pyo3::exceptions::PyValueError::new_err(
-            "vonorms must have exactly 7 elements"
-        ));
-    }
-
-    let mut vonorms_fixed = [0.0; 7];
-    for (i, &v) in vonorms_arr.iter().enumerate() {
-        vonorms_fixed[i] = v;
-    }
+    let vonorms_slice = vonorms.as_slice()?;
+    let vonorms_fixed = validate_and_convert_vonorms(vonorms_slice)?;
 
     // Call Rust implementation (float version with tolerance)
     let (canonical, zero_idxs, selling_flat, sorting_mats) = lnf::build_lnf_raw_float(&vonorms_fixed, tol);
@@ -78,45 +82,14 @@ fn find_stabilizers_rust<'py>(
     py: Python<'py>,
     vonorms: PyReadonlyArray1<f64>,
 ) -> PyResult<Py<pyo3::PyAny>> {
-    let vonorms_arr = vonorms.as_array();
-
-    // Convert to fixed-size array
-    if vonorms_arr.len() != 7 {
-        return Err(pyo3::exceptions::PyValueError::new_err(
-            "vonorms must have exactly 7 elements"
-        ));
-    }
-
-    let mut vonorms_fixed = [0.0; 7];
-    for (i, &v) in vonorms_arr.iter().enumerate() {
-        vonorms_fixed[i] = v;
-    }
+    let vonorms_slice = vonorms.as_slice()?;
+    let vonorms_fixed = validate_and_convert_vonorms(vonorms_slice)?;
 
     // Call Rust implementation - returns flat Vec<i32>
     let stabilizers_flat = lnf::find_stabilizers_raw(&vonorms_fixed);
 
-    // Reshape to (N, 3, 3) where N = len / 9
-    let n_matrices = stabilizers_flat.len() / 9;
-
-    if n_matrices == 0 {
-        // Return empty (0, 3, 3) array
-        let empty: Vec<Vec<Vec<i32>>> = Vec::new();
-        return Ok(pyo3::types::PyList::new_bound(py, empty).into());
-    }
-
-    // Convert to 3D structure
-    let mut matrices: Vec<Vec<Vec<i32>>> = Vec::with_capacity(n_matrices);
-    for i in 0..n_matrices {
-        let start = i * 9;
-        let mat = vec![
-            stabilizers_flat[start..start+3].to_vec(),
-            stabilizers_flat[start+3..start+6].to_vec(),
-            stabilizers_flat[start+6..start+9].to_vec(),
-        ];
-        matrices.push(mat);
-    }
-
-    // Convert to nested Python lists (PyO3 will handle the conversion)
+    // Convert to nested Python list
+    let matrices = flat_matrices_to_nested(&stabilizers_flat);
     Ok(pyo3::types::PyList::new_bound(py, matrices).into())
 }
 
@@ -128,45 +101,14 @@ fn find_stabilizers_rust_float<'py>(
     vonorms: PyReadonlyArray1<f64>,
     tol: f64,
 ) -> PyResult<Py<pyo3::PyAny>> {
-    let vonorms_arr = vonorms.as_array();
-
-    // Convert to fixed-size array
-    if vonorms_arr.len() != 7 {
-        return Err(pyo3::exceptions::PyValueError::new_err(
-            "vonorms must have exactly 7 elements"
-        ));
-    }
-
-    let mut vonorms_fixed = [0.0; 7];
-    for (i, &v) in vonorms_arr.iter().enumerate() {
-        vonorms_fixed[i] = v;
-    }
+    let vonorms_slice = vonorms.as_slice()?;
+    let vonorms_fixed = validate_and_convert_vonorms(vonorms_slice)?;
 
     // Call Rust float implementation - returns flat Vec<i32>
     let stabilizers_flat = lnf::find_stabilizers_raw_float(&vonorms_fixed, tol);
 
-    // Reshape to (N, 3, 3) where N = len / 9
-    let n_matrices = stabilizers_flat.len() / 9;
-
-    if n_matrices == 0 {
-        // Return empty (0, 3, 3) array
-        let empty: Vec<Vec<Vec<i32>>> = Vec::new();
-        return Ok(pyo3::types::PyList::new_bound(py, empty).into());
-    }
-
-    // Convert to 3D structure
-    let mut matrices: Vec<Vec<Vec<i32>>> = Vec::with_capacity(n_matrices);
-    for i in 0..n_matrices {
-        let start = i * 9;
-        let mat = vec![
-            stabilizers_flat[start..start+3].to_vec(),
-            stabilizers_flat[start+3..start+6].to_vec(),
-            stabilizers_flat[start+6..start+9].to_vec(),
-        ];
-        matrices.push(mat);
-    }
-
-    // Convert to nested Python lists (PyO3 will handle the conversion)
+    // Convert to nested Python list
+    let matrices = flat_matrices_to_nested(&stabilizers_flat);
     Ok(pyo3::types::PyList::new_bound(py, matrices).into())
 }
 
@@ -181,44 +123,18 @@ fn combine_stabilizers_rust<'py>(
     s2_flat: PyReadonlyArray1<i32>,
     middle_2d: PyReadonlyArray1<i32>,
 ) -> PyResult<Py<pyo3::PyAny>> {
-    let s1 = s1_flat.as_array();
-    let s2 = s2_flat.as_array();
-    let middle_flat = middle_2d.as_array();
-
-    // Convert middle to 3x3 matrix
-    if middle_flat.len() != 9 {
-        return Err(pyo3::exceptions::PyValueError::new_err(
-            "middle matrix must have exactly 9 elements (3x3)"
-        ));
-    }
-
-    let middle = [
-        [middle_flat[0], middle_flat[1], middle_flat[2]],
-        [middle_flat[3], middle_flat[4], middle_flat[5]],
-        [middle_flat[6], middle_flat[7], middle_flat[8]],
-    ];
+    let middle_slice = middle_2d.as_slice()?;
+    let middle = validate_and_convert_middle(middle_slice)?;
 
     // Call Rust implementation
     let result_flat = lnf::combine_stabilizers(
-        s1.as_slice().unwrap(),
-        s2.as_slice().unwrap(),
+        s1_flat.as_slice()?,
+        s2_flat.as_slice()?,
         &middle,
     );
 
-    // Convert to (N, 3, 3) structure
-    let n_matrices = result_flat.len() / 9;
-    let mut matrices: Vec<Vec<Vec<i32>>> = Vec::with_capacity(n_matrices);
-
-    for i in 0..n_matrices {
-        let start = i * 9;
-        let mat = vec![
-            result_flat[start..start+3].to_vec(),
-            result_flat[start+3..start+6].to_vec(),
-            result_flat[start+6..start+9].to_vec(),
-        ];
-        matrices.push(mat);
-    }
-
+    // Convert to nested Python list
+    let matrices = flat_matrices_to_nested(&result_flat);
     Ok(pyo3::types::PyList::new_bound(py, matrices).into())
 }
 
@@ -303,47 +219,14 @@ fn find_and_combine_stabilizers_rust<'py>(
     vonorms2: PyReadonlyArray1<f64>,
     middle_flat: PyReadonlyArray1<i32>,
 ) -> PyResult<Py<PyArray1<i32>>> {
-    // Convert vonorms arrays to fixed-size arrays
-    let vonorms1_arr = vonorms1.as_array();
-    let vonorms2_arr = vonorms2.as_array();
+    let vonorms1_fixed = validate_and_convert_vonorms(vonorms1.as_slice()?)?;
+    let vonorms2_fixed = validate_and_convert_vonorms(vonorms2.as_slice()?)?;
+    let middle = validate_and_convert_middle(middle_flat.as_slice()?)?;
 
-    if vonorms1_arr.len() != 7 || vonorms2_arr.len() != 7 {
-        return Err(pyo3::exceptions::PyValueError::new_err(
-            "vonorms arrays must have exactly 7 elements"
-        ));
-    }
-
-    let mut vonorms1_fixed = [0.0; 7];
-    let mut vonorms2_fixed = [0.0; 7];
-    for i in 0..7 {
-        vonorms1_fixed[i] = vonorms1_arr[i];
-        vonorms2_fixed[i] = vonorms2_arr[i];
-    }
-
-    // Convert middle matrix
-    let middle_arr = middle_flat.as_array();
-    if middle_arr.len() != 9 {
-        return Err(pyo3::exceptions::PyValueError::new_err(
-            "middle matrix must have exactly 9 elements (3x3)"
-        ));
-    }
-
-    let mut middle = [[0i32; 3]; 3];
-    for i in 0..3 {
-        for j in 0..3 {
-            middle[i][j] = middle_arr[i * 3 + j];
-        }
-    }
-
-    // OLD IMPLEMENTATION (testing if optimization is incorrect):
+    // Combine stabilizers from both vonorm sets
     let s1_flat = lnf::find_stabilizers_raw(&vonorms1_fixed);
     let s2_flat = lnf::find_stabilizers_raw(&vonorms2_fixed);
     let combined_flat = lnf::combine_stabilizers(&s1_flat, &s2_flat, &middle);
-
-    // OPTIMIZED: Only find s2 stabilizers, skip s1 orbit
-    // NEW IMPLEMENTATION (commented out for testing):
-    // let s2_flat = lnf::find_stabilizers_raw(&vonorms2_fixed);
-    // let combined_flat = lnf::combine_middle_and_s2_stabilizers(&s2_flat, &middle);
 
     // Return as flat numpy array (Python will reshape to (N, 3, 3))
     let result_array = PyArray1::from_vec_bound(py, combined_flat);
@@ -360,47 +243,14 @@ fn find_and_combine_stabilizers_rust_float<'py>(
     middle_flat: PyReadonlyArray1<i32>,
     tol: f64,
 ) -> PyResult<Py<PyArray1<i32>>> {
-    // Convert vonorms arrays to fixed-size arrays
-    let vonorms1_arr = vonorms1.as_array();
-    let vonorms2_arr = vonorms2.as_array();
+    let vonorms1_fixed = validate_and_convert_vonorms(vonorms1.as_slice()?)?;
+    let vonorms2_fixed = validate_and_convert_vonorms(vonorms2.as_slice()?)?;
+    let middle = validate_and_convert_middle(middle_flat.as_slice()?)?;
 
-    if vonorms1_arr.len() != 7 || vonorms2_arr.len() != 7 {
-        return Err(pyo3::exceptions::PyValueError::new_err(
-            "vonorms arrays must have exactly 7 elements"
-        ));
-    }
-
-    let mut vonorms1_fixed = [0.0; 7];
-    let mut vonorms2_fixed = [0.0; 7];
-    for i in 0..7 {
-        vonorms1_fixed[i] = vonorms1_arr[i];
-        vonorms2_fixed[i] = vonorms2_arr[i];
-    }
-
-    // Convert middle matrix
-    let middle_arr = middle_flat.as_array();
-    if middle_arr.len() != 9 {
-        return Err(pyo3::exceptions::PyValueError::new_err(
-            "middle matrix must have exactly 9 elements (3x3)"
-        ));
-    }
-
-    let mut middle = [[0i32; 3]; 3];
-    for i in 0..3 {
-        for j in 0..3 {
-            middle[i][j] = middle_arr[i * 3 + j];
-        }
-    }
-
-    // OLD IMPLEMENTATION (testing if optimization is incorrect):
+    // Combine stabilizers from both vonorm sets (with tolerance)
     let s1_flat = lnf::find_stabilizers_raw_float(&vonorms1_fixed, tol);
     let s2_flat = lnf::find_stabilizers_raw_float(&vonorms2_fixed, tol);
     let combined_flat = lnf::combine_stabilizers(&s1_flat, &s2_flat, &middle);
-
-    // OPTIMIZED: Only find s2 stabilizers, skip s1 orbit
-    // NEW IMPLEMENTATION (commented out for testing):
-    // let s2_flat = lnf::find_stabilizers_raw_float(&vonorms2_fixed, tol);
-    // let combined_flat = lnf::combine_middle_and_s2_stabilizers(&s2_flat, &middle);
 
     // Return as flat numpy array (Python will reshape to (N, 3, 3))
     let result_array = PyArray1::from_vec_bound(py, combined_flat);
@@ -425,20 +275,12 @@ fn compute_step_data_raw_rust<'py>(
     n_atoms: usize,
     motif_delta: i32,
 ) -> PyResult<Py<pyo3::PyAny>> {
-    // Extract arrays
-    let coord_mat = motif_coord_matrix.as_array();
-    let input_vn = input_vonorms.as_array();
+    let vonorms_arr = validate_and_convert_vonorms(input_vonorms.as_slice()?)?;
 
-    // Convert input vonorms to array
-    let vonorms_arr: [f64; 7] = [
-        input_vn[0], input_vn[1], input_vn[2], input_vn[3],
-        input_vn[4], input_vn[5], input_vn[6]
-    ];
-
-    // Call internal function (convert numpy arrays to slices)
+    // Call internal function
     let result_values = compute_step_data_raw_internal(
         &vonorms_arr,
-        coord_mat.as_slice().unwrap(),
+        motif_coord_matrix.as_slice()?,
         n_atoms,
         motif_delta,
     );
@@ -499,18 +341,7 @@ pub(crate) fn compute_step_data_raw_internal(
 
     // Compute current stabilizers from input vonorms
     let s1_flat = lnf::find_stabilizers_raw(input_vonorms);
-    let n_s1 = s1_flat.len() / 9;
-    let mut s1_matrices: Vec<[[i32; 3]; 3]> = Vec::with_capacity(n_s1);
-    for i in 0..n_s1 {
-        let start = i * 9;
-        let mut mat = [[0i32; 3]; 3];
-        for row in 0..3 {
-            for col in 0..3 {
-                mat[row][col] = s1_flat[start + row * 3 + col];
-            }
-        }
-        s1_matrices.push(mat);
-    }
+    let s1_matrices = parse_flat_to_matrices(&s1_flat);
 
     // Generate step vectors (same as LatticeStep.all_step_vecs())
     let step_vecs = generate_step_vectors();
@@ -526,31 +357,14 @@ pub(crate) fn compute_step_data_raw_internal(
         let s2_flat = lnf::find_stabilizers_raw(&s4_rep.permuted_vonorms);
 
         // Parse transform and s2 matrices
-        let n_t = transform_mats.len();
-        let n_s2 = s2_flat.len() / 9;
-
-        let mut t_matrices: Vec<[[i32; 3]; 3]> = Vec::with_capacity(n_t);
-        for mat_vec in &transform_mats {
-            let mut mat = [[0i32; 3]; 3];
-            for row in 0..3 {
-                for col in 0..3 {
-                    mat[row][col] = mat_vec[row][col];
-                }
-            }
-            t_matrices.push(mat);
-        }
-
-        let mut s2_matrices: Vec<[[i32; 3]; 3]> = Vec::with_capacity(n_s2);
-        for i in 0..n_s2 {
-            let start = i * 9;
-            let mut mat = [[0i32; 3]; 3];
-            for row in 0..3 {
-                for col in 0..3 {
-                    mat[row][col] = s2_flat[start + row * 3 + col];
-                }
-            }
-            s2_matrices.push(mat);
-        }
+        let t_matrices: Vec<[[i32; 3]; 3]> = transform_mats.iter()
+            .map(|mat_vec| [
+                [mat_vec[0][0], mat_vec[0][1], mat_vec[0][2]],
+                [mat_vec[1][0], mat_vec[1][1], mat_vec[1][2]],
+                [mat_vec[2][0], mat_vec[2][1], mat_vec[2][2]],
+            ])
+            .collect();
+        let s2_matrices = parse_flat_to_matrices(&s2_flat);
 
         // Compute all s1 @ t @ s2 products and deduplicate
         let mut unique_products: HashMap<Vec<i32>, [[i32; 3]; 3]> = HashMap::new();
@@ -560,15 +374,7 @@ pub(crate) fn compute_step_data_raw_internal(
                 for s2 in &s2_matrices {
                     let st = mat_mul(s1, t);
                     let product = mat_mul(&st, s2);
-
-                    let mut flat = Vec::with_capacity(9);
-                    for row in 0..3 {
-                        for col in 0..3 {
-                            flat.push(product[row][col]);
-                        }
-                    }
-
-                    unique_products.insert(flat, product);
+                    unique_products.insert(linalg::mat_to_flat(&product).to_vec(), product);
                 }
             }
         }
@@ -639,7 +445,7 @@ pub(crate) fn compute_step_data_raw_internal(
 }
 
 // Use shared functions
-use linalg::{mat_mul, mat_inv_f64};
+use linalg::{mat_mul, mat_inv_f64, flat9_to_mat3x3, slice_to_vonorms, flat_matrices_to_nested, parse_flat_to_matrices, IDENTITY_3X3};
 use mnf::compute_atom_labels;
 
 /// Build CNFs from validated step data
@@ -899,45 +705,18 @@ pub(crate) fn canonicalize_cnfs_batch_internal(
 
     for (_step_vec, vonorms, coords, _matrix) in step_data {
         // Step 1: Build LNF (canonicalize vonorms)
-        let mut vonorms_arr = [0.0; 7];
-        for (i, &v) in vonorms.iter().enumerate().take(7) {
-            vonorms_arr[i] = v;
-        }
-
+        let vonorms_arr = slice_to_vonorms(&vonorms);
         let (canonical_vonorms_vec, _, selling_flat_opt, sorting_mats) =
             lnf::build_lnf_raw_discretized(&vonorms_arr);
-
-        let mut canonical_vonorms = [0.0; 7];
-        for (i, &v) in canonical_vonorms_vec.iter().enumerate().take(7) {
-            canonical_vonorms[i] = v;
-        }
+        let canonical_vonorms = slice_to_vonorms(&canonical_vonorms_vec);
 
         // Step 2: Compute transformation matrix (middle = selling @ sorting)
-        let selling_mat = if let Some(selling_flat) = selling_flat_opt {
-            [
-                [selling_flat[0], selling_flat[1], selling_flat[2]],
-                [selling_flat[3], selling_flat[4], selling_flat[5]],
-                [selling_flat[6], selling_flat[7], selling_flat[8]],
-            ]
-        } else {
-            [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
-        };
-
-        let sorting_flat = &sorting_mats[0];
-        let sorting_mat = [
-            [sorting_flat[0], sorting_flat[1], sorting_flat[2]],
-            [sorting_flat[3], sorting_flat[4], sorting_flat[5]],
-            [sorting_flat[6], sorting_flat[7], sorting_flat[8]],
-        ];
-
-        let mut middle = [[0i32; 3]; 3];
-        for i in 0..3 {
-            for j in 0..3 {
-                middle[i][j] = selling_mat[i][0] * sorting_mat[0][j]
-                             + selling_mat[i][1] * sorting_mat[1][j]
-                             + selling_mat[i][2] * sorting_mat[2][j];
-            }
-        }
+        let selling_mat = selling_flat_opt
+            .as_ref()
+            .map(|flat| flat9_to_mat3x3(flat))
+            .unwrap_or(IDENTITY_3X3);
+        let sorting_mat = flat9_to_mat3x3(&sorting_mats[0]);
+        let middle = mat_mul(&selling_mat, &sorting_mat);
 
         // Step 3: Find stabilizers and combine
         let s2_flat = lnf::find_stabilizers_raw(&canonical_vonorms);
@@ -976,18 +755,7 @@ fn get_s4_maximal_representatives_rust<'py>(
     use crate::permutations::{compute_conorms, find_zero_indices_exact, get_s4_representatives};
     use pyo3::types::{PyDict, PyList};
 
-    let vonorms_arr = vonorms.as_array();
-
-    if vonorms_arr.len() != 7 {
-        return Err(pyo3::exceptions::PyValueError::new_err(
-            "vonorms must have exactly 7 elements"
-        ));
-    }
-
-    let mut vonorms_fixed = [0.0; 7];
-    for (i, &v) in vonorms_arr.iter().enumerate() {
-        vonorms_fixed[i] = v;
-    }
+    let vonorms_fixed = validate_and_convert_vonorms(vonorms.as_slice()?)?;
 
     // Compute conorms and zero indices
     let conorms = compute_conorms(&vonorms_fixed);
@@ -1092,17 +860,7 @@ fn reconstruct_structure_from_cnf<'py>(
 ) -> PyResult<(Vec<f64>, Vec<f64>)> {
     use crate::geometry::{vonorms_to_lattice_matrix, coords_to_cartesian_positions};
 
-    // Convert vonorms to array
-    let vonorms_slice = vonorms.as_slice()?;
-    if vonorms_slice.len() != 7 {
-        return Err(pyo3::exceptions::PyValueError::new_err(
-            "vonorms must have exactly 7 elements"
-        ));
-    }
-    let mut vonorms_arr = [0.0; 7];
-    vonorms_arr.copy_from_slice(vonorms_slice);
-
-    // Convert coords to slice
+    let vonorms_arr = validate_and_convert_vonorms(vonorms.as_slice()?)?;
     let coords_slice = coords.as_slice()?;
 
     // Reconstruct lattice matrix from vonorms
@@ -1112,11 +870,9 @@ fn reconstruct_structure_from_cnf<'py>(
     let cart_coords = coords_to_cartesian_positions(coords_slice, n_atoms, delta, &lattice_matrix);
 
     // Flatten lattice matrix to return
-    let lattice_flat = vec![
-        lattice_matrix[0][0], lattice_matrix[0][1], lattice_matrix[0][2],
-        lattice_matrix[1][0], lattice_matrix[1][1], lattice_matrix[1][2],
-        lattice_matrix[2][0], lattice_matrix[2][1], lattice_matrix[2][2],
-    ];
+    let lattice_flat: Vec<f64> = lattice_matrix.iter()
+        .flat_map(|row| row.iter().copied())
+        .collect();
 
     Ok((lattice_flat, cart_coords))
 }
