@@ -24,6 +24,17 @@ This representation has several useful properties:
 
 - By exploring the energy landscape over this graph, one can find saddle points representing minimum energy barriers between phases.
 
+## Detailed Guides
+
+For detailed guides and tutorials, visit the documentation at **[maxgallant.com/crystal-normal-form](https://maxgallant.com/crystal-normal-form)**.
+
+The documentation includes:
+- **Quickstart** — Get up and running with your first CNF calculation
+- **CNF Overview** — Understanding the crystal normal form representation
+- **Lattice & Motif Normal Forms** — Deep dives into LNF and MNF construction
+- **Neighbor Finding** — How crystal neighbors are generated
+- **Pathfinding** — A*, waterfilling, and barrier search algorithms
+
 ## Installation
 
 ### Requirements
@@ -64,17 +75,6 @@ If you don't have a Rust toolchain installed, the package will still work using 
 # Check that the CLI is available
 cnf --help
 ```
-
-## Documentation
-
-For detailed guides and tutorials, visit the documentation at **[maxgallant.com/crystal-normal-form](https://maxgallant.com/crystal-normal-form)**.
-
-The documentation includes:
-- **Quickstart** — Get up and running with your first CNF calculation
-- **CNF Overview** — Understanding the crystal normal form representation
-- **Lattice & Motif Normal Forms** — Deep dives into LNF and MNF construction
-- **Neighbor Finding** — How crystal neighbors are generated
-- **Pathfinding** — A*, waterfilling, and barrier search algorithms
 
 ## Citation
 
