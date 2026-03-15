@@ -7,8 +7,12 @@ use std::cmp::Ordering;
 
 use crate::linalg::{mat_inv_f64, parse_flat_to_matrices};
 
+// =============================================================================
+// Helper Functions (pub(crate) for use by neighbors module)
+// =============================================================================
+
 /// Multiply a 3x3 matrix by a 3xN coordinate matrix
-fn matrix_mult_coords(mat: &[[f64; 3]; 3], coords: &[f64], n_atoms: usize) -> Vec<f64> {
+pub(crate) fn matrix_mult_coords(mat: &[[f64; 3]; 3], coords: &[f64], n_atoms: usize) -> Vec<f64> {
     let mut result = vec![0.0; 3 * n_atoms];
 
     for i in 0..n_atoms {
@@ -25,7 +29,7 @@ fn matrix_mult_coords(mat: &[[f64; 3]; 3], coords: &[f64], n_atoms: usize) -> Ve
 }
 
 /// Move coordinates into bounds [0, mod) using modulo
-fn move_into_bounds(coords: &mut [f64], mod_val: f64) {
+pub(crate) fn move_into_bounds(coords: &mut [f64], mod_val: f64) {
     for c in coords.iter_mut() {
         // Round to 6 decimal places first (matching Python)
         *c = (*c * 1e6).round() / 1e6;
@@ -33,6 +37,56 @@ fn move_into_bounds(coords: &mut [f64], mod_val: f64) {
         *c = c.rem_euclid(mod_val);
     }
 }
+
+/// Sort a coordinate matrix lexicographically by (element_label, x, y, z)
+pub(crate) fn sort_coords(coords: &[f64], atom_labels: &[usize], n_atoms: usize) -> Vec<f64> {
+    // Create index array
+    let mut indices: Vec<usize> = (0..n_atoms).collect();
+
+    // Sort indices by (atom_label, x, y, z) lexicographically
+    indices.sort_by(|&a, &b| {
+        let a_offset = a * 3;
+        let b_offset = b * 3;
+
+        // Compare element label first
+        match atom_labels[a].cmp(&atom_labels[b]) {
+            Ordering::Equal => {
+                // Compare x
+                let cmp_x = coords[a_offset].partial_cmp(&coords[b_offset]).unwrap_or(Ordering::Equal);
+                match cmp_x {
+                    Ordering::Equal => {
+                        // Compare y
+                        let cmp_y = coords[a_offset + 1].partial_cmp(&coords[b_offset + 1]).unwrap_or(Ordering::Equal);
+                        match cmp_y {
+                            Ordering::Equal => {
+                                // Compare z
+                                coords[a_offset + 2].partial_cmp(&coords[b_offset + 2]).unwrap_or(Ordering::Equal)
+                            }
+                            other => other,
+                        }
+                    }
+                    other => other,
+                }
+            }
+            other => other,
+        }
+    });
+
+    // Build sorted coordinate array
+    let mut sorted = Vec::with_capacity(n_atoms * 3);
+    for &idx in &indices {
+        let offset = idx * 3;
+        sorted.push(coords[offset]);
+        sorted.push(coords[offset + 1]);
+        sorted.push(coords[offset + 2]);
+    }
+
+    sorted
+}
+
+// =============================================================================
+// Internal MNF Helpers
+// =============================================================================
 
 /// Apply all stabilizer matrices to motif coordinates
 /// Returns a flat array of all stabilized coordinate matrices
@@ -98,52 +152,6 @@ fn generate_all_shifts(
     shifted_mats
 }
 
-/// Sort a coordinate matrix lexicographically by (element_label, x, y, z)
-fn sort_coords(coords: &[f64], atom_labels: &[usize], n_atoms: usize) -> Vec<f64> {
-    // Create index array
-    let mut indices: Vec<usize> = (0..n_atoms).collect();
-
-    // Sort indices by (atom_label, x, y, z) lexicographically
-    indices.sort_by(|&a, &b| {
-        let a_offset = a * 3;
-        let b_offset = b * 3;
-
-        // Compare element label first
-        match atom_labels[a].cmp(&atom_labels[b]) {
-            Ordering::Equal => {
-                // Compare x
-                let cmp_x = coords[a_offset].partial_cmp(&coords[b_offset]).unwrap_or(Ordering::Equal);
-                match cmp_x {
-                    Ordering::Equal => {
-                        // Compare y
-                        let cmp_y = coords[a_offset + 1].partial_cmp(&coords[b_offset + 1]).unwrap_or(Ordering::Equal);
-                        match cmp_y {
-                            Ordering::Equal => {
-                                // Compare z
-                                coords[a_offset + 2].partial_cmp(&coords[b_offset + 2]).unwrap_or(Ordering::Equal)
-                            }
-                            other => other,
-                        }
-                    }
-                    other => other,
-                }
-            }
-            other => other,
-        }
-    });
-
-    // Build sorted coordinate array
-    let mut sorted = Vec::with_capacity(n_atoms * 3);
-    for &idx in &indices {
-        let offset = idx * 3;
-        sorted.push(coords[offset]);
-        sorted.push(coords[offset + 1]);
-        sorted.push(coords[offset + 2]);
-    }
-
-    sorted
-}
-
 /// Extract MNF string from sorted coordinates (skip first atom, which is at origin)
 #[inline]
 fn extract_mnf(coords: &[f64], n_atoms: usize) -> Vec<f64> {
@@ -194,6 +202,10 @@ fn compute_canonical_mnf(
 
     mnf_strings.swap_remove(0)
 }
+
+// =============================================================================
+// Public API
+// =============================================================================
 
 /// Build MNF using vectorized algorithm
 ///
@@ -255,138 +267,4 @@ pub fn compute_atom_labels(atoms: &[String]) -> Vec<usize> {
     }
 
     labels
-}
-
-/// Generate motif perturbations
-/// coords_with_origin: flat array WITH origin at [0,0,0], so length = n_atoms * 3
-/// Returns list of perturbed coordinate arrays (each as Vec<i32>)
-fn generate_motif_perturbations(coords_with_origin: &[i32], n_atoms: usize) -> Vec<Vec<i32>> {
-    let mut perturbations = Vec::new();
-    let coord_len = n_atoms * 3;
-
-    // Generate ±1 for each individual coordinate
-    for idx in 0..coord_len {
-        for adj in [-1, 1] {
-            let mut perturbed = coords_with_origin.to_vec();
-            perturbed[idx] += adj;
-            perturbations.push(perturbed);
-        }
-    }
-
-    // Generate ±1 for each atom (all 3 coordinates)
-    for atom_idx in 0..n_atoms {
-        for adj in [-1, 1] {
-            let mut perturbed = coords_with_origin.to_vec();
-            let offset = atom_idx * 3;
-            perturbed[offset] += adj;
-            perturbed[offset + 1] += adj;
-            perturbed[offset + 2] += adj;
-            perturbations.push(perturbed);
-        }
-    }
-
-    perturbations
-}
-
-/// Find and canonicalize motif neighbors
-///
-/// This function finds all motif neighbors by:
-/// 1. Applying each stabilizer to the motif
-/// 2. Generating perturbations (±1 on coordinates)
-/// 3. Batch canonicalizing all perturbations
-/// 4. Returning unique canonical results
-///
-/// Arguments:
-/// - motif_coords: Coordinates WITHOUT origin, length = (n_atoms-1)*3
-/// - atoms: Atom symbols INCLUDING origin, length = n_atoms
-/// - stabilizers_flat: Flattened 3x3 stabilizer matrices
-/// - delta: Discretization parameter
-///
-/// Returns: List of canonical motif coordinates (WITHOUT origin)
-pub fn find_and_canonicalize_motif_neighbors(
-    motif_coords: &[i32],
-    atoms: &[String],
-    stabilizers_flat: &[i32],
-    delta: i32,
-) -> Vec<Vec<i32>> {
-    let n_atoms = atoms.len();
-
-    // Pre-compute atom labels
-    let atom_labels = compute_atom_labels(atoms);
-
-    // Count origin atoms (atoms matching the first atom)
-    let num_origin_atoms = atoms.iter().filter(|a| *a == &atoms[0]).count();
-
-    // Parse stabilizers using shared utility
-    let stabilizers = parse_flat_to_matrices(stabilizers_flat);
-
-    // Convert motif_coords to f64 and prepend origin
-    let mut coords_f64 = vec![0.0, 0.0, 0.0]; // Origin at [0, 0, 0]
-    for &c in motif_coords {
-        coords_f64.push(c as f64);
-    }
-
-    // Collect all perturbations across all stabilizers
-    let mut all_perturbations: Vec<Vec<f64>> = Vec::new();
-
-    for stabilizer in &stabilizers {
-        // Apply stabilizer transformation
-        let inv = mat_inv_f64(stabilizer);
-        let mut transformed = matrix_mult_coords(&inv, &coords_f64, n_atoms);
-        move_into_bounds(&mut transformed, delta as f64);
-
-        // Sort by (atom_label, x, y, z)
-        let sorted = sort_coords(&transformed, &atom_labels, n_atoms);
-
-        // Extract coords excluding origin and convert to i32
-        let sorted_mnf: Vec<i32> = sorted[3..]  // Skip first 3 (origin)
-            .iter()
-            .map(|&c| c.round() as i32)
-            .collect();
-
-        // Prepend origin for perturbation generation
-        let mut coords_with_origin = vec![0, 0, 0];
-        coords_with_origin.extend_from_slice(&sorted_mnf);
-
-        // Generate perturbations
-        let perturbations = generate_motif_perturbations(&coords_with_origin, n_atoms);
-
-        // Convert perturbations to f64 for canonicalization
-        for perturb in perturbations {
-            let perturb_f64: Vec<f64> = perturb.iter().map(|&c| c as f64).collect();
-            all_perturbations.push(perturb_f64);
-        }
-    }
-
-    // Flatten stabilizers for build_mnf_batch
-    let mut stabilizers_flat = Vec::with_capacity(stabilizers.len() * 9);
-    for stab in &stabilizers {
-        for row in stab {
-            for &val in row {
-                stabilizers_flat.push(val);
-            }
-        }
-    }
-
-    // Batch canonicalize all perturbations
-    let canonical_results = build_mnf_batch(
-        &all_perturbations,
-        n_atoms,
-        &atom_labels,
-        num_origin_atoms,
-        &stabilizers_flat,
-        delta as f64,
-    );
-
-    // Convert results to i32 and deduplicate
-    use std::collections::HashSet;
-    let mut unique_results: HashSet<Vec<i32>> = HashSet::new();
-
-    for result_f64 in canonical_results {
-        let result_i32: Vec<i32> = result_f64.iter().map(|&c| c.round() as i32).collect();
-        unique_results.insert(result_i32);
-    }
-
-    // Convert to Vec and return
-    unique_results.into_iter().collect()
 }
