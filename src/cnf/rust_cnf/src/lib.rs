@@ -1,3 +1,4 @@
+mod linalg;
 mod permutations;
 mod lnf;
 mod mnf;
@@ -9,19 +10,6 @@ mod heuristics;
 
 use pyo3::prelude::*;
 use numpy::{PyArray1, PyArrayMethods, PyReadonlyArray1};
-
-/// Simple test function to verify Rust-Python integration works
-#[pyfunction]
-fn hello_rust() -> PyResult<String> {
-    Ok("Hello from Rust! CNF optimization ready.".to_string())
-}
-
-/// Test function: sum an array (to verify numpy integration)
-#[pyfunction]
-fn sum_array<'py>(_py: Python<'py>, arr: PyReadonlyArray1<f64>) -> PyResult<f64> {
-    let arr = arr.as_array();
-    Ok(arr.iter().sum())
-}
 
 /// Rust implementation of build_lnf_raw for discretized vonorms (exact equality)
 /// Returns: (canonical_vonorms, zero_idxs, selling_transform_flat, sorting_matrices)
@@ -571,8 +559,8 @@ pub(crate) fn compute_step_data_raw_internal(
         for s1 in &s1_matrices {
             for t in &t_matrices[..1.min(t_matrices.len())] {
                 for s2 in &s2_matrices {
-                    let st = matrix_multiply_i32(s1, t);
-                    let product = matrix_multiply_i32(&st, s2);
+                    let st = mat_mul(s1, t);
+                    let product = mat_mul(&st, s2);
 
                     let mut flat = Vec::with_capacity(9);
                     for row in 0..3 {
@@ -592,7 +580,7 @@ pub(crate) fn compute_step_data_raw_internal(
 
         for (mat_flat, mat) in sorted_products {
             // Invert matrix and transform coordinates
-            let mat_inv = matrix_inverse_i32(&mat);
+            let mat_inv = mat_inv_f64(&mat);
 
             // Transform coordinates: mat_inv @ coord_matrix
             let mut transformed_coords = vec![0.0; motif_coord_matrix.len()];
@@ -651,52 +639,8 @@ pub(crate) fn compute_step_data_raw_internal(
     result.into_iter().map(|(_, v)| v).collect()
 }
 
-// Helper: Matrix multiplication for i32 matrices
-fn matrix_multiply_i32(a: &[[i32; 3]; 3], b: &[[i32; 3]; 3]) -> [[i32; 3]; 3] {
-    let mut result = [[0i32; 3]; 3];
-    for i in 0..3 {
-        for j in 0..3 {
-            for k in 0..3 {
-                result[i][j] += a[i][k] * b[k][j];
-            }
-        }
-    }
-    result
-}
-
-// Helper: Matrix inversion for i32 matrices
-fn matrix_inverse_i32(mat: &[[i32; 3]; 3]) -> [[f64; 3]; 3] {
-    // Convert to f64, invert, then we'll keep as f64 for precision
-    let mut m = [[0.0f64; 3]; 3];
-    for i in 0..3 {
-        for j in 0..3 {
-            m[i][j] = mat[i][j] as f64;
-        }
-    }
-
-    // Compute determinant
-    let det = m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1])
-            - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
-            + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
-
-    if det.abs() < 1e-10 {
-        panic!("Matrix is singular and cannot be inverted");
-    }
-
-    // Compute adjugate matrix
-    let mut inv = [[0.0f64; 3]; 3];
-    inv[0][0] = (m[1][1] * m[2][2] - m[1][2] * m[2][1]) / det;
-    inv[0][1] = (m[0][2] * m[2][1] - m[0][1] * m[2][2]) / det;
-    inv[0][2] = (m[0][1] * m[1][2] - m[0][2] * m[1][1]) / det;
-    inv[1][0] = (m[1][2] * m[2][0] - m[1][0] * m[2][2]) / det;
-    inv[1][1] = (m[0][0] * m[2][2] - m[0][2] * m[2][0]) / det;
-    inv[1][2] = (m[0][2] * m[1][0] - m[0][0] * m[1][2]) / det;
-    inv[2][0] = (m[1][0] * m[2][1] - m[1][1] * m[2][0]) / det;
-    inv[2][1] = (m[0][1] * m[2][0] - m[0][0] * m[2][1]) / det;
-    inv[2][2] = (m[0][0] * m[1][1] - m[0][1] * m[1][0]) / det;
-
-    inv
-}
+// Use shared linalg functions
+use linalg::{mat_mul, mat_inv_f64};
 
 /// Build CNFs from validated step data
 ///
@@ -1470,8 +1414,6 @@ fn filter_neighbors_by_min_distance_rust(
 
 #[pymodule]
 fn rust_cnf(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(hello_rust, m)?)?;
-    m.add_function(wrap_pyfunction!(sum_array, m)?)?;
     m.add_function(wrap_pyfunction!(build_lnf_raw_rust, m)?)?;
     m.add_function(wrap_pyfunction!(build_lnf_raw_float_rust, m)?)?;
     m.add_function(wrap_pyfunction!(find_stabilizers_rust, m)?)?;

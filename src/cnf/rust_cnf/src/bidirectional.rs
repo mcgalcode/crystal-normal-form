@@ -6,32 +6,7 @@ use std::cmp::Ordering;
 use crate::pathfinding::AStarNode;
 use crate::neighbors::find_neighbor_tuples;
 use crate::geometry::filter_neighbors_by_min_distance;
-
-/// Compute Manhattan distance (L1) heuristic between two CNF states
-/// Uses sum of absolute differences, multiplied by 10
-fn manhattan_heuristic(vonorms1: &[i32], coords1: &[i32], vonorms2: &[i32], coords2: &[i32]) -> f64 {
-    assert_eq!(coords1.len(), coords2.len());
-    assert_eq!(vonorms1.len(), vonorms2.len());
-
-    // Manhattan distance in vonorm space
-    let vonorm_dist: f64 = vonorms1.iter()
-        .zip(vonorms2.iter())
-        .map(|(&v1, &v2)| {
-            (v1 - v2).abs() as f64
-        })
-        .sum();
-
-    // Manhattan distance in coord space
-    let coord_dist: f64 = coords1.iter()
-        .zip(coords2.iter())
-        .map(|(&c1, &c2)| {
-            (c1 - c2).abs() as f64
-        })
-        .sum();
-
-    // Combined Manhattan distance, multiplied by 10 (matches Python implementation)
-    (vonorm_dist + coord_dist) * 10.0
-}
+use crate::heuristics::manhattan_heuristic;
 
 /// Create a hash key from vonorms and coords for deduplication
 fn make_key(vonorms: &[i32], coords: &[i32]) -> Vec<i32> {

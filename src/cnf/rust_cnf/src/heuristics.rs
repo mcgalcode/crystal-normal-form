@@ -6,7 +6,35 @@
 /// Voronoi class boundaries where canonical orderings change.
 
 use std::collections::HashSet;
+use crate::linalg::{mat_inv, mat_to_flat};
 use crate::permutations::PERMUTATIONS;
+
+// =============================================================================
+// Manhattan Heuristic
+// =============================================================================
+
+/// Compute Manhattan distance (L1) heuristic between two CNF states.
+///
+/// Returns sum of absolute differences multiplied by 10 (matches Python implementation).
+pub fn manhattan_heuristic(
+    vonorms1: &[i32], coords1: &[i32],
+    vonorms2: &[i32], coords2: &[i32],
+) -> f64 {
+    debug_assert_eq!(coords1.len(), coords2.len());
+    debug_assert_eq!(vonorms1.len(), vonorms2.len());
+
+    let vonorm_dist: i32 = vonorms1.iter()
+        .zip(vonorms2.iter())
+        .map(|(&v1, &v2)| (v1 - v2).abs())
+        .sum();
+
+    let coord_dist: i32 = coords1.iter()
+        .zip(coords2.iter())
+        .map(|(&c1, &c2)| (c1 - c2).abs())
+        .sum();
+
+    (vonorm_dist + coord_dist) as f64 * 10.0
+}
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -85,40 +113,6 @@ fn compute_atom_labels(elements: &[String]) -> Vec<usize> {
     labels
 }
 
-/// Invert a 3x3 integer matrix. Exact for unimodular matrices (det = +/-1).
-fn invert_3x3_i32(m: &[[i32; 3]; 3]) -> [[i32; 3]; 3] {
-    let det = m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1])
-            - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
-            + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
-
-    // Adjugate matrix
-    let adj = [
-        [
-            m[1][1] * m[2][2] - m[1][2] * m[2][1],
-            m[0][2] * m[2][1] - m[0][1] * m[2][2],
-            m[0][1] * m[1][2] - m[0][2] * m[1][1],
-        ],
-        [
-            m[1][2] * m[2][0] - m[1][0] * m[2][2],
-            m[0][0] * m[2][2] - m[0][2] * m[2][0],
-            m[0][2] * m[1][0] - m[0][0] * m[1][2],
-        ],
-        [
-            m[1][0] * m[2][1] - m[1][1] * m[2][0],
-            m[0][1] * m[2][0] - m[0][0] * m[2][1],
-            m[0][0] * m[1][1] - m[0][1] * m[1][0],
-        ],
-    ];
-
-    // inv = adj / det. For det = +/-1, this is adj * det (exact integer).
-    let mut inv = [[0i32; 3]; 3];
-    for i in 0..3 {
-        for j in 0..3 {
-            inv[i][j] = adj[i][j] * det;
-        }
-    }
-    inv
-}
 
 /// Build a 3x3 unimodular matrix from 3 Voronoi vector indices.
 /// Corresponds to Python's `VonormPermutationMatrix.from_vector_idxs(perm[1:4])`.
@@ -225,15 +219,6 @@ fn apply_shifts_and_sort(
     variants
 }
 
-/// Flatten a 3x3 matrix to a 9-element array for use as a HashSet key.
-#[inline]
-fn mat_to_key(m: &[[i32; 3]; 3]) -> [i32; 9] {
-    [
-        m[0][0], m[0][1], m[0][2],
-        m[1][0], m[1][1], m[1][2],
-        m[2][0], m[2][1], m[2][2],
-    ]
-}
 
 // ---------------------------------------------------------------------------
 // Variant generation
@@ -267,7 +252,7 @@ fn generate_variants_for_goal(
 
                 let idxs = [vonorm_perm[1], vonorm_perm[2], vonorm_perm[3]];
                 let u_mat = matrix_from_voronoi_idxs(idxs);
-                let u_inv = invert_3x3_i32(&u_mat);
+                let u_inv = mat_inv(&u_mat);
 
                 let transformed = transform_coords(&u_inv, &full_coords, n_atoms, delta);
                 let new_variants = apply_shifts_and_sort(
@@ -304,11 +289,11 @@ fn generate_variants_for_goal(
                             [mat_vecs[2][0], mat_vecs[2][1], mat_vecs[2][2]],
                         ];
 
-                        if !seen_mats.insert(mat_to_key(&u_mat)) {
+                        if !seen_mats.insert(mat_to_flat(&u_mat)) {
                             continue;
                         }
 
-                        let u_inv = invert_3x3_i32(&u_mat);
+                        let u_inv = mat_inv(&u_mat);
                         let transformed =
                             transform_coords(&u_inv, &full_coords, n_atoms, delta);
                         let new_variants = apply_shifts_and_sort(

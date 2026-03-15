@@ -12,7 +12,7 @@ use rand::Rng;
 
 use crate::neighbors::find_neighbor_tuples;
 use crate::geometry::filter_neighbors_by_min_distance;
-use crate::heuristics::{GoalVariants, HeuristicMode, precompute_goal_variants, unimodular_heuristic};
+use crate::heuristics::{GoalVariants, HeuristicMode, precompute_goal_variants, unimodular_heuristic, manhattan_heuristic};
 
 /// How often to check for Python interrupts (Ctrl+C)
 const INTERRUPT_CHECK_INTERVAL: usize = 100;
@@ -55,63 +55,8 @@ impl Ord for AStarNode {
     }
 }
 
-/// Compute squared Euclidean distance heuristic between two CNF states
-/// Uses sum of squared differences WITHOUT sqrt
-/// This is inadmissible (overestimates) but works well in practice for CNF navigation
-#[allow(dead_code)]
-fn euclidean_heuristic(vonorms1: &[i32], coords1: &[i32], vonorms2: &[i32], coords2: &[i32]) -> f64 {
-    assert_eq!(coords1.len(), coords2.len());
-    assert_eq!(vonorms1.len(), vonorms2.len());
-
-    // Distance in vonorm space
-    let vonorm_dist_sq: f64 = vonorms1.iter()
-        .zip(vonorms2.iter())
-        .map(|(&v1, &v2)| {
-            let diff = v1 as f64 - v2 as f64;
-            diff * diff
-        })
-        .sum();
-
-    // Distance in coord space
-    let coord_dist_sq: f64 = coords1.iter()
-        .zip(coords2.iter())
-        .map(|(&c1, &c2)| {
-            let diff = c1 as f64 - c2 as f64;
-            diff * diff
-        })
-        .sum();
-
-    // Combined SQUARED distance (no sqrt)
-    vonorm_dist_sq + coord_dist_sq
-}
-
-/// Compute Manhattan distance (L1) heuristic between two CNF states
-/// Uses sum of absolute differences, multiplied by 2
-/// This matches the Python implementation's manhattan_distance heuristic
-fn manhattan_heuristic(vonorms1: &[i32], coords1: &[i32], vonorms2: &[i32], coords2: &[i32]) -> f64 {
-    assert_eq!(coords1.len(), coords2.len());
-    assert_eq!(vonorms1.len(), vonorms2.len());
-
-    // Manhattan distance in vonorm space
-    let vonorm_dist: f64 = vonorms1.iter()
-        .zip(vonorms2.iter())
-        .map(|(&v1, &v2)| {
-            (v1 - v2).abs() as f64
-        })
-        .sum();
-
-    // Manhattan distance in coord space
-    let coord_dist: f64 = coords1.iter()
-        .zip(coords2.iter())
-        .map(|(&c1, &c2)| {
-            (c1 - c2).abs() as f64
-        })
-        .sum();
-
-    (vonorm_dist + coord_dist) * 10.0
-}
-
-/// Create a hash key from vonorms and coords for deduplication
+/// Create a hash key from vonorms and coords for deduplication.
+#[inline]
 fn make_key(vonorms: &[i32], coords: &[i32]) -> Vec<i32> {
     let mut key = Vec::with_capacity(vonorms.len() + coords.len());
     key.extend_from_slice(vonorms);
@@ -119,7 +64,8 @@ fn make_key(vonorms: &[i32], coords: &[i32]) -> Vec<i32> {
     key
 }
 
-/// Check if two CNF states are equal
+/// Check if two CNF states are equal.
+#[inline]
 fn states_equal(vonorms1: &[i32], coords1: &[i32], vonorms2: &[i32], coords2: &[i32]) -> bool {
     vonorms1 == vonorms2 && coords1 == coords2
 }
