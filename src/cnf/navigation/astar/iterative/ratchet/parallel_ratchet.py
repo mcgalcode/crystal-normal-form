@@ -114,6 +114,7 @@ def _run_ratchet_worker(
     ceiling_step_mev_per_atom: float,
     dropout: float,
     max_iterations: int,
+    initial_max_iters: int | None,
     beam_width: int,
     output_dir: str | None,
 ) -> RefinementResult:
@@ -177,6 +178,7 @@ def _run_ratchet_worker(
             ceiling_step_mev_per_atom=ceiling_step_mev_per_atom,
             dropout=dropout,
             max_iterations=max_iterations,
+            initial_max_iters=initial_max_iters,
             beam_width=beam_width,
             verbosity=1,  # Each worker logs its progress
             output_dir=worker_output_dir,
@@ -214,6 +216,7 @@ def parallel_ratchet(
     ceiling_step_mev_per_atom: float = 2.0,
     dropout: float = 0.1,
     max_iterations: int = 100_000,
+    initial_max_iters: int | None = None,
     beam_width: int = 1000,
     verbosity: int = 1,
     output_dir: str | None = None,
@@ -361,6 +364,7 @@ def parallel_ratchet(
                 ceiling_step_mev_per_atom=ceiling_step_mev_per_atom,
                 dropout=dropout,
                 max_iterations=max_iterations,
+                initial_max_iters=initial_max_iters,
                 beam_width=beam_width,
                 output_dir=str(output_dir) if output_dir else None,
             )
