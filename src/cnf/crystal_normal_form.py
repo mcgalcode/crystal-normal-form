@@ -1,4 +1,5 @@
 from pymatgen.core import Structure # Or other library
+from ase import Atoms
 from .lattice.lattice_normal_form import LatticeNormalForm
 from .motif.motif_normal_form import MotifNormalForm
 import json
@@ -62,6 +63,9 @@ class CrystalNormalForm:
         lattice_vecs = self.lattice_normal_form.to_superbasis().generating_vecs()
         motif = self.motif_normal_form.to_motif()
         return Structure(lattice_vecs, motif.atoms, motif.positions)
+    
+    def to_ase_atoms(self) -> Atoms:
+        return self.reconstruct().to_ase_atoms()
     
     @property
     def voronoi_class(self):
