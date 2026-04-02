@@ -9,7 +9,7 @@ from pymatgen.core import Structure
 from ..endpoints import get_endpoint_unit_cells, get_endpoint_cnfs_with_resolution
 from .core import astar_pathfind
 from .models import PathContext, Path, Attempt, SearchParameters, SearchResult
-from .heuristics import manhattan_distance
+from .heuristics import manhattan_distance, weighted_manhattan
 
 USE_RUST = os.getenv('USE_RUST') == '1'
 

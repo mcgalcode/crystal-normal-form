@@ -49,6 +49,44 @@ def manhattan_distance(cnf: tuple, goals: list[CrystalNormalForm]) -> float:
 
     return manhattan_dist * 2
 
+
+def weighted_manhattan(cnf: tuple, goals: list[CrystalNormalForm]) -> float:
+    """Manhattan heuristic with de-weighted motif contribution.
+
+    For large unit cells, the motif has many more coordinates than the vonorms
+    (7 vs 3*(n_atoms-1)), which can cause the motif distance to dominate.
+    This heuristic scales down the motif distance so lattice and motif have
+    equal per-coordinate weight.
+
+    Formula: vonorm_diff + motif_diff * (7 / n_motif_coords)
+    This makes each motif coordinate change "count" as much as each vonorm change.
+
+    Returns:
+        Rebalanced Manhattan distance, scaled by 2.
+    """
+    min_dist = float('inf')
+    current = np.array(cnf)
+
+    for goal in goals:
+        goal_coords = np.array(goal.coords)
+
+        # Vonorms: first 7 coordinates
+        vonorm_diff = np.sum(np.abs(current[:7] - goal_coords[:7]))
+
+        # Motif: remaining coordinates (3 * (n_atoms - 1))
+        n_motif_coords = len(cnf) - 7
+        if n_motif_coords > 0:
+            motif_diff = np.sum(np.abs(current[7:] - goal_coords[7:]))
+            # Scale motif down to match vonorm per-coordinate weight
+            motif_scale = 7.0 / n_motif_coords
+            dist = vonorm_diff + motif_diff * motif_scale
+        else:
+            dist = vonorm_diff
+
+        min_dist = min(min_dist, dist)
+
+    return min_dist * 2
+
 def manhattan_dist_cnfs(cnf: CrystalNormalForm, cnf2: CrystalNormalForm) -> float:
     return np.sum(np.abs(np.array(cnf.coords) - np.array(cnf2.coords)))
 
@@ -235,8 +273,8 @@ def make_heuristic(mode: str, weight: float = 0.5):
     """Factory function for A* heuristics.
 
     Args:
-        mode: One of "manhattan", "unimodular_light", "unimodular_partial",
-            "unimodular_full".
+        mode: One of "manhattan", "weighted_manhattan", "unimodular_light",
+            "unimodular_partial", "unimodular_full".
         weight: Weight for unimodular heuristics.
 
     Returns:
@@ -244,6 +282,8 @@ def make_heuristic(mode: str, weight: float = 0.5):
     """
     if mode == "manhattan":
         return manhattan_distance
+    elif mode == "weighted_manhattan":
+        return weighted_manhattan
     elif mode == "unimodular_light":
         return UnimodularManhattanHeuristic(weight=weight, full=False, partial=False)
     elif mode == "unimodular_partial":

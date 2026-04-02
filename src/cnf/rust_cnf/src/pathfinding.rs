@@ -12,7 +12,7 @@ use rand::Rng;
 
 use crate::neighbors::find_neighbor_tuples;
 use crate::geometry::filter_neighbors_by_min_distance;
-use crate::heuristics::{GoalVariants, HeuristicMode, precompute_goal_variants, unimodular_heuristic, manhattan_heuristic};
+use crate::heuristics::{GoalVariants, HeuristicMode, precompute_goal_variants, unimodular_heuristic, manhattan_heuristic, weighted_manhattan_heuristic};
 
 /// How often to check for Python interrupts (Ctrl+C)
 const INTERRUPT_CHECK_INTERVAL: usize = 100;
@@ -70,19 +70,26 @@ fn states_equal(vonorms1: &[i32], coords1: &[i32], vonorms2: &[i32], coords2: &[
     vonorms1 == vonorms2 && coords1 == coords2
 }
 
-/// Compute heuristic value, dispatching based on whether goal variants are precomputed.
+/// Compute heuristic value, dispatching based on mode and precomputed variants.
 fn compute_h(
     vonorms: &[i32],
     coords: &[i32],
     goal_points: &[(Vec<i32>, Vec<i32>)],
     goal_variants: &Option<GoalVariants>,
+    heuristic_mode: HeuristicMode,
 ) -> f64 {
     match goal_variants {
         Some(gv) => unimodular_heuristic(vonorms, coords, gv),
         None => {
             goal_points
                 .iter()
-                .map(|(gv, gc)| manhattan_heuristic(vonorms, coords, gv, gc))
+                .map(|(gv, gc)| {
+                    match heuristic_mode {
+                        HeuristicMode::Manhattan => manhattan_heuristic(vonorms, coords, gv, gc),
+                        HeuristicMode::WeightedManhattan => weighted_manhattan_heuristic(vonorms, coords, gv, gc),
+                        _ => unreachable!("Unimodular modes should have goal_variants"),
+                    }
+                })
                 .min_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal))
                 .unwrap_or(0.0)
         }
@@ -131,7 +138,7 @@ pub fn astar_pathfind(
 ) -> (Option<Vec<Vec<i32>>>, usize) {
     // Pre-compute goal variants for unimodular heuristic modes
     let goal_variants: Option<GoalVariants> = match heuristic_mode {
-        HeuristicMode::Manhattan => None,
+        HeuristicMode::Manhattan | HeuristicMode::WeightedManhattan => None,
         mode => Some(precompute_goal_variants(goal_points, elements, delta, mode, heuristic_weight)),
     };
 
@@ -154,7 +161,7 @@ pub fn astar_pathfind(
     // Initialize with all start points
     for (start_vonorms, start_coords) in start_points {
         // Compute minimum heuristic to any goal
-        let h_start = compute_h(start_vonorms, start_coords, goal_points, &goal_variants);
+        let h_start = compute_h(start_vonorms, start_coords, goal_points, &goal_variants, heuristic_mode);
 
         open_set.push(AStarNode {
             f_score: h_start,
@@ -336,7 +343,7 @@ pub fn astar_pathfind(
                 g_score.insert(neighbor_key.clone(), tentative_g);
 
                 // Calculate f_score using heuristic
-                let h = compute_h(&neighbor_vonorms, &neighbor_coords, goal_points, &goal_variants);
+                let h = compute_h(&neighbor_vonorms, &neighbor_coords, goal_points, &goal_variants, heuristic_mode);
 
                 // In greedy mode, f = h (ignore path cost); otherwise f = g + h (standard A*)
                 let f = if greedy { h } else { tentative_g + h };

@@ -37,6 +37,43 @@ pub fn manhattan_heuristic(
     (vonorm_dist + coord_dist) as f64 * 10.0
 }
 
+/// Compute weighted Manhattan heuristic with de-weighted motif contribution.
+///
+/// For large unit cells, motif coordinates dominate (3*(n_atoms-1) vs 7 vonorms).
+/// This heuristic scales down the motif distance so lattice and motif have
+/// equal per-coordinate weight.
+///
+/// Formula: vonorm_diff + motif_diff * (7 / n_motif_coords)
+/// Returns: rebalanced distance, scaled by 2 (matches Python manhattan).
+pub fn weighted_manhattan_heuristic(
+    vonorms1: &[i32], coords1: &[i32],
+    vonorms2: &[i32], coords2: &[i32],
+) -> f64 {
+    debug_assert_eq!(coords1.len(), coords2.len());
+    debug_assert_eq!(vonorms1.len(), 7);
+    debug_assert_eq!(vonorms2.len(), 7);
+
+    let vonorm_dist: i32 = vonorms1.iter()
+        .zip(vonorms2.iter())
+        .map(|(&v1, &v2)| (v1 - v2).abs())
+        .sum();
+
+    let n_motif_coords = coords1.len();
+    let dist = if n_motif_coords > 0 {
+        let motif_dist: i32 = coords1.iter()
+            .zip(coords2.iter())
+            .map(|(&c1, &c2)| (c1 - c2).abs())
+            .sum();
+        // Scale motif down to match vonorm per-coordinate weight
+        let motif_scale = 7.0 / n_motif_coords as f64;
+        vonorm_dist as f64 + motif_dist as f64 * motif_scale
+    } else {
+        vonorm_dist as f64
+    };
+
+    dist * 2.0
+}
+
 // ---------------------------------------------------------------------------
 // Public types
 // ---------------------------------------------------------------------------
@@ -46,6 +83,8 @@ pub fn manhattan_heuristic(
 pub enum HeuristicMode {
     /// Plain Manhattan distance (L1) with 10x scaling
     Manhattan,
+    /// Manhattan distance normalized by coordinate counts (balanced vonorm/motif)
+    WeightedManhattan,
     /// 168 vonorm-permutation-derived matrices (one per permutation)
     UnimodularLight,
     /// One matrix per (zero_set, conorm_perm) across all coforms
@@ -58,10 +97,11 @@ impl HeuristicMode {
     pub fn from_str(s: &str) -> Self {
         match s {
             "manhattan" => HeuristicMode::Manhattan,
+            "weighted_manhattan" => HeuristicMode::WeightedManhattan,
             "unimodular_light" => HeuristicMode::UnimodularLight,
             "unimodular_partial" => HeuristicMode::UnimodularPartial,
             "unimodular_full" => HeuristicMode::UnimodularFull,
-            _ => panic!("Unknown heuristic mode: '{}'. Expected one of: manhattan, unimodular_light, unimodular_partial, unimodular_full", s),
+            _ => panic!("Unknown heuristic mode: '{}'. Expected one of: manhattan, weighted_manhattan, unimodular_light, unimodular_partial, unimodular_full", s),
         }
     }
 }
@@ -292,7 +332,7 @@ fn generate_variants_for_goal(
             }
         }
 
-        HeuristicMode::Manhattan => unreachable!(),
+        HeuristicMode::Manhattan | HeuristicMode::WeightedManhattan => unreachable!(),
     }
 
     // Deduplicate variants
