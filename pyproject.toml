@@ -17,7 +17,7 @@ dependencies = [
     "pytest-xdist>=3.8.0",
     "rustworkx>=0.17.1",
     "sortedcontainers>=2.4.0",
-    "tensorflow>=2.14.0,<2.16",
+    "tensorflow>=2.14.0",
     "tensorpotential>=0.4.5",
 ]
 
