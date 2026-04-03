@@ -246,7 +246,9 @@ def parallel_ratchet(
         delta_factor: delta multiplied by this on each adaptation.
         ceiling_step_mev_per_atom: Minimum ceiling reduction per step.
         dropout: Neighbor dropout probability.
-        max_iterations: Max A* iterations per search.
+        max_iterations: Max A* iterations per search (absolute cap).
+        initial_max_iters: Starting max iterations. If None, estimates via
+            plain A* search. If provided, skips estimation and uses this value.
         beam_width: Max open-set size for beam search.
         verbosity: 0=silent, 1=progress, 2+=detailed.
         output_dir: Base directory for outputs.

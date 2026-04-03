@@ -32,6 +32,7 @@ def parallel_ratchet_job(
     ceiling_step_mev_per_atom: float = 2.0,
     dropout: float = 0.1,
     max_iterations: int | None = None,
+    initial_max_iters: int | None = None,
     beam_width: int = 1000,
     grace_model_path: str | None = None,
     output_dir: str | None = None,
@@ -65,8 +66,10 @@ def parallel_ratchet_job(
         delta_factor: delta multiplied by this on each adaptation (> 1 = finer).
         ceiling_step_mev_per_atom: Minimum ceiling reduction per step.
         dropout: Neighbor dropout probability.
-        max_iterations: Max A* iterations per search. If None, estimates via
-            plain A* (starts at 5000, retries with 1.5x up to 5 times).
+        max_iterations: Max A* iterations per search (absolute cap). If None,
+            defaults to 10000.
+        initial_max_iters: Starting max iterations. If None, estimates via
+            plain A* search. If provided, skips estimation and uses this value.
         beam_width: Max open-set size for beam search.
         grace_model_path: Path to local GRACE model (uses foundation model if None).
         output_dir: Base directory for outputs.
@@ -109,6 +112,7 @@ def parallel_ratchet_job(
         ceiling_step_mev_per_atom=ceiling_step_mev_per_atom,
         dropout=dropout,
         max_iterations=max_iterations,
+        initial_max_iters=initial_max_iters,
         beam_width=beam_width,
         verbosity=1,
         output_dir=output_dir,
